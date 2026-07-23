@@ -1,0 +1,49 @@
+{
+    "key": "group_63c94c973564b",
+    "title": "Block: Style",
+    "fields": [
+        {
+            "key": "field_644ab015271a6",
+            "label": "Style",
+            "type": "tab"
+        },
+        {
+            "key": "field_644ab015271a6_background_color",
+            "label": "Background Color",
+            "name": "background_color",
+            "type": "radio",
+            "wrapper": { "width": "50", "class": "theme-color" },
+            "default_value": "default",
+            "return_format": "value",
+            "layout": "vertical"
+        },
+        {
+            "key": "field_644ab015271a6_text_color",
+            "label": "Text Color",
+            "name": "text_color",
+            "type": "radio",
+            "wrapper": { "width": "50", "class": "theme-color" },
+            "default_value": "default",
+            "return_format": "value",
+            "layout": "vertical"
+        },
+        {
+            "key": "field_671b92a9d6748",
+            "label": "Spacing",
+            "name": "spacing",
+            "aria-label": "",
+            "type": "theme_block_spacing",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            }
+        }
+    ],
+    "location": [ [ { "param": "block", "operator": "!=", "value": "acf\/blabla" } ] ],
+    "menu_order": 10,
+    "modified": 1685898068
+}

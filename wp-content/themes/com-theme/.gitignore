@@ -1,0 +1,10 @@
+.DS_Store
+.idea/
+.vscode/
+node_modules/
+assets/node_modules/
+assets/.cache/
+*.log
+*.zip
+*.sql
+*.sql.gz

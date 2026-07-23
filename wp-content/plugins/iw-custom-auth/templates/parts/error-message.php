@@ -1,0 +1,1 @@
+<div class="bg-red p-[2rem] mb-8 text-white hidden" data-form-error data-toggle-class="hidden"></div>

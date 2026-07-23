@@ -1,0 +1,23 @@
+{
+  "name": "iw-cookiebot-customizer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "npx babel src/js/main.js --watch --out-file dist/main.js --presets=@babel/preset-env",
+    "build": "npx babel src/js/main.js --out-file dist/main.js --presets=@babel/preset-env",
+    "compile-styles": "node-sass --output-style expanded --precision 6 src/scss/main.scss dist/main.css"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.13.10",
+    "@babel/core": "^7.13.10",
+    "@babel/preset-env": "^7.13.12",
+    "clean-css-cli": "^5.2.2"
+  },
+  "dependencies": {
+    "sass": "^1.92.1"
+  }
+}

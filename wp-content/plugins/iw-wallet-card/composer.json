@@ -1,0 +1,28 @@
+{
+  "name": "ahatzif/iw-wallet-card",
+  "description": "WordPress wallet card tools for memberships and tickets",
+  "type": "wordpress-plugin",
+  "license": "proprietary",
+  "minimum-stability": "stable",
+  "require": {
+    "php": ">=8.0",
+    "chillerlan/php-qrcode": "^4.3",
+    "firebase/php-jwt": "^7.0",
+    "pkpass/pkpass": "^2.5",
+    "google/auth": "^1.18",
+    "guzzlehttp/guzzle": "^7.12.1",
+    "guzzlehttp/psr7": "^2.12.1",
+    "google/apiclient": "^2.15",
+    "google/apiclient-services": "~0.300",
+    "monolog/monolog": "^2.9",
+    "phpseclib/phpseclib": "^3.0.54"
+  },
+  "scripts": {
+    "pre-autoload-dump": "Google\\Task\\Composer::cleanup"
+  },
+  "extra": {
+    "google/apiclient-services": [
+      "Walletobjects"
+    ]
+  }
+}

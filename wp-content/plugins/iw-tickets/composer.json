@@ -1,0 +1,12 @@
+{
+  "name": "ahatzif/iw-tickets",
+  "description": "WordPress WooCommerce ticketing tools",
+  "type": "wordpress-plugin",
+  "license": "proprietary",
+  "require": {
+    "php": ">=8.0",
+    "setasign/fpdf": "^1.8",
+    "chillerlan/php-qrcode": "^4.4",
+    "dompdf/dompdf": "^3.1"
+  }
+}

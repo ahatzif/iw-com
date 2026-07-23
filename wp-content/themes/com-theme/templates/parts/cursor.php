@@ -1,0 +1,1 @@
+<div class="fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 group-[.is-mobile]:hidden z-[100000] pointer-events-none absolute rounded-full bg-white w-10 h-10 z-[1000]" data-module-cursor style=" mix-blend-mode: difference;"></div>

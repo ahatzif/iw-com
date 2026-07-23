@@ -1,0 +1,74 @@
+{
+  "key": "group_659bf0abb3dfe",
+  "title": "Block: Photo And Text",
+  "fields": [
+    {
+      "key": "field_659bf0abb3e017e",
+      "label": "Image",
+      "name": "image",
+      "aria-label": "",
+      "type": "image_aspect_ratio_crop",
+      "instructions": "",
+      "required": 0,
+      "conditional_logic": 0,
+      "wrapper": {
+        "width": "",
+        "class": "",
+        "id": ""
+      },
+      "crop_type": "pixel_size",
+      "aspect_ratio_width": 768,
+      "aspect_ratio_height": 960,
+      "return_format": "id",
+      "preview_size": "medium",
+      "library": "all",
+      "min_width": 768,
+      "min_height": 960,
+      "min_size": "",
+      "max_width": "",
+      "max_height": "",
+      "max_size": "",
+      "mime_types": "",
+      "parent_repeater": "field_659bbaf01fc7d"
+    },
+    {
+      "key": "field_659bf0abb3e01",
+      "label": "Text",
+      "name": "text",
+      "aria-label": "",
+      "type": "wysiwyg",
+      "instructions": "",
+      "required": 0,
+      "conditional_logic": 0,
+      "wrapper": {
+        "width": "100",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "",
+      "tabs": "all",
+      "toolbar": "full",
+      "media_upload": 1,
+      "delay": 0
+    }
+  ],
+  "location": [
+    [
+      {
+        "param": "block",
+        "operator": "==",
+        "value": "acf\/photo-and-text"
+      }
+    ]
+  ],
+  "menu_order": 0,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "hide_on_screen": "",
+  "active": true,
+  "description": "",
+  "show_in_rest": 0,
+  "modified": 1704718507
+}

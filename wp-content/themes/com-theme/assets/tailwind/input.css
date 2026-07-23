@@ -1,0 +1,72 @@
+@config "./tailwind.config.cjs";
+@import "tailwindcss";
+
+@theme {
+    --color-*: initial;
+    --font-*: initial;
+    --text-*: initial;
+    --radius-*: initial;
+    --shadow-*: initial;
+    --container-*: initial;
+    --leading-*: initial;
+    --drop-shadow-*: initial;
+    --blur-*: initial;
+    --default-font-*: initial;
+    --default-mono-font-*: initial;
+    --perspective-*: initial;
+    --inset-shadow-*: initial;
+    --tracking-*: initial;
+}
+
+
+:root {
+    --header-height: max(80px, 10rem);
+    --header-height-mobile: clamp(60px, 80px, 80px);
+    --rem: max(5px, calc(100vw * 10 / 1440));
+    --rem2: clamp(7px, calc(100vw * 10 / 1440), 10px);
+    --mobile-page-padding: max(1.5rem, calc(100vw/13/2));
+    --max-vw: 100vw;
+    --vw: min(var(--max-vw),100vw);
+    --colums-mobile: 12;
+    --colums-desktop: 24;
+
+}
+@keyframes loading { 0% { opacity: 0; } 50% { opacity: 0.6; } 100% { opacity: 0; } }
+
+@keyframes loading-low { 0% { opacity: 0; } 50% { opacity: 0.6; } 100% { opacity: 0; } }
+
+@keyframes video-is-playing { 0% { opacity: 0; transform: scale(0)} 50% { opacity: 1;  } 100% { opacity: 0; transform: scale(0.5) } }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base {
+    html{ @apply text-base  md:text-base-md lg:text-base-lg }
+    html.is-loading, html.is-loading * { cursor: wait !important;}
+    body { @apply text-[1.6rem];}
+    body.admin-bar{ top: var( --wp-admin--admin-bar--height );}
+    body.hide-admin-bar #wpadminbar{ display: none !important;}
+    input, select, textarea, button{ border-radius: 0; -webkit-appearance: none; }
+    input:focus, select:focus, textarea:focus, button:focus { outline: none;}
+
+}
+.page-wrapper-limit, .page-wrapper{ @apply max-w-[var(--max-vw)] mx-auto;}
+/*.page-wrapper{ @apply px-[var(--mobile-page-padding)] md:px-1/24;}*/
+.page-wrapper{ @apply px-1/12 md:px-1/24; }
+.playing .animate-play, .paused .animate-pause{ @apply origin-center animate-[video-is-playing_0.8s];}
+
+[data-module-form-control] input[type="checkbox"]:checked ~ .checkbox:after{ opacity: 1;}
+[data-module-vh]:not(.ready) { height: 100vh; }
+
+.fancybox__backdrop { @apply !bg-white }
+.fancybox__toolbar{ @apply z-[20]; }
+.fancybox-close { @apply absolute rounded-full top-40 right-60 size-35 flex bg-white items-center justify-center cursor-pointer pointer-events-auto outline-none; }
+.fancybox-close svg { @apply group-[.close:hover]:opacity-70 duration-300 size-20 fill-black rounded-full; }
+.fancybox-custom-nav { @apply  absolute bottom-40 right-60 flex gap-15 flex-row-reverse; }
+.fancybox-custom-nav-button{ @apply outline-none relative; }
+.fancybox-custom-nav-button.is-prev:before, .fancybox-custom-nav-button.is-next:before{ @apply absolute inset-0 z-1 content-['']; }
+
+
+.wpml-ls-statics-footer{ display: none; }
+
+
+.bg-cover{ @apply bg-center }

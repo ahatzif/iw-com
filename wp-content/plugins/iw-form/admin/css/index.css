@@ -1,0 +1,62 @@
+.form-wrap label {
+    display: inline-block;
+    max-width: 100%;
+    margin-bottom: 5px;
+    font-weight: bold !important;
+    font-size: 14px !important;
+}
+
+.form-builder .hidden-field {
+    display: block !important;
+}
+
+.form-builder .paragraph-field .form-group.subtype-wrap,
+.form-builder .paragraph-field .form-group.validate-wrap {
+    display: none !important;
+}
+
+
+.ql-snow .ql-editor h2 {
+    font-size: 1.5em !important;
+    padding: 0 !important;
+}
+
+.form-wrap.form-builder{
+    padding: 0 !important;
+}
+
+.stage-wrap{
+    width: calc(74% - 12px) !important;
+}
+
+.form-wrap.form-builder.formbuilder-embedded-bootstrap input[type="text"],
+.form-wrap.form-builder.formbuilder-embedded-bootstrap textarea{
+    width: 100%;
+}
+
+.frmb .fb-field-wrapper, .form-elements .fb-field-wrapper{
+    background: #f1f5f8;
+    border-color: #66afe9;
+}
+
+.form-wrap .form-field{
+    margin: 0 !important;
+}
+
+
+.frmb .sortable-options .option-selected, .form-elements .sortable-options .option-selected{
+    width: auto !important;
+}
+
+.form-elements .input-wrap>input[type='checkbox']{
+    margin-top: 0 !important;
+}
+
+.form-elements .input-wrap label{
+    margin-bottom: 0 !important;
+}
+
+
+.form-wrap.form-builder .frmb .form-elements .false-label:first-child, .form-wrap.form-builder .frmb .form-elements label:first-child{
+    padding-top: 0 !important;
+}

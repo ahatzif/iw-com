@@ -1,0 +1,30 @@
+// This file is auto generated
+bg-black hover:bg-black text-black hover:text-black border-black hover:border-black bg-white hover:bg-white text-white hover:text-white border-white hover:border-white bg-error hover:bg-error text-error hover:text-error border-error hover:border-error bg-success hover:bg-success text-success hover:text-success border-success hover:border-success 
+
+pt-30 md:pt-30 pb-30 md:pb-30 py-30 md:py-30 mt-30 md:mt-30 mb-30 md:mb-30 my-30 md:my-30  
+
+pt-60 md:pt-60 pb-60 md:pb-60 py-60 md:py-60 mt-60 md:mt-60 mb-60 md:mb-60 my-60 md:my-60  
+
+pt-100 md:pt-100 pb-100 md:pb-100 py-100 md:py-100 mt-100 md:mt-100 mb-100 md:mb-100 my-100 md:my-100  
+
+pt-120 md:pt-120 pb-120 md:pb-120 py-120 md:py-120 mt-120 md:mt-120 mb-120 md:mb-120 my-120 md:my-120  
+
+pt-none md:pt-none pb-none md:pb-none py-none md:py-none mt-none md:mt-none mb-none md:mb-none my-none md:my-none  
+
+pt-small md:pt-small pb-small md:pb-small py-small md:py-small mt-small md:mt-small mb-small md:mb-small my-small md:my-small  
+
+pt-normal md:pt-normal pb-normal md:pb-normal py-normal md:py-normal mt-normal md:mt-normal mb-normal md:mb-normal my-normal md:my-normal  
+
+pt-big md:pt-big pb-big md:pb-big py-big md:py-big mt-big md:mt-big mb-big md:mb-big my-big md:my-big  
+
+pt-huge md:pt-huge pb-huge md:pb-huge py-huge md:py-huge mt-huge md:mt-huge mb-huge md:mb-huge my-huge md:my-huge  
+
+pt-extra-huge md:pt-extra-huge pb-extra-huge md:pb-extra-huge py-extra-huge md:py-extra-huge mt-extra-huge md:mt-extra-huge mb-extra-huge md:mb-extra-huge my-extra-huge md:my-extra-huge  
+
+ rounded-t-0 rounded-b-0
+
+ rounded-t-10 rounded-b-10
+
+ rounded-t-20 rounded-b-20
+
+ rounded-t-30 rounded-b-30

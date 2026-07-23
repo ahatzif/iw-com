@@ -1,0 +1,1 @@
+<nav><?php com\theme::menu_caps( ['container' => false, 'items_wrap' => '<ul data-page-header="menu" class="flex font-bold space-x-10">%3$s</ul>', 'theme_location' => 'main', 'li_class' => "" ] ); ?></nav>

@@ -1,0 +1,42 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editors
+.idea
+.idea/
+.vscode/
+
+# WordPress local/runtime files
+.htaccess
+readme.html
+robots.txt
+wp-config.php
+wordfence-waf.php
+wp-content/advanced-cache.php
+wp-content/cache/
+wp-content/languages/
+wp-content/uploads/
+wp-content/upgrade/
+wp-content/wflogs/
+wp-content/wp-cache-config.php
+wp-content/webp-express/config
+
+# Dependencies and build output
+node_modules/
+vendor/
+dist/
+build/
+
+# Local secrets and database dumps
+.env
+.local/
+.wp-sync.env
+*.sql
+*.sql.gz
+*.zip

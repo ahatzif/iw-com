@@ -7,7 +7,9 @@ $size = $photoType === 'full' ? 'com-theme-content-photo-full' : 'full';
 $photoFieldName = $photoType === 'default' ? 'photo_cropped' : 'photo';
 ?>
 <?php if( ! empty( $photoID = get_field( $photoFieldName ) ) ) { ?>
-<div class="px-2/12 mb-[7.5rem] [&+.wysiwyg]:mt-0">
+<section class="<?php echo esc_attr( com_theme_block_style_classes( '', [ 'desktop' => [ 'mb' => '80' ] ] ) ); ?>">
+<div class="<?php echo esc_attr( com_theme_block_wrapper_classes( 'px-2/12' ) ); ?> [&+.wysiwyg]:mt-0">
     <?php get_template_part('templates/parts/image', false, [ 'id' => $photoID, 'size' => $size, 'classes' => $classes  ]); ?>
 </div>
+</section>
 <?php } ?>

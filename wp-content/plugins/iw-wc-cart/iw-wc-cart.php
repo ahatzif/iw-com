@@ -136,14 +136,16 @@ class IW_WC_Cart {
         $product_id    = intval($_POST['product_id'] ?? 0);
         $variation_id  = intval($_POST['variation_id'] ?? 0);
         $quantity      = intval($_POST['quantity'] ?? 0);
-        $cart_item_key = self::iw_get_cart_item_id( $product_id, $variation_id );
+        $requested_key = sanitize_text_field( wp_unslash( $_POST['cart_item_key'] ?? '' ) );
+        $cart_item_key = $requested_key && WC()->cart->get_cart_item( $requested_key )
+            ? $requested_key
+            : self::iw_get_cart_item_id( $product_id, $variation_id );
         if ( ! $cart_item_key || ! WC()->cart->get_cart_item($cart_item_key)) wp_send_json_error(['message' => 'Item not found in cart']);
         if ($quantity < 1) {
             WC()->cart->remove_cart_item($cart_item_key);
             $item_new_total = 0;
         } else {
             WC()->cart->set_quantity($cart_item_key, $quantity, true);
-            $cart_item_key = self::iw_get_cart_item_id( $product_id, $variation_id );
             $item = WC()->cart->get_cart_item($cart_item_key);
             $line_total = $item['line_total'] + $item['line_tax'];
             $item_new_total = wc_price($line_total);
@@ -449,10 +451,14 @@ class IW_WC_Cart {
 
         $cart = WC()->cart;
         $data = array();
-        $totalItems = WC()->cart->get_cart_contents_count();
+        $totalItems = function_exists( 'com_theme_cart_count' )
+            ? com_theme_cart_count()
+            : WC()->cart->get_cart_contents_count();
 
         $data['itemsCount'] = $totalItems;
-        $data['itemsCountText'] = $totalItems .  " " . ( $totalItems > 1 ? __('Είδη', 'iw-theme') : __('Είδος', 'iw-theme') );
+        $data['itemsCountText'] = function_exists( 'com_theme_cart_count_label' )
+            ? com_theme_cart_count_label( $totalItems )
+            : $totalItems . ' ' . ( $totalItems === 1 ? __( 'Είδος', 'iw-theme' ) : __( 'Είδη', 'iw-theme' ) );
         $data['subtotal'] = $cart->get_cart_subtotal();
         $data['subtotalWithFees'] = wc_price( WC()->cart->get_subtotal() + WC()->cart->get_subtotal_tax() + WC()->cart->get_fee_total() );
         // Fees
@@ -492,7 +498,7 @@ class IW_WC_Cart {
             $discount_total = $discount_price * $qty;
             if ( $regular_price > $discount_price ) {
                 $priceHTML =  '<span style="text-decoration: line-through;" class="mr-5">' . wc_price( $regular_total ) . '</span>';
-                $priceHTML .= '<span class="text-shop2">' . wc_price( $discount_total ) . '</span>';
+                $priceHTML .= '<span class="text-error">' . wc_price( $discount_total ) . '</span>';
             } else {
                 $priceHTML  =  wc_price( $discount_total );
             }

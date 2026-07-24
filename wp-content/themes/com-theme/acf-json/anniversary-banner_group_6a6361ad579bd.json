@@ -1,0 +1,102 @@
+{
+  "key": "group_6a6361ad579bd",
+  "title": "Block: Anniversary Banner",
+  "fields": [
+    {
+      "key": "field_com_anniversary_message",
+      "label": "Anniversary Banner",
+      "name": "",
+      "type": "message",
+      "message": "",
+      "new_lines": "wpautop",
+      "esc_html": 0
+    },
+    {
+      "key": "field_com_anniversary_settings",
+      "label": "Settings",
+      "name": "",
+      "type": "tab",
+      "placement": "top",
+      "endpoint": 0,
+      "selected": 0
+    },
+    {
+      "key": "field_com_anniversary_eyebrow",
+      "label": "Eyebrow",
+      "name": "eyebrow",
+      "type": "text",
+      "wrapper": {
+        "width": "40",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_anniversary_title",
+      "label": "Title",
+      "name": "title",
+      "type": "textarea",
+      "required": 1,
+      "wrapper": {
+        "width": "60",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "",
+      "rows": 2,
+      "new_lines": "br",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_anniversary_text",
+      "label": "Supporting text",
+      "name": "text",
+      "type": "textarea",
+      "wrapper": {
+        "width": "60",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "",
+      "rows": 3,
+      "new_lines": "",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_anniversary_link",
+      "label": "Link",
+      "name": "link",
+      "type": "link",
+      "wrapper": {
+        "width": "40",
+        "class": "",
+        "id": ""
+      },
+      "return_format": "array"
+    }
+  ],
+  "location": [
+    [
+      {
+        "param": "block",
+        "operator": "==",
+        "value": "acf/anniversary-banner"
+      }
+    ]
+  ],
+  "menu_order": 0,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "hide_on_screen": "",
+  "active": true,
+  "description": "",
+  "show_in_rest": 0,
+  "modified": 1784900002
+}

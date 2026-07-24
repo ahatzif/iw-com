@@ -24,7 +24,7 @@ if (!empty($youtube_video_id)) {
         $thumbnail_url = "https://img.youtube.com/vi/" . $youtube_video_id . "/maxresdefault.jpg";
     } 
 ?>
-    <div class="my-80 md-max:pt-80 group" data-module-youtube-player>
+    <section class="group md-max:pt-80 <?php echo esc_attr( com_theme_block_style_classes( '', [ 'desktop' => [ 'mt' => '80', 'mb' => '80' ] ] ) ); ?>" data-module-youtube-player>
         <div class="md:page-wrapper">
             <div class="flex flex-wrap flex-gap-20">
                 <div class="w-full md:w-10/12 md:mx-1/12">
@@ -70,5 +70,5 @@ if (!empty($youtube_video_id)) {
             </div>
         </div>
 
-    </div>
+    </section>
 <?php }

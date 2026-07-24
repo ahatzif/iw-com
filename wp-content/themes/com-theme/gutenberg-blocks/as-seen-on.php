@@ -1,10 +1,10 @@
 <?php
 // Title: As Seen On
 $columns = get_field( 'columns' );
-error_log( print_r( get_field('colulmns'), true ) );
 if( ! empty( $columns ) ) {
 ?>
-<div class="page-wrapper my-100">
+<section class="<?php echo esc_attr( com_theme_block_style_classes() ); ?>">
+<div class="<?php echo esc_attr( com_theme_block_wrapper_classes() ); ?>">
     <div class="px-1/12 md:px-2/12">
         <?php if( ! empty( $title = get_field( 'title' ) ) ) { ?>
         <h2 class="text-center text-14 mb-40 font-bold leading-[1.4285714286]"><?php echo $title;?></h2>
@@ -18,11 +18,12 @@ if( ! empty( $columns ) ) {
                     </div>
                 </div>
                 <?php if( ! empty( $column[ 'text' ] ) ) { ?>
-                <p class="text-14 leading-[1.5714285714 text-center font-light"><?php echo $column[ 'text' ]; ?></p>
+                <p class="text-14 leading-[1.5714285714] text-center font-light"><?php echo $column[ 'text' ]; ?></p>
                 <?php } ?>
             </div>
         <?php } ?>
         </div>
     </div>
 </div>
+</section>
 <?php }

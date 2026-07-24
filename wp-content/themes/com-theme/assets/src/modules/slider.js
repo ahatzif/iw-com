@@ -7,7 +7,7 @@ export default class extends module {
         super(m);
 
         new Swiper( this.$( 'swiper' )[0] , {
-            modules: [Navigation,EffectFade,Autoplay, FreeMode, Pagination],
+            modules: [Navigation,EffectFade,Autoplay],
             loop: true,
             speed: 1000,
             navigation: {

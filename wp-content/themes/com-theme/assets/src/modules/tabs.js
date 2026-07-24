@@ -4,18 +4,21 @@ export default class extends module {
     constructor(m) {
         super(m);
         this.events = { click: { 'switch': 'switch', } };
+        this.switches = [...this.$( 'switch' )];
         this.tabs = this.$( 'tabs' )[0];
-        this.activeTabIndex = 0;
+        this.activeIndex = 0;
         if( this.tabs ){
             this.tabs = [...this.tabs.querySelectorAll( '& > div')];
         }
     }
     switch( e ){
-        if( e.target.dataset.tab ){
-            let newTabIndex = parseInt( e.target.dataset.tab ) - 1;
-            this.tabs[ this.activeTabIndex ].classList.add( 'hidden' );
-            this.tabs[ newTabIndex ].classList.remove( 'hidden' );
-            this.activeTabIndex = newTabIndex;
-        }
+        let newActiveIndex = this.switches.indexOf( e.currentTarget);
+        this.tabs[ this.activeIndex ].classList.remove( 'active' );
+        this.switches[ this.activeIndex ].classList.remove( 'active' );
+        this.tabs[ newActiveIndex ].classList.add( 'active' );
+        this.switches[ newActiveIndex ].classList.add( 'active' );
+        this.activeIndex = newActiveIndex;
+        window.dispatchEvent(new Event('resize'));
+
     }
 }

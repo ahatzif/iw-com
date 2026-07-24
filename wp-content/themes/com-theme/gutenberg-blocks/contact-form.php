@@ -1,6 +1,7 @@
 <?php // Title: Contact Form ?>
 
 
+<section class="<?php echo esc_attr( com_theme_block_style_classes() ); ?>">
 <div class="px-page-padding">
     <div class="flex flex-gap-20">
         <div class="md:mx-2/12 pb-[65px] md:pb-160r">
@@ -65,3 +66,4 @@
         </div>
     </div>
 </div>
+</section>

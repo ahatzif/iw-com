@@ -10,3 +10,8 @@
     <path class="cls-2"
           d="M13.62,25.59l7.39,7.39c.39,.39,1.02,.39,1.41,0s.39-1.02,0-1.41l-5.74-5.74h18.99c.55,0,1-.45,1-1s-.45-1-1-1H16.79l5.63-5.63c.39-.39,.39-1.02,0-1.41-.2-.2-.45-.29-.71-.29s-.51,.1-.71,.29l-7.39,7.39c-.39,.39-.39,1.02,0,1.41h0Z"/>
 </svg>
+<svg width="41" height="41" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="39.8301" y="39.8574" width="38.5" height="38.5" rx="19.25" transform="rotate(-180 39.8301 39.8574)" stroke="#756546" stroke-width="1.5"/>
+<path d="M17.0664 12.877L24.6013 20.4118" stroke="#756546" stroke-width="2" stroke-linecap="round"/>
+<path d="M24.7969 20.6074L17.2733 28.131" stroke="#756546" stroke-width="2" stroke-linecap="round"/>
+</svg>

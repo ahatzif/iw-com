@@ -21,6 +21,123 @@
             "endpoint": 0
         },
         {
+            "key": "field_com_branding_tab",
+            "label": "Branding",
+            "name": "",
+            "aria-label": "",
+            "type": "tab",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "placement": "left",
+            "endpoint": 0
+        },
+        {
+            "key": "field_com_header_logo",
+            "label": "Header Logo",
+            "name": "header_logo",
+            "aria-label": "",
+            "type": "image",
+            "instructions": "Upload an SVG when possible. Fallback sprite logos are used when this is empty.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "return_format": "id",
+            "library": "all",
+            "min_width": "",
+            "min_height": "",
+            "min_size": "",
+            "max_width": "",
+            "max_height": "",
+            "max_size": "",
+            "mime_types": "svg,png,jpg,jpeg,webp",
+            "preview_size": "medium"
+        },
+        {
+            "key": "field_com_header_logo_light",
+            "label": "Header Logo Light",
+            "name": "header_logo_light",
+            "aria-label": "",
+            "type": "image",
+            "instructions": "Upload an SVG when possible. Fallback sprite logos are used when this is empty.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "return_format": "id",
+            "library": "all",
+            "min_width": "",
+            "min_height": "",
+            "min_size": "",
+            "max_width": "",
+            "max_height": "",
+            "max_size": "",
+            "mime_types": "svg,png,jpg,jpeg,webp",
+            "preview_size": "medium"
+        },
+        {
+            "key": "field_com_footer_logo",
+            "label": "Footer Logo",
+            "name": "footer_logo",
+            "aria-label": "",
+            "type": "image",
+            "instructions": "Upload an SVG when possible. Fallback sprite logos are used when this is empty.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "return_format": "id",
+            "library": "all",
+            "min_width": "",
+            "min_height": "",
+            "min_size": "",
+            "max_width": "",
+            "max_height": "",
+            "max_size": "",
+            "mime_types": "svg,png,jpg,jpeg,webp",
+            "preview_size": "medium"
+        },
+        {
+            "key": "field_com_footer_logo_light",
+            "label": "Footer Logo Light",
+            "name": "footer_logo_light",
+            "aria-label": "",
+            "type": "image",
+            "instructions": "Upload an SVG when possible. Fallback sprite logos are used when this is empty.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "return_format": "id",
+            "library": "all",
+            "min_width": "",
+            "min_height": "",
+            "min_size": "",
+            "max_width": "",
+            "max_height": "",
+            "max_size": "",
+            "mime_types": "svg,png,jpg,jpeg,webp",
+            "preview_size": "medium"
+        },
+        {
             "key": "field_62ebe750c8293",
             "label": "Terms Page",
             "name": "terms_page",
@@ -87,6 +204,58 @@
             "multiple": 0
         },
         {
+            "key": "field_com_tickets_page",
+            "label": "Tickets Page",
+            "name": "tickets_page",
+            "aria-label": "",
+            "type": "post_object",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "post_type": [
+                "page"
+            ],
+            "post_status": "",
+            "taxonomy": "",
+            "return_format": "object",
+            "multiple": 0,
+            "allow_null": 1,
+            "bidirectional": 0,
+            "ui": 1,
+            "bidirectional_target": []
+        },
+        {
+            "key": "field_com_buy_tickets_page",
+            "label": "Buy Tickets Page",
+            "name": "buy_tickets_page",
+            "aria-label": "",
+            "type": "post_object",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "post_type": [
+                "page"
+            ],
+            "post_status": "",
+            "taxonomy": "",
+            "return_format": "object",
+            "multiple": 0,
+            "allow_null": 1,
+            "bidirectional": 0,
+            "ui": 1,
+            "bidirectional_target": []
+        },
+        {
             "key": "field_66193460eafaf",
             "label": "Search Page",
             "name": "search_page",
@@ -108,32 +277,6 @@
             "allow_archives": 0,
             "multiple": 0,
             "allow_null": 0
-        },
-        {
-            "key": "field_66155b68d7649",
-            "label": "Recipes Page",
-            "name": "recipes_page",
-            "aria-label": "",
-            "type": "post_object",
-            "instructions": "",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "",
-                "class": "",
-                "id": ""
-            },
-            "post_type": [
-                "page"
-            ],
-            "post_status": "",
-            "taxonomy": "",
-            "return_format": "object",
-            "multiple": 0,
-            "allow_null": 0,
-            "bidirectional": 0,
-            "ui": 1,
-            "bidirectional_target": [ ]
         },
         {
             "key": "field_66155bb36bd2d",
@@ -159,7 +302,7 @@
             "allow_null": 0,
             "bidirectional": 0,
             "ui": 1,
-            "bidirectional_target": [ ]
+            "bidirectional_target": []
         },
         {
             "key": "field_66155bc1d65ee",
@@ -185,7 +328,7 @@
             "allow_null": 0,
             "bidirectional": 0,
             "ui": 1,
-            "bidirectional_target": [ ]
+            "bidirectional_target": []
         },
         {
             "key": "field_6053673965ae6",
@@ -230,7 +373,7 @@
             "allow_null": 0,
             "bidirectional": 0,
             "ui": 1,
-            "bidirectional_target": [ ]
+            "bidirectional_target": []
         },
         {
             "key": "field_66167f8738218",
@@ -246,11 +389,51 @@
                 "class": "",
                 "id": ""
             },
-            "default_value": "Γαλακτοκομείο Λάρισας ΟΛΥΜΠΟΣ\r\n\r\n<a target=\"_blank\" href=\"https:\/\/maps.app.goo.gl\/B4QdB9AXzFpBZH1r6\">16ο χλμ Λάρισας – Θεσσαλονίκης 41500<\/a>\r\n\r\nΓραμμή Επικοινωνίας: <a href=\"tel:8008001234\">8008001234<\/a> (ΧΩΡΙΣ ΧΡΕΩΣΗ)\r\nΕλληνικά Γαλακτοκομεία - Α.Ε | αρ. Γ.Ε.ΜΗ 026530540000",
+            "default_value": "Το Μεσολόγγι δεν είναι μια πόλη που απλώς επισκέπτεται κανείς· είναι μια εμπειρία που ζει, μια ταυτότητα που μοιράζεται και μια μνήμη που εμπνέει.",
             "tabs": "all",
-            "toolbar": "simple",
+            "toolbar": "Simple",
             "media_upload": 0,
             "delay": 0
+        },
+        {
+            "key": "field_com_footer_copyright_text",
+            "label": "Copyright Text",
+            "name": "footer_copyright_text",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "©Copyright Messolonghi All Right Reserved",
+            "maxlength": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_com_footer_credit_text",
+            "label": "Credit Text",
+            "name": "footer_credit_text",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "created by INTERWEAVE",
+            "maxlength": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
         },
         {
             "key": "field_661945a409511",
@@ -377,5 +560,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1712936153
+    "modified": 1784847595
 }

@@ -6,7 +6,7 @@ export default class extends module {
     constructor(m) {
         super(m);
         this.opened = this.el.querySelector( '[data-accordion="target"]' );
-        this.isFirstOpen = true;
+        this.isFirstOpen = false;
         this.el.addEventListener( 'click', e => {
            if(e.target.dataset.accordion === 'toggle' || e.target.closest( '[data-accordion="toggle"]' ) ){
                let parent = e.target.closest( '[data-accordion="parent"]' );

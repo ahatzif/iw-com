@@ -1,0 +1,134 @@
+{
+  "key": "group_6a6361b4528a3",
+  "title": "Block: Featured Experiences",
+  "fields": [
+    {
+      "key": "field_com_featured_experiences_message",
+      "label": "Featured Experiences",
+      "name": "",
+      "type": "message",
+      "message": "",
+      "new_lines": "wpautop",
+      "esc_html": 0
+    },
+    {
+      "key": "field_com_featured_experiences_settings",
+      "label": "Settings",
+      "name": "",
+      "type": "tab",
+      "placement": "top",
+      "endpoint": 0,
+      "selected": 0
+    },
+    {
+      "key": "field_com_featured_experiences_eyebrow",
+      "label": "Eyebrow",
+      "name": "eyebrow",
+      "type": "text",
+      "wrapper": {
+        "width": "40",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "ΜΗ ΧΑΣΕΤΕ",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_featured_experiences_title",
+      "label": "Title",
+      "name": "title",
+      "type": "text",
+      "wrapper": {
+        "width": "60",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "Εμπειρίες που αξίζουν",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_featured_experiences_items",
+      "label": "Cards",
+      "name": "items",
+      "type": "repeater",
+      "required": 0,
+      "layout": "block",
+      "pagination": 0,
+      "min": 0,
+      "max": 0,
+      "collapsed": "field_com_featured_experience_title",
+      "button_label": "Add card",
+      "rows_per_page": 20,
+      "sub_fields": [
+        {
+          "key": "field_com_featured_experience_image",
+          "label": "Image",
+          "name": "image",
+          "type": "image",
+          "required": 1,
+          "wrapper": {
+            "width": "30",
+            "class": "",
+            "id": ""
+          },
+          "return_format": "id",
+          "library": "all",
+          "preview_size": "medium",
+          "parent_repeater": "field_com_featured_experiences_items"
+        },
+        {
+          "key": "field_com_featured_experience_title",
+          "label": "Title",
+          "name": "title",
+          "type": "textarea",
+          "required": 1,
+          "wrapper": {
+            "width": "40",
+            "class": "",
+            "id": ""
+          },
+          "rows": 3,
+          "new_lines": "",
+          "maxlength": "",
+          "placeholder": "",
+          "parent_repeater": "field_com_featured_experiences_items"
+        },
+        {
+          "key": "field_com_featured_experience_link",
+          "label": "Link",
+          "name": "link",
+          "type": "link",
+          "required": 1,
+          "wrapper": {
+            "width": "30",
+            "class": "",
+            "id": ""
+          },
+          "return_format": "array",
+          "parent_repeater": "field_com_featured_experiences_items"
+        }
+      ]
+    }
+  ],
+  "location": [
+    [
+      {
+        "param": "block",
+        "operator": "==",
+        "value": "acf/featured-experiences"
+      }
+    ]
+  ],
+  "menu_order": 0,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "hide_on_screen": "",
+  "active": true,
+  "description": "",
+  "show_in_rest": 0,
+  "modified": 1784900003
+}

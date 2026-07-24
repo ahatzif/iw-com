@@ -1,0 +1,156 @@
+{
+  "key": "group_6a63618c43922",
+  "title": "Block: Home Hero",
+  "fields": [
+    {
+      "key": "field_com_home_hero_message",
+      "label": "Home Hero",
+      "name": "",
+      "type": "message",
+      "message": "",
+      "new_lines": "wpautop",
+      "esc_html": 0
+    },
+    {
+      "key": "field_com_home_hero_settings",
+      "label": "Settings",
+      "name": "",
+      "type": "tab",
+      "placement": "top",
+      "endpoint": 0,
+      "selected": 0
+    },
+    {
+      "key": "field_com_home_hero_eyebrow",
+      "label": "Eyebrow",
+      "name": "eyebrow",
+      "type": "text",
+      "wrapper": {
+        "width": "40",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "ΤΑ ΜΟΥΣΕΙΑ ΜΑΣ",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_home_hero_title",
+      "label": "Title",
+      "name": "title",
+      "type": "textarea",
+      "required": 1,
+      "wrapper": {
+        "width": "60",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "Επισκεφθείτε\nτα μουσεία μας",
+      "rows": 3,
+      "new_lines": "br",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_home_hero_text",
+      "label": "Intro text",
+      "name": "text",
+      "type": "textarea",
+      "wrapper": {
+        "width": "100",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "",
+      "rows": 4,
+      "new_lines": "",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_home_hero_primary_link",
+      "label": "Primary link",
+      "name": "primary_link",
+      "type": "link",
+      "wrapper": {
+        "width": "50",
+        "class": "",
+        "id": ""
+      },
+      "return_format": "array"
+    },
+    {
+      "key": "field_com_home_hero_secondary_link",
+      "label": "Secondary link",
+      "name": "secondary_link",
+      "type": "link",
+      "instructions": "Use #museums to scroll to the museum list.",
+      "wrapper": {
+        "width": "50",
+        "class": "",
+        "id": ""
+      },
+      "return_format": "array"
+    },
+    {
+      "key": "field_com_home_hero_museums",
+      "label": "Museum slides",
+      "name": "museums",
+      "type": "relationship",
+      "instructions": "Leave empty to use all published museums in menu order.",
+      "post_type": [
+        "museum"
+      ],
+      "post_status": [
+        "publish"
+      ],
+      "taxonomy": "",
+      "filters": [
+        "search"
+      ],
+      "return_format": "object",
+      "min": 0,
+      "max": 8,
+      "elements": [
+        "featured_image"
+      ],
+      "bidirectional": 0
+    },
+    {
+      "key": "field_com_home_hero_background",
+      "label": "Background image",
+      "name": "background_image",
+      "type": "image",
+      "instructions": "Optional. The bundled COM background is used when empty.",
+      "return_format": "id",
+      "library": "all",
+      "preview_size": "medium",
+      "min_width": 0,
+      "min_height": 0,
+      "min_size": 0,
+      "max_width": 0,
+      "max_height": 0,
+      "max_size": 0,
+      "mime_types": ""
+    }
+  ],
+  "location": [
+    [
+      {
+        "param": "block",
+        "operator": "==",
+        "value": "acf/home-hero"
+      }
+    ]
+  ],
+  "menu_order": 0,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "hide_on_screen": "",
+  "active": true,
+  "description": "",
+  "show_in_rest": 0,
+  "modified": 1784900000
+}

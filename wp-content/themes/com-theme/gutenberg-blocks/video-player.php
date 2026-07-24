@@ -22,7 +22,7 @@ if (! empty($video = get_field("video"))) {
        }
    }
 ?>
-   <section class="<?php echo $backgroundColor; ?>">
+   <section class="<?php echo esc_attr( com_theme_block_style_classes( $backgroundColor ) ); ?>">
        <div data-module-video-player class="overflow-hidden group video-player relative volume-on <?php echo $videoSize ?>  <?php if ($video["autoplay"]) echo "playing"; ?>" <?php if (! empty($video["fullscreen"])) echo "data-module-vh"; ?>>
            <video data-video-player="video" class="absolute top-0 left-0 w-full h-full object-cover " playsinline preload="metadata" width="<?php echo $meta["width"]; ?>" height="<?php echo $meta["height"]; ?>"
                <?php if (empty($video["disable_lazy_load"])) echo "data-lazy data-"; ?>src="<?php echo $video["file"]["url"]; ?>#t=0.1"

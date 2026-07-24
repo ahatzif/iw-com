@@ -16,9 +16,8 @@
                 "class": "theme-color",
                 "id": ""
             },
-            "choices": {
-            },
-            "default_value": "off-white",
+            "choices": {},
+            "default_value": "ochre",
             "return_format": "value",
             "allow_null": 0,
             "other_choice": 0,

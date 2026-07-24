@@ -8,25 +8,40 @@ export default class extends module {
         this.resultsSelector = this.el.dataset.target;
         this.resultsDiv = document.querySelector(this.el.dataset.target);
         this.buildLinks();
+
     }
     buildLinks() {
-        [...this.el.querySelectorAll('a')].forEach(a => a.addEventListener('click', this.onClick.bind(this)));
+        [...this.el.querySelectorAll('a')].forEach(a => {
+            a.classList.add( 'ab-item' );
+            a.addEventListener('click', this.onClick.bind(this))
+        });
     }
     onClick(e) {
         e.preventDefault();
         let target = e.currentTarget;
+        target.classList.add( 'animate-loading' );
+
 
         // let url = this.el.href.split("?")[0] + 'page/' + this.page + '/' + (this.el.dataset.params || '');
-        axios.get(target.href).then((response) => {
+        axios.get(target.href, {
+            headers: {
+                'Accept': 'text/html',
+                'Cache-Control': 'max-age=0',
+                'User-Agent': navigator.userAgent
+            }
+        }).then((response) => {
+            window.history.pushState({ path: target.href }, '', target.href);
             target.classList.remove('animate-loading');
             const doc = document.createElement("div");
             doc.innerHTML = response.data;
+
             doc.paging = doc.querySelector("#" + this.el.id).innerHTML;
             this.el.innerHTML = doc.paging;
             this.buildLinks();
             doc.innerHTML = doc.querySelector(this.resultsSelector).innerHTML;
 
             let newDivs = [];
+            this.call('destroy', this.resultsDiv, 'app');
             this.resultsDiv.innerHTML = '';
             [...doc.querySelectorAll('& > div')].forEach(div => {
                 div.classList.add('ajax-loaded');
@@ -35,9 +50,12 @@ export default class extends module {
             });
             this.call('update', false, 'Scroll');
             this.call('updateLazy', false, 'Scroll');
+
             this.call('addParallaxImages', this.resultsDiv.querySelectorAll(".ajax-loaded [data-parallax]"), 'Scroll');
 
             newDivs.forEach(div => div.classList.remove('ajax-loaded'));
+            this.call('update', this.resultsDiv, 'app');
+            this.call('scrollTo', { target : this.resultsDiv, options: { offset: -150 } },  'Scroll');
         });
     }
 }

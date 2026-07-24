@@ -10,6 +10,7 @@ $totalPromos = count( $promos );
 
 
 ?>
+<section class="<?php echo esc_attr( com_theme_block_style_classes( '', [] ) ); ?>">
 <div class="page-wrapper">
     <div class="flex flex-wrap">
     <?php
@@ -39,3 +40,4 @@ $totalPromos = count( $promos );
     <?php } ?>
     </div>
 </div>
+</section>

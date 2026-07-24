@@ -15,14 +15,14 @@ export default class extends module {
         this.ratio = 9/16;
         window.addEventListener( 'resize', this.onResizeBind );
         this.onResize();
-        document.addEventListener('keyup', this.keyPressBind );
+        document.addEventListener('keyup', this.keyPressBind);
     }
     keyPress(e) {
         if (e.code === 'Escape') {
             this.close();
         }
     }
-    close(){
+    close() {
         this.iFrame.src = '';
         this.modal.classList.remove( 'active' );
     }

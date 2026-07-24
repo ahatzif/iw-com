@@ -55,12 +55,62 @@ class IW_Theme_Block_Styles {
     }
 
     public function applyBlockColors($value) {
+        $defaultClasses = preg_split('/\s+/', trim((string) $value)) ?: [];
         $backgroundColor = get_field('background_color');
         $textColor = get_field('text_color');
-        $backgroundColorClass = (!empty($backgroundColor) && $backgroundColor !== 'default') ? 'bg-' . $backgroundColor : '';
-        $textColorClass = (!empty($textColor) && $textColor !== 'default') ? 'text-' . $textColor : '';
-        $classes = trim($backgroundColorClass . ' ' . $textColorClass);
+        $selectedBackgroundColor = !empty($backgroundColor) && $backgroundColor !== 'default';
+        $selectedTextColor = !empty($textColor) && $textColor !== 'default';
+
+        $classes = array_values(array_filter($defaultClasses, function($class) {
+            return ! $this->is_color_class($class, 'bg-') && ! $this->is_color_class($class, 'text-');
+        }));
+
+        $defaultBackgroundClass = $this->find_color_class($defaultClasses, 'bg-');
+        $defaultTextClass = $this->find_color_class($defaultClasses, 'text-');
+
+        if ($selectedBackgroundColor) {
+            $classes[] = 'bg-' . $backgroundColor;
+        } elseif (!empty($defaultBackgroundClass)) {
+            $classes[] = $defaultBackgroundClass;
+        }
+
+        if ($selectedTextColor) {
+            $classes[] = 'text-' . $textColor;
+        } elseif ($selectedBackgroundColor) {
+            $classes[] = $this->get_contrast_text_class($backgroundColor);
+        } elseif (!empty($defaultTextClass)) {
+            $classes[] = $defaultTextClass;
+        }
+
+        $classes = trim(implode(' ', array_unique(array_filter($classes))));
         return empty($classes) ? $value : $classes;
+    }
+
+    protected function find_color_class($classes, $prefix) {
+        foreach ($classes as $class) {
+            if ($this->is_color_class($class, $prefix)) {
+                return $class;
+            }
+        }
+
+        return '';
+    }
+
+    protected function is_color_class($class, $prefix) {
+        if (!str_starts_with($class, $prefix)) {
+            return false;
+        }
+
+        $color = substr($class, strlen($prefix));
+        $color = strtok($color, '/');
+
+        return isset(self::getThemeConfig()['colors'][$color]) || in_array($color, ['current', 'transparent'], true);
+    }
+
+    protected function get_contrast_text_class($backgroundColor) {
+        $lightTextBackgrounds = ['blue', 'dark', 'black', 'validated', 'error', 'success', 'limited'];
+
+        return in_array($backgroundColor, $lightTextBackgrounds, true) ? 'text-white' : 'text-blue';
     }
     public function applyBlockSpacings($default_spacing) {
         $default_spacing = wp_parse_args($default_spacing, [ "desktop" => ["mt" => "", "mb" => "", "pt" => "", "pb" => ""], "mobile" => ["mt" => "", "mb" => "", "pt" => "", "pb" => ""] ]);

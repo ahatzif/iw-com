@@ -2,7 +2,8 @@
 
 if( ! empty( $photos = get_field( 'gallery' )  ) ) {
     ?>
-    <div class="page-wrapper my-100 relative" data-module-swiper data-options='{ "loop" : true }'>
+    <section class="<?php echo esc_attr( com_theme_block_style_classes( '' ) ); ?>">
+    <div class="<?php echo esc_attr( com_theme_block_wrapper_classes( 'page-wrapper' ) ); ?> relative" data-module-swiper data-options='{ "loop" : true }'>
         <div class="ml-1/12 md:ml-2/12">
             <div class="swiper relative cursor-pointer" data-swiper="swiper">
                 <div class="wrapper flex">
@@ -25,4 +26,5 @@ if( ! empty( $photos = get_field( 'gallery' )  ) ) {
             </div>
         </div>-->
     </div>
+    </section>
 <?php }

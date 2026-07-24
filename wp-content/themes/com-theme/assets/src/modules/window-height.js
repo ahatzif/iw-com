@@ -16,7 +16,7 @@ export default class extends module {
 
     update() {
         let subtract = this.subtract ? this.subtract.getBoundingClientRect().height : 0;
-        this.el.style.height = (this.el.dataset.h ? this.el.dataset.h : 100) * ( window.innerHeight - subtract ) / 100 + 'px';
+        this.el.style.height = ( this.el.dataset.h ? this.el.dataset.h : 100 ) * ( document.documentElement.offsetHeight - subtract ) / 100 + 'px';
         this.el.classList.add( 'ready' );
         this.call( 'update', false, 'Scroll' );
     }

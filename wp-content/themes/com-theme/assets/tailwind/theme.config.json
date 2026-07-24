@@ -1,38 +1,84 @@
 {
   "colors": {
+    "blue": "#173276",
+    "blue-soft": "#8185BE",
+    "ochre": "#EBE6D6",
+    "ochre-light": "#F7F5EE",
+    "gray-light": "#D9D9D9",
+    "medium": "#a7aaa2",
+    "dark": "#31312F",
     "black": "#000000",
-    "white": "#FFF",
-    "error": "#F00",
-    "success": "#0F0"
+    "white": "#ffffff",
+
+    "validated": "#00741D",
+    "error": "#FF0F00",
+    "success": "#00B109",
+    "limited": "#C41313"
   },
   "spacing": {
+    "-100": "-100",
+    "-50": "-50",
+    "-40": "-40",
+    "-30": "-30",
+    "-20": "-20",
+    "-10": "-10",
+
+
     "none": "0",
     "30": "30",
+    "40": "40",
     "small": "50",
-    "60": "60",
     "normal": "60",
+    "80": "80",
+    "90": "90",
     "100": "100",
     "120": "120",
+    "130": "130",
     "big": "150",
+    "160": "160",
+    "170": "170",
+    "180": "180",
     "huge": "200",
     "extra-huge": "300"
   },
+
   "borderRadius": {
     "0": "0",
     "10": "10",
     "20": "20",
-    "30": "30"
+    "30": "30",
+    "40": "40"
   },
   "text" : {
+    "Display" : [ "7.6rem", {"lineHeight": 0.895, "fontWeight": 300}],
+    "Hero" : [ "6rem", {"lineHeight": 1.1667, "fontWeight": 500}],
+    "Museum-Title" : [ "2.8rem", {"lineHeight": 1, "fontWeight": 700}],
+    "Card-Body" : [ "1.4rem", {"lineHeight": 1.2, "fontWeight": 400}],
     "H1" : [ "6rem", {"lineHeight": 1.2, "fontWeight": 400, "letterSpacing": "-.02em"}],
     "H2" : [ "4.4rem", {"lineHeight": 1.2, "fontWeight": 400}],
-    "H3" : [ "3.6rem", {"lineHeight": 1.1, "fontWeight": 400, "letterSpacing": "-.01em"}],
-    "H4" : [ "2.6rem", {"lineHeight": 1.2461538462, "fontWeight": 400}],
-    "H5" : [ "2rem", {"lineHeight": 1.25,"fontWeight": 400}],
+    "H3" : [ "3.5rem", {"lineHeight": 1.1, "fontWeight": 400, "letterSpacing": "-.01em"}],
+    "H30" : [ "3rem", {"lineHeight": 1.1, "fontWeight": 400, "letterSpacing": "-.01em"}],
+    "H4" : [ "2.5rem", {"lineHeight": 1.2461538462, "fontWeight": 400}],
+    "H5" : [ "2rem", {"lineHeight": 1.2,"fontWeight": 400}],
     "H6" : [ "1.5rem", {"lineHeight": 1.2,"fontWeight": 400}],
     "H7" : [ "1.3rem", {"lineHeight": 1.2307692308, "fontWeight": 400}],
-    "H8" : [ "1.1rem", {"lineHeight": 1.2545454545, "fontWeight": 400}],
-    "H9" : [ "0.9rem", {"lineHeight": 1.2555555556, "fontWeight": 400}],
-    "Body-Text" : [ "1.8rem", {"lineHeight": 1.3,"fontWeight": 400}]
+    "H8" : [ "1.2rem", {"lineHeight": 1.272727272727273, "fontWeight": 400}],
+    "H9" : [ "max(9px,0.9rem)", {"lineHeight": 1.2555555556, "fontWeight": 400}],
+    "Body-Text" : [ "1.8rem", {"lineHeight": 1.3,"fontWeight": 400}],
+    "Nav-Menu" : [ "1.8rem", {"lineHeight": 1,"fontWeight": 700}],
+    "Button-XL" : [ "2rem", {"lineHeight": 1,"fontWeight": 700, "letterSpacing": "-.01em"}],
+    "Button-L" : [ "1.8rem", {"lineHeight": 1.3,"fontWeight": 700}],
+    "Button-M" : [ "1.4rem", {"lineHeight": 1.4,"fontWeight": 700}],
+    "Button-S" : [ "1.2rem", {"lineHeight": 1.4,"fontWeight": 700, "letterSpacing": ".01em"}],
+    "Button-XS" : [ "1rem", {"lineHeight": 1.3,"fontWeight": 700, "letterSpacing": ".01em"}],
+    "Text-Link" : [ "1.3rem", {"lineHeight": 1.2538461538,"fontWeight": 400}],
+    "Text-Link-L" : [ "2rem", {"lineHeight": 1.3,"fontWeight": 400}],
+    "Section-Title-XL" : [ "3rem", {"lineHeight": 1.3,"fontWeight": 700, "letterSpacing": ".08em"}],
+    "Section-Title-L" : [ "2.6rem", {"lineHeight": 1.3,"fontWeight": 500, "letterSpacing": ".07em"}],
+    "Section-Title-M" : [ "1.6rem", {"lineHeight": 1.3,"fontWeight": 600, "letterSpacing": ".08em"}],
+    "Section-Title-S" : [ "1.3rem", {"lineHeight": 1.3,"fontWeight": 700, "letterSpacing": ".1em"}],
+    "Section-Title-XS" : [ "1rem", {"lineHeight": 1.3,"fontWeight": 700, "letterSpacing": ".05em"}],
+    "Section-Title-XΧS" : [ ".8rem", {"lineHeight": 1.25,"fontWeight": 700, "letterSpacing": ".06em"}],
+    "Section-Title-Wide" : [ "1.4rem", {"lineHeight": 1.3,"fontWeight": 700, "letterSpacing": ".04em"}]
   }
 }

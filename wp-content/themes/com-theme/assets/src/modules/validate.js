@@ -8,6 +8,7 @@ export default class extends module {
         this.rules = this.el.dataset.rules ? this.el.dataset.rules.split( '|' ) : [];
 
         this.target = this.$( 'target' )[ 0 ];
+
         this.name = this.target.getAttribute( 'name' ).replace( /[\[\]]/g, '' );
         this.message = this.$( 'message' )[ 0 ];
         this.validate = this.validate;
@@ -15,9 +16,6 @@ export default class extends module {
     }
 
     addEvents() {
-
-
-
         // Backend validation errors
         this.el.addEventListener( 'formError', errors => {
             if ( errors.detail.errors.hasOwnProperty( this.name ) ) {
@@ -44,7 +42,11 @@ export default class extends module {
                 } );
             }
 
-            this.target.addEventListener( 'blur', () => this.validateDefault() );
+            this.target.addEventListener( 'blur', () => {
+                if( ! this.isValid ) {
+                    //setTimeout( () => {this.validateDefault()},100);
+                }
+            } );
         }
 
 
@@ -59,25 +61,59 @@ export default class extends module {
     }
 
     validateDefault(){
+
+        if( ! this.el.closest( '.force-validation') ){
+            if( this.el.closest( '.hidden:not(.hidden-step)' ) || this.el.classList.contains( 'hidden' ) ) return true;
+        }
         this.isValid = true;
+
+
         for ( let ruleParts of this.rules ) {
             let parts = ruleParts.split( ':' );
             let rule = parts[ 0 ];
             let params = rule.length > 1 ? parts[ 1 ] : false;
+
             if ( Validations[ rule ] ) {
                 this.isValid = Validations[ rule ]( this.target, params );
                 this.message.innerHTML = this.isValid ? '&nbsp;' : ValidationMessages[ rule ]( this.target, params );
-                if ( !this.isValid ) break;
+                this.el.classList.toggle( 'valid-' + rule, this.isValid );
+                this.el.classList.toggle( 'invalid-' + rule, ! this.isValid );
+                if ( ! this.isValid ) break;
             }
         }
-        this.el.classList.toggle( 'error', ! this.isValid );
 
+        this.el.classList.toggle( 'error', ! this.isValid );
         return this.isValid;
+    }
+
+    validateRule( theRule ){
+        let parts = theRule.split( ':' );
+        let rule = parts[ 0 ];
+        let params = rule.length > 1 ? parts[ 1 ] : false;
+        if ( Validations[ rule ] ) {
+            this.isValid = Validations[ rule ]( this.target, params );
+            this.message.innerHTML = this.isValid ? '&nbsp;' : ValidationMessages[ rule ]( this.target, params );
+            this.el.classList.toggle( 'valid-' + rule, this.isValid );
+            this.el.classList.toggle( 'invalid-' + rule, ! this.isValid );
+        }
+        this.el.classList.toggle( 'error', ! this.isValid );
+        return this.isValid;
+    }
+
+    setRules( rules ){
+        this.rules = Array.isArray( rules ) ? rules : String( rules || '' ).split( '|' ).filter( Boolean );
+        this.el.dataset.rules = this.rules.join( '|' );
+        this.clear();
     }
 
     validateSelect(){
 
-        if( this.target.querySelector( 'option[value=""]').selected ) {
+
+        if( ! this.el.closest( '.force-validation') ) {
+            if ( this.el.closest( '.hidde:not(.hidden-step)' ) || this.el.classList.contains( 'hidden' ) ) return true;
+        }
+        let empty = this.target.querySelector( 'option[value=""]');
+        if( empty && empty.selected ) {
             this.isValid = false;
         } else {
             if (this.target.multiple) {
@@ -107,8 +143,4 @@ export default class extends module {
         this.message.innerHTML = '&nbsp;';
         this.el.classList.remove( 'error' );
     }
-
-
-
-
 }

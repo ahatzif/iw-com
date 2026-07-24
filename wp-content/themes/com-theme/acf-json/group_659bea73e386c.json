@@ -21,6 +21,24 @@
             "esc_html": 0
         },
         {
+            "key": "field_659bea73e386c_block_title_settings_tab",
+            "label": "Settings",
+            "name": "",
+            "aria-label": "",
+            "type": "tab",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "placement": "top",
+            "endpoint": 0,
+            "selected": 0
+        },
+        {
             "key": "field_659bea73e3871",
             "label": "Size",
             "name": "size",
@@ -136,5 +154,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1784892491
+    "modified": 1784896243
 }

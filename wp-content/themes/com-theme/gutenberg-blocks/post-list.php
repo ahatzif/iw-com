@@ -191,10 +191,15 @@ if (!empty($taxonomyName) && $taxonomyName !== 'no') {
 
 $showFilters = get_field('show_filters');
 
-
-if ($postSelection === 'auto' && $showFilters) {
-    get_template_part('templates/parts/post-list/filters', $postType, ['postType' => $postType, 'allowMultiple' => $allowMultiple, 'terms' => $terms, 'filters' => $filters]);
-}
 if ($query->have_posts() || $showFilters) {
+    ?>
+    <section class="<?php echo esc_attr( com_theme_block_style_classes() ); ?>">
+    <?php
+    if ($postSelection === 'auto' && $showFilters) {
+        get_template_part('templates/parts/post-list/filters', $postType, ['postType' => $postType, 'allowMultiple' => $allowMultiple, 'terms' => $terms, 'filters' => $filters]);
+    }
     get_template_part('templates/parts/post-list/' . $listViewTemplate, $postType, ['query' => $query, 'postType' => $postType, 'params' => $loadMoreParams, 'taxonomyName' => $taxonomyName, 'blockFields' => get_fields()]);
+    ?>
+    </section>
+    <?php
 }

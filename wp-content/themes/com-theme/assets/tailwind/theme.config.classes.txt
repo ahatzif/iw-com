@@ -1,30 +1,52 @@
 // This file is auto generated
-bg-black hover:bg-black text-black hover:text-black border-black hover:border-black bg-white hover:bg-white text-white hover:text-white border-white hover:border-white bg-error hover:bg-error text-error hover:text-error border-error hover:border-error bg-success hover:bg-success text-success hover:text-success border-success hover:border-success 
+bg-blue hover:bg-blue text-blue hover:text-blue border-blue hover:border-blue fill-blue bg-blue-soft hover:bg-blue-soft text-blue-soft hover:text-blue-soft border-blue-soft hover:border-blue-soft fill-blue-soft bg-ochre hover:bg-ochre text-ochre hover:text-ochre border-ochre hover:border-ochre fill-ochre bg-ochre-light hover:bg-ochre-light text-ochre-light hover:text-ochre-light border-ochre-light hover:border-ochre-light fill-ochre-light bg-gray-light hover:bg-gray-light text-gray-light hover:text-gray-light border-gray-light hover:border-gray-light fill-gray-light bg-medium hover:bg-medium text-medium hover:text-medium border-medium hover:border-medium fill-medium bg-dark hover:bg-dark text-dark hover:text-dark border-dark hover:border-dark fill-dark bg-black hover:bg-black text-black hover:text-black border-black hover:border-black fill-black bg-white hover:bg-white text-white hover:text-white border-white hover:border-white fill-white bg-validated hover:bg-validated text-validated hover:text-validated border-validated hover:border-validated fill-validated bg-error hover:bg-error text-error hover:text-error border-error hover:border-error fill-error bg-success hover:bg-success text-success hover:text-success border-success hover:border-success fill-success bg-limited hover:bg-limited text-limited hover:text-limited border-limited hover:border-limited fill-limited 
 
-pt-30 md:pt-30 pb-30 md:pb-30 py-30 md:py-30 mt-30 md:mt-30 mb-30 md:mb-30 my-30 md:my-30  
+pt-30 md:pt-30 pb-30 md:pb-30 py-30 md:py-30 mt-30 md:mt-30 mb-30 md:mb-30 my-30 md:my-30
 
-pt-60 md:pt-60 pb-60 md:pb-60 py-60 md:py-60 mt-60 md:mt-60 mb-60 md:mb-60 my-60 md:my-60  
+pt-40 md:pt-40 pb-40 md:pb-40 py-40 md:py-40 mt-40 md:mt-40 mb-40 md:mb-40 my-40 md:my-40
 
-pt-100 md:pt-100 pb-100 md:pb-100 py-100 md:py-100 mt-100 md:mt-100 mb-100 md:mb-100 my-100 md:my-100  
+pt-80 md:pt-80 pb-80 md:pb-80 py-80 md:py-80 mt-80 md:mt-80 mb-80 md:mb-80 my-80 md:my-80
 
-pt-120 md:pt-120 pb-120 md:pb-120 py-120 md:py-120 mt-120 md:mt-120 mb-120 md:mb-120 my-120 md:my-120  
+pt-90 md:pt-90 pb-90 md:pb-90 py-90 md:py-90 mt-90 md:mt-90 mb-90 md:mb-90 my-90 md:my-90
 
-pt-none md:pt-none pb-none md:pb-none py-none md:py-none mt-none md:mt-none mb-none md:mb-none my-none md:my-none  
+pt-100 md:pt-100 pb-100 md:pb-100 py-100 md:py-100 mt-100 md:mt-100 mb-100 md:mb-100 my-100 md:my-100
 
-pt-small md:pt-small pb-small md:pb-small py-small md:py-small mt-small md:mt-small mb-small md:mb-small my-small md:my-small  
+pt-120 md:pt-120 pb-120 md:pb-120 py-120 md:py-120 mt-120 md:mt-120 mb-120 md:mb-120 my-120 md:my-120
 
-pt-normal md:pt-normal pb-normal md:pb-normal py-normal md:py-normal mt-normal md:mt-normal mb-normal md:mb-normal my-normal md:my-normal  
+pt-130 md:pt-130 pb-130 md:pb-130 py-130 md:py-130 mt-130 md:mt-130 mb-130 md:mb-130 my-130 md:my-130
 
-pt-big md:pt-big pb-big md:pb-big py-big md:py-big mt-big md:mt-big mb-big md:mb-big my-big md:my-big  
+pt-160 md:pt-160 pb-160 md:pb-160 py-160 md:py-160 mt-160 md:mt-160 mb-160 md:mb-160 my-160 md:my-160
 
-pt-huge md:pt-huge pb-huge md:pb-huge py-huge md:py-huge mt-huge md:mt-huge mb-huge md:mb-huge my-huge md:my-huge  
+pt-170 md:pt-170 pb-170 md:pb-170 py-170 md:py-170 mt-170 md:mt-170 mb-170 md:mb-170 my-170 md:my-170
 
-pt-extra-huge md:pt-extra-huge pb-extra-huge md:pb-extra-huge py-extra-huge md:py-extra-huge mt-extra-huge md:mt-extra-huge mb-extra-huge md:mb-extra-huge my-extra-huge md:my-extra-huge  
+pt-180 md:pt-180 pb-180 md:pb-180 py-180 md:py-180 mt-180 md:mt-180 mb-180 md:mb-180 my-180 md:my-180
 
- rounded-t-0 rounded-b-0
+-pt-100 md:-pt-100 -pb-100 md:-pb-100 -py-100 md:-py-100 -mt-100 md:-mt-100 -mb-100 md:-mb-100 -my-100 md:-my-100
 
- rounded-t-10 rounded-b-10
+-pt-50 md:-pt-50 -pb-50 md:-pb-50 -py-50 md:-py-50 -mt-50 md:-mt-50 -mb-50 md:-mb-50 -my-50 md:-my-50
 
- rounded-t-20 rounded-b-20
+-pt-40 md:-pt-40 -pb-40 md:-pb-40 -py-40 md:-py-40 -mt-40 md:-mt-40 -mb-40 md:-mb-40 -my-40 md:-my-40
 
- rounded-t-30 rounded-b-30
+-pt-30 md:-pt-30 -pb-30 md:-pb-30 -py-30 md:-py-30 -mt-30 md:-mt-30 -mb-30 md:-mb-30 -my-30 md:-my-30
+
+-pt-20 md:-pt-20 -pb-20 md:-pb-20 -py-20 md:-py-20 -mt-20 md:-mt-20 -mb-20 md:-mb-20 -my-20 md:-my-20
+
+-pt-10 md:-pt-10 -pb-10 md:-pb-10 -py-10 md:-py-10 -mt-10 md:-mt-10 -mb-10 md:-mb-10 -my-10 md:-my-10
+
+pt-none md:pt-none pb-none md:pb-none py-none md:py-none mt-none md:mt-none mb-none md:mb-none my-none md:my-none
+
+pt-small md:pt-small pb-small md:pb-small py-small md:py-small mt-small md:mt-small mb-small md:mb-small my-small md:my-small
+
+pt-normal md:pt-normal pb-normal md:pb-normal py-normal md:py-normal mt-normal md:mt-normal mb-normal md:mb-normal my-normal md:my-normal
+
+pt-big md:pt-big pb-big md:pb-big py-big md:py-big mt-big md:mt-big mb-big md:mb-big my-big md:my-big
+
+pt-huge md:pt-huge pb-huge md:pb-huge py-huge md:py-huge mt-huge md:mt-huge mb-huge md:mb-huge my-huge md:my-huge
+
+pt-extra-huge md:pt-extra-huge pb-extra-huge md:pb-extra-huge py-extra-huge md:py-extra-huge mt-extra-huge md:mt-extra-huge mb-extra-huge md:mb-extra-huge my-extra-huge md:my-extra-huge
+
+rounded-t-0 rounded-b-0 
+rounded-t-10 rounded-b-10 
+rounded-t-20 rounded-b-20 
+rounded-t-30 rounded-b-30 
+rounded-t-40 rounded-b-40 

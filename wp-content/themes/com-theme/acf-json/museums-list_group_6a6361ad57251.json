@@ -1,0 +1,245 @@
+{
+  "key": "group_6a6361ad57251",
+  "title": "Block: Museums List",
+  "fields": [
+    {
+      "key": "field_com_museums_list_message",
+      "label": "Museums List",
+      "name": "",
+      "type": "message",
+      "message": "",
+      "new_lines": "wpautop",
+      "esc_html": 0
+    },
+    {
+      "key": "field_com_museums_list_settings",
+      "label": "Settings",
+      "name": "",
+      "type": "tab",
+      "placement": "top",
+      "endpoint": 0,
+      "selected": 0
+    },
+    {
+      "key": "field_com_museums_list_eyebrow",
+      "label": "Eyebrow",
+      "name": "eyebrow",
+      "type": "text",
+      "wrapper": {
+        "width": "35",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "ΤΙΤΛΟΣ",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_museums_list_title",
+      "label": "Title",
+      "name": "title",
+      "type": "textarea",
+      "wrapper": {
+        "width": "65",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "",
+      "rows": 3,
+      "new_lines": "br",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_museums_list_anchor",
+      "label": "Anchor ID",
+      "name": "anchor_id",
+      "type": "text",
+      "instructions": "Used by links such as #museums.",
+      "wrapper": {
+        "width": "30",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "museums",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_museums_list_selection",
+      "label": "Museums",
+      "name": "museums",
+      "type": "relationship",
+      "instructions": "Leave empty to show every published museum in menu order.",
+      "post_type": [
+        "museum"
+      ],
+      "post_status": [
+        "publish"
+      ],
+      "taxonomy": "",
+      "filters": [
+        "search"
+      ],
+      "return_format": "object",
+      "min": 0,
+      "max": 0,
+      "elements": [
+        "featured_image"
+      ],
+      "bidirectional": 0
+    },
+    {
+      "key": "field_com_museums_list_labels_tab",
+      "label": "Labels",
+      "name": "",
+      "type": "tab",
+      "placement": "top",
+      "endpoint": 0,
+      "selected": 0
+    },
+    {
+      "key": "field_com_museums_list_more_label",
+      "label": "More label",
+      "name": "more_label",
+      "type": "text",
+      "wrapper": {
+        "width": "50",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "Περισσότερα →",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_museums_list_ticket_label",
+      "label": "Ticket label",
+      "name": "ticket_label",
+      "type": "text",
+      "wrapper": {
+        "width": "50",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "Εισιτήρια",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_museums_list_all_tab",
+      "label": "All Museums Card",
+      "name": "",
+      "type": "tab",
+      "placement": "top",
+      "endpoint": 0,
+      "selected": 0
+    },
+    {
+      "key": "field_com_museums_list_show_all",
+      "label": "Show all museums card",
+      "name": "show_all_card",
+      "type": "true_false",
+      "default_value": 1,
+      "ui": 1,
+      "ui_on_text": "",
+      "ui_off_text": ""
+    },
+    {
+      "key": "field_com_museums_list_all_place",
+      "label": "Place",
+      "name": "all_card_place",
+      "type": "text",
+      "wrapper": {
+        "width": "35",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "ΜΕΣΟΛΟΓΓΙ, ΑΙΤΩΛΙΚΟ",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_museums_list_all_title",
+      "label": "Title",
+      "name": "all_card_title",
+      "type": "text",
+      "wrapper": {
+        "width": "65",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "Επίσκεψη σε όλα τα μουσεία",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_museums_list_all_text",
+      "label": "Description",
+      "name": "all_card_text",
+      "type": "textarea",
+      "default_value": "",
+      "rows": 4,
+      "new_lines": "",
+      "maxlength": "",
+      "placeholder": ""
+    },
+    {
+      "key": "field_com_museums_list_all_link",
+      "label": "More link",
+      "name": "all_card_link",
+      "type": "link",
+      "wrapper": {
+        "width": "40",
+        "class": "",
+        "id": ""
+      },
+      "return_format": "array"
+    },
+    {
+      "key": "field_com_museums_list_all_ticket",
+      "label": "Ticket link",
+      "name": "all_card_ticket_link",
+      "type": "link",
+      "wrapper": {
+        "width": "40",
+        "class": "",
+        "id": ""
+      },
+      "return_format": "array"
+    },
+    {
+      "key": "field_com_museums_list_all_price",
+      "label": "Ticket price",
+      "name": "all_card_price",
+      "type": "text",
+      "wrapper": {
+        "width": "20",
+        "class": "",
+        "id": ""
+      },
+      "default_value": "3€ - 6€",
+      "maxlength": "",
+      "placeholder": ""
+    }
+  ],
+  "location": [
+    [
+      {
+        "param": "block",
+        "operator": "==",
+        "value": "acf/museums-list"
+      }
+    ]
+  ],
+  "menu_order": 0,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "hide_on_screen": "",
+  "active": true,
+  "description": "",
+  "show_in_rest": 0,
+  "modified": 1784900001
+}

@@ -1,0 +1,50 @@
+<?php
+/**
+ * Customer addresses.
+ *
+ * @package com-theme
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+$customer_id = get_current_user_id();
+$get_addresses = [
+    'billing' => __( 'Διεύθυνση χρέωσης', 'com-theme' ),
+];
+
+if ( ! wc_ship_to_billing_address_only() && wc_shipping_enabled() ) {
+    $get_addresses['shipping'] = __( 'Διεύθυνση αποστολής', 'com-theme' );
+}
+
+$get_addresses = apply_filters( 'woocommerce_my_account_get_addresses', $get_addresses, $customer_id );
+
+get_template_part( 'woocommerce/myaccount/page-title', null, [
+    'eyebrow'     => __( 'Στοιχεία αποστολής', 'com-theme' ),
+    'title'       => __( 'Διευθύνσεις', 'com-theme' ),
+    'description' => __( 'Οι διευθύνσεις αυτές χρησιμοποιούνται αυτόματα κατά την ολοκλήρωση της αγοράς.', 'com-theme' ),
+] );
+?>
+
+<div class="grid gap-15 sm:grid-cols-2">
+    <?php foreach ( $get_addresses as $name => $address_title ) :
+        $address = wc_get_account_formatted_address( $name );
+        $edit_url = wc_get_endpoint_url( 'edit-address', $name );
+    ?>
+        <article class="flex min-h-[24rem] flex-col rounded-[1.2rem] bg-ochre-light p-20 md:p-25">
+            <div class="mb-25 flex items-start justify-between gap-20">
+                <span class="flex size-40 items-center justify-center rounded-full bg-blue text-white">
+                    <svg class="size-20 fill-current" aria-hidden="true"><use xlink:href="#icon-location"></use></svg>
+                </span>
+                <a href="<?= esc_url( $edit_url ) ?>" data-barba-prevent data-account-pages="link" class="text-[1.3rem] underline underline-offset-4">
+                    <?= esc_html( $address ? __( 'Επεξεργασία', 'com-theme' ) : __( 'Προσθήκη', 'com-theme' ) ) ?>
+                </a>
+            </div>
+            <h3 class="m-0 text-[1.2rem] font-bold uppercase tracking-[.1em] text-blue-soft"><?= esc_html( $address_title ) ?></h3>
+            <address class="mt-20 text-[1.6rem] not-italic leading-[1.55]">
+                <?= $address ? wp_kses_post( $address ) : esc_html__( 'Δεν έχετε ορίσει αυτή τη διεύθυνση.', 'com-theme' ) ?>
+            </address>
+
+            <?php do_action( 'woocommerce_my_account_after_my_address', $name ); ?>
+        </article>
+    <?php endforeach; ?>
+</div>

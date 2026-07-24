@@ -22,7 +22,7 @@
     },
     {
       "key": "field_{{field-key-content}}",
-      "label": "Content",
+      "label": "Settings",
       "name": "",
       "aria-label": "",
       "type": "tab",

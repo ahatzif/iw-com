@@ -14,6 +14,7 @@ export default class extends module {
         this.items = [...this.$( 'item' )];
         this.preview = this.$( 'preview' )[0];
         this.mouse = {x:0,y:0};
+        this.y = 0;
 
         this.initBind = this.init.bind( this );
         this.onScrollBind = this.onScroll.bind( this );

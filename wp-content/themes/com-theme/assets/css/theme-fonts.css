@@ -1,102 +1,53 @@
+/*
+ * The Typekit service used to deliver this font or fonts for use on websites
+ * is provided by Adobe and is subject to these Terms of Use
+ * http://www.adobe.com/products/eulas/tou_typekit. For font license
+ * information, see the list below.
+ *
+ * tt-commons-pro:
+ *   - http://typekit.com/eulas/00000000000000007756f630
+ *   - http://typekit.com/eulas/00000000000000007756f626
+ *   - http://typekit.com/eulas/00000000000000007756f631
+ *   - http://typekit.com/eulas/00000000000000007756f61f
+ *
+ * © 2009-2025 Adobe Systems Incorporated. All Rights Reserved.
+ */
+/*{"last_published":"2025-01-29 10:34:55 UTC"}*/
+
+@import url("https://p.typekit.net/p.css?s=1&k=pzv0iuf&ht=tk&f=53549.53556.53560.53561&a=93107358&app=typekit&e=css");
+
 @font-face {
-    font-family: 'HCo Gotham SSm';
-    src:url('fonts/hco-gotham-ssm/woff2/GothamSSm-XLight_Web.woff2') format('woff2'),
-    url('fonts/hco-gotham-ssm/woff/GothamSSm-XLight_Web.woff') format('woff');
-    font-weight: 200;
-    font-style: normal;
+  font-family: "tt-commons-pro";
+  src: url("https://use.typekit.net/af/55cf35/00000000000000007756f630/30/l?primer=2c525e945db23ca903c9e53f7672c72b14fc41c424013235fbe023be98740bd1&fvd=n6&v=3") format("woff2"), url("https://use.typekit.net/af/55cf35/00000000000000007756f630/30/d?primer=2c525e945db23ca903c9e53f7672c72b14fc41c424013235fbe023be98740bd1&fvd=n6&v=3") format("woff"), url("https://use.typekit.net/af/55cf35/00000000000000007756f630/30/a?primer=2c525e945db23ca903c9e53f7672c72b14fc41c424013235fbe023be98740bd1&fvd=n6&v=3") format("opentype");
+  font-display: auto;
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: normal;
 }
 
 @font-face {
-    font-family: 'HCo Gotham SSm';
-    src:url('fonts/hco-gotham-ssm/woff2/GothamSSm-XLightItalic_Web.woff2') format('woff2'),
-    url('fonts/hco-gotham-ssm/woff/GothamSSm-XLightItalic_Web.woff') format('woff');
-    font-weight: 200;
-    font-style: italic;
+  font-family: "tt-commons-pro";
+  src: url("https://use.typekit.net/af/31a6cd/00000000000000007756f626/30/l?primer=2c525e945db23ca903c9e53f7672c72b14fc41c424013235fbe023be98740bd1&fvd=n7&v=3") format("woff2"), url("https://use.typekit.net/af/31a6cd/00000000000000007756f626/30/d?primer=2c525e945db23ca903c9e53f7672c72b14fc41c424013235fbe023be98740bd1&fvd=n7&v=3") format("woff"), url("https://use.typekit.net/af/31a6cd/00000000000000007756f626/30/a?primer=2c525e945db23ca903c9e53f7672c72b14fc41c424013235fbe023be98740bd1&fvd=n7&v=3") format("opentype");
+  font-display: auto;
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: normal;
 }
 
 @font-face {
-    font-family: 'HCo Gotham SSm';
-    src:url('fonts/hco-gotham-ssm/woff2/GothamSSm-Light_Web.woff2') format('woff2'),
-    url('fonts/hco-gotham-ssm/woff/GothamSSm-Light_Web.woff') format('woff');
-    font-weight: 300;
-    font-style: normal;
+  font-family: "tt-commons-pro";
+  src: url("https://use.typekit.net/af/402a01/00000000000000007756f631/30/l?primer=2c525e945db23ca903c9e53f7672c72b14fc41c424013235fbe023be98740bd1&fvd=n4&v=3") format("woff2"), url("https://use.typekit.net/af/402a01/00000000000000007756f631/30/d?primer=2c525e945db23ca903c9e53f7672c72b14fc41c424013235fbe023be98740bd1&fvd=n4&v=3") format("woff"), url("https://use.typekit.net/af/402a01/00000000000000007756f631/30/a?primer=2c525e945db23ca903c9e53f7672c72b14fc41c424013235fbe023be98740bd1&fvd=n4&v=3") format("opentype");
+  font-display: auto;
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
 }
 
 @font-face {
-    font-family: 'HCo Gotham SSm';
-    src:url('fonts/hco-gotham-ssm/woff2/GothamSSm-LightItalic_Web.woff2') format('woff2'),
-    url('fonts/hco-gotham-ssm/woff/GothamSSm-LightItalic_Web.woff') format('woff');
-    font-weight: 300;
-    font-style: italic;
-}
-
-@font-face {
-    font-family: 'HCo Gotham SSm';
-    src:url('fonts/hco-gotham-ssm/woff2/GothamSSm-Book_Web.woff2') format('woff2'),
-    url('fonts/hco-gotham-ssm/woff/GothamSSm-Book_Web.woff') format('woff');
-    font-weight: 400;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'HCo Gotham SSm';
-    src:url('fonts/hco-gotham-ssm/woff2/GothamSSm-BookItalic_Web.woff2') format('woff2'),
-    url('fonts/hco-gotham-ssm/woff/GothamSSm-BookItalic_Web.woff') format('woff');
-    font-weight: 400;
-    font-style: italic;
-}
-
-@font-face {
-    font-family: 'HCo Gotham SSm';
-    src:url('fonts/hco-gotham-ssm/woff2/GothamSSm-Medium_Web.woff2') format('woff2'),
-    url('fonts/hco-gotham-ssm/woff/GothamSSm-Medium_Web.woff') format('woff');
-    font-weight: 500;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'HCo Gotham SSm';
-    src:url('fonts/hco-gotham-ssm/woff2/GothamSSm-MediumItalic_Web.woff2') format('woff2'),
-    url('fonts/hco-gotham-ssm/woff/GothamSSm-MediumItalic_Web.woff') format('woff');
-    font-weight: 500;
-    font-style: italic;
-}
-
-@font-face {
-    font-family: 'HCo Gotham SSm';
-    src:url('fonts/hco-gotham-ssm/woff2/GothamSSm-Bold_Web.woff2') format('woff2'),
-    url('fonts/hco-gotham-ssm/woff/GothamSSm-Bold_Web.woff') format('woff');
-    font-weight: 700;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'HCo Gotham SSm';
-    src:url('fonts/hco-gotham-ssm/woff2/GothamSSm-BoldItalic_Web.woff2') format('woff2'),
-    url('fonts/hco-gotham-ssm/woff/GothamSSm-BoldItalic_Web.woff') format('woff');
-    font-weight: 700;
-    font-style: italic;
-}
-
-@font-face {
-    font-family: 'HCo Gotham SSm';
-    src:url('fonts/hco-gotham-ssm/woff2/GothamSSm-Black_Web.woff2') format('woff2'),
-    url('fonts/hco-gotham-ssm/woff/GothamSSm-Black_Web.woff') format('woff');
-    font-weight: 800;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'HCo Gotham SSm';
-    src:url('fonts/hco-gotham-ssm/woff2/GothamSSm-BlackItalic_Web.woff2') format('woff2'),
-    url('fonts/hco-gotham-ssm/woff/GothamSSm-BlackItalic_Web.woff') format('woff');
-    font-weight: 800;
-    font-style: italic;
-}
-@font-face {
-    font-family: 'Gotham Greek Ultra';
-    src: url("fonts/gotham/GothamGreek-Ultra.eot");
-    src: url("fonts/gotham/GothamGreek-Ultra.eot?#iefix") format("embedded-opentype"), url("fonts/gotham/GothamGreek-Ultra.woff") format("woff"), url("fonts/gotham/GothamGreek-Ultra.ttf") format("truetype"), url("fonts/gotham/GothamGreek-Ultra.svg#GothamGreek-Ultra") format("svg");
-    font-weight: normal;
-    font-style: normal;
+  font-family: "tt-commons-pro";
+  src: url("https://use.typekit.net/af/16a4f6/00000000000000007756f61f/30/l?primer=2c525e945db23ca903c9e53f7672c72b14fc41c424013235fbe023be98740bd1&fvd=n5&v=3") format("woff2"), url("https://use.typekit.net/af/16a4f6/00000000000000007756f61f/30/d?primer=2c525e945db23ca903c9e53f7672c72b14fc41c424013235fbe023be98740bd1&fvd=n5&v=3") format("woff"), url("https://use.typekit.net/af/16a4f6/00000000000000007756f61f/30/a?primer=2c525e945db23ca903c9e53f7672c72b14fc41c424013235fbe023be98740bd1&fvd=n5&v=3") format("opentype");
+  font-display: auto;
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: normal;
 }

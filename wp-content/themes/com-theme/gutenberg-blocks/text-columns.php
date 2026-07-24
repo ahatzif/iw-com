@@ -3,6 +3,10 @@
 if( ! empty( $columns = get_field( 'columns' ) ) ) {
     $wrapper = get_field( 'wrapper' );
     $numberOfColumns = get_field( 'number_of_columns' );
+    $hasWhiteBackground = get_field( 'background' ) === 'white';
+    $defaultSpacings = $hasWhiteBackground
+        ? [ 'desktop' => [ 'pt' => '100', 'pb' => '100' ] ]
+        : [ 'desktop' => [ 'mt' => '100', 'mb' => '100' ] ];
     if( $wrapper === 'small' ) {
         $numberOfColumns = "3";
     }
@@ -13,7 +17,8 @@ if( ! empty( $columns = get_field( 'columns' ) ) ) {
         $gap = "md:gap-60";
     }
 ?>
-<div class="page-wrapper <?php echo get_field( 'background' ) === 'white' ? 'py-100 bg-white' : 'my-100'; ?> ">
+<section class="<?php echo esc_attr( com_theme_block_style_classes( $hasWhiteBackground ? 'bg-white text-blue' : 'text-blue', $defaultSpacings ) ); ?>">
+<div class="<?php echo esc_attr( com_theme_block_wrapper_classes() ); ?>">
     <div class="mx-1/12 <?php if( $wrapper !== 'default' ) echo 'lg:mx-2/12';  ?>">
         <?php if( ! empty( $title = get_field( 'title' ) ) ){  ?>
         <h3 class="text-21 mb-50"><?php echo $title; ?></h3>
@@ -25,7 +30,7 @@ if( ! empty( $columns = get_field( 'columns' ) ) ) {
             $photo = $column[ 'photo' ];
 
             ?>
-            <div class="<?php echo empty( $photo) ? 'border-t border-t-[1px] border-t-black pt-20' : ''; ?> space-y-20" >
+            <div class="<?php echo empty( $photo) ? 'border-t border-t-[1px] border-t-current pt-20' : ''; ?> space-y-20" >
                 <?php if( ! empty( $photo ) ) { ?>
                 <div class="relative aspect-[0.9523809524]">
                     <?php if( ! empty( $link) ) { ?><a href="<?php echo $link[ 'url' ]; ?>" target="<?php echo $link['target'] ?>"><?php } ?>
@@ -42,7 +47,7 @@ if( ! empty( $columns = get_field( 'columns' ) ) ) {
                 <?php } ?>
                 <?php if( ! empty( $link = $column[ 'link' ] ) ) { ?>
                 <div>
-                    <a href="<?php echo $link[ 'url' ]; ?>" target="<?php echo $link['target'] ?>" class="text-blue font-bold text-12 leading-[1.3333333333]"><?php echo com\theme::remove_accents( $link[ 'title' ] ); ?></a>
+                    <a href="<?php echo $link[ 'url' ]; ?>" target="<?php echo $link['target'] ?>" class="text-current font-bold text-12 leading-[1.3333333333]"><?php echo com\theme::remove_accents( $link[ 'title' ] ); ?></a>
                 </div>
                 <?php } ?>
             </div>
@@ -50,4 +55,5 @@ if( ! empty( $columns = get_field( 'columns' ) ) ) {
         </div>
     </div>
 </div>
+</section>
 <?php }

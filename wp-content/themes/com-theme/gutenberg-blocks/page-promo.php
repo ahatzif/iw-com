@@ -14,7 +14,8 @@ if( ! empty( $page ) ) {
     if( empty( $linkText ) ) $linkText = $page->post_title;
     ?>
 
-    <div class="page-wrapper">
+    <section class="<?php echo esc_attr( com_theme_block_style_classes( 'text-blue' ) ); ?>">
+    <div class="<?php echo esc_attr( com_theme_block_wrapper_classes() ); ?>">
         <div class="bg-white py-100">
             <div class="md:flex" style="background-color: <?php echo $background; ?>">
                 <div class="mx-1/12 md:mx-0 md:w-5/12 <?php echo $imagePosition === 'right' ? 'order-first md:order-last' : 'md:ml-1/12'; ?>">
@@ -30,12 +31,13 @@ if( ! empty( $page ) ) {
                         <?php if( ! empty( $title = get_field( 'title' ) ) ) { ?>
                             <h2 class="text-42 font-heading leading-[1.1904761905]"><a href="<?php echo get_permalink( $page ); ?>"><?php echo $title; ?></a></h2>
                         <?php } ?>
-                        <a class="text-blue font-bold hover:underline text-14 leading-[1.4285714286]" href="<?php echo get_permalink( $page ); ?>"><?php echo com\theme::remove_accents( $linkText ); ?></a>
+                        <a class="text-current font-bold hover:underline text-14 leading-[1.4285714286]" href="<?php echo get_permalink( $page ); ?>"><?php echo com\theme::remove_accents( $linkText ); ?></a>
                     </div>
                     <div class="absolute md:top-0 md:h-full md:w-20 <?php echo $imagePosition === 'right' ? 'left-0' : 'right-0'; ?>" style="background-color: <?php echo $background; ?>"></div>
                 </div>
             </div>
         </div>
     </div>
+    </section>
 
 <?php }

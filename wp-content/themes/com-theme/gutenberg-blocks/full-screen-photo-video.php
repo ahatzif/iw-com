@@ -1,7 +1,7 @@
 <?php // Title: Fullscreen Photo / Video
 if( ! empty( $video = get_field( 'video' ) ) || ! empty( $photo = get_field( 'photo') ) ){
 ?>
-    <div class="bg-brown text-white relative" data-module-vh >
+    <section class="<?php echo esc_attr( com_theme_block_style_classes( 'bg-blue text-white', [] ) ); ?> relative" data-module-vh >
         <?php if( ! empty( $video ) ) { ?>
         <video src="<?php echo $video; ?>" muted autoplay loop class="absolute top-0 left-0 object-cover w-full h-full"></video>
         <?php } else if( ! empty( $photo ) ) {
@@ -17,7 +17,7 @@ if( ! empty( $video = get_field( 'video' ) ) || ! empty( $photo = get_field( 'ph
                     <h1 class="text-72 text-center font-heading text-center w-full"><?php echo $title; ?></h1>
                     <?php } ?>
                     <?php if( ! empty( $text = get_field( 'text' ) ) ) { ?>
-                        <p class="text-21 mt-20 font-light prose text-white max-w-[780px] mx-auto"><?php echo $text; ?></p>
+                        <p class="text-21 mt-20 font-light prose text-current max-w-[780px] mx-auto"><?php echo $text; ?></p>
                     <?php } ?>
                     <?php if( ! empty( $link = get_field( 'link' ) ) ) { ?>
                         <div class="mt-50">
@@ -27,5 +27,5 @@ if( ! empty( $video = get_field( 'video' ) ) || ! empty( $photo = get_field( 'ph
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 <?php }

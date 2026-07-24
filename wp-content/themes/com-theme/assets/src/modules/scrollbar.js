@@ -6,7 +6,8 @@ Scrollbar.detachStyle();
 
 export default class extends module {
     constructor(m) {
-        super(m);
+        super( m );
+        
     }
 
     init() {
@@ -30,4 +31,19 @@ export default class extends module {
     }
 
     destroy(){}
+
+    scrollIntoView( el ){
+        const bounding = el.getBoundingClientRect();
+        const currentScroll = this.scrollBar.offset.y;
+        const offsetTop = bounding.top  + currentScroll - this.el.getBoundingClientRect().top;
+        this.scrollBar.scrollTo(0, offsetTop, 300);
+    }
+
+    scrollTop( duration = 0 ){
+        this.scrollBar.scrollTo(0, 0, duration );
+    }
+
+    scrollBottom( duration = 0 ){
+        this.scrollBar.scrollTo( 0, this.scrollBar.limit.y, duration );
+    }
 }

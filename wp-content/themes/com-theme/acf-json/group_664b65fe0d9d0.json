@@ -21,6 +21,24 @@
             "esc_html": 0
         },
         {
+            "key": "field_664b65fe0d9d0_block_title_settings_tab",
+            "label": "Settings",
+            "name": "",
+            "aria-label": "",
+            "type": "tab",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "placement": "top",
+            "endpoint": 0,
+            "selected": 0
+        },
+        {
             "key": "field_664b6664c06ca",
             "label": "Buttons",
             "name": "buttons",
@@ -120,5 +138,5 @@
     "acfe_form": 0,
     "acfe_meta": "",
     "acfe_note": "",
-    "modified": 1784892491
+    "modified": 1784896243
 }

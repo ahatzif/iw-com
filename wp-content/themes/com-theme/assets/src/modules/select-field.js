@@ -1,5 +1,6 @@
 import { module } from 'modujs';
 import Emitter from "tiny-emitter/instance";
+import infoPopup from "./info-popup.js";
 
 
 export default class extends module {
@@ -9,6 +10,7 @@ export default class extends module {
         this.events = { click: { 'option': 'onSelect' }, mouseenter: { 'option': 'onMouseEnter' } };
         this.select = this.el.querySelector( 'select' );
         this.isMultiple = this.select.multiple;
+
 
 
 
@@ -50,7 +52,10 @@ export default class extends module {
 
         new ResizeObserver(() => { this.setHeight() }).observe(this.el);
 
-
+        this.optionClone = this.$( 'option-clone' )[0];
+        if( this.optionClone ){
+            this.optionClone = this.optionClone.firstElementChild;
+        }
     }
 
     formReset( e ){
@@ -125,11 +130,14 @@ export default class extends module {
     }
 
     onChange(e){
-        this.select.dispatchEvent( new Event('change') );
+        this.select.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
     }
 
 
     onSelect( e, triggerChange = true ) {
+        if( this.input ){
+            this.input.value = '';
+        }
         if( ! this.isMultiple ) {
             if( e.currentTarget && e.currentTarget.dataset.text){
                 this.$( 'placeholder' )[0].textContent = e.currentTarget.dataset.text;
@@ -292,8 +300,75 @@ export default class extends module {
 
 
 
+    updateOptions(optionsObj = {}, valueOrValues = null, triggerChange = true) {
+
+
+
+        let optionsContainer = this.$('options')[0];
+        const optionsContainerScrollContent = optionsContainer.querySelector( '.scroll-content'  );
+        if( optionsContainerScrollContent ) optionsContainer = optionsContainerScrollContent;
+        if (optionsContainer) {
+            optionsContainer.innerHTML = '';
+        }
+        this.select.innerHTML = '';
+
+
+
+
+        Object.entries(optionsObj).forEach(([value, label]) => {
+            const nativeOpt = document.createElement('option');
+            nativeOpt.value = value;
+            nativeOpt.textContent = label;
+            this.select.append(nativeOpt);
+            // Custom option node (same structure as existing ones)
+            const customOpt = this.optionClone.cloneNode( true );
+            customOpt.dataset.value = value;
+            customOpt.dataset.text = label;
+            customOpt.querySelector( '[data-label]' ).textContent = label;
+            optionsContainer.append(customOpt);
+            // Bind interactions
+            customOpt.addEventListener('click', this.onSelect.bind(this));
+            customOpt.addEventListener('mouseenter', this.onMouseEnter.bind(this));
+        });
+
+
+        if (this.isMultiple) {
+            this.clearAllSelections();
+        } else {
+            this.selected = null;
+            if (this.placeholder) {
+                this.placeholder.textContent = this.placeholder.dataset.placeholderDefaultText || '';
+            }
+        }
+
+
+        if (this.maxOptions) {
+            this.onResize();
+        } else {
+            this.setHeight();
+        }
+
+
+        if (valueOrValues !== null) {
+            this.setValue(valueOrValues, triggerChange);
+        }
+
+        if (triggerChange && valueOrValues === null) {
+            this.onChange();
+        }
+    }
+
+
+
+
     destroy(){
         window.removeEventListener( 'resize', this.onResizeBind );
+    }
+
+
+    expandChildren( e ){
+        e.stopPropagation();
+        let parentId = e.target.id;
     }
 
 }

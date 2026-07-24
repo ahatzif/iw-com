@@ -7,12 +7,17 @@ export default class LayoutController extends module {
         document.addEventListener('keydown', (event) => this.handleKeydown(event));
     }
 
+    init() {
+        document.body.classList.toggle('show-layout-grid', Cookies.get('layout-grid') === 'true');
+        document.body.classList.toggle('hide-admin-bar', Cookies.get('hide-admin-bar') === 'true');
+    }
+
     handleKeydown(event) {
         const isMetaOrCtrlPressed = event.metaKey || event.ctrlKey;
         if (isMetaOrCtrlPressed) {
             switch (event.code) {
-                case 'Slash': this.toggleLayoutGrid(); break;
-                case 'KeyB': this.toggleAdminBar(); break;
+                case 'Slash': event.preventDefault(); this.toggleLayoutGrid(); break;
+                case 'KeyB': event.preventDefault(); this.toggleAdminBar(); break;
                 default: break;
             }
         }

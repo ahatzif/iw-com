@@ -3,7 +3,7 @@
 if( ! empty( $video = get_field( 'video' ) ) ){
 ?>
 
-<div class="bg-paper text-white relative" data-module-vh data-module-hero-video>
+<section class="<?php echo esc_attr( com_theme_block_style_classes( 'text-white', [] ) ); ?> relative" data-module-vh data-module-hero-video>
     <video data-hero-video="video" data-src="<?php echo $video; ?>" <?php if( ! empty( $mobileSrc = get_field( 'mobile_video') ) ) echo 'data-mobile-src'; ?> muted autoplay loop class="object-cover w-full h-full"></video>
 
     <?php if( ! empty( $title = get_field( 'title' ) ) ) { ?>
@@ -16,5 +16,5 @@ if( ! empty( $video = get_field( 'video' ) ) ){
         </div>
     <?php } ?>
     <div data-main-menu-trigger class="h-header-height absolute bottom-0 left-0 w-full text-base-heading"></div>
-</div>
+</section>
 <?php }

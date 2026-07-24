@@ -1,6 +1,7 @@
 <?php // Title: Photo And Text ?>
 
-<div class="page-wrapper my-100">
+<section class="<?php echo esc_attr( com_theme_block_style_classes() ); ?>">
+<div class="<?php echo esc_attr( com_theme_block_wrapper_classes() ); ?>">
     <div class="mx-1/12 md:mx-2/12 md:w-8/12">
         <div class="flex flex-wrap">
             <?php if( ! empty( $image = get_field( 'image' ) ) ) {?>
@@ -19,5 +20,5 @@
         </div>
     </div>
 </div>
-
+</section>
 

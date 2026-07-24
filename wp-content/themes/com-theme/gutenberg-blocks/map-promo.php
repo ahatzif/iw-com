@@ -6,8 +6,9 @@ $promo = get_field( 'promo' );
 $imagePosition = $promo[ 'iframe_position' ];
 ?>
 
-<div class="page-wrapper my-100">
-    <div class="bg-white mx-1/12">
+<section class="<?php echo esc_attr( com_theme_block_style_classes() ); ?>">
+<div class="<?php echo esc_attr( com_theme_block_wrapper_classes() ); ?>">
+    <div class="mx-1/12">
         <div class="sm:flex">
             <div class="sm:w-5/12 <?php echo $imagePosition === 'right' ? 'order-first sm:order-last sm:ml-1/12' : 'sm:mr-1/12' ?>">
                 <div class="aspect-[1.5] bg-black bg-opacity-10 grayscale">
@@ -28,3 +29,4 @@ $imagePosition = $promo[ 'iframe_position' ];
         </div>
     </div>
 </div>
+</section>

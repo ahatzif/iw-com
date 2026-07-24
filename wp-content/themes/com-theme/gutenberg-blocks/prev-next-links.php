@@ -10,9 +10,10 @@ if (is_singular())
     $custom_post_type = get_post_type();
     $labels = get_post_type_labels(get_post_type_object($custom_post_type));
 ?>
-    <div class="page-wrapper my-100">
+    <section class="<?php echo esc_attr( com_theme_block_style_classes( 'text-blue', [ 'desktop' => [ 'mt' => '100', 'mb' => '100' ] ] ) ); ?>">
+    <div class="<?php echo esc_attr( com_theme_block_wrapper_classes() ); ?>">
         <div class="px-1/12">
-            <div class="flex gap-[70px] justify-between md:justify-center text-blue leading-[1.42857143] font-semibold uppercase text-14">
+            <div class="flex gap-[70px] justify-between md:justify-center text-current leading-[1.42857143] font-semibold uppercase text-14">
                 <?php if ($prevPost)
                 { ?>
                     <a class="hover:underline" href="<?php echo $prevPost ?>"><?php _e('Previous ' . $labels->singular_name, 'com-theme'); ?></a>
@@ -32,4 +33,5 @@ if (is_singular())
             </div>
         </div>
     </div>
+    </section>
 <?php } ?>

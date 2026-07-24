@@ -2,7 +2,8 @@
 
 if( ! empty( $slides = get_field( 'slides' )  ) ) {
 ?>
-<div class="page-wrapper my-100" data-module-swiper>
+<section class="<?php echo esc_attr( com_theme_block_style_classes() ); ?>">
+<div class="<?php echo esc_attr( com_theme_block_wrapper_classes() ); ?>" data-module-swiper>
     <div class="mx-1/12">
     <?php if( ! empty( $title = get_field( 'title' ) ) ) { ?>
         <h2 class="text-21 leading-[1.4285714286] mb-50"><?php echo $title;?></h2>
@@ -23,7 +24,7 @@ if( ! empty( $slides = get_field( 'slides' )  ) ) {
                     <?php } ?>
                     <?php if( ! empty( $linkText = $slide[ 'link_text' ] ) ) { ?>
                         <div class="mt-30">
-                            <a class="text-blue font-bold text-14 leading-none" target="<?php echo $link['target'] ?>"  href="<?php echo $link['url']; ?>"><?php echo $linkText; ?></a>
+                            <a class="text-current font-bold text-14 leading-none" target="<?php echo $link['target'] ?>"  href="<?php echo $link['url']; ?>"><?php echo $linkText; ?></a>
                         </div>
                     <?php } ?>
                 </div>
@@ -42,4 +43,5 @@ if( ! empty( $slides = get_field( 'slides' )  ) ) {
     </div>
 
 </div>
+</section>
 <?php }

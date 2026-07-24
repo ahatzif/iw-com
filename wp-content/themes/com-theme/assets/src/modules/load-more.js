@@ -2,7 +2,6 @@ import { module } from 'modujs';
 import axios from 'axios';
 import Ukiyo from "ukiyojs";
 import LazyLoad from "vanilla-lazyload";
-import { Load } from "./_all.js";
 
 export default class extends module {
     constructor(m) {
@@ -12,7 +11,6 @@ export default class extends module {
         this.maxNumPages = parseInt( this.el.dataset.maxNumPages );
         this.text = this.el.textContent;
         this.loadingText = this.el.dataset.loadingText;
-
 
 
         this.el.addEventListener( 'click', (e) => {
@@ -41,10 +39,14 @@ export default class extends module {
                 this.el.parentNode.classList.remove( 'loading' );
                 this.el.textContent = this.text;
                 this.el.parentNode.classList.toggle( 'hidden', this.page === this.maxNumPages );
+
+
                 this.call('update', false, 'Scroll');
                 this.call('updateLazy', false, 'Scroll');
                 this.call( 'addParallaxImages', this.target.querySelectorAll(".ajax-loaded [data-parallax]"), 'Scroll' );
+
                 newDivs.forEach( div => div.classList.remove( 'ajax-loaded' ) ) ;
+
             });
         });
     }
@@ -53,23 +55,6 @@ export default class extends module {
         this.page = 0;
         this.el.href = href;
         this.el.click();
-    }
-
-
-    setState( state = { } ){
-        if( state.page ){
-            this.page = state.page;
-        }
-        if( state.html ){
-            this.target.innerHTML = state.html;
-            this.call('updateLazy', false, 'Scroll');
-            this.call( 'addParallaxImages', this.target.querySelectorAll("[data-parallax]"), 'Scroll' );
-            this.call('update', false, 'Scroll');
-        }
-    }
-
-    init(){
-
     }
 
 }

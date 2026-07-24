@@ -63,12 +63,12 @@ add_action( 'init', function() {
 add_action( 'wp_enqueue_scripts', function() {
     wp_add_inline_script( 'jquery-migrate', 'jQuery.migrateMute = true;' );
     wp_dequeue_style('wp-block-library');
-    wp_enqueue_style( 'google-fonts-css', get_theme_file_uri( '/assets/css/google-fonts.css' ) );
-    wp_enqueue_style( 'theme-fonts-css', get_theme_file_uri( '/assets/css/theme-fonts.css' ) );
-    wp_enqueue_style( 'tailwind-css', get_theme_file_uri( '/assets/css/tailwind.css' ) );
-    wp_enqueue_style( 'swiper-css', get_theme_file_uri( '/assets/css/swiper.css' ) );
-    wp_enqueue_style('fancybox-css', get_theme_file_uri('/assets/css/fancybox.css'));
-    wp_enqueue_script( 'index-js', get_theme_file_uri( '/assets/js/index.js' ), array( ), '1.0', true );
+    wp_enqueue_style( 'google-fonts-css', get_theme_file_uri( '/assets/css/google-fonts.css' ), [], com_theme_asset_version( 'assets/css/google-fonts.css' ) );
+    wp_enqueue_style( 'theme-fonts-css', get_theme_file_uri( '/assets/css/theme-fonts.css' ), [], com_theme_asset_version( 'assets/css/theme-fonts.css' ) );
+    wp_enqueue_style( 'tailwind-css', get_theme_file_uri( '/assets/css/tailwind.css' ), [], com_theme_asset_version( 'assets/css/tailwind.css' ) );
+    wp_enqueue_style( 'swiper-css', get_theme_file_uri( '/assets/css/swiper.css' ), [], com_theme_asset_version( 'assets/css/swiper.css' ) );
+    wp_enqueue_style( 'fancybox-css', get_theme_file_uri( '/assets/css/fancybox.css' ), [], com_theme_asset_version( 'assets/css/fancybox.css' ) );
+    wp_enqueue_script( 'index-js', get_theme_file_uri( '/assets/js/index.js' ), [], com_theme_asset_version( 'assets/js/index.js' ), true );
     wp_localize_script( 'index-js', 'THEME_OBJ', ['homeURL' => home_url(), 'ajaxURL' => admin_url( 'admin-ajax.php' )]);
     wp_localize_script( 'index-js', 'FORM_MESSAGES', [
         'fieldRequired' => __( 'Το πεδίο είναι υποχρεωτικό', 'com-theme' ),
@@ -93,6 +93,7 @@ add_action( 'after_setup_theme', function() {
     add_theme_support( 'post-thumbnails' );
     add_theme_support( 'html5', [ 'script', 'style' ] );
     add_theme_support( 'title-tag' );
+    add_theme_support( 'woocommerce' );
 });
 
 
@@ -176,12 +177,26 @@ add_filter('body_class', function ($classes) {
 
     $id = is_tax() ? get_queried_object() : get_the_ID();
 
-    if( ! empty( $pageColor = get_field('page_background', $id) ) ) {
-        $classes[] = 'bg-' . $pageColor;
+    if ( function_exists( 'com_theme_page_background_class' ) ) {
+        $page_background_class = com_theme_page_background_class( $id );
+
+        if ( $page_background_class !== '' ) {
+            $classes[] = $page_background_class;
+        }
     }
 
-    if( ! empty( get_field('white_header', $id) ) ) {
-        $classes[] = 'white-header text-white';
+    if ( function_exists( 'com_theme_field_value' ) && com_theme_field_value( 'white_header', $id, false ) ) {
+        $classes[] = 'white-header';
+        $classes[] = 'text-white';
+    }
+
+    if ( function_exists( 'com_theme_hide_breadcrumb' ) && com_theme_hide_breadcrumb( $id ) ) {
+        $classes[] = 'hide-breadcrumb';
+    }
+
+    if ( function_exists( 'com_theme_is_purchase_flow' ) && com_theme_is_purchase_flow() ) {
+        $classes[] = 'is-woocommerce-page';
+        $classes[] = 'com-purchase-flow';
     }
 
     return $classes;

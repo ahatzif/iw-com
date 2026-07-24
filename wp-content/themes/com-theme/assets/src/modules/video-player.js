@@ -14,7 +14,10 @@ gsap.registerPlugin(Draggable);
 export default class extends module {
     constructor(m) {
         super(m);
-        this.events = { click: { 'toggle-play': 'togglePlay', 'full-screen' : 'fullScreen', 'volume' : 'toggleVolume', 'set-current-time': 'setCurrentTime' } };
+        this.events = { click: { 'toggle-play': 'togglePlay', 'full-screen' : 'fullScreen', 'volume' : 'toggleVolume', 'set-current-time': 'setCurrentTime','progress-indicator': 'seekAudio', },
+        mousedown: {
+            button: 'startDrag',
+        } };
 
         this.video = this.$('video')[0];
         this.isPlaying = this.video.autoplay;
@@ -22,6 +25,7 @@ export default class extends module {
         this.progressBar = this.$('progress-bar')[0];
         this.time = this.$('time')[0];
         let that = this;
+
         this.fillProgressBarBind = this.fillProgressBar.bind( this );
         this.onResizeBind = this.onResize.bind( this );
 
@@ -37,43 +41,50 @@ export default class extends module {
         this.el.addEventListener( 'mouseleave', this.mouseLeave.bind( this ) );
 
 
-        if( this.progressHandle ){
+        // if( this.progressHandle ){
 
-            Draggable.create( this.progressHandle, {
-                type: "x",
-                bounds: this.progressHandle.parentNode,
-                onDragStart : function() {
-                    that.video.removeEventListener( 'timeupdate', this.fillProgressBarBind );
-                    if( that.isPlaying ) that.video.pause();
-                },
-                onDrag : function() {
-                    that.video.currentTime = that.video.duration * this.endX / this.maxX;
-                    that.setProgress();
-                },
-                onDragEnd : function ( ){
-                    that.video.addEventListener( 'timeupdate', this.fillProgressBarBind );
-                    if( that.isPlaying ) that.video.play();
-                }
-            } );
+        //     Draggable.create( this.progressHandle, {
+        //         type: "x",
+        //         bounds: this.progressHandle.parentNode,
+        //         onDragStart : function() {
+        //             that.video.removeEventListener( 'timeupdate', this.fillProgressBarBind );
+        //             if( that.isPlaying ) that.video.pause();
+        //         },
+        //         onDrag : function() {
+        //             that.video.currentTime = that.video.duration * this.endX / this.maxX;
+        //             that.setProgress();
+        //         },
+        //         onDragEnd : function ( ){
+        //             that.video.addEventListener( 'timeupdate', this.fillProgressBarBind );
+        //             if( that.isPlaying ) that.video.play();
+        //         }
+        //     } );
 
-            this.draggable = Draggable.get( this.progressHandle );
+        //     this.draggable = Draggable.get( this.progressHandle );
 
-            this.video.addEventListener( 'timeupdate', this.fillProgressBarBind );
-            window.addEventListener( 'resize', this.onResizeBind );
+        //     this.video.addEventListener( 'timeupdate', this.fillProgressBarBind );
+        //     window.addEventListener( 'resize', this.onResizeBind );
 
-        }
+        // }
 
 
 
         this.video.addEventListener( 'ended', this.videoEnded.bind( this )  );
         this.onPauseAllVideosBind = this.onPauseAllVideos.bind( this );
         Emitter.on('pause-all-videos', this.onPauseAllVideosBind );
-
-
-
+        this.progressIndicator = this.$('progress-indicator')[0];
+        this.progressButton = this.$('button')[0];
+        if(this.progressIndicator !== undefined){
+            this.progressBarSecond = this.progressIndicator.parentElement;
+        }
+        this.currentTimeElement = this.$('current-time')[0];
+        this.durationElement = this.$('duration')[0];
+        this.video.addEventListener('timeupdate', () => this.updateTime());
+        this.video.addEventListener('loadedmetadata', () => this.updateDuration());
+        this.updateDuration();
     }
 
-    setProgress(){
+    setProgress() {
         let progress = this.video.currentTime / this.video.duration;
         gsap.set( this.progressBar, { x: progress * 100 + '%' } );
     }
@@ -96,7 +107,6 @@ export default class extends module {
         this.resizeTimeout = setTimeout( ()=>{
             this.draggable.applyBounds();
             this.fillProgressBar();
-            console.info('+');
         },100)
 
     }
@@ -154,6 +164,11 @@ export default class extends module {
         this.el.classList.toggle('playing', this.isPlaying );
         this.el.classList.toggle('paused', !this.isPlaying );
         this.isPlaying ? Emitter.emit('pause-all-videos', this.video ) : false;
+
+        if(this.isPlaying){
+            this.el.classList.remove('waiting');
+        }
+
     }
 
 
@@ -213,6 +228,55 @@ export default class extends module {
         this.isPlaying = false;
     }
 
+
+    formatTime(seconds) {
+        if (!seconds || isNaN(seconds)) return '00:00';
+        return `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${Math.floor(seconds % 60).toString().padStart(2, '0')}`;
+    }
+
+    updateTime() {
+        if(!this.currentTimeElement) return;
+        this.currentTimeElement.textContent = this.formatTime(this.video.currentTime);
+        const progress = (this.video.currentTime / this.video.duration) * 100;
+        this.progressIndicator.style.width = `${progress}%`;
+    }
+
+    updateDuration() {
+        if (this.video.duration && this.durationElement) {
+            this.durationElement.textContent = this.formatTime(this.video.duration);
+        }
+    }
+
+    seekAudio(event) {
+        const rect = this.progressBarSecond.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const percentage = clickX / rect.width;
+        this.video.currentTime = this.video.duration * percentage;
+        this.updateTime();
+    }
+
+    startDrag(event) {
+        event.preventDefault();
+        this.isDragging = true;
+        window.addEventListener('mousemove', this.dragMove);
+        window.addEventListener('mouseup', this.stopDrag);
+    }
+
+    dragMove = (event) => {
+        if (!this.isDragging) return;
+        const rect = this.progressBarSecond.getBoundingClientRect();
+        const moveX = event.clientX - rect.left;
+        let percentage = moveX / rect.width;
+        percentage = Math.min(Math.max(percentage, 0), 1);
+        this.video.currentTime = this.video.duration * percentage;
+        this.updateTime();
+    };
+
+    stopDrag = () => {
+        this.isDragging = false;
+        window.removeEventListener('mousemove', this.dragMove);
+        window.removeEventListener('mouseup', this.stopDrag);
+    };
 
     destroy(){
         window.removeEventListener( 'resize', this.onResizeBind );

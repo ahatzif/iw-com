@@ -21,10 +21,10 @@ if ($allowMultiple && !empty($filters)) {
                     'tag' => 'a',
                     'link' => '' . get_permalink($parentPage) . '',
                     'attrs' => 'data-barba-prevent data-load-more-filters="' . ($allowMultiple ? 'clear' : 'button') . '"',
-                    'classes' => 'slide [&.active]:bg-dark-blue [&.active]:text-white ' . ($allIsActive ? 'active' : ''),
+                    'classes' => 'slide [&.active]:bg-blue [&.active]:text-white ' . ($allIsActive ? 'active' : ''),
                     'text' => __('ΟΛΑ', 'com-theme'),
                     'outline' => true,
-                    'color' => 'dark-blue',
+                    'color' => 'blue',
                     'size' => 'small',
                     'hover' => false
                 ]);
@@ -40,7 +40,7 @@ if ($allowMultiple && !empty($filters)) {
                         'tag' => 'a',
                         'link' => '' . get_term_link($term) . '',
                         'attrs' => 'data-barba-prevent data-load-more-filters="button" data-name="' . esc_attr($term->name) . '" data-id="' . $term->term_id . '" data-slug="' . $term->slug . '"',
-                        'classes' => 'slide  [&.active]:bg-dark-blue [&.active]:text-white ' . ($termIsActive ? 'active' : ''),
+                        'classes' => 'slide  [&.active]:bg-blue [&.active]:text-white ' . ($termIsActive ? 'active' : ''),
                         'text' => $term->name,
                         'outline' => true,
                         'size' => 'small',
@@ -51,7 +51,7 @@ if ($allowMultiple && !empty($filters)) {
         </div>
 
         <?php if ($allowMultiple) { ?>
-            <div class="text-button-small text-dark-blue md:space-x-20 hidden [&.active]:block md:[&.active]:flex <?php if (!empty($filters)) echo 'active'; ?>" data-load-more-filters="pills-outer">
+            <div class="text-button-small text-blue md:space-x-20 hidden [&.active]:block md:[&.active]:flex <?php if (!empty($filters)) echo 'active'; ?>" data-load-more-filters="pills-outer">
                 <div class="shrink-0"><?php _e('ΕΧΕΤΕ ΕΠΙΛΕΞΕΙ', 'com-theme'); ?>:</div>
                 <div data-load-more-filters="pills" class="flex flex-wrap">
                     <?php if( ! empty( $filters) ) { foreach ( $filters[ 'terms' ] as $term  ) { ?>

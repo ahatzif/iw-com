@@ -16,14 +16,15 @@ $hasFormMessages = false;
 if (!empty($formID)) {
     $formConfig = get_post_meta($formID, '_form_config', true);
     $formConfig = json_decode($formConfig); ?>
-    <div class="page-wrapper my-[7.3rem]">
+    <section class="<?php echo esc_attr( com_theme_block_style_classes( 'text-blue', [ 'desktop' => [ 'mt' => '80', 'mb' => '80' ] ] ) ); ?>">
+    <div class="<?php echo esc_attr( com_theme_block_wrapper_classes() ); ?>">
         <div class="flex flex-gap-20 flex-wrap">
             <div class="w-full  md:w-10/12 lg:w-5/12 md:ml-1/12 space-y-40 mb-50 lg:pr-[4.3rem] prose">
                 <?php if (!empty($title = get_field('title'))) { ?>
-                    <div class="text-m-text text-dark-blue"><?php echo $title; ?></div>
+                    <div class="text-m-text text-current"><?php echo $title; ?></div>
                 <?php } ?>
                 <?php if (!empty($text = get_field('text'))) { ?>
-                    <div class="text-s-text-regular text-grey prose-p:mb-[1.6rem] prose-strong:text-grey prose-strong:font-bold prose-a:text-grey prose-a:underline"><?php echo $text; ?></div>
+                    <div class="text-s-text-regular text-current prose-p:mb-[1.6rem] prose-strong:text-current prose-strong:font-bold prose-a:text-current prose-a:underline"><?php echo $text; ?></div>
                 <?php } ?>
             </div>
             <form action="<?php echo admin_url('admin-ajax.php'); ?>" data-module-form enctype="multipart/form-data" class="w-full md:w-10/12 md:ml-1/12 lg:ml-0 lg:w-5/12 xl:pl-[6.3rem] group form peer [&.loading]:cursor-wait"  data-reset-on-success="true">
@@ -55,4 +56,5 @@ if (!empty($formID)) {
             </form>
         </div>
     </div>
+    </section>
 <?php }

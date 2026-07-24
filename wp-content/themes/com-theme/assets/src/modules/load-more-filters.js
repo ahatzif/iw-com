@@ -6,38 +6,46 @@ export default class extends module {
     constructor(m) {
         super(m);
         this.isMultiple = this.el.dataset.multiple === 'true';
-        this.events = { click: { 'clear': 'clear', 'button': 'setFilters', 'pills': 'pillClick' } };
+        this.events = { click: { 'button': 'setFilters', 'pills': 'pillClick', 'clear': 'clear' } };
         this.target = document.querySelector(this.el.dataset.target);
         this.href = this.el.dataset.href;
         this.clearButton = this.$('clear')[0];
         this.pillsContainer = this.$('pills')[0];
         this.pillsContainerOuter = this.$('pills-outer')[0];
 
-        this.searchForm();
-
     }
 
     clear(e) {
         e.preventDefault();
-        let link = e.currentTarget;
-        [...this.el.querySelectorAll('[data-load-more-filters="button"].active')].forEach(el => {
-            el.classList.remove('active');
-        });
+        [...this.el.querySelectorAll('[data-load-more-filters="button"].active')].forEach(el => el.classList.remove('active'));
         this.clearButton.classList.add('active');
-        this.pillsContainerOuter.classList.remove('active');
+        if (this.pillsContainerOuter) this.pillsContainerOuter.classList.remove('active');
         this.createPills([]);
         this.target.classList.add('animate-loading-low');
-        link.classList.add('loading');
-        axios.get(this.href).then(response => this.updateDOM(response, link ));
-        window.history.pushState({ page: 'somePage' }, 'Title', this.href);
+        window.history.pushState({}, '', this.href);
+        axios.get(this.href).then(response => this.updateDOM(response));
+    }
+    createPills(pills) {
+        if (!this.pillsContainer) return;
+        this.pillsContainer.innerHTML = '';
+        pills.forEach(pill => {
+            let pillDiv = document.createElement('div');
+            pillDiv.innerHTML = `<div class="bg-ochre-light rounded-20 text-H8 md:text-H7 text-dark px-[1.7rem] py-[.8rem] flex items-center"><svg class="size-[.8rem] shrink-0 mr-10 fill-current cursor-pointer" data-id="${pill.id}" data-remove><use xlink:href="#icon-clear-filter"></use></svg>${pill.name}</div>`;
+            this.pillsContainer.append(pillDiv);
+        });
+    }
+
+    pillClick(e) {
+        let target = this.el.querySelector('[data-load-more-filters="button"][data-id="' + e.target.dataset.id + '"].active')
+        if (target) target.click();
     }
 
     setFilters(e) {
         e.preventDefault();
         let link = e.currentTarget;
         let newURL;
-        link.classList.add('loading');
         if (!this.isMultiple) {
+            link.classList.add('loading');
             this.el.classList.add('pointer-events-none');
             newURL = link.href;
         } else {
@@ -52,25 +60,33 @@ export default class extends module {
             this.clearButton.classList.toggle('active', this.slugs.length === 0);
             this.pillsContainerOuter.classList.toggle('active', this.slugs.length > 0);
             newURL = this.href;
+
             if (this.slugs.length > 0) {
-                newURL += this.slugs.join('/') + '/';
+                const filtersByTax = {};
+
+                [...this.el.querySelectorAll('[data-load-more-filters="button"].active')].forEach(el => {
+                    const taxonomy = el.dataset.taxonomy;
+                    if (!filtersByTax[taxonomy]) filtersByTax[taxonomy] = [];
+                    filtersByTax[taxonomy].push(el.dataset.slug);
+                });
+
+                Object.keys(filtersByTax).forEach(tax => newURL += tax + '/' + filtersByTax[tax].join(',') + '/');
             }
+
 
             this.createPills(this.pills);
         }
-
         window.history.pushState({ page: 'somePage' }, 'Title', newURL);
         axios.get(newURL).then(response => this.updateDOM(response, link));
     }
-
     updateDOM(response, link = false) {
-        link.classList.remove('loading');
         if (!this.isMultiple && link) {
-            link.parentNode.querySelector('.active').classList.remove('active');
+            const activeLink = link.parentNode.querySelector('.active');
+            if (activeLink) activeLink.classList.remove('active');
+            link.classList.remove('loading');
             link.classList.add('active');
         }
         this.target.classList.remove('animate-loading-low');
-
         let doc = document.createElement("div");
         doc.innerHTML = response.data;
         doc.innerHTML = doc.querySelector(this.el.dataset.target).innerHTML;
@@ -88,48 +104,4 @@ export default class extends module {
         newDivs.forEach(div => div.classList.remove('ajax-loaded'));
         this.el.classList.remove('pointer-events-none');
     }
-
-    createPills(pills) {
-        this.pillsContainer.innerHTML = '';
-        pills.forEach(pill => {
-            let pillDiv = document.createElement('div');
-            pillDiv.innerHTML = `<div class="mr-20"><span class="cursor-pointer" data-id="${pill.id}" data-remove>x</span> ${pill.name}</div>`
-            this.pillsContainer.append(pillDiv);
-        });
-    }
-
-    pillClick(e) {
-
-        let target = this.el.querySelector('[data-load-more-filters="button"][data-id="' + e.target.dataset.id + '"].active')
-        if (target) {
-            target.click();
-        }
-    }
-
-
-    searchForm(){
-
-        [...this.el.querySelectorAll( '[data-search-text]' )].forEach( term => {
-            this.searchTerms.push( term.dataset.searchText );
-        });
-
-
-        this.form = this.$( 'form' );
-        if( this.form[0] ){
-            this.form = this.form[0];
-            this.searchField = this.form.querySelector( 'input[name="search"]' );
-
-
-            this.form.addEventListener( 'submit', e => {
-                e.preventDefault();
-                this.searchTerms = this.searchField.value.split( ' ' );
-                this.searchField.value = '';
-                this.setFilters();
-            });
-        }
-    }
-
-
-
-
 }

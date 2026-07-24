@@ -3,6 +3,24 @@
     "title": "Block: Hero Video",
     "fields": [
         {
+            "key": "field_65a67dd7db902_block_title",
+            "label": "Hero Video",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        },
+        {
             "key": "field_65a67e588ef62",
             "label": "Video",
             "name": "video",
@@ -81,5 +99,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1705410445
+    "modified": 1784892491
 }

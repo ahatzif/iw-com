@@ -3,6 +3,24 @@
     "title": "Block: Youtube Video",
     "fields": [
         {
+            "key": "field_6627a0743c908_block_title",
+            "label": "Youtube Video",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        },
+        {
             "key": "field_662a4db52afbc",
             "label": "From",
             "name": "from",
@@ -85,7 +103,7 @@
             {
                 "param": "block",
                 "operator": "==",
-                "value": ""
+                "value": "acf\/youtube-video"
             }
         ]
     ],
@@ -98,5 +116,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1721144919
+    "modified": 1784892491
 }

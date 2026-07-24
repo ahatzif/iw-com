@@ -3,6 +3,24 @@
     "title": "Block: Wysiwyg",
     "fields": [
         {
+            "key": "field_659810f18749d_block_title",
+            "label": "WYSIWYG",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        },
+        {
             "key": "field_659810f1874a0",
             "label": "Text",
             "name": "text",
@@ -21,6 +39,54 @@
             "toolbar": "full",
             "media_upload": 1,
             "delay": 0
+        },
+        {
+            "key": "field_6900000000010",
+            "label": "Scroll sidebar",
+            "name": "has_scroll_sidebar",
+            "aria-label": "",
+            "type": "true_false",
+            "instructions": "Builds a sticky table of contents from H2 headings in the text.",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "default_value": 0,
+            "ui_on_text": "",
+            "ui_off_text": "",
+            "ui": 1
+        },
+        {
+            "key": "field_6900000000011",
+            "label": "Sidebar title",
+            "name": "scroll_sidebar_title",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": [
+                [
+                    {
+                        "field": "field_6900000000010",
+                        "operator": "==",
+                        "value": "1"
+                    }
+                ]
+            ],
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "ΠΕΡΙΕΧΟΜΕΝΑ",
+            "maxlength": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
         }
     ],
     "location": [
@@ -41,5 +107,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1704478248
+    "modified": 1784892196
 }

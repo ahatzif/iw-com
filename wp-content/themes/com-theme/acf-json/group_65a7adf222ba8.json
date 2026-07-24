@@ -4,6 +4,24 @@
     "title": "Block: Fullscreen Photo \/ Video",
     "fields": [
         {
+            "key": "field_65a7adf222ba8_block_title",
+            "label": "Fullscreen Photo / Video",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        },
+        {
             "key": "field_65a7b142fcc2d",
             "label": "Photo",
             "name": "photo",
@@ -141,5 +159,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1705491350
+    "modified": 1784892491
 }

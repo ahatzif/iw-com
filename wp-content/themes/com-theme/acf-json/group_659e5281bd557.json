@@ -4,6 +4,24 @@
 
     "fields": [
         {
+            "key": "field_659e5281bd557_block_title",
+            "label": "Text Columns",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        },
+        {
             "key": "field_659ea0d74851b",
             "label": "Background",
             "name": "background",
@@ -237,5 +255,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1705581354
+    "modified": 1784892491
 }

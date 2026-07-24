@@ -4,6 +4,24 @@
     
     "fields": [
         {
+            "key": "field_659e99b89f0c1_block_title",
+            "label": "FAQ",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        },
+        {
             "key": "field_659e9a87f9c50",
             "label": "FAQs",
             "name": "faqs",
@@ -88,5 +106,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1704893135
+    "modified": 1784892491
 }

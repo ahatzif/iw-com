@@ -3,6 +3,24 @@
   "title": "Block: Photo And Text",
   "fields": [
     {
+      "key": "field_659bf0abb3dfe_block_title",
+      "label": "Photo And Text",
+      "name": "",
+      "aria-label": "",
+      "type": "message",
+      "instructions": "",
+      "required": 0,
+      "conditional_logic": 0,
+      "wrapper": {
+        "width": "",
+        "class": "",
+        "id": ""
+      },
+      "message": "",
+      "new_lines": "wpautop",
+      "esc_html": 0
+    },
+    {
       "key": "field_659bf0abb3e017e",
       "label": "Image",
       "name": "image",
@@ -70,5 +88,5 @@
   "active": true,
   "description": "",
   "show_in_rest": 0,
-  "modified": 1704718507
+  "modified": 1784892491
 }

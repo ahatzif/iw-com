@@ -3,6 +3,24 @@
     "title": "Block: Form",
     "fields": [
         {
+            "key": "field_65a7c8ae328b7_block_title",
+            "label": "Form",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        },
+        {
             "key": "field_65a7c8ae328ca",
             "label": "Title",
             "name": "title",
@@ -129,5 +147,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1705928426
+    "modified": 1784892491
 }

@@ -3,6 +3,24 @@
     "title": "Block: Swiper Slider",
     "fields": [
         {
+            "key": "field_659bb91f6f2cb_block_title",
+            "label": "Swiper Slider",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        },
+        {
             "key": "field_659bb91f6f2cd",
             "label": "Title",
             "name": "title",
@@ -154,5 +172,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1704705937
+    "modified": 1784892491
 }

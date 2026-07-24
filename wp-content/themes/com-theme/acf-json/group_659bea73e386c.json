@@ -3,6 +3,24 @@
     "title": "Block: Image",
     "fields": [
         {
+            "key": "field_659bea73e386c_block_title",
+            "label": "Image",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        },
+        {
             "key": "field_659bea73e3871",
             "label": "Size",
             "name": "size",
@@ -118,5 +136,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1704717941
+    "modified": 1784892491
 }

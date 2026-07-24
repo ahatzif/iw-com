@@ -3,6 +3,24 @@
     "title": "Block: Video Player",
     "fields": [
         {
+            "key": "field_65b8e6771f791_block_title",
+            "label": "Video Player",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        },
+        {
             "key": "field_65b8e677fd9a7",
             "label": "Video",
             "name": "video",
@@ -132,8 +150,8 @@
                         "class": "theme-color",
                         "id": ""
                     },
-                    "choices": [ ],
-                    "default_value": "bg-light-blue",
+                    "choices": [],
+                    "default_value": "ochre-light",
                     "return_format": "value",
                     "allow_null": 0,
                     "other_choice": 0,
@@ -155,7 +173,7 @@
                         "class": "theme-color",
                         "id": ""
                     },
-                    "choices": [ ],
+                    "choices": [],
                     "default_value": "",
                     "return_format": "value",
                     "allow_null": 0,
@@ -374,5 +392,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1728461494
+    "modified": 1784892196
 }

@@ -3,6 +3,24 @@
     "title": "Block: Photos Slider",
     "fields": [
         {
+            "key": "field_659c0094b8b1e_block_title",
+            "label": "Photos Slider",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        },
+        {
             "key": "field_659c02a60ef48",
             "label": "Gallery",
             "name": "gallery",
@@ -49,5 +67,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1704723882
+    "modified": 1784892491
 }

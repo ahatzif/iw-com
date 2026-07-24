@@ -3,6 +3,24 @@
     "title": "Block: Photo",
     "fields": [
         {
+            "key": "field_66bb2db27d1e2_block_title",
+            "label": "Photo",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        },
+        {
             "key": "field_66bb30e19beb7",
             "label": "Type",
             "name": "type",
@@ -116,5 +134,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1723544844
+    "modified": 1784892491
 }

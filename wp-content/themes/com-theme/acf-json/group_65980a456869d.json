@@ -3,12 +3,50 @@
     "title": "Block: Page Header",
     "fields": [
         {
+            "key": "field_65980a456869d_block_title",
+            "label": "Page Header",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        },
+        {
             "key": "field_65980a45686a0",
             "label": "Custom Title",
             "name": "title",
             "aria-label": "",
             "type": "text",
-            "instructions": "Leave empty to use page \/ post title",
+            "instructions": "Leave empty to use page / post title",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "100",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "maxlength": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_com_page_header_eyebrow",
+            "label": "Eyebrow",
+            "name": "eyebrow",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "Leave empty to use parent page title, or the front page title when there is no parent",
             "required": 0,
             "conditional_logic": 0,
             "wrapper": {
@@ -28,7 +66,7 @@
             "name": "text",
             "aria-label": "",
             "type": "textarea",
-            "instructions": "Leave empty to use page \/ post title",
+            "instructions": "Leave empty to use page / post title",
             "required": 0,
             "conditional_logic": 0,
             "wrapper": {
@@ -61,5 +99,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1704463881
+    "modified": 1784892196
 }

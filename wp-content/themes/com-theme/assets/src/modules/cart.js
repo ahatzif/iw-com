@@ -1,11 +1,26 @@
 import { module } from 'modujs';
 import axios from 'axios';
 
+let refreshRequest = null;
+
 export default class extends module {
     constructor(m) {
         super(m);
         this.itemsContainer = this.$('items')?.[0] ?? null;
         this.itemsCount = this.$('cart-items-count')?.[0] ?? null;
+        this.onDocumentClickBind = this.onDocumentClick.bind(this);
+    }
+
+    init() {
+        document.addEventListener('click', this.onDocumentClickBind);
+    }
+
+    onDocumentClick(event) {
+        this.el.querySelectorAll('details[data-cart-ticket-details][open]').forEach(details => {
+            if (!details.contains(event.target)) {
+                details.removeAttribute('open');
+            }
+        });
     }
 
     update(cart) {
@@ -38,10 +53,24 @@ export default class extends module {
     }
 
     refresh() {
-        axios.post(THEME_OBJ.ajaxURL, new URLSearchParams({ action: 'iw_cart_refresh' })).then(response => {
-            if (response.data?.success) {
-                this.call('update', response.data.data.cart, 'Cart');
-            }
-        });
+        if (refreshRequest) return refreshRequest;
+
+        refreshRequest = axios
+            .post(THEME_OBJ.ajaxURL, new URLSearchParams({ action: 'iw_cart_refresh' }))
+            .then(response => {
+                if (response.data?.success) {
+                    this.call('update', response.data.data.cart, 'Cart');
+                }
+                return response;
+            })
+            .finally(() => {
+                refreshRequest = null;
+            });
+
+        return refreshRequest;
+    }
+
+    destroy() {
+        document.removeEventListener('click', this.onDocumentClickBind);
     }
 }

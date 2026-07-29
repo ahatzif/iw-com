@@ -9,53 +9,12 @@ if(!class_exists('acfe_admin_menu')):
 class acfe_admin_menu{
     
     /**
-     * Construct
+     * construct
      */
     function __construct(){
-    
-        add_action('current_screen', array($this, 'current_screen'));
-        add_action('admin_menu',     array($this, 'admin_menu'), 999);
         
-    }
-    
-    /**
-     * current_screen
-     *
-     * @param $screen
-     */
-    function current_screen($screen){
+        add_action('admin_menu', array($this, 'admin_menu'), 999);
         
-        // check version
-        if(acf_version_compare(acf_get_setting('version'),  '>=', '5.9')){
-    
-            // allowed screens
-            $allowed = array(
-                'edit-acf-field-group-category',
-                'edit-acfe-dbt',
-                'acfe-dbt',
-                'edit-acfe-dop',
-                'acfe-dop',
-                'edit-acfe-template',
-                'acfe-template',
-                'edit-acfe-form',
-                'acfe-form'
-            );
-            
-            // chgeck allowed
-            if(acf_is_screen($allowed)){
-                add_action('in_admin_header', array($this, 'in_admin_header'));
-            }
-            
-        }
-        
-    }
-    
-    
-    /**
-     * in_admin_header
-     */
-    function in_admin_header(){
-        acf_get_view('html-admin-navigation');
     }
     
     
@@ -70,7 +29,7 @@ class acfe_admin_menu{
         global $submenu;
         
         // bail early
-        if(!acf_maybe_get($submenu, 'edit.php?post_type=acf-field-group')){
+        if(!acfe_get($submenu, array('edit.php?post_type=acf-field-group'))){
             return;
         }
         
@@ -89,6 +48,7 @@ class acfe_admin_menu{
             'edit.php?post_type=acf-post-type',
             'acfe-settings',
             'edit.php?post_type=acf-taxonomy',
+            'edit.php?post_type=acf-ui-options-page',
             'acf-tools',
             'acf-settings-updates',
         );

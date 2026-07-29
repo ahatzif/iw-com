@@ -15,11 +15,11 @@ class WPML_Admin_Menu_Item {
 	/**
 	 * WPML_Menu_Item constructor.
 	 *
-	 * @param array $args
+	 * @param array|null $args
 	 *
 	 * @throws \InvalidArgumentException
 	 */
-	public function __construct( array $args = null ) {
+	public function __construct( ?array $args = null ) {
 		if ( $args ) {
 			$required_fields = array(
 				'capability',

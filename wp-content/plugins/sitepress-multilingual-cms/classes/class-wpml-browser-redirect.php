@@ -27,7 +27,7 @@ class WPML_Browser_Redirect {
 	}
 
 	public function enqueue_scripts() {
-		wp_register_script( 'wpml-browser-redirect', ICL_PLUGIN_URL . '/dist/js/browser-redirect/app.js', array(), ICL_SITEPRESS_VERSION );
+		wp_register_script( 'wpml-browser-redirect', ICL_PLUGIN_URL . '/dist/js/browser-redirect/app.js', array(), ICL_SITEPRESS_SCRIPT_VERSION );
 
 		$args['skip_missing'] = intval( $this->sitepress->get_setting( 'automatic_redirect' ) == 1 );
 
@@ -64,6 +64,12 @@ class WPML_Browser_Redirect {
 			'languageUrls' => $language_urls,
 			'cookie'       => $cookie,
 		);
+
+		$current_page_id = get_queried_object_id();
+		$url             = $this->sitepress->get_setting( 'urls' );
+		if ( $url && isset( $url['root_page'] ) && $current_page_id === (int) $url['root_page'] ) {
+			$params['pageLanguage'] = ''; // Root page does not have a language.
+		}
 
 		/**
 		 * Filters the data sent to the browser redirection script.
@@ -107,7 +113,7 @@ class WPML_Browser_Redirect {
 		 * @since 4.0.6
 		 *
 		 * @param bool $enqueue Defaults to `true`
-		 * @param bool $params  @see `wpml_browser_redirect_language_params`
+		 * @param array $params  @see `wpml_browser_redirect_language_params`
 		 */
 		do_action( 'wpml_enqueued_browser_redirect_language', $enqueue, $params );
 	}

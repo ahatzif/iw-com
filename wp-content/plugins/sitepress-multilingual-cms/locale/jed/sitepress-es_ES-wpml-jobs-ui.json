@@ -4,25 +4,20 @@
       "messages": {
          "": {
             "domain": "messages",
-            "lang": "en"
+            "plural_forms": "nplurals=2; plural=(n != 1);",
+            "lang": "es_ES"
          },
-         "Draft — Pending review": [
-            "Borrador: revisión pendiente"
-         ],
-         "Complete": [
-            "Terminada"
-         ],
-         "Insufficient funds": [
-            "Fondos insuficientes"
-         ],
          "Start batch sync": [
             "Iniciar sincronización por lotes"
          ],
          "Cancel job": [
             "Cancelar trabajo"
          ],
+         "Continue reviewing": [
+            "Continuar revisando"
+         ],
          "Start downloading XLIFF file": [
-            "Empezar a descargar el archivo XLIFF"
+            "Iniciar descarga de archivo XLIFF"
          ],
          "Edit": [
             "Editar"
@@ -40,7 +35,7 @@
             "Traducir"
          ],
          "Take and Translate": [
-            "Aceptar y traducir"
+            "Tomar y traducir"
          ],
          "View": [
             "Ver"
@@ -49,37 +44,43 @@
             "Eliminar traducciones"
          ],
          "Keep Translations as Draft": [
-            "Dejar las traducciones en borrador"
+            "Mantener traducciones como borrador"
          ],
          "Never mind. I want to review these translations.": [
-            "No importa: quiero revisar estas traducciones."
+            "No importa. Quiero revisar estas traducciones."
          ],
          "Cancel": [
             "Cancelar"
          ],
          "This will remove the selected jobs from the Translations Queue without publishing them. What would you like to do with the translations?": [
-            "Esta acción eliminará de la cola los trabajos seleccionados sin que se publiquen sus traducciones. ¿Qué quiere hacer con las traducciones?"
+            "Esto eliminará los trabajos seleccionados de la cola de traducciones sin publicarlos. ¿Qué desea hacer con las traducciones?"
          ],
          "Cancel Translation Review": [
-            "Cancelar revisión de la traducción"
+            "Cancelar revisión de traducción"
          ],
          "Bulk actions": [
-            "Acciones por lote"
+            "Acciones masivas"
          ],
          "Apply": [
             "Aplicar"
          ],
          "Actions applied to multiple translation jobs can take a few seconds. Please do not leave the page.": [
-            "Puede llevar unos segundos aplicar las acciones asignadas a varios trabajos de traducción. No salga de la página."
+            "Las acciones aplicadas a varios trabajos de traducción pueden tardar unos segundos. No abandone la página."
          ],
          "Actions applied to multiple translation jobs can take a few minutes. Please do not leave the page.": [
-            "Puede llevar unos minutos aplicar las acciones asignadas a varios trabajos de traducción. No salga de la página."
+            "Las acciones aplicadas a varios trabajos de traducción pueden tardar unos minutos. No abandone la página."
          ],
          "Select translator": [
             "Seleccionar traductor"
          ],
          "Assign": [
             "Asignar"
+         ],
+         "Cancelled": [
+            "Cancelado"
+         ],
+         "Needs translation": [
+            "Necesita traducción"
          ],
          "In progress": [
             "En curso"
@@ -90,17 +91,29 @@
          "Completed": [
             "Completado"
          ],
+         "%s are immediately published because they don't support draft mode.": [
+            "%s se publican inmediatamente porque no admiten el modo borrador."
+         ],
          "Published — Pending review": [
-            "Publicada: revisión pendiente"
+            "Publicado — Pendiente de revisión"
+         ],
+         "Draft — Pending review": [
+            "Borrador — Pendiente de revisión"
+         ],
+         "Review in progress": [
+            "Revisión en curso"
+         ],
+         "Published — Review in progress": [
+            "Publicado — Revisión en curso"
+         ],
+         "Draft — Review in progress": [
+            "Borrador — Revisión en curso"
+         ],
+         "Insufficient funds": [
+            "Fondos insuficientes"
          ],
          "Needs update": [
             "Necesita actualización"
-         ],
-         "Cancelled": [
-            "Cancelado"
-         ],
-         "Needs translation": [
-            "Necesita traducirse"
          ],
          "View original": [
             "Ver original"
@@ -108,14 +121,20 @@
          "(no title)": [
             "(sin título)"
          ],
+         "Automatic translation": [
+            "Traducción automática"
+         ],
          "TP ID: %d": [
             "ID de TP: %d"
          ],
          "Reset": [
-            "Reiniciar"
+            "Restablecer"
          ],
          "Filter": [
-            "Filtro"
+            "Filtrar"
+         ],
+         "ID (%s)": [
+            "ID (%s)"
          ],
          "Title (%s)": [
             "Título (%s)"
@@ -139,25 +158,22 @@
             "Fecha de envío (%s)"
          ],
          "Deadline (%s)": [
-            "Plazo (%s)"
+            "Fecha límite (%s)"
          ],
          "Clear all filters": [
             "Borrar todos los filtros"
          ],
          "Any Translation Service": [
-            "Cualquier trabajo de traducción"
+            "Cualquier servicio de traducción"
          ],
          "Any WordPress Translator": [
             "Cualquier traductor de WordPress"
          ],
-         "ID (%s)": [
-            "ID (%s)"
-         ],
          "From": [
-            "Del"
+            "Desde"
          ],
          "To": [
-            "Al"
+            "Hasta"
          ],
          "Anyone": [
             "Cualquiera"
@@ -169,10 +185,19 @@
             "Todos los tipos"
          ],
          "Select visible columns": [
-            "Seleccionar las columnas visibles"
+            "Seleccionar columnas visibles"
+         ],
+         "Sort descending": [
+            "Ordenar descendente"
+         ],
+         "Sort ascending": [
+            "Ordenar ascendente"
+         ],
+         "Cancel sorting": [
+            "Cancelar ordenación"
          ],
          "The bulk action is running...": [
-            "La acción en lote se está ejecutando…"
+            "La acción masiva se está ejecutando..."
          ],
          "Export all jobs to XLIFF 1.0": [
             "Exportar todos los trabajos a XLIFF 1.0"
@@ -208,25 +233,28 @@
             "Importar"
          ],
          "Import / Export XLIFF": [
-            "Importar / Exportar XLIFF"
+            "Importar / exportar XLIFF"
          ],
          "Actions": [
             "Acciones"
          ],
          "Batch name": [
-            "Nombre de lote"
+            "Nombre del lote"
+         ],
+         "Filter by %s": [
+            "Filtrar por %s"
          ],
          "Title": [
             "Título"
          ],
          "Approve translation reviews": [
-            "Aprobar revisiones de las traducciones"
+            "Aprobar revisiones de traducción"
          ],
          "Cancel jobs": [
             "Cancelar trabajos"
          ],
          "Cancel translation reviews": [
-            "Cancelar revisiones de las traducciones"
+            "Cancelar revisiones de traducción"
          ],
          "Export to XLIFF %s": [
             "Exportar a XLIFF %s"
@@ -237,71 +265,71 @@
          "This action does not apply to any of the selected translation jobs": [
             "Esta acción no se aplica a ninguno de los trabajos de traducción seleccionados"
          ],
-         "Translations has been downloaded": [
+         "Translations have been downloaded": [
             "Las traducciones se han descargado"
          ],
          "Translation has been downloaded": [
             "La traducción se ha descargado"
          ],
          "Translations could not be downloaded": [
-            "No se han podido descargar las traducciones"
+            "No se pudieron descargar las traducciones"
          ],
          "Translation could not be downloaded": [
-            "No se ha podido descargar la traducción"
+            "No se pudo descargar la traducción"
          ],
          "Approving translations reviews failed!": [
-            "No se han podido aprobar las revisiones de las traducciones."
+            "¡Error al aprobar las revisiones de traducción!"
          ],
          "Failed approving translations for the following posts: ": [
-            "No se han podido aprobar las revisiones de las traducciones en las publicaciones siguientes: "
+            "Error al aprobar las traducciones para las siguientes publicaciones: "
          ],
          "Translations reviews approved successfully!": [
-            "¡Se han aprobado las revisiones de las traducciones!"
+            "¡Revisiones de traducción aprobadas correctamente!"
          ],
          "No valid jobs selected to approve translations reviews!": [
-            "No se pueden revisar las traducciones de los trabajos seleccionados."
+            "¡No se han seleccionado trabajos válidos para aprobar las revisiones de traducción!"
          ],
          "The translator has been assigned to the job": [
-            "Se ha sido asignado el traductor al trabajo"
+            "El traductor ha sido asignado al trabajo"
          ],
          "The translator could not be assigned to the job": [
-            "No se ha podido asignar el traductor al trabajo"
+            "No se pudo asignar el traductor al trabajo"
          ],
          "The jobs have been cancelled": [
-            "Se han cancelado los trabajos"
+            "Los trabajos han sido cancelados"
          ],
          "The job has been cancelled": [
-            "Se ha cancelado el trabajo"
+            "El trabajo ha sido cancelado"
          ],
          "The jobs could not be cancelled": [
-            "No se han podido cancelar los trabajos"
+            "No se pudieron cancelar los trabajos"
          ],
          "The job could not be cancelled": [
-            "No se ha podido cancelar el trabajo"
+            "No se pudo cancelar el trabajo"
          ],
          "Translation reviews have been canceled": [
-            "Se han cancelado las revisiones de las traducciones"
+            "Las revisiones de traducción han sido canceladas"
          ],
          "Translation review has been canceled": [
-            "Se ha cancelado la revisión de la traducción"
+            "La revisión de traducción ha sido cancelada"
          ],
          "Translation reviews could not be canceled": [
-            "No se han podido cancelar las revisiones de las traducciones"
+            "No se pudieron cancelar las revisiones de traducción"
          ],
          "Translation review could not be canceled": [
-            "No se ha podido cancelar la revisión de la traducción"
+            "No se pudo cancelar la revisión de traducción"
          ],
          "Sent on": [
             "Enviado el"
          ],
          "Deadline": [
-            "Plazo de entrega"
+            "Fecha límite"
          ],
          "Status": [
             "Estado"
          ],
          "Pending review": [
-            "Revisión pendiente"
+            "Pendiente de revisión"
          ],
          "ID": [
             "ID"
@@ -316,25 +344,25 @@
             "Traducido por"
          ],
          "Download XLIFF file couldn't be finished": [
-            "No se ha podido descargar el archivo XLIFF"
+            "No se pudo finalizar la descarga del archivo XLIFF"
          ],
          "Could not load jobs for export": [
-            "No se han podido cargar los trabajos para exportarlos"
+            "No se pudieron cargar los trabajos para exportar"
          ],
          "The export to XLIFF failed": [
-            "No se ha podido exportar a XLIFF"
+            "La exportación a XLIFF falló"
          ],
          "Imported %d jobs": [
-            "Se han importado %d trabajos"
+            "Se importaron %d trabajos"
          ],
          "Imported one job": [
-            "Se ha importado un trabajo"
+            "Se importó un trabajo"
          ],
          "Could not import any job": [
-            "No se ha podido importar ningún trabajo"
+            "No se pudo importar ningún trabajo"
          ],
          "Import failed!": [
-            "No se ha podido realizar la importación."
+            "¡Error de importación!"
          ],
          "Loading translations queue": [
             "Cargando cola de traducciones"
@@ -343,40 +371,38 @@
             "Cargando trabajos de traducción"
          ],
          "Jobs could not be loaded": [
-            "No se han podido cargar los trabajos"
+            "No se pudieron cargar los trabajos"
          ],
          "Specify some jobs to resign": [
-            "Especifique los trabajos a los que quiere renunciar"
+            "Especifique algunos trabajos para renunciar"
          ],
          "We could not resign jobs: %s": [
-            "No se ha podido renunciar a los trabajos: %s"
+            "No pudimos renunciar a los trabajos: %s"
          ],
          "Resigned from jobs": [
-            "Ha renunciado a los trabajos"
+            "Se ha renunciado a los trabajos"
          ],
          "Resigned from job": [
-            "Ha renunciado al trabajo"
+            "Se ha renunciado al trabajo"
          ],
          "Failed to resign from jobs": [
-            "No ha podido renunciar a los trabajos"
-         ],
-         "The Advanced Editor jobs synchronization": [
-            "Sincronización de trabajos del Editor avanzado"
+            "Error al renunciar a los trabajos"
          ],
          "The Advanced Editor jobs synchronization has failed": [
-            "No se han podido sincronizar los trabajos del Editor avanzado"
+            "La sincronización de trabajos del Editor Avanzado ha fallado"
          ],
          "Synchronization with the Professional Translation service has failed": [
-            "No se ha podido sincronizar con el servicio de traducción profesional"
+            "La sincronización con el servicio de Traducción Profesional ha fallado"
          ],
-         "The Professional Translations jobs synchronization": [
-            "Sincronización de trabajos del servicio de traducción profesional"
+         "%d translation has been downloaded": [
+            "Se ha descargado %d traducción",
+            "Se han descargado %d traducciones"
          ],
          "Batch sync finished successfully!": [
-            "¡Se ha realizado la sincronización por lotes!"
+            "¡Sincronización por lotes finalizada correctamente!"
          ],
          "Batch sync couldn't be finished": [
-            "No se ha podido realizar la sincronización por lotes"
+            "No se pudo finalizar la sincronización por lotes"
          ]
       }
    }

@@ -26,49 +26,6 @@ class WPML_ST_TM_Jobs extends WPML_WPDB_User {
 			10,
 			1
 		);
-		add_filter(
-			'wpml_st_job_state_pending',
-			array(
-				$this,
-				'tm_external_job_in_progress_filter',
-			),
-			10,
-			2
-		);
-	}
-
-	/**
-	 * @param bool         $in_progress_status
-	 * @param array|object $job_arr
-	 *
-	 * @return bool true if a job is in progress for the given arguments
-	 */
-	public function tm_external_job_in_progress_filter( $in_progress_status, $job_arr ) {
-		$job_arr = (array) $job_arr;
-		if ( isset( $job_arr['batch'] ) ) {
-			$job_arr['batch'] = (array) $job_arr['batch'];
-		}
-
-		return isset( $job_arr['batch']['id'] )
-			   && empty( $job_arr['cms_id'] )
-			   && ! empty( $job_arr['id'] )
-			   && ! empty( $job_arr['job_state'] )
-			   && $job_arr['job_state'] === 'delivered'
-			&& $this->wpdb->get_var(
-				$this->wpdb->prepare(
-					"
-			SELECT COUNT(*)
-			FROM {$this->wpdb->prefix}icl_core_status ct
-			JOIN {$this->wpdb->prefix}icl_string_status st
-				ON ct.rid = st.rid
-			JOIN {$this->wpdb->prefix}icl_string_translations t
-				ON st.string_translation_id = t.id
-				WHERE ct.rid = %d AND t.status < %d
-		",
-					$job_arr['id'],
-					ICL_TM_COMPLETE
-				)
-			) ? true : $in_progress_status;
 	}
 
 	public function jobs_union_table_sql_filter( $sql_statements, $args ) {
@@ -156,7 +113,9 @@ class WPML_ST_TM_Jobs extends WPML_WPDB_User {
 		if ( count( $wheres ) > 0 && count( $wheres ) === count( $where_args ) ) {
 			$where_sql = implode( ' AND ', $wheres );
 
-			$string_where = 'WHERE ' . $this->wpdb->prepare( $where_sql, $where_args );
+			/** @var string $sql */
+			$sql = $this->wpdb->prepare( $where_sql, $where_args );
+			$string_where = 'WHERE ' . $sql;
 		}
 
 		return $string_where;

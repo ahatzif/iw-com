@@ -26,16 +26,13 @@ class WPML_Site_ID {
 	/**
 	 * Read and, if needed, generate the site ID based on the scope.
 	 *
-	 * @param string $scope      Defaults to "global".
-	 *                           Use a different value when the ID is used for specific scopes.
-	 *
-	 * @param bool   $create_new Forces the creation of a new ID.
+	 * @param string $scope Defaults to "global".
+	 *                      Use a different value when the ID is used for specific scopes.
 	 *
 	 * @return string|null The generated/stored ID or null if it wasn't possible to generate/store the value.
 	 */
-	public function get_site_id( $scope = self::SITE_SCOPES_GLOBAL, $create_new = false ) {
-		$generate = ! $this->read_value( $scope ) || $create_new;
-		if ( $generate && ! $this->generate_site_id( $scope ) ) {
+	public function get_site_id( $scope = self::SITE_SCOPES_GLOBAL ) {
+		if ( ! $this->read_value( $scope ) && ! $this->generate_site_id( $scope ) ) {
 			return null;
 		}
 
@@ -114,5 +111,10 @@ class WPML_Site_ID {
 		}
 
 		return null;
+	}
+
+	public function reset( string $scope = self::SITE_SCOPES_GLOBAL ) {
+		delete_option( $this->get_option_key( $scope ) );
+		unset( $this->site_ids[ $scope ] );
 	}
 }

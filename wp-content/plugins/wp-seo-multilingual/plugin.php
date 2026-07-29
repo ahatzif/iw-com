@@ -5,23 +5,25 @@
  * Description: Multilingual support for popular SEO plugins
  * Author: OnTheGoSystems
  * Author URI: http://www.onthegosystems.com/
- * Version: 2.1.1
+ * Version: 2.2.5
  * Plugin Slug: wp-seo-multilingual
- * Tested up to: 6.7
+ * Text Domain: wp-seo-multilingual
+ * Tested up to: 6.8
  *
  * @package wpml/wpseo
  */
 
-use WPML\WPSEO\Loaders as YoastSEOLoaders;
+use WPML\WPSEO\YoastSEO\Loaders as YoastSEOLoaders;
 use WPML\WPSEO\RankMathSEO\Loaders as RankMathSEOLoaders;
+use WPML\WPSEO\YoastSEO\Utils;
 
 // Check if we are already active.
 if ( defined( 'WPSEOML_VERSION' ) ) {
 	return;
 }
 
-define( 'WPSEOML_VERSION', '2.1.1' );
-define( 'WPSEOML_PLUGIN_PATH', dirname( __FILE__ ) );
+define( 'WPSEOML_VERSION', '2.2.5' );
+define( 'WPSEOML_PLUGIN_PATH', __DIR__ );
 
 /**
  * We need to do the redirection checks before wordpress-seo loads.
@@ -51,7 +53,7 @@ if ( ! WPML_Core_Version_Check::is_ok( WPSEOML_PLUGIN_PATH . '/wpml-dependencies
 require_once WPSEOML_PLUGIN_PATH . '/vendor/autoload.php';
 
 // We have to do this early because wordpress-seo does it early too.
-if ( apply_filters( 'wpml_setting', false, 'setup_complete' ) ) {
+if ( Utils::isPremium() && apply_filters( 'wpml_setting', false, 'setup_complete' ) ) {
 	$redirector = new WPML_WPSEO_Redirection();
 	if ( $redirector->is_redirection() ) {
 		add_filter( 'wpml_skip_convert_url_string', '__return_true' );

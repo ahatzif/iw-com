@@ -7,9 +7,12 @@ export default class extends module {
 
     // Accept either data-end (preferred) or legacy data-expires.
     this.expiresRaw = (this.el.dataset.end || this.el.dataset.expires || '').trim();
+    this.expiresTimestamp = Number(this.el.dataset.expiresTimestamp) || 0;
 
     // Start datetime comes from HTML (e.g. when hold was created)
     this.startRaw = (this.el.dataset.start || '').trim();
+    this.startTimestamp = Number(this.el.dataset.startTimestamp) || 0;
+    this.expiryRedirect = (this.el.dataset.expiryRedirect || '').trim();
 
     // Optional fallback duration (ms) if start is not provided.
     const durationAttr = (this.el.dataset.durationMs || '').trim();
@@ -17,25 +20,28 @@ export default class extends module {
     this.displayEl = (this.$('display') && this.$('display')[0]) ? this.$('display')[0] : null;
 
 
-    // Detect document language (e.g. <html lang="el">)
-    const docLang = (document.documentElement && document.documentElement.lang) ? document.documentElement.lang : '';
-    this.lang = (docLang || 'en').toLowerCase();
-
-    // Unit suffixes (keep them short for the small circle UI)
-    this.units = { day: this.lang.startsWith('el') ? 'ημ' : 'd',  hour: this.lang.startsWith('el') ? 'ω' : 'h',};
+    // Unit suffixes come from the template so they can be translated.
+    this.units = {
+      day: this.el.dataset.dayUnit || '',
+      hour: this.el.dataset.hourUnit || '',
+      minute: this.el.dataset.minuteUnit || '',
+    };
 
     this._tickHandle = null;
+    this._refreshHandle = null;
 
 
     // If we don't have an expiry, do nothing.
-    if (!this.expiresRaw) {
+    if (!this.expiresTimestamp && !this.expiresRaw) {
       this.displayEl.textContent = '';
       return;
     }
 
-    // Parse "YYYY-MM-DD HH:mm:ss" as local time.
-    const isoLocalEnd = this.expiresRaw.replace(' ', 'T');
-    this.expiresAt = new Date(isoLocalEnd);
+    // Prefer the absolute server timestamp so fixed-offset WordPress timezones
+    // stay correct across browser daylight-saving changes.
+    this.expiresAt = this.expiresTimestamp
+      ? new Date(this.expiresTimestamp * 1000)
+      : new Date(this.expiresRaw.replace(' ', 'T'));
 
     if (Number.isNaN(this.expiresAt.getTime())) {
       this.displayEl.textContent = '';
@@ -43,9 +49,10 @@ export default class extends module {
     }
 
     this.startAt = null;
-    if (this.startRaw) {
-      const isoLocalStart = this.startRaw.replace(' ', 'T');
-      const parsedStart = new Date(isoLocalStart);
+    if (this.startTimestamp || this.startRaw) {
+      const parsedStart = this.startTimestamp
+        ? new Date(this.startTimestamp * 1000)
+        : new Date(this.startRaw.replace(' ', 'T'));
       if (!Number.isNaN(parsedStart.getTime())) {
         this.startAt = parsedStart;
       }
@@ -74,6 +81,7 @@ export default class extends module {
 
       this.el.classList.add('is-expired');
       this.el.classList.add('error');
+      this.el.classList.add('text-error');
       this.el.classList.remove('is-blinking');
 
       if (this._tickHandle) {
@@ -81,14 +89,12 @@ export default class extends module {
         this._tickHandle = null;
       }
 
-        let cart = this.el.closest( '[data-module-cart]' );
-        if( cart ){
-            let moduleName = cart.dataset.moduleCart;
-            if( moduleName === 'main' ){
-                this.call( 'refresh', false, 'Cart', moduleName )
-            }
+      if (this.expiryRedirect) {
+        window.location.assign(this.expiryRedirect);
+        return;
+      }
 
-        }
+      this.scheduleCartRefresh();
 
       return;
     }
@@ -114,17 +120,38 @@ export default class extends module {
       // e.g. "2d 04:12:33"
       this.displayEl.textContent = `${days}${this.units.day} ${String(hours).padStart(2, '0')}${this.units.hour}`;
     } else if (hours > 0) {
-      const minuteUnit = this.lang.startsWith('el') ? 'λ' : 'm';
-      this.displayEl.textContent = `${hours}${this.units.hour} ${String(minutes).padStart(2, '0')}${minuteUnit}`;
+      this.displayEl.textContent = `${hours}${this.units.hour} ${String(minutes).padStart(2, '0')}${this.units.minute}`;
     } else {
       this.displayEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
+  }
+
+  scheduleCartRefresh() {
+    const cart = this.el.closest('[data-module-cart]');
+    const cartModuleId = cart?.dataset.moduleCart;
+
+    if (!cart || !cartModuleId || cart.dataset.timerRefreshScheduled === '1') {
+      return;
+    }
+
+    cart.dataset.timerRefreshScheduled = '1';
+    this._refreshHandle = window.setTimeout(() => {
+      try {
+        this.call('refresh', false, 'Cart', cartModuleId);
+      } catch (error) {
+        window.location.reload();
+      }
+    }, 0);
   }
 
   destroy() {
     if (this._tickHandle) {
       window.clearInterval(this._tickHandle);
       this._tickHandle = null;
+    }
+    if (this._refreshHandle) {
+      window.clearTimeout(this._refreshHandle);
+      this._refreshHandle = null;
     }
   }
 }

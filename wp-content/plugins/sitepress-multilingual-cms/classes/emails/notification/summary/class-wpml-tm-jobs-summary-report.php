@@ -13,16 +13,6 @@ class WPML_TM_Jobs_Summary_Report {
 	private $jobs = array();
 
 	/**
-	 * @var WPML_TM_String
-	 */
-	private $string_counter;
-
-	/**
-	 * @var WPML_TM_Post
-	 */
-	private $post_counter;
-
-	/**
 	 * @var string
 	 */
 	private $type;
@@ -34,14 +24,10 @@ class WPML_TM_Jobs_Summary_Report {
 
 	public function __construct(
 		WPML_Translation_Jobs_Collection $jobs_collection,
-		WPML_TM_String $string_counter,
-		WPML_TM_Post $post_counter,
 		$type,
 		WPML_Translation_Element_Factory $element_factory
 	) {
 		$this->jobs_collection = $jobs_collection;
-		$this->string_counter  = $string_counter;
-		$this->post_counter    = $post_counter;
 		$this->type            = $type;
 		$this->element_factory = $element_factory;
 		$this->build_completed_jobs();
@@ -57,19 +43,27 @@ class WPML_TM_Jobs_Summary_Report {
 
 		foreach ( $jobs as $job ) {
 			$completed_date = $job instanceof WPML_Post_Translation_Job || $job instanceof WPML_Element_Translation_Job ? $job->get_completed_date() : '';
-			$out_of_period  = strtotime( $completed_date ) < strtotime( '-' . WPML_TM_Jobs_Summary::WEEKLY_SCHEDULE );
+
+			if ( ! $completed_date ) {
+				continue;
+			}
+
+			$out_of_period = strtotime( $completed_date ) < strtotime( '-' . WPML_TM_Jobs_Summary::WEEKLY_SCHEDULE );
 
 			if ( WPML_TM_Jobs_Summary::DAILY_REPORT === $this->type ) {
 				$out_of_period = strtotime( $completed_date ) < strtotime( '-' . WPML_TM_Jobs_Summary::DAILY_SCHEDULE );
 			}
 
-			if ( ! $completed_date || $out_of_period ) {
+			if ( $out_of_period ) {
 				continue;
 			}
 
 			$original_element = $this->element_factory->create( $job->get_original_element_id(), $job->get_type() );
 			$translation_element = $original_element->get_translation( $job->get_language_code() );
 
+			if ( is_null( $translation_element ) ) {
+				continue;
+			}
 
 			$this->jobs[ $job->get_basic_data()->manager_id ][ WPML_TM_Jobs_Summary::JOBS_COMPLETED_KEY ][] = array(
 				'completed_date'  => date_i18n( get_option( 'date_format', 'F d, Y' ), strtotime( $job->get_completed_date() ) ),
@@ -113,13 +107,11 @@ class WPML_TM_Jobs_Summary_Report {
 			}
 
 			if ( 'String' === $job->get_type() ) {
-				$this->string_counter->set_id( $job->get_original_element_id() );
 				$number_of_strings ++;
-				$number_of_words_in_strings += $this->string_counter->get_words_count();
+				$number_of_words_in_strings += apply_filters( 'wpml_word_count_calculate_string', 0, $job->get_original_element_id() );
 			} else {
-				$this->post_counter->set_id( $job->get_original_element_id() );
 				$counters[ $manager_id ][ $lang_pair ]['number_of_pages'] += 1;
-				$counters[ $manager_id ][ $lang_pair ]['number_of_words'] += $this->post_counter->get_words_count();
+				$counters[ $manager_id ][ $lang_pair ]['number_of_words'] += apply_filters( 'wpml_word_count_calculate_post', 0, $job->get_original_element_id() );
 
 				$this->jobs[ $manager_id ][ WPML_TM_Jobs_Summary::JOBS_WAITING_KEY ][ $lang_pair ] = array(
 					'lang_pair'         => $job->get_source_language_code( true ) . ' ' . __( 'to', 'wpml-translation-management' ) . ' ' . $job->get_language_code( true ),

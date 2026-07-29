@@ -52,13 +52,24 @@ class Editor {
 	 * @return array
 	 */
 	public function open( $params ) {
+		/**
+		 * @param \WPML_Element_Translation_Job $jobObject
+		 *
+		 * @return bool
+		 */
 		$shouldOpenCTE = function ( $jobObject ) use ( $params ) {
 			if ( ! \WPML_TM_ATE_Status::is_enabled() ) {
 				return true;
 			}
 
-			if ( $this->isNewJobCreated( $params, $jobObject ) ) {
-				return wpml_tm_load_old_jobs_editor()->shouldStickToWPMLEditor( $jobObject->get_id() );
+			$previousJob = $this->previousJob( $params, $jobObject );
+
+			/**
+			 * If job object isn't translated and previous job exists this means that a new job is created and post needs update
+			 * So we check if it should stick to WPML translation editor
+			 */
+			if ( ! $jobObject->get_basic_data_property( 'translated' ) && $previousJob ) {
+				return wpml_tm_load_old_jobs_editor()->shouldStickToWPMLEditor( $jobObject->get_id(), $previousJob );
 			}
 
 			return wpml_tm_load_old_jobs_editor()->editorForTranslationsPreviouslyCreatedUsingCTE() === \WPML_TM_Editors::WPML &&
@@ -80,6 +91,13 @@ class Editor {
 
 			return $jobObject;
 		};
+
+		$dataOfTranslationCreatedInNativeEditorViaConnection = $this->manualJobs->maybeGetDataIfTranslationCreatedInNativeEditorViaConnection( $params );
+		if ( $dataOfTranslationCreatedInNativeEditorViaConnection ) {
+			update_post_meta( $dataOfTranslationCreatedInNativeEditorViaConnection['originalPostId'], \WPML_TM_Post_Edit_TM_Editor_Mode::POST_META_KEY_USE_NATIVE, 'yes' );
+
+			return $this->displayWPNative( $dataOfTranslationCreatedInNativeEditorViaConnection );
+		}
 
 		return Either::of( $params )
 		             ->map( [ $this->manualJobs, 'createOrReuse' ] )
@@ -122,6 +140,11 @@ class Editor {
 				return Either::of( $jobObject );
 			};
 
+			/**
+			 * @param \WPML_Element_Translation_Job $jobObject
+			 *
+			 * @return callable|Left|Right
+			 */
 			$handleMissingATEJob = function ( $jobObject ) use ( $params ) {
 				// ATE editor is already set. All fine, we can proceed.
 				if ( $this->isValidATEJob( $jobObject ) ) {
@@ -129,10 +152,21 @@ class Editor {
 				}
 
 				/**
+				 * If the job editor is 'wpml', it means an existing in-progress CTE job is being reused
+				 * (not a newly created job). Since we reached this point, $shouldOpenCTE already confirmed
+				 * this job should be migrated to ATE.
+				 *
+				 * @see https://onthegosystems.myjetbrains.com/youtrack/issue/wpmldev-6608
+				 */
+				if ( $jobObject->get_basic_data_property( 'editor' ) === \WPML_TM_Editors::WPML ) {
+					return $this->createATECounterpartForExistingWPMLJob( $params, $jobObject );
+				}
+
+				/**
 				 * The new job has been created because either there was no translation at all or translation was "needs update".
 				 * The ATE job could not be created inside WPML_TM_ATE_Jobs_Actions::added_translation_jobs ,and we have to return the error message.
 				 */
-				if ( $this->isNewJobCreated( $params, $jobObject ) ) {
+				if ( ! $jobObject->get_basic_data_property( 'translated' ) && $this->previousJob( $params, $jobObject ) ) {
 					return Either::left( $this->handleATEJobCreationError( $params, self::ATE_JOB_COULD_NOT_BE_CREATED, $jobObject ) );
 				}
 
@@ -175,13 +209,32 @@ class Editor {
 	}
 
 	/**
+	 * @param array $dataOfTranslationCreatedInNativeEditorViaConnection
+	 *
+	 * @return array
+	 */
+	private function displayWPNative( array $dataOfTranslationCreatedInNativeEditorViaConnection ) {
+		$url = 'post.php?' . http_build_query(
+				[
+					'lang'      => $dataOfTranslationCreatedInNativeEditorViaConnection['targetLanguageCode'],
+					'action'    => 'edit',
+					'post_type' => str_replace( 'post_', '', $dataOfTranslationCreatedInNativeEditorViaConnection['postType'] ),
+					'post'      => $dataOfTranslationCreatedInNativeEditorViaConnection['translatedPostId']
+				]
+			);
+
+
+		return [ 'editor' => \WPML_TM_Editors::WP, 'jobObject' => null, 'url' => $url ];
+	}
+
+	/**
 	 * @param \WPML_Element_Translation_Job $jobObject
 	 *
 	 * @return void
 	 */
 	private function maybeSetReviewStatus( $jobObject ) {
 		if ( Relation::propEq( 'review_status', ReviewStatus::NEEDS_REVIEW, $jobObject->to_array() ) ) {
-			Jobs::setReviewStatus( $jobObject->get_id(), SetupOption::shouldTranslateEverything() ? ReviewStatus::EDITING : null );
+			Jobs::setReviewStatus( $jobObject->get_id(), SetupOption::shouldBeReviewed() ? ReviewStatus::EDITING : null );
 		}
 	}
 
@@ -229,16 +282,35 @@ class Editor {
 	}
 
 	/**
-	 * It checks if we created a new entry in wp_icl_translate_job table.
+	 * It checks if we have a previous job in _icl_translate_job DB table and returns it if exists or returns false otherwise.
 	 * It happens when none translation for a specific language has existed so far or when a translation has been "needs update".
 	 *
-	 * @param array                         $params
+	 * @param array $params
 	 * @param \WPML_Element_Translation_Job $jobObject
 	 *
-	 * @return bool
+	 * @return object|bool
 	 */
-	private function isNewJobCreated( $params , $jobObject ) {
-		return (int) $jobObject->get_id() !== (int) Obj::prop( 'job_id', $params );
+	private function previousJob( $params, $jobObject ) {
+		/**
+		 * If we get previous job ID passed in $params (like how it happens when updating translation from posts list).,
+		 * then we can compare it with the job_id coming from $jobObject
+		 *
+		 * Otherwise, if we're getting same job_id inside $params and $jobObject (like how it happens when updating translation from translations queue).,
+		 * then we get the previous job ID and compare it with the job_id coming from $jobObject, if they are not equal we return the previous job object, or we return false otherwise.
+		 *
+		 * @see wpmldev-541
+		 */
+
+		$jobObjectJobId = (int) $jobObject->get_id();
+		$jobIdInParams  = (int) Obj::prop( 'job_id', $params );
+
+		if ( $jobObjectJobId !== $jobIdInParams ) {
+			return Jobs::get( $jobIdInParams );
+		}
+
+		$previousJob = Jobs::getPreviousJob( $jobIdInParams );
+
+		return $previousJob && (int) $previousJob->job_id !== $jobObjectJobId ? $previousJob : false;
 	}
 
 	/**
@@ -298,7 +370,7 @@ class Editor {
 		if ( array_key_exists( 'return_url', $params ) ) {
 			$return_url = filter_var( $params['return_url'], FILTER_SANITIZE_URL );
 
-			$return_url_parts = wp_parse_url( $return_url );
+			$return_url_parts = wp_parse_url( (string) $return_url );
 
 			$admin_url       = get_admin_url();
 			$admin_url_parts = wp_parse_url( $admin_url );

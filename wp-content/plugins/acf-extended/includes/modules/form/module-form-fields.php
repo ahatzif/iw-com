@@ -332,7 +332,7 @@ class acfe_module_form_field_groups{
     function field_groups_choices($field){
         
         // validate
-        if(acf_maybe_get($field, 'ajax_action') !== 'acfe/form/map_field_groups_ajax'){
+        if(acfe_get($field, 'ajax_action') !== 'acfe/form/map_field_groups_ajax'){
             return $field;
         }
         
@@ -500,7 +500,7 @@ class acfe_module_form_field_groups{
     
         // custom value
         $children = array();
-        $value_array = acf_get_array($options['value']);
+        $value_array = acfe_as_array($options['value']);
         $value_array[] = '';
         
         foreach($value_array as $value){
@@ -576,7 +576,7 @@ class acfe_module_form_field_groups{
     function select_choices($field){
         
         // validate
-        if(acf_maybe_get($field, 'ajax_action') !== 'acfe/form/map_field_ajax'){
+        if(acfe_get($field, 'ajax_action') !== 'acfe/form/map_field_ajax'){
             return $field;
         }
         
@@ -891,7 +891,7 @@ class acfe_module_form_field_groups{
     
         // custom value
         $children = array();
-        $value_array = acf_get_array($options['value']);
+        $value_array = acfe_as_array($options['value']);
         $value_array[] = ''; // we must append empty string to let search being a custom value (in case a value was never selected before)
     
         foreach($value_array as $value){
@@ -1051,7 +1051,7 @@ class acfe_module_form_field_groups{
             // this fix an issue where acf_get_fields($field_group) return orphan fields in ajax query
             // if field group has no fields and is local field group
             if(!empty($all_fields) && acf_is_local_field_group($field_group)){
-                if(isset($all_fields[0]['field']) && acf_maybe_get($all_fields[0]['field'], 'parent') !== $field_group){
+                if(isset($all_fields[0]['field']) && acfe_get($all_fields[0]['field'], 'parent') !== $field_group){
                     return $fields;
                 }
             }
@@ -2061,6 +2061,33 @@ class acfe_module_form_field_groups{
                     'name' => 'success_scroll',
                     'type' => 'true_false',
                     'instructions' => __('Scroll to message on success', 'acfe'),
+                    'conditional_logic' => array(
+                        array(
+                            array(
+                                'field' => 'field_success_return',
+                                'operator' => '==',
+                                'value' => '',
+                            ),
+                        ),
+                    ),
+                    'wrapper' => array(
+                        'width' => '',
+                        'class' => '',
+                        'id' => '',
+                    ),
+                    'message' => '',
+                    'default_value' => 0,
+                    'ui' => 1,
+                    'ui_on_text' => '',
+                    'ui_off_text' => '',
+                    'group_with' => 'success',
+                ),
+                array(
+                    'key' => 'field_success_shortcode',
+                    'label' => __('Apply shortcodes', 'acfe'),
+                    'name' => 'success_shortcode',
+                    'type' => 'true_false',
+                    'instructions' => __('Apply shortcodes to success message', 'acfe'),
                     'conditional_logic' => array(
                         array(
                             array(

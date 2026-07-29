@@ -7,12 +7,11 @@
 
 defined( 'ABSPATH' ) || exit;
 
+remove_action( 'woocommerce_account_content', 'woocommerce_output_all_notices', 5 );
+
 $current_user = wp_get_current_user();
 $current_endpoint = com_theme_account_current_endpoint();
 $menu_items = wc_get_account_menu_items();
-$display_name = trim( (string) $current_user->first_name );
-$display_name = $display_name !== '' ? $display_name : $current_user->display_name;
-$initial = mb_strtoupper( mb_substr( $display_name, 0, 1 ) );
 ?>
 
 <main
@@ -21,8 +20,8 @@ $initial = mb_strtoupper( mb_substr( $display_name, 0, 1 ) );
 >
     <header class="mb-50 flex flex-col gap-30 border-b border-blue/50 pb-40 md:mb-60 md:flex-row md:items-end md:justify-between md:pb-50">
         <div class="max-w-[78rem]">
-            <p class="mb-15 text-[1rem] font-medium uppercase tracking-[.18em] text-blue/60">
-                <?= esc_html__( 'Προσωπικός χώρος', 'com-theme' ) ?>
+            <p class="mb-15 text-[1rem] font-medium tracking-[.18em] text-blue/60">
+                <?= esc_html( com\theme::remove_accents( __( 'Προσωπικός χώρος', 'com-theme' ) ) ) ?>
             </p>
             <h1 class="m-0 text-[4rem] font-medium leading-[1.05] md:text-[6rem]">
                 <?= esc_html__( 'Ο λογαριασμός μου', 'com-theme' ) ?>
@@ -31,17 +30,11 @@ $initial = mb_strtoupper( mb_substr( $display_name, 0, 1 ) );
                 <?= esc_html__( 'Όλα όσα αφορούν τις αγορές και τις επισκέψεις σας, συγκεντρωμένα σε ένα σημείο.', 'com-theme' ) ?>
             </p>
         </div>
-
-        <div class="flex items-center gap-15 md:pb-5">
-            <span class="flex size-50 items-center justify-center rounded-full bg-blue text-[2rem] font-medium text-ochre" aria-hidden="true">
-                <?= esc_html( $initial ) ?>
-            </span>
-            <div>
-                <span class="block text-[1.1rem] uppercase tracking-[.12em] text-blue/60"><?= esc_html__( 'Καλώς ήρθατε', 'com-theme' ) ?></span>
-                <strong class="block text-[1.6rem] font-bold"><?= esc_html( $display_name ) ?></strong>
-            </div>
-        </div>
     </header>
+
+    <div data-account-pages="notices" aria-live="polite">
+        <?php woocommerce_output_all_notices(); ?>
+    </div>
 
     <nav class="-mx-1/12 mb-20 overflow-x-auto px-1/12 md:hidden" aria-label="<?= esc_attr__( 'Σελίδες λογαριασμού', 'com-theme' ) ?>">
         <ul class="flex w-max gap-10 pb-10">
@@ -83,8 +76,8 @@ $initial = mb_strtoupper( mb_substr( $display_name, 0, 1 ) );
                             <?php $count = com_theme_account_endpoint_count( $endpoint ); ?>
                             <?php if ( $count > 0 ) : ?>
                                 <span class="flex min-w-[2.4rem] items-center justify-center rounded-full border border-current px-6 py-3 text-[1rem]"><?= esc_html( (string) $count ) ?></span>
-                            <?php elseif ( $is_active ) : ?>
-                                <span aria-hidden="true">→</span>
+                            <?php else : ?>
+                                <span class="opacity-0 transition-opacity group-[.is-active]:opacity-100" aria-hidden="true">→</span>
                             <?php endif; ?>
                         </a>
                     </li>

@@ -25,23 +25,23 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
 ] );
 ?>
 
-<div class="grid gap-15 sm:grid-cols-2">
+<div class="space-y-15">
     <?php foreach ( $get_addresses as $name => $address_title ) :
         $address = wc_get_account_formatted_address( $name );
         $edit_url = wc_get_endpoint_url( 'edit-address', $name );
     ?>
-        <article class="flex min-h-[24rem] flex-col rounded-[1.2rem] bg-ochre-light p-20 md:p-25">
-            <div class="mb-25 flex items-start justify-between gap-20">
-                <span class="flex size-40 items-center justify-center rounded-full bg-blue text-white">
+        <article class="min-h-[18rem] rounded-[1.2rem] border border-blue/15 p-20 md:p-25">
+            <div class="mb-20 flex items-start justify-between gap-20">
+                <div class="flex items-center gap-10 text-blue-soft">
                     <svg class="size-20 fill-current" aria-hidden="true"><use xlink:href="#icon-location"></use></svg>
-                </span>
+                    <h3 class="m-0 text-[1.1rem] font-bold tracking-[.1em]"><?= esc_html( com\theme::remove_accents( $address_title ) ) ?></h3>
+                </div>
                 <a href="<?= esc_url( $edit_url ) ?>" data-barba-prevent data-account-pages="link" class="text-[1.3rem] underline underline-offset-4">
-                    <?= esc_html( $address ? __( 'Επεξεργασία', 'com-theme' ) : __( 'Προσθήκη', 'com-theme' ) ) ?>
+                    <?= esc_html__( 'Επεξεργασία', 'com-theme' ) ?>
                 </a>
             </div>
-            <h3 class="m-0 text-[1.2rem] font-bold uppercase tracking-[.1em] text-blue-soft"><?= esc_html( $address_title ) ?></h3>
-            <address class="mt-20 text-[1.6rem] not-italic leading-[1.55]">
-                <?= $address ? wp_kses_post( $address ) : esc_html__( 'Δεν έχετε ορίσει αυτή τη διεύθυνση.', 'com-theme' ) ?>
+            <address class="text-[1.3rem] not-italic leading-[1.5]">
+                <?= $address ? wp_kses_post( $address ) : esc_html__( 'Δεν έχει οριστεί ακόμη.', 'com-theme' ) ?>
             </address>
 
             <?php do_action( 'woocommerce_my_account_after_my_address', $name ); ?>

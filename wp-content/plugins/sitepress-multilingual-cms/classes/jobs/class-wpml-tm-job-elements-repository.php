@@ -1,5 +1,7 @@
 <?php
 
+use WPML\Translation\TranslationElements\FieldCompression;
+
 class WPML_TM_Job_Elements_Repository {
 
 	/** @var wpdb */
@@ -19,14 +21,16 @@ class WPML_TM_Job_Elements_Repository {
 	 */
 	public function get_job_elements( WPML_TM_Post_Job_Entity $job ) {
 		$sql = "
-			SELECT translate.* 
-			FROM {$this->wpdb->prefix}icl_translate translate 
+			SELECT translate.*
+			FROM {$this->wpdb->prefix}icl_translate translate
 			WHERE job_id = %d
 		";
 
 		$rowset = $this->wpdb->get_results( $this->wpdb->prepare( $sql, $job->get_translate_job_id() ) );
 
-		return array_map( array( $this, 'build_element_entity' ), $rowset );
+		return is_array( $rowset )
+			? array_map( array( $this, 'build_element_entity' ), $rowset )
+			: [];
 	}
 
 	/**
@@ -42,8 +46,8 @@ class WPML_TM_Job_Elements_Repository {
 			$raw_data->field_type,
 			$raw_data->field_format,
 			$raw_data->field_translate,
-			$raw_data->field_data,
-			$raw_data->field_data_translated,
+			FieldCompression::decompress( $raw_data->field_data, true ),
+			FieldCompression::decompress( $raw_data->field_data_translated, true ),
 			$raw_data->field_finished
 		);
 	}

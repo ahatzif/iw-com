@@ -27,6 +27,7 @@ class WPML_TM_Batch_Report_Email_Process {
 	}
 
 	public function process_emails() {
+		$this->batch_report->process_jobs_with_delay();
 		$batch_jobs = $this->batch_report->get_jobs();
 
 		$this->email_builder->prepare_assigned_jobs_emails( $batch_jobs );
@@ -36,18 +37,26 @@ class WPML_TM_Batch_Report_Email_Process {
 	}
 
 	private function send_emails() {
-		$headers = array();
-		$headers[] = 'Content-type: text/html; charset=UTF-8';
+		$this->batch_report->clean_batch_jobs();
+
+		$headers         = array();
+		$headers[]       = 'Content-type: text/html; charset=UTF-8';
+		$translators_ids = [ 0 ];
 
 		foreach ( $this->email_builder->get_emails() as $email ) {
 			$email['attachment'] = isset( $email['attachment'] ) ? $email['attachment'] : array();
-			$email_sent = wp_mail( $email['email'], $email['subject'], $email['body'], $headers, $email['attachment'] );
+
+            $email_sent = WPML_Mail_Sender::send( $email['email'], $email['subject'], $email['body'], $headers, $email['attachment'], 'batch-report' );
 
 			if ( $email_sent ) {
-				$this->batch_report->reset_batch_report( $email['translator_id'] );
+				$translators_ids[] = $email['translator_id'];
 			}
 		}
 
-		$this->batch_report->reset_batch_report( 0 );
+		$orphaned_translators_ids = $this->email_builder->get_orphaned_translators_ids();
+		$dnd_translators_ids      = $this->email_builder->get_dnd_translators_ids();
+		$translators_ids          = array_merge( $translators_ids, $orphaned_translators_ids, $dnd_translators_ids );
+
+		$this->batch_report->reset_batch_report_for_translators( $translators_ids );
 	}
 }

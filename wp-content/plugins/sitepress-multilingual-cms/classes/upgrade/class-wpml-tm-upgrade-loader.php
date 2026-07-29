@@ -93,6 +93,11 @@ class WPML_TM_Upgrade_Loader implements IWPML_Action {
 				[],
 				[ \WPML_Upgrade::SCOPE_ADMIN ]
 			),
+			$this->factory->create_command_definition(
+				WPML\TM\Upgrade\Commands\ResetClonedSiteLock::class,
+				[],
+				[ \WPML_Upgrade::SCOPE_ADMIN ]
+			),
 		);
 
 		$upgrade = new WPML_Upgrade( $commands, $this->sitepress, $this->factory );

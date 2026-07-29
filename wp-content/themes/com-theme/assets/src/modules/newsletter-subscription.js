@@ -60,7 +60,7 @@ export default class extends module {
             } else {
                 console.info(res.data);
                 this.form.classList.add( 'error' );
-                this.errorElement.innerHTML = 'ERROR';
+                this.errorElement.textContent = this.el.dataset.errorMessage || '';
             }
         }).catch(err => {
             btn.classList.remove( 'loading' );

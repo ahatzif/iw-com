@@ -104,17 +104,6 @@ class WPML_TM_ICL_Translation_Status {
 		return (int) $this->status_result;
 	}
 
-	/**
-	 * @return Just|Nothing
-	 */
-	public function previous() {
-
-		return Maybe::fromNullable( $this->wpdb->get_var(
-			"SELECT _prevstate
-		     FROM {$this->wpdb->prefix}{$this->table} "
-			. $this->get_where()
-		) )->map( 'unserialize' );
-	}
 
 	/**
 	 * @return string

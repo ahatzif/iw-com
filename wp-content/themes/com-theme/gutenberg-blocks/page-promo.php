@@ -25,8 +25,14 @@ if( ! empty( $page ) ) {
                 </div>
                 <div class="pt-1/12 md:pt-0 md:w-6/12 px-2/12 md:px-1/12 bg-white relative">
                     <div class="flex flex-col items-center justify-center text-center space-y-30 h-full">
-                        <?php if( ! empty( $icon ) ) { ?>
-                            <img class="h-[5rem] w-auto" src="<?php echo $icon[ 'url' ] ?>" alt="<?php echo $title; ?>">
+                        <?php if( ! empty( $icon_id = com_theme_attachment_id( $icon ) ) ) { ?>
+                            <?php get_template_part( 'templates/parts/image', null, [
+                                'id'       => $icon_id,
+                                'size'     => 'full',
+                                'classes'  => 'h-[5rem] w-auto',
+                                'alt'      => $title,
+                                'parallax' => false,
+                            ] ); ?>
                         <?php } ?>
                         <?php if( ! empty( $title = get_field( 'title' ) ) ) { ?>
                             <h2 class="text-42 font-heading leading-[1.1904761905]"><a href="<?php echo get_permalink( $page ); ?>"><?php echo $title; ?></a></h2>

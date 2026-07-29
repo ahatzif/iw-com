@@ -55,7 +55,7 @@
 			self.model.trigger('modeChanged');
 
 			self.syncedLabel = labels.hieraAlreadySynced;
-			
+
 			return self;
 		},
 		setToTranslate: function () {
@@ -80,10 +80,9 @@
 				tax = self.model.get("taxonomy"),
 				taxonomyPluralLabel = TaxonomyTranslation.data.taxonomies[tax].label,
 				taxonomySingularLabel = TaxonomyTranslation.data.taxonomies[tax].singularLabel;
-				
+
 			self.headerTerms = labels.translate.replace( '%taxonomy%', taxonomySingularLabel );
 			self.summaryTerms = labels.summaryTerms.replace( '%taxonomy%', '<strong>' + taxonomyPluralLabel + '</strong>' );
-			self.resultsTruncated = labels.resultsTruncated.replace( '%taxonomy%', '<strong>' + taxonomyPluralLabel + '</strong>' );
 			self.labelSummary = labels.summaryLabels.replace( '%taxonomy%', '<strong>' + taxonomySingularLabel + '</strong>' );
 
 			return self;
@@ -132,7 +131,6 @@
 					taxonomy: taxonomy,
 					langs: TaxonomyTranslation.data.activeLanguages,
 					summaryTerms: self.summaryTerms,
-					resultsTruncated: self.resultsTruncated,
 					labelSummary: self.labelSummary,
 					mode: self.mode,
 					hasContent: hasContent,
@@ -193,9 +191,9 @@
 					loaded.show();
 					loaded.parent().children( '.wpml-loading-taxonomy' ).remove();
 				}
-				
+
 			}
-			
+
 			return self;
 		},
 		addLabelTranslation: function (mainFragment, renderedFragment) {
@@ -241,7 +239,7 @@
 		selectTaxonomy: function () {
 			var self = this,
 				tax = jQuery("#icl_tt_tax_switch").val();
-				
+
 			if (tax !== undefined) {
 				self.mode = 'translate';
 				self.model.setTaxonomy(tax);
@@ -249,7 +247,7 @@
 		},
 		doSync: function () {
 			var self = this;
-			
+
 			self.$el.find( '#tax-apply' ).prop( 'disabled', true );
 			TaxonomyTranslation.mainView.model.doSync( self.$el.find("#in-lang").val() );
 			self.syncedLabel = labels.hieraSynced;

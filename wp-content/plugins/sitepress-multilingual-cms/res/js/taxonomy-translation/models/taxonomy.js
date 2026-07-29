@@ -2,7 +2,7 @@
 
 (function () {
 	"use strict";
-	
+
 	TaxonomyTranslation.models.Taxonomy = Backbone.Model.extend({
 
 		defaults: function () {
@@ -65,8 +65,6 @@
 					if (response.bottomContent) {
 						self.set('bottomContent', response.bottomContent);
 					}
-
-					TaxonomyTranslation.data.resultsTruncated = response.resultsTruncated;
 
 					if (termsData) {
 						self.processData(termsData);

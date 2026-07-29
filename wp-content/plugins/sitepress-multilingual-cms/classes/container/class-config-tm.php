@@ -5,7 +5,6 @@ namespace WPML\TM\Container;
 use WPML\TM\ATE\ClonedSites\ApiCommunication;
 use WPML\TM\ATE\ClonedSites\Lock;
 use WPML\TM\ATE\Log\Storage;
-use WPML\TM\Notices\AteLockNotice;
 
 class Config {
 
@@ -42,7 +41,6 @@ class Config {
 			Storage::class,
 			ApiCommunication::class,
 			Lock::class,
-			AteLockNotice::class,
 		];
 	}
 }

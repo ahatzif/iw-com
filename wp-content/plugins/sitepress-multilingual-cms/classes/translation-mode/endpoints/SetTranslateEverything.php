@@ -8,28 +8,33 @@ use WPML\Collect\Support\Collection;
 use WPML\Element\API\Languages;
 use WPML\FP\Fns;
 use WPML\FP\Right;
-use WPML\LIB\WP\User;
 use WPML\Setup\Option;
 use function WPML\FP\partialRight;
 
+/**
+ * @depecated
+ * @todo Remove this class
+ */
 class SetTranslateEverything implements IHandler {
 
 	public function run( Collection $data ) {
 		if ( $data->has( 'translateEverything' ) ) {
-			Option::setTranslateEverything( $data->get( 'translateEverything' ) );
-			do_action( 'wpml_set_translate_everything', $data->get( 'translateEverything' ) );
-		}
+			$useTranslateEverything = $data->get( 'translateEverything' );
 
-		if ( $data->has( 'onlyNew' ) ) {
-			$markAsComplete = partialRight(
-				[ Option::class, 'markPostTypeAsCompleted' ],
-				$data->get( 'onlyNew', false ) ? Languages::getSecondaryCodes() : []
-			);
-			Fns::map( Fns::unary( $markAsComplete ), PostTypes::getAutomaticTranslatable() );
+			Option::setTranslateEverything( $useTranslateEverything );
+			do_action( 'wpml_set_translate_everything', $useTranslateEverything );
 		}
 
 		if ( $data->has( 'reviewMode' ) ) {
 			Option::setReviewMode( $data->get( 'reviewMode' ) );
+		}
+
+		if ( $data->has( 'whoMode' ) ) {
+			Option::setTranslationMode( $data->get( 'whoMode' ) );
+		}
+
+		if ( $data->has( 'translateEverythingDrafts' ) ) {
+			Option::setTranslateEverythingDrafts( $data->get( 'translateEverythingDrafts' ) );
 		}
 
 		return Right::of( true );

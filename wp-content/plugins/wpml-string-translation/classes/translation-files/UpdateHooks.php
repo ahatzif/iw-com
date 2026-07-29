@@ -23,10 +23,17 @@ class UpdateHooks implements \IWPML_Action {
 	/** @var callable */
 	private $resetDomainsCache;
 
+	/**
+	 * Constructor.
+	 *
+	 * @param Manager              $file_manager
+	 * @param DomainsLocalesMapper $domains_locales_mapper
+	 * @param callable|null        $resetDomainsCache
+	 */
 	public function __construct(
 		Manager $file_manager,
 		DomainsLocalesMapper $domains_locales_mapper,
-		callable $resetDomainsCache = null
+		?callable $resetDomainsCache = null
 	) {
 		$this->file_manager           = $file_manager;
 		$this->domains_locales_mapper = $domains_locales_mapper;
@@ -35,9 +42,16 @@ class UpdateHooks implements \IWPML_Action {
 	}
 
 	public function add_hooks() {
+		add_action( 'wpml_st_strings_table_altered', [ Domains::class, 'invalidateMODomainCache' ] );
+		add_action( 'wpml_st_string_registered', [ Domains::class, 'invalidateMODomainCache' ] );
+		add_action( 'wpml_st_string_unregistered', [ Domains::class, 'invalidateMODomainCache' ] );
+		add_action( 'wpml_st_string_updated', [ Domains::class, 'invalidateMODomainCache' ] );
+
 		add_action( 'wpml_st_add_string_translation', array( $this, 'add_to_update_queue' ) );
 		add_action( 'wpml_st_update_string', array( $this, 'refresh_after_update_original_string' ), 10, 6 );
 		add_action( 'wpml_st_before_remove_strings', array( $this, 'refresh_before_remove_strings' ) );
+		add_action( 'wpml_st_translation_files_process_queue', [ $this, 'process_update_queue_action' ] );
+
 		/**
 		 * @see UpdateHooks::refresh_domain
 		 * @since @3.1.0
@@ -58,9 +72,15 @@ class UpdateHooks implements \IWPML_Action {
 	}
 
 	private function add_shutdown_action() {
-		if ( ! has_action( 'shutdown', array( $this, 'process_update_queue' ) ) ) {
-			add_action( 'shutdown', array( $this, 'process_update_queue' ) );
+		if ( ! has_action( 'shutdown', array( $this, 'process_update_queue_action' ) ) ) {
+			add_action( 'shutdown', array( $this, 'process_update_queue_action' ) );
 		}
+	}
+
+	public function process_update_queue_action() {
+		remove_action( 'shutdown', array( $this, 'process_update_queue_action' ) );
+
+		$this->process_update_queue();
 	}
 
 	/**
@@ -73,8 +93,9 @@ class UpdateHooks implements \IWPML_Action {
 		$this->entities_to_update = $this->entities_to_update->merge( $outdated_entities );
 
 		$this->entities_to_update->each(
-			function( $entity ) {
-				$this->update_file( $entity->domain, $entity->locale );
+			function ( $entity ) {
+				$updatedFilename = $this->update_file( $entity->domain, $entity->locale );
+				do_action( 'wpml_st_translation_file_updated', $updatedFilename, $entity->domain, $entity->locale );
 			}
 		);
 
@@ -97,7 +118,10 @@ class UpdateHooks implements \IWPML_Action {
 
 	public function update_imported_file( \WPML_ST_Translations_File_Entry $file_entry ) {
 		if ( $file_entry->get_status() === \WPML_ST_Translations_File_Entry::IMPORTED ) {
-			$this->update_file( $file_entry->get_domain(), $file_entry->get_file_locale() );
+			$updatedFilename = $this->update_file( $file_entry->get_domain(), $file_entry->get_file_locale() );
+			if ( $updatedFilename ) {
+				do_action( 'wpml_st_translation_file_updated', $updatedFilename, $file_entry->get_domain(), $file_entry->get_file_locale() );
+			}
 		}
 	}
 
@@ -130,6 +154,8 @@ class UpdateHooks implements \IWPML_Action {
 	/**
 	 * @param string $domain
 	 * @param string $locale
+	 *
+	 * @return false|string
 	 */
 	private function update_file( $domain, $locale ) {
 		/**
@@ -138,7 +164,8 @@ class UpdateHooks implements \IWPML_Action {
 		 */
 		$this->file_manager->remove( $domain, $locale );
 		if ( $this->file_manager->handles( $domain ) ) {
-			$this->file_manager->add( $domain, $locale );
+			return $this->file_manager->add( $domain, $locale );
 		}
+		return false;
 	}
 }

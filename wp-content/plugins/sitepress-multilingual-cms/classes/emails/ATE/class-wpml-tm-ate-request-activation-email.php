@@ -33,7 +33,6 @@ class WPML_TM_ATE_Request_Activation_Email {
 			'Content-type: text/html; charset=UTF-8',
 		);
 
-		return wp_mail( $to, $subject, $message, $headers );
+		return WPML_Mail_Sender::send( $to, $subject, $message, $headers, array(), 'ate-request-activation' );
 	}
-
 }

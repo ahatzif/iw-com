@@ -14,7 +14,10 @@ class WPML_TF_Collection implements Iterator, Countable {
 	 * @param \IWPML_TF_Data_Object $data_object
 	 */
 	public function add( IWPML_TF_Data_Object $data_object ) {
-		$this->collection[ $data_object->get_id() ] = $data_object;
+		$id = $data_object->get_id();
+		$id = null === $id ? '' : $id;
+
+		$this->collection[ $id ] = $data_object;
 	}
 
 	/**
@@ -30,34 +33,31 @@ class WPML_TF_Collection implements Iterator, Countable {
 	 * @return IWPML_TF_Data_Object|null
 	 */
 	public function get( $id ) {
+		$id = null === $id ? '' : $id;
+
 		return array_key_exists( $id, $this->collection ) ? $this->collection[ $id ] : null;
 	}
 
-	/**
-	 * @return int
-	 */
-	public function count() {
+	public function count(): int {
 		return count( $this->collection );
 	}
 
+  #[\ReturnTypeWillChange]
 	public function rewind() {
 		reset( $this->collection );
 	}
 
-	/**
-	 * @return mixed
-	 */
+	#[\ReturnTypeWillChange]
 	public function current() {
 		return current( $this->collection );
 	}
 
-	/**
-	 * @return mixed
-	 */
+	#[\ReturnTypeWillChange]
 	public function key() {
 		return key( $this->collection );
 	}
 
+  #[\ReturnTypeWillChange]
 	public function next() {
 		next( $this->collection );
 	}
@@ -65,7 +65,7 @@ class WPML_TF_Collection implements Iterator, Countable {
 	/**
 	 * @return bool
 	 */
-	public function valid() {
+	public function valid(): bool {
 		return key( $this->collection ) !== null;
 	}
 }

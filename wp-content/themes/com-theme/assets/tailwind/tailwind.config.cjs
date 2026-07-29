@@ -15,6 +15,7 @@ module.exports = {
     "./src/modules/**/*.js",
     './tailwind/theme.config.classes.txt',
   ],
+  blocklist: [ 'uppercase' ],
   future: { hoverOnlyWhenSupported: true, },
   theme: {
     extend: {

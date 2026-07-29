@@ -2,6 +2,8 @@
 
 namespace WPML\Container;
 
+use WPML\TM\ATE\AutoTranslate\Endpoint\GetJobsCount;
+
 class Config {
 
 	public static function getSharedInstances() {
@@ -49,12 +51,29 @@ class Config {
 			\WPML_Term_Translation::class     => [ \WPML_Term_Translation::class, 'getGlobalInstance' ],
 			\WPML_URL_Converter::class        => [ \WPML_URL_Converter::class, 'getGlobalInstance' ],
 			\WPML_Post_Status::class          => 'wpml_get_post_status_helper',
+			\WPML\ATE\Proxies\ProxyInterceptorLoader::class => [ \WPML\ATE\Proxies\ProxyInterceptorLoader::class, 'get' ],
 			'\WPML_Language_Resolution'       => function () {
 				global $wpml_language_resolution;
 
 				return $wpml_language_resolution;
 			},
 			\TranslationManagement::class     => 'wpml_load_core_tm',
+			\WPML\User\UsersByCapsRepository::class => function () {
+				global $wpdb;
+
+				$languagePairs = new \WPML_Language_Pair_Records( $wpdb, new \WPML_Language_Records( $wpdb ) );
+
+				return new \WPML\User\UsersByCapsRepository( $wpdb, $languagePairs );
+			},
+			GetJobsCount::class => function() {
+				return new GetJobsCount(
+					new \WPML\TM\ATE\AutoTranslate\Repository\CachedJobsCount(
+						new \WPML\TM\ATE\AutoTranslate\Repository\JobsCount(
+							new \WPML\TM\ATE\Jobs()
+						)
+					)
+				);
+			},
 		];
 	}
 }

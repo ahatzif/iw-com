@@ -7,10 +7,6 @@ class WPML_Taxonomy_Translation_Table_Display {
 	private static function get_strings_translation_array() {
 		$st_plugin = '<a href="' . get_admin_url( null, 'plugins.php' ) . '" target="_blank" class="wpml-external-link">WPML String Translation</a>';
 
-		$term_results_cap = defined( 'WPML_TAXONOMY_TRANSLATION_MAX_TERMS_RESULTS_SET' ) ?
-			WPML_TAXONOMY_TRANSLATION_MAX_TERMS_RESULTS_SET :
-			WPML_Taxonomy_Translation_Screen_Data::WPML_TAXONOMY_TRANSLATION_MAX_TERMS_RESULTS_SET;
-
 		$labels = array(
 			'Show'                            => __( 'Show', 'sitepress' ),
 			'untranslated'                    => __( 'untranslated', 'sitepress' ),
@@ -68,7 +64,6 @@ class WPML_Taxonomy_Translation_Table_Display {
 			'activateStringTranslation'       => sprintf( __( 'To translate taxonomy labels and slug you need %s plugin.', 'sitepress' ), $st_plugin ),
 			'preparingTermsData'              => __( 'Loading ...', 'sitepress' ),
 			'firstColumnHeading'              => sprintf( __( '%1$s terms (in original language)', 'sitepress' ), '%taxonomy%' ),
-			'resultsTruncated'                => sprintf( __( 'Because too many %1$s were found, only the first %2$s results are listed. You can refine the results using the Search field below.', 'sitepress' ), '%taxonomy%', '<strong>' . $term_results_cap . '</strong>' ),
 			'wpml_save_term_nonce'            => wp_create_nonce( 'wpml_save_term_nonce' ),
 			'wpml_tt_sync_hierarchy_nonce'    => wp_create_nonce( 'wpml_tt_sync_hierarchy_nonce' ),
 			'wpml_generate_unique_slug_nonce' => wp_create_nonce( 'wpml_generate_unique_slug_nonce' ),
@@ -87,44 +82,48 @@ class WPML_Taxonomy_Translation_Table_Display {
 
 		WPML_Simple_Language_Selector::enqueue_scripts();
 
-		wp_enqueue_style( 'translate-taxonomy', ICL_PLUGIN_URL . '/res/css/taxonomy-translation.css', array(), ICL_SITEPRESS_VERSION );
+		wp_enqueue_style( 'translate-taxonomy', ICL_PLUGIN_URL . '/res/css/taxonomy-translation.css', array(), ICL_SITEPRESS_SCRIPT_VERSION );
 
 		$core_dependencies = array( 'jquery', 'jquery-ui-dialog', 'backbone', 'wpml-underscore-template-compiler' );
 		wp_register_script(
 			'templates-compiled',
-			ICL_PLUGIN_URL . '/res/js/taxonomy-translation/templates-compiled.js',
+			ICL_PLUGIN_URL . '/res/js/templates-compiled.js',
 			$core_dependencies,
-			'1.2.4'
+			ICL_SITEPRESS_SCRIPT_VERSION
 		);
 		$core_dependencies[] = 'templates-compiled';
-		wp_register_script( 'main-util', ICL_PLUGIN_URL . '/res/js/taxonomy-translation/util.js', $core_dependencies );
+		wp_register_script( 'main-util', ICL_PLUGIN_URL . '/res/js/taxonomy-translation/util.js', $core_dependencies, ICL_SITEPRESS_SCRIPT_VERSION );
 
-		wp_register_script( 'main-model', ICL_PLUGIN_URL . '/res/js/taxonomy-translation/main.js', $core_dependencies );
+		wp_register_script( 'main-model', ICL_PLUGIN_URL . '/res/js/taxonomy-translation/main.js', $core_dependencies, ICL_SITEPRESS_SCRIPT_VERSION );
 		$core_dependencies[] = 'main-model';
 
 		$dependencies = $core_dependencies;
 		wp_register_script(
 			'term-rows-collection',
 			ICL_PLUGIN_URL . '/res/js/taxonomy-translation/collections/term-rows.js',
-			array_merge( $core_dependencies, array( 'term-row-model' ) )
+			array_merge( $core_dependencies, array( 'term-row-model' ) ),
+			ICL_SITEPRESS_SCRIPT_VERSION
 		);
 		$dependencies[] = 'term-rows-collection';
 		wp_register_script(
 			'term-model',
 			ICL_PLUGIN_URL . '/res/js/taxonomy-translation/models/term.js',
-			$core_dependencies
+			$core_dependencies,
+			ICL_SITEPRESS_SCRIPT_VERSION
 		);
 		$dependencies[] = 'term-model';
 		wp_register_script(
 			'taxonomy-model',
 			ICL_PLUGIN_URL . '/res/js/taxonomy-translation/models/taxonomy.js',
-			$core_dependencies
+			$core_dependencies,
+			ICL_SITEPRESS_SCRIPT_VERSION
 		);
 		$dependencies[] = 'taxonomy-model';
 		wp_register_script(
 			'term-row-model',
 			ICL_PLUGIN_URL . '/res/js/taxonomy-translation/models/term-row.js',
-			$core_dependencies
+			$core_dependencies,
+			ICL_SITEPRESS_SCRIPT_VERSION
 		);
 		$dependencies[] = 'term-row-model';
 
@@ -148,7 +147,7 @@ class WPML_Taxonomy_Translation_Table_Display {
 				$script,
 				ICL_PLUGIN_URL . '/res/js/taxonomy-translation/views/' . $script . '.js',
 				$core_dependencies,
-				'1.2.4'
+				ICL_SITEPRESS_SCRIPT_VERSION
 			);
 			$dependencies[] = $script;
 		}
@@ -165,7 +164,7 @@ class WPML_Taxonomy_Translation_Table_Display {
 			wp_enqueue_script( $handle );
 		}
 
-		wp_register_script( 'taxonomy-hierarchy-sync-message', ICL_PLUGIN_URL . '/res/js/taxonomy-hierarchy-sync-message.js', array( 'jquery' ) );
+		wp_register_script( 'taxonomy-hierarchy-sync-message', ICL_PLUGIN_URL . '/res/js/taxonomy-hierarchy-sync-message.js', array( 'jquery' ), ICL_SITEPRESS_SCRIPT_VERSION );
 		wp_enqueue_script( 'taxonomy-hierarchy-sync-message' );
 
 	}
@@ -246,7 +245,6 @@ class WPML_Taxonomy_Translation_Table_Display {
 			wp_send_json(
 				array(
 					'terms'                => $term_results['terms'],
-					'resultsTruncated'     => $term_results['truncated'],
 					'taxLabelTranslations' => $labels,
 					'defaultLanguage'      => $def_lang,
 					'bottomContent'        => $bottom_content,

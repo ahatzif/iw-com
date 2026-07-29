@@ -37,8 +37,8 @@ class WPML_TF_Frontend_AJAX_Hooks implements IWPML_Action {
 		WPML_TF_Data_Object_Storage $feedback_storage,
 		WPML_TF_Document_Information $document_information,
 		WPML_TF_Post_Rating_Metrics $post_rating_metrics,
-		WPML_TP_Client_Factory $tp_client_factory = null,
-		array $post_data = null
+		?WPML_TP_Client_Factory $tp_client_factory = null,
+		?array $post_data = null
 	) {
 		$this->feedback_storage     = $feedback_storage;
 		$this->document_information = $document_information;

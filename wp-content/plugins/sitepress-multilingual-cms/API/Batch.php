@@ -7,7 +7,7 @@ use WPML\FP\Curryable;
 use WPML\FP\Fns;
 use WPML\FP\Obj;
 use WPML\TM\Jobs\Dispatch\Messages;
-use function WPML\Container\make;
+use WPML\Translation\CancelJobsServiceFactory;
 
 /**
  * Class Batch
@@ -24,24 +24,32 @@ class Batch {
 	public static function init() {
 
 		self::curryN( 'rollback', 1, function ( $basketName ) {
-			$batch = make( \WPML_Translation_Basket::class )->get_basket_batch( $basketName );
-			$batch->cancel_all_jobs();
-			$batch->clear_batch_data();
+			$batchId = \WPML_Translation_Basket::get_batch_id_from_name( $basketName );
+
+			if ( $batchId ) {
+				/**
+				 * We have a known bug here, which we don't want to fix now. When the cancellation process is done,
+				 * jobs are canceled in the WordPress database, but their counterparts in ATE are not canceled.
+				 *
+				 * The first problem is in JobActionsFactory. That factory is not executed in Ajax request, where the sending to translation
+				 * actually happens.
+				 *
+				 * However, even if we fix the bug with JobActionsFactory, the process will not work well either.
+				 * Even though we make a call to ATE with the proper request, jobs are not canceled on their side.
+				 * I suspect this is a timing issue, stemming from the fact that we're trying to cancel a job which was created a second ago.
+				 * So perhaps ATE doesn't manage to sync all those jobs yet.
+				 *
+				 * As we have had this issue for a very long time, we don't want to invest time in fixing it now.
+				 */
+				$cancelJobsService = CancelJobsServiceFactory::create();
+				$cancelJobsService->cancelJobsInBatch( $batchId );
+			}
+
+			\TranslationProxy_Basket::set_batch_data( null );
+			icl_cache_clear();
 		} );
 
 
-	}
-
-	public static function sendPosts( Messages $messages, $batch, $sendFrom = Jobs::SENT_VIA_BASKET ) {
-		$dispatchActions = function ( $batch ) use ( $sendFrom ) {
-			$allowedTypes = array_keys( \TranslationProxy_Basket::get_basket_items_types() );
-
-			foreach ( $allowedTypes as $type ) {
-				do_action( 'wpml_tm_send_' . $type . '_jobs', $batch, $type, $sendFrom );
-			}
-		};
-
-		self::send( $dispatchActions, [ $messages, 'showForPosts' ], $batch );
 	}
 
 	public static function sendStrings( Messages $messages, $batch ) {

@@ -2,7 +2,7 @@ import { module } from 'modujs';
 const { slideToggle, slideDown, slideUp } = window.domSlider;
 import Emitter from "tiny-emitter/instance";
 import axios from "axios";
-import { loadStripeJs } from "../utils/stripe";
+
 export default class extends module {
     constructor(m) {
         super(m);
@@ -11,7 +11,6 @@ export default class extends module {
         this.form = this.el;
         this.submitBind = this.onSubmit.bind( this );
         this.el.addEventListener( 'submit', this.submitBind );
-        this.createStripeForm();
         this.handleShippingAddressChanges();
         this.shippingMethods = this.$( 'shipping-methods' );
         this.shippingMethodsContainer = this.$( 'shipping-methods-container' );
@@ -62,34 +61,13 @@ export default class extends module {
             return;
         }
         e.preventDefault();
-        if( this.stripeCardElementHolder ) {
-            this.stripeCardElementHolder.classList.remove('error');
-        }
         this.paymentMethod = this.el.querySelector('input[name="payment_method"]:checked');
         if( this.paymentMethod ){
             this.paymentMethod  = this.paymentMethod.value;
         }
 
         this.notices.innerHTML = '';
-        if(  this.paymentMethod === 'stripe' ){
-            if( this.stripePaymentMethodInput.value ){
-                this.sendForm();
-                return;
-            }
-
-            this.stripe.createPaymentMethod({ type: 'card', card: this.card }).then(result => {
-                if( result.paymentMethod ){
-                    this.setStripePaymentMethod(result.paymentMethod.id);
-                    this.sendForm();
-                } else if( result.error ) {
-                    this.stripeCardElementHolder.classList.add( 'error'  );
-                    this.stripeCardElementErrorMessage.textContent = result.error.message;
-                    this.call( 'scrollTo', { target: this.stripeCardElementHolder, options : { duration: 0.01, offset: -60 -  document.querySelector( 'header' ).offsetHeight  } }, 'Scroll');
-                }
-            });
-        } else {
-            this.sendForm();
-        }
+        this.sendForm();
     }
 
     sendForm(){
@@ -108,49 +86,10 @@ export default class extends module {
         } ).catch( error => console.info(error) );
     }
 
-    async createStripeForm(){
-        const StripeConstructor = await this.loadStripeJs();
-        const stripeKey = window.wc_stripe_upe_params?.key || window.wc_stripe_params?.key || this.el.dataset.stripeKey;
-        if ( ! stripeKey )  throw new Error('Stripe publishable key not found');
-        this.stripe = StripeConstructor( stripeKey );
-
-        this.stripePaymentMethodInput = this.el.querySelector('input[name="stripe_source"]');
-        this.wcStripePaymentMethodInput = this.el.querySelector('input[name="wc-stripe-payment-method"]');
-        this.wcStripeSelectedPaymentTypeInput = this.el.querySelector('input[name="wc_stripe_selected_upe_payment_type"]');
-        if( ! this.stripePaymentMethodInput ) return;
-
-        this.stripeCardElementHolder = this.$('stripe-card-element-holder')[0];
-        this.stripeCardElementErrorMessage = this.$('stripe-card-element-error-message')[0];
-
-
-        const elements = this.stripe.elements( { locale: document.documentElement.lang || 'en' });
-        this.card = elements.create('card', { hidePostalCode: true, style: {
-                base: { color: '#31312F', fontSize: '20px', '::placeholder': { color: '#31312F' }, },
-                invalid: { color: '#FF0F00' },
-            }, });
-        this.card.mount('[data-checkout-form="stripe-card-element"]');
-    }
-
-
-
-    async loadStripeJs() {
-        return loadStripeJs();
-    }
-
-    setStripePaymentMethod( paymentMethodId ) {
-        this.stripePaymentMethodInput.value = paymentMethodId;
-        if ( this.wcStripePaymentMethodInput ) {
-            this.wcStripePaymentMethodInput.value = paymentMethodId;
-        }
-        if ( this.wcStripeSelectedPaymentTypeInput ) {
-            this.wcStripeSelectedPaymentTypeInput.value = 'card';
-        }
-    }
-
 
     onFormError( form ){
         if (!this.el.contains(form)) return;
-        let firstError = form.querySelector('.StripeElement--invalid,[data-module-validate].error');
+        let firstError = form.querySelector('[data-module-validate].error');
         if( firstError ){
             let step = firstError.closest( '[data-checkout-form="step"]' );
             let active = this.el.querySelector( '.active[data-checkout-form="step"]');

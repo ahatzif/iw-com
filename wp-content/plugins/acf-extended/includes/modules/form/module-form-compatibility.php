@@ -8,11 +8,44 @@ if(!class_exists('acfe_module_form_compatibility')):
 
 class acfe_module_form_compatibility{
     
+    /**
+     * construct
+     */
     function __construct(){
+        
+        // pre validate item
+        add_filter('acfe/module/validate_item/module=form',           array($this, 'validate_item'), 10, 2);
         
         // import
         add_filter('acfe/module/prepare_item_for_import/module=form', array($this, 'import_0_9'),   20);
         add_filter('acfe/module/prepare_item_for_import/module=form', array($this, 'import_0_8_5'), 10);
+        
+    }
+    
+    
+    /**
+     * pre_validate_item
+     *
+     * @param $item
+     * @param $module
+     *
+     * @return array|mixed
+     */
+    function validate_item($item, $module){
+        
+        // get raw item
+        $raw_item = $module->get_raw_item($item);
+        if(!$raw_item){
+            return $item;
+        }
+        
+        // back-compatibility for old items that weren't updated
+        if(isset($raw_item['success']) && !isset($raw_item['success']['shortcode'])){
+            $item['success']['shortcode'] = true;
+        }
+        
+        // return
+        return $item;
         
     }
     
@@ -169,22 +202,22 @@ class acfe_module_form_compatibility{
         
         );
         
-        foreach(acf_get_array($args['acfe_form_actions']) as &$row){
+        foreach(acfe_as_array($args['acfe_form_actions']) as &$row){
             
             foreach($rules as $rule){
                 
-                if(!acf_maybe_get($row, $rule['group'])){
+                if(!acfe_get($row, $rule['group'])){
                     continue;
                 }
                 
                 $value = null;
                 $group = $row[$rule['group']];
                 
-                if(acf_maybe_get($group, $rule['sub_field']) === 'custom'){
-                    $value = acf_maybe_get($group, $rule['sub_field_custom']);
+                if(acfe_get($group, $rule['sub_field']) === 'custom'){
+                    $value = acfe_get($group, $rule['sub_field_custom']);
                     
                 }else{
-                    $value = acf_maybe_get($group, $rule['sub_field']);
+                    $value = acfe_get($group, $rule['sub_field']);
                 }
                 
                 unset($row[$rule['group']]);
@@ -247,11 +280,11 @@ class acfe_module_form_compatibility{
             
             );
             
-            foreach(acf_get_array($args['acfe_form_actions']) as &$row){
+            foreach(acfe_as_array($args['acfe_form_actions']) as &$row){
                 
                 foreach($rules as $rule){
                     
-                    $load_values = acf_maybe_get($row, $rule['load_values']);
+                    $load_values = acfe_get($row, $rule['load_values']);
                     $fields = $rule['fields'];
                     
                     if(!empty($load_values)){
@@ -260,7 +293,7 @@ class acfe_module_form_compatibility{
                     
                     foreach($fields as $map => $save){
                         
-                        $map_value = acf_maybe_get($row, $map);
+                        $map_value = acfe_get($row, $map);
                         
                         if(empty($map_value)){
                             continue;

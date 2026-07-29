@@ -19,6 +19,9 @@ use function WPML\FP\pipe;
  */
 class WPML_Terms_Translations {
 
+	/** @var array<string,bool> */
+	private static $term_slug_exist_cache = [];
+
 	/**
 	 * @param array<string|\WP_Term> $terms
 	 * @param string[]|string        $taxonomies This is only used by the WP core AJAX call that fetches the preview
@@ -67,28 +70,21 @@ class WPML_Terms_Translations {
 	}
 
 	/**
+	 * Generates a unique slug for a given term and language
+	 *
 	 * @param string $slug
 	 * @param string $taxonomy
 	 * @param string $lang
-	 * Creates a unique slug for a given term, using a scheme
-	 * encoding the language code in the slug.
+	 * @param int    $parent
 	 *
 	 * @return string
 	 */
-	public static function term_unique_slug( $slug, $taxonomy, $lang ) {
-		global $sitepress;
-
-		$default_language = $sitepress->get_default_language();
-
-		if ( $lang !== $default_language && self::term_slug_exists( $slug, $taxonomy ) ) {
-			$slug .= '-' . $lang;
-		}
-
+	public static function term_unique_slug( $slug, $taxonomy, $lang, $parent = 0 ) {
 		$i      = 2;
 		$suffix = '-' . $i;
 
-		if ( self::term_slug_exists( $slug, $taxonomy ) ) {
-			while ( self::term_slug_exists( $slug . $suffix, $taxonomy ) ) {
+		if ( self::term_slug_exists( $slug, $taxonomy, $lang, $parent ) ) {
+			while ( self::term_slug_exists( $slug . $suffix, $taxonomy, $lang, $parent ) ) {
 				$i ++;
 				$suffix = '-' . $i;
 			}
@@ -100,28 +96,47 @@ class WPML_Terms_Translations {
 
 	/**
 	 * @param string $slug
-	 * @param bool   $taxonomy
-	 * If $taxonomy is given, then slug existence is checked only for the specific taxonomy.
+	 * @param string $taxonomy
+	 * @param int    $parent
 	 *
 	 * @return bool
 	 */
-	private static function term_slug_exists( $slug, $taxonomy = false ) {
+	public static function term_slug_exists( $slug, $taxonomy, $lang = false, $parent = 0 ) {
 		global $wpdb;
 
-		$existing_term_prepared_query = $wpdb->prepare(
-			"SELECT t.term_id
-                                                         FROM {$wpdb->terms} t
-                                                         JOIN {$wpdb->term_taxonomy} tt
-                                                          ON t.term_id  = tt.term_id
-                                                         WHERE t.slug = %s
-                                                          AND tt.taxonomy = %s
-                                                         LIMIT 1",
-			$slug,
-			$taxonomy
-		);
-		$term_id                      = $wpdb->get_var( $existing_term_prepared_query );
+		$cache_key_str = wp_json_encode( [ $slug, $taxonomy, $lang, $parent ] );
+		$cache_key     = $cache_key_str ? md5( $cache_key_str ) : '';
 
-		return (bool) $term_id;
+		if ( $cache_key && isset( static::$term_slug_exist_cache[ $cache_key ] ) ) {
+			return static::$term_slug_exist_cache[ $cache_key ];
+		}
+
+		$where      = 't.slug = %s AND tt.taxonomy = %s AND tt.parent = %d';
+		$where_args = array( $slug, $taxonomy, $parent );
+
+		if ( $lang ) {
+			$where       .= ' AND tr.language_code = %s';
+			$where_args[] = $lang;
+		}
+
+		$query = "SELECT t.term_id
+		          FROM {$wpdb->terms} t
+		          JOIN {$wpdb->term_taxonomy} tt
+		            ON t.term_id = tt.term_id
+		          JOIN {$wpdb->prefix}icl_translations tr
+		            ON tt.term_taxonomy_id = tr.element_id
+		            	AND tr.element_type = CONCAT('tax_', %s)
+		          WHERE " . $wpdb->prepare( $where, $where_args ) . '
+		          LIMIT 1';
+
+		$existing_term_prepared_query = $wpdb->prepare( $query, $taxonomy );
+		$result                       = (bool) $wpdb->get_var( $existing_term_prepared_query );
+
+		if ( $cache_key ) {
+			static::$term_slug_exist_cache[ $cache_key ] = $result;
+		}
+
+		return $result;
 	}
 
 	/**
@@ -158,6 +173,7 @@ class WPML_Terms_Translations {
 	 * @param string|string[]|\WP_Post $post_type
 	 */
 	public static function quick_edit_terms_removal( $column_name, $post_type ) {
+		/** @var SitePress $sitepress */
 		global $sitepress, $wpdb;
 		if ( $column_name == 'icl_translations' ) {
 			$taxonomies                     = array_filter(
@@ -189,8 +205,7 @@ class WPML_Terms_Translations {
 				$terms_by_language_and_taxonomy[ $lang ][ $tax ][] = $term->term_id;
 			}
 			$terms_json = wp_json_encode( $terms_by_language_and_taxonomy );
-			$output     = '<div id="icl-terms-by-lang" style="display: none;">' . wp_kses_post( $terms_json ) . '</div>';
-			echo $output;
+			echo $terms_json ? '<div id="icl-terms-by-lang" style="display: none;">' . wp_kses_post( $terms_json ) . '</div>' : '';
 		}
 	}
 
@@ -245,7 +260,7 @@ class WPML_Terms_Translations {
 
 		$term                = false;
 		$lang_code           = false;
-		$taxonomy            = false;
+		$taxonomy            = '';
 		$original_id         = false;
 		$original_tax_id     = false;
 		$trid                = false;
@@ -345,7 +360,9 @@ class WPML_Terms_Translations {
 					)
 				);
 
-				$translated_slug = self::term_unique_slug( $translated_slug, $taxonomy, $lang_code );
+				$translated_slug = is_string( $lang_code )
+					? self::term_unique_slug( $translated_slug, $taxonomy, $lang_code )
+					: $translated_slug;
 			}
 			$new_translated_term = false;
 			if ( $term ) {
@@ -408,6 +425,10 @@ class WPML_Terms_Translations {
 		$post_translations        = $sitepress->get_element_translations( $post_trid, 'post_' . $post_type );
 		$terms_from_original_post = wp_get_post_terms( $post_id, $taxonomy );
 
+		if ( is_wp_error ( $terms_from_original_post ) ) {
+			return;
+		}
+
 		$is_original = true;
 
 		if ( $sitepress->get_original_element_id( $post_id, 'post_' . $post_type ) != $post_id ) {
@@ -421,6 +442,11 @@ class WPML_Terms_Translations {
 				continue;
 			}
 			$terms_from_translated_post = wp_get_post_terms( $translated_post_id, $taxonomy );
+
+			if ( is_wp_error ( $terms_from_translated_post ) ) {
+				continue;
+			}
+
 			if ( $is_original ) {
 				$duplicates = $sitepress->get_duplicates( $post_id );
 				if ( in_array( $translated_post_id, $duplicates ) ) {
@@ -582,10 +608,14 @@ class WPML_Terms_Translations {
 		return function ( $termId ) {
 			global $wpdb;
 
-			$sql      = "SELECT t.name FROM {$wpdb->terms} AS t JOIN {$wpdb->term_taxonomy} AS tt ON t.term_id = tt.term_id WHERE tt.term_taxonomy_id=%d";
-			$termName = $wpdb->get_var( $wpdb->prepare( $sql, $termId ) );
+			$sql    = "SELECT t.name, t.term_id FROM {$wpdb->terms} AS t JOIN {$wpdb->term_taxonomy} AS tt ON t.term_id = tt.term_id WHERE tt.term_taxonomy_id=%d";
+			$result = $wpdb->get_row( $wpdb->prepare( $sql, $termId ) );
 
-			return [ 'id' => $termId, 'name' => $termName ];
+			return [
+				'id'      => $termId, // The term_taxonomy_id.
+				'name'    => isset( $result->name ) ? $result->name : '',
+				'term_id' => isset( $result->term_id ) ? $result->term_id : 0,
+			];
 		};
 	}
 
@@ -627,10 +657,27 @@ class WPML_Terms_Translations {
 			global $sitepress;
 
 			$idInCorrectId = false;
-			$newTerm       = wp_insert_term( $termData['name'], $taxonomy, [ 'slug' => self::term_unique_slug( sanitize_title( $termData['name'] ), $taxonomy, $postLang ) ] );
-			if ( isset( $newTerm['term_taxonomy_id'] ) ) {
+			$trid          = $sitepress->get_element_trid( $termData['id'], 'tax_' . $taxonomy );
+
+			// Since 4.8 we allow same slug of terms in different languages.
+			// Add filter to check only current language terms in wp_insert_term().
+			$sitepress->switch_lang( $postLang );
+			if ( ! has_filter( 'get_terms', [ 'WPML_Terms_Translations', 'get_terms_filter' ] ) ) {
+				add_filter( 'get_terms', [ 'WPML_Terms_Translations', 'get_terms_filter' ], 10, 2 );
+				$remove_filter = true;
+			}
+
+			$newTerm = $trid
+				? wp_insert_term( $termData['name'], $taxonomy, [ 'slug' => self::term_unique_slug( sanitize_title( $termData['name'] ), $taxonomy, $postLang ) ] )
+				: wp_update_term( $termData['term_id'], $taxonomy, [ 'slug' => self::term_unique_slug( sanitize_title( $termData['name'] ), $taxonomy, $postLang ) ] );
+
+			if ( ! empty( $remove_filter ) ) {
+				remove_filter( 'get_terms', [ 'WPML_Terms_Translations', 'get_terms_filter' ] );
+			}
+			$sitepress->switch_lang();
+
+			if ( ! is_wp_error( $newTerm ) && isset( $newTerm['term_taxonomy_id'] ) ) {
 				$idInCorrectId = $newTerm['term_taxonomy_id'];
-				$trid          = $sitepress->get_element_trid( $termData['id'], 'tax_' . $taxonomy );
 				$sitepress->set_element_language_details( $idInCorrectId, 'tax_' . $taxonomy, $trid, $postLang );
 			}
 

@@ -104,7 +104,7 @@ export default class extends module {
     searchTaxNumber(){
         let mode = this.getBillingMode();
         if( mode === 'manual' ){
-            this.call( 'showError', 'Δεν υπάρχει αυτόματη επαλήθευση για τη συγκεκριμένη χώρα.', 'Validate', this.inputField.dataset.moduleValidate );
+            this.call( 'showError', this.el.dataset.manualValidationMessage || '', 'Validate', this.inputField.dataset.moduleValidate );
             return;
         }
 

@@ -25,6 +25,9 @@ class WPML_LS_Render extends WPML_SP_User {
 	/** @var bool */
 	private $wpml_ls_exclude_in_menu;
 
+	/** @var bool */
+	private $has_hierarchical_menu = false;
+
 	/**
 	 * WPML_Language_Switcher_Menu constructor.
 	 *
@@ -48,6 +51,8 @@ class WPML_LS_Render extends WPML_SP_User {
 
 			add_filter( 'wp_get_nav_menu_items', array( $this, 'wp_get_nav_menu_items_filter' ), 10, 2 );
 			add_filter( 'wp_setup_nav_menu_item', array( $this, 'maybe_repair_menu_item' ), PHP_INT_MAX );
+			add_filter( 'nav_menu_link_attributes', array( $this, 'add_menu_link_accessibility_attributes' ), 10, 2 );
+			add_action( 'wp_footer', array( $this, 'add_menu_accessibility_script' ), 999 );
 
 			add_filter( 'the_content', array( $this, 'the_content_filter' ), self::THE_CONTENT_FILTER_PRIORITY );
 			if ( ! $this->is_widgets_page() ) {
@@ -72,15 +77,17 @@ class WPML_LS_Render extends WPML_SP_User {
 			$this->assets->maybe_late_enqueue_template( $slot->template() );
 			$this->current_template = clone $this->templates->get_template( $slot->template() );
 
+			$sandbox = false;
 			if ( $slot->template_string() ) {
 				$this->current_template->set_template_string( $slot->template_string() );
+				$sandbox = true;
 			}
 
 			$model = $this->model_build->get( $slot, $this->current_template->get_template_data() );
 
 			if ( $model['languages'] ) {
 				$this->current_template->set_model( $model );
-				$html = $this->current_template->get_html();
+				$html = $this->current_template->get_html( $sandbox );
 			}
 		}
 
@@ -206,6 +213,9 @@ class WPML_LS_Render extends WPML_SP_User {
 		$model      = $this->model_build->get( $slot );
 
 		if ( isset( $model['languages'] ) ) {
+			if ( $slot->get( 'is_hierarchical' ) ) {
+				$this->has_hierarchical_menu = true;
+			}
 
 			$this->current_template = $this->templates->get_template( $slot->template() );
 			$menu_order             = 1;
@@ -350,5 +360,118 @@ class WPML_LS_Render extends WPML_SP_User {
 		if ( $slot->is_enabled() ) {
 			echo $this->render( $slot );
 		}
+	}
+
+	/**
+	 * Adds accessibility attributes to the menu link element
+	 *
+	 * @param array    $atts The HTML attributes applied to the menu item's link element
+	 * @param WP_Post|WPML_LS_Menu_Item $item The current menu item
+	 *
+	 * @return array Modified attributes
+	 */
+	public function add_menu_link_accessibility_attributes( $atts, $item ) {
+		if ( $item instanceof WPML_LS_Menu_Item ) {
+			if ( isset( $item->aria_label ) ) {
+				$atts['aria-label'] = $item->aria_label;
+			}
+
+			if ( isset( $item->link_role ) && ! empty( $item->link_role ) ) {
+				$atts['role'] = $item->link_role;
+			}
+
+			if ( isset( $item->aria_expanded ) && ! empty( $item->aria_expanded ) ) {
+				$atts['aria-expanded'] = $item->aria_expanded;
+			}
+
+			if ( isset( $item->aria_controls ) && ! empty( $item->aria_controls ) ) {
+				$atts['aria-controls'] = $item->aria_controls;
+			}
+
+			if ( isset( $item->classes ) && is_array( $item->classes ) ) {
+				foreach ( $item->classes as $class ) {
+					if ( strpos( $class, 'wpml-ls-current-language' ) !== false ) {
+						$atts['aria-current'] = 'page';
+						break;
+					}
+				}
+			}
+		}
+
+		return $atts;
+	}
+
+	public function add_menu_accessibility_script() {
+ 		if ( ! $this->has_hierarchical_menu_items() ) {
+			return;
+		}
+ 		?>
+		<script>
+		(function() {
+			'use strict';
+			var parentSelector = '.menu-item.wpml-ls-current-language.menu-item-has-children';
+			
+			function toggleSubmenu(link, forceClose) {
+				var isExpanded = link.getAttribute('aria-expanded') === 'true';
+				if (forceClose || isExpanded) {
+					link.setAttribute('aria-expanded', 'false');
+				} else {
+					link.setAttribute('aria-expanded', 'true');
+				}
+			}
+			
+			function handleKeydown(e) {
+				var key = e.key || e.keyCode;
+				if (key === 'Enter' || key === ' ' || key === 13 || key === 32) {
+					e.preventDefault();
+					toggleSubmenu(this);
+				} else if (key === 'Escape' || key === 'Esc' || key === 27) {
+					if (this.getAttribute('aria-expanded') === 'true') {
+						e.preventDefault();
+						toggleSubmenu(this, true);
+					}
+				}
+			}
+			
+			function handleBlur(e) {
+				var link = this;
+				var parent = link.closest(parentSelector);
+				if (!parent) return;
+				
+				setTimeout(function() {
+					if (!parent.contains(document.activeElement)) {
+						toggleSubmenu(link, true);
+					}
+				}, 100);
+			}
+			
+			function init() {
+				var parents = document.querySelectorAll(parentSelector);
+				for (var i = 0; i < parents.length; i++) {
+					var link = parents[i].querySelector('a[aria-expanded]');
+					if (link) {
+						link.addEventListener('keydown', handleKeydown);
+						link.addEventListener('blur', handleBlur);
+					}
+				}
+			}
+			
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', init);
+			} else {
+				init();
+			}
+		})();
+		</script>
+		<?php
+	}
+
+	/**
+	 * Check if any hierarchical menu items exist in current page
+	 *
+	 * @return bool
+	 */
+	private function has_hierarchical_menu_items() {
+		return $this->has_hierarchical_menu;
 	}
 }

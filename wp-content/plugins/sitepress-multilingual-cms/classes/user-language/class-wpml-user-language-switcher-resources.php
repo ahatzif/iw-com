@@ -14,7 +14,7 @@ class WPML_User_Language_Switcher_Resources {
 	 * @param array<string,mixed> $data
 	 */
 	public function enqueue_scripts( $data ) {
-		wp_register_script( 'wpml-user-language', ICL_PLUGIN_URL . '/res/js/wpml-user-language.js', array( 'jquery' ) );
+		wp_register_script( 'wpml-user-language', ICL_PLUGIN_URL . '/res/js/wpml-user-language.js', array( 'jquery' ), ICL_SITEPRESS_SCRIPT_VERSION );
 
 		$wp_mail_script_data = array(
 			'ajax_url'          => admin_url( 'admin-ajax.php' ),

@@ -22,14 +22,19 @@ if ( empty( $museums ) ) {
 	] );
 }
 
+$all_card_ticket_post = get_field( 'all_card_ticket_post' );
+$all_card_ticket_id = com_theme_all_museums_ticket_post_id( $all_card_ticket_post );
+$all_card_more_url = $all_card_ticket_id ? get_permalink( $all_card_ticket_id ) : com_theme_link_url( get_field( 'all_card_link' ) );
+
 $all_card = [
 	'is_all'      => true,
+	'id'          => $all_card_ticket_id,
 	'place'       => get_field( 'all_card_place' ) ?: __( 'ΜΕΣΟΛΟΓΓΙ, ΑΙΤΩΛΙΚΟ', 'com-theme' ),
-	'title'       => get_field( 'all_card_title' ) ?: __( 'Επίσκεψη σε όλα τα μουσεία', 'com-theme' ),
-	'description' => get_field( 'all_card_text' ),
-	'url'         => com_theme_link_url( get_field( 'all_card_link' ) ) ?: com_theme_option_page_url( 'tickets_page', 'tickets' ),
-	'ticket_url'  => com_theme_link_url( get_field( 'all_card_ticket_link' ) ) ?: com_theme_option_page_url( 'buy_tickets_page', 'buy-tickets' ),
-	'price'       => get_field( 'all_card_price' ) ?: __( '3€ - 6€', 'com-theme' ),
+	'title'       => get_field( 'all_card_title' ) ?: ( $all_card_ticket_id ? get_the_title( $all_card_ticket_id ) : __( 'Επίσκεψη σε όλα τα μουσεία', 'com-theme' ) ),
+	'description' => get_field( 'all_card_text' ) ?: ( $all_card_ticket_id ? get_the_excerpt( $all_card_ticket_id ) : '' ),
+	'url'         => $all_card_more_url ?: com_theme_option_page_url( 'tickets_page', 'tickets' ),
+	'ticket_url'  => com_theme_all_museums_ticket_url( get_field( 'all_card_ticket_link' ), $all_card_ticket_post ),
+	'price'       => com_theme_all_museums_ticket_price_text( $all_card_ticket_id, get_field( 'all_card_price' ) ?: __( '3€ - 6€', 'com-theme' ) ),
 ];
 
 $ticket_label = get_field( 'ticket_label' ) ?: __( 'Εισιτήρια', 'com-theme' );
@@ -40,7 +45,7 @@ $more_label = get_field( 'more_label' ) ?: __( 'Περισσότερα →', 'co
 		<?php if ( $eyebrow || $title ) : ?>
 			<header class="flex w-full flex-col gap-5 md:w-[60rem]">
 				<?php if ( $eyebrow ) : ?>
-					<p class="text-[1rem] font-medium uppercase leading-none tracking-[.18em] opacity-60"><?php echo esc_html( $eyebrow ); ?></p>
+					<p class="text-[1rem] font-medium leading-none tracking-[.18em] opacity-60"><?php echo esc_html( com\theme::remove_accents( $eyebrow ) ); ?></p>
 				<?php endif; ?>
 				<?php if ( $title ) : ?>
 					<h2 id="<?php echo esc_attr( $section_title_id ); ?>" class="text-[2rem] font-normal leading-[1.2]"><?php echo wp_kses_post( $title ); ?></h2>
@@ -65,11 +70,12 @@ $more_label = get_field( 'more_label' ) ?: __( 'Περισσότερα →', 'co
 					continue;
 					}
 
-					$museum_ticket_link = get_field( 'ticket_link', $museum_id );
-					$museum_ticket_url = com_theme_link_url( $museum_ticket_link );
-					if ( $museum_ticket_url === '' && function_exists( 'get_tickets_permalink' ) ) {
-						$museum_ticket_url = (string) get_tickets_permalink( $museum_id );
+				if ( $show_all_card !== false && $all_card_ticket_id && $museum_id === $all_card_ticket_id ) {
+					continue;
 					}
+
+					$museum_ticket_link = get_field( 'ticket_link', $museum_id );
+					$museum_ticket_url = com_theme_museum_ticket_url( $museum_id, $museum_ticket_link );
 					$museum_data = [
 					'is_all'      => false,
 					'id'          => $museum_id,
@@ -77,7 +83,7 @@ $more_label = get_field( 'more_label' ) ?: __( 'Περισσότερα →', 'co
 					'title'       => get_the_title( $museum_id ),
 					'description' => get_the_excerpt( $museum_id ),
 					'url'         => get_permalink( $museum_id ),
-						'ticket_url'  => $museum_ticket_url ?: com_theme_option_page_url( 'buy_tickets_page', 'buy-tickets' ),
+						'ticket_url'  => $museum_ticket_url,
 					'price'       => get_field( 'ticket_price_text', $museum_id ),
 					'image_id'    => com_theme_museum_image_id( $museum_id ),
 				];

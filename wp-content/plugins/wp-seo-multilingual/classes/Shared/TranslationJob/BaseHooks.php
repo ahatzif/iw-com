@@ -9,7 +9,7 @@ use WPML\LIB\WP\Hooks;
 use function WPML\FP\spreadArgs;
 
 /**
- * @template T of array{
+ * @phpstan-type FieldArray array{
  *     field_type?: string,
  *     title?: string,
  *     group?: array<string,string>
@@ -19,9 +19,10 @@ abstract class BaseHooks implements \IWPML_Frontend_Action, \IWPML_Backend_Actio
 
 	const PURPOSE_SEO_TITLE     = 'seo_title';
 	const PURPOSE_SEO_META_DESC = 'seo_meta_description';
+	const PREFIX_JOB_FIELD_TERM = 't';
 
 	public function add_hooks() {
-		Hooks::onFilter( 'wpml_tm_adjust_translation_fields' )
+		Hooks::onFilter( 'wpml_tm_adjust_translation_fields', 10, 2 )
 			->then( spreadArgs( [ $this, 'adjustFields' ] ) );
 
 		Hooks::onFilter( 'wpml_st_translation_job_admin_text_prefixes_to_groups' )
@@ -53,14 +54,17 @@ abstract class BaseHooks implements \IWPML_Frontend_Action, \IWPML_Backend_Actio
 	}
 
 	/**
-	 * @param list<T> $fields
+	 * @param list<FieldArray> $fields
+	 * @param object|mixed     $job
 	 *
-	 * @return list<T>
+	 * @return list<FieldArray>
 	 */
-	public function adjustFields( $fields ) {
+	public function adjustFields( $fields, $job ) {
 		foreach ( $fields as &$field ) {
-			$type = Obj::prop( 'field_type', $field );
-			if ( Str::startsWith( $this->getFieldPrefix(), $type ) ) {
+			$fieldType = Obj::prop( 'field_type', $field );
+			$field     = $this->extraAdjustField( $field, $fieldType, $job );
+
+			if ( preg_match( '/^' . self::PREFIX_JOB_FIELD_TERM . '?' . $this->getFieldPrefix() . '/', $fieldType ) ) {
 				$field = $this->addTitleAndGroup( $field );
 				$field = $this->addPurpose( $field );
 			}
@@ -70,9 +74,20 @@ abstract class BaseHooks implements \IWPML_Frontend_Action, \IWPML_Backend_Actio
 	}
 
 	/**
-	 * @param T $field
+	 * @param FieldArray   $field
+	 * @param string|null  $fieldType
+	 * @param object|mixed $job
 	 *
-	 * @return T
+	 * @return FieldArray
+	 */
+	protected function extraAdjustField( $field, $fieldType, $job ) {
+		return $field;
+	}
+
+	/**
+	 * @param FieldArray $field
+	 *
+	 * @return FieldArray
 	 */
 	private function addTitleAndGroup( $field ) {
 		$title = (string) Obj::prop( 'title', $field );
@@ -89,12 +104,12 @@ abstract class BaseHooks implements \IWPML_Frontend_Action, \IWPML_Backend_Actio
 	}
 
 	/**
-	 * @param T $field
+	 * @param FieldArray $field
 	 *
-	 * @return T
+	 * @return FieldArray
 	 */
 	private function addPurpose( $field ) {
-		$fieldKey = preg_replace( '/^(field-)(.*)(-0)$/', '$2', $field['field_type'] );
+		$fieldKey = preg_replace( '/^(' . self::PREFIX_JOB_FIELD_TERM . '?field-)(.*)(-\d+)$/', '$2', $field['field_type'] );
 
 		$purpose = wpml_collect( $this->getKeyPurposeMap() )->get( $fieldKey );
 

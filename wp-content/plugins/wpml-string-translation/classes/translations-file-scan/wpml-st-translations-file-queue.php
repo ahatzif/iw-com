@@ -23,6 +23,7 @@ class WPML_ST_Translations_File_Queue {
 	/** @var int */
 	private $limit;
 
+	/** @var WPML_Transient  */
 	private $transient;
 
 	/**
@@ -52,7 +53,7 @@ class WPML_ST_Translations_File_Queue {
 	/**
 	 * @param QueueFilter|null $queueFilter
 	 */
-	public function import( QueueFilter $queueFilter = null ) {
+	public function import( $queueFilter = null ) {
 		$this->file_dictionary->clear_skipped();
 		$files = $this->file_dictionary->get_not_imported_files();
 
@@ -157,6 +158,30 @@ class WPML_ST_Translations_File_Queue {
 	 */
 	public function get_pending() {
 		return count( $this->file_dictionary->get_not_imported_files() );
+	}
+
+	/**
+	 * @param QueueFilter $queueFilter
+	 *
+	 * @return int
+	 */
+	public function getPendingByFilter( QueueFilter $queueFilter ) {
+		$this->file_dictionary->clear_skipped();
+		$files = $this->file_dictionary->get_not_imported_files();
+
+		if ( ! count( $files ) ) {
+			return 0;
+		}
+
+		$count = 0;
+
+		foreach ( $files as $file ) {
+			if ( $queueFilter->isSelected( $file ) ) {
+				$count++;
+			}
+		}
+
+		return $count;
 	}
 
 	public function mark_as_finished() {

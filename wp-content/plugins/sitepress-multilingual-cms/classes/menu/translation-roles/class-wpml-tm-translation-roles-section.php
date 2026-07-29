@@ -4,6 +4,7 @@ use WPML\TranslationRoles\UI\Initializer;
 use WPML\TM\Menu\TranslationServices\Section;
 use WPML\TM\Menu\TranslationMethod\TranslationMethodSettings;
 use WPML\FP\Relation;
+use WPML\LIB\WP\User;
 
 class WPML_TM_Translation_Roles_Section implements IWPML_TM_Admin_Section {
 	const SLUG = 'translators';
@@ -43,7 +44,7 @@ class WPML_TM_Translation_Roles_Section implements IWPML_TM_Admin_Section {
 	 * @return string|array
 	 */
 	public function get_capabilities() {
-		return [ WPML_Manage_Translations_Role::CAPABILITY, 'manage_options' ];
+		return [ User::CAP_MANAGE_TRANSLATIONS, User::CAP_ADMINISTRATOR ];
 	}
 
 	/**
@@ -52,8 +53,17 @@ class WPML_TM_Translation_Roles_Section implements IWPML_TM_Admin_Section {
 	 * @return string
 	 */
 	public function get_caption() {
-		return __( 'Translators', 'wpml-translation-management' );
+		return __( 'Manage Translators & Services', 'sitepress' );
 
+	}
+
+	/**
+	 * Returns the description to display below the tab.
+	 *
+	 * @return string
+	 */
+	public function get_description() {
+		return '<p class="wpml-tab-description">' . __( 'Choose who translates your site', 'sitepress' ) . '</p>';
 	}
 
 	/**

@@ -130,7 +130,7 @@ class WPML_TM_Post_Job_Entity extends WPML_TM_Job_Entity {
 	/**
 	 * @param DateTime|null $completed_date
 	 */
-	public function set_completed_date( DateTime $completed_date = null ) {
+	public function set_completed_date( ?DateTime $completed_date = null ) {
 		$this->completed_date = $completed_date;
 	}
 

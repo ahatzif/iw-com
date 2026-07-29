@@ -80,19 +80,32 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 	 * $language_code_translated language
 	 *
 	 * @param string $post_type - post_type that should have the translated parents fixed
+	 * @return bool
 	 */
 	private function maybe_fix_translated_parent( $post_type ) {
 		if ( $this->must_sync_parents( $post_type ) ) {
 			$sync_helper = wpml_get_hierarchy_sync_helper();
 			$sync_helper->sync_element_hierarchy( $post_type );
+			return true;
 		}
+
+		return false;
 	}
 
 	public function sync_with_duplicates( $post_id ) {
-		$duplicates = $this->sitepress->get_duplicates( $post_id );
-		foreach ( array_keys( $duplicates ) as $lang_code ) {
+		$duplicates      = $this->sitepress->get_duplicates( $post_id );
+		$languages       = array_keys ( $duplicates );
+		$filter_callback = function () use ( $languages ) {
+			return $languages;
+		};
+
+		add_filter( 'wpml_prefetch_languages_for_mt_attachments', $filter_callback);
+
+		foreach ( $languages as $lang_code ) {
 			$this->sitepress->make_duplicate( $post_id, $lang_code );
 		}
+
+		remove_filter( 'wpml_prefetch_languages_for_mt_attachments', $filter_callback );
 	}
 
 	/**
@@ -102,7 +115,7 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 	public function delete_post_actions( $post_id, $keep_db_entries = false ) {
 		$post_type            = get_post_type( $post_id );
 		$post_type_exceptions = array( 'nav_menu_item' );
-		if ( in_array( $post_type, $post_type_exceptions ) ) {
+		if ( ! $post_type || in_array( $post_type, $post_type_exceptions ) ) {
 			return;
 		}
 
@@ -112,7 +125,7 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 			$trid                               = $this->post_translation->get_element_trid( $post_id );
 			$translated_ids                     = $this->get_translations_without_source( $post_id, $trid );
 			if ( $this->sync_delete || Lst::includes( $post_type, [ 'wp_template', 'wp_template_part' ] ) ) {
-				$this->delete_translations( $translated_ids, $keep_db_entries );
+				$this->delete_translations( $post_type, $translated_ids, $keep_db_entries );
 			}
 			$this->is_deleting_all_translations = false;
 		}
@@ -178,17 +191,25 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 	}
 
 	/**
-	 * @param array $translated_ids
-	 * @param bool  $keep_db_entries
+	 * @param array  $translated_ids
+	 * @param bool   $keep_db_entries
+	 * @param string $post_type
 	 */
-	private function delete_translations( array $translated_ids, $keep_db_entries ) {
+	private function delete_translations( $post_type, array $translated_ids, $keep_db_entries ) {
 		if ( ! empty( $translated_ids ) ) {
 			foreach ( $translated_ids as $trans_id ) {
 				if ( ! $this->is_bulk_prevented( $trans_id ) ) {
 					if ( $keep_db_entries ) {
 						$this->post_translation->trash_translation( $trans_id );
 					} else {
+						if ( $post_type === 'attachment' ) {
+							// When we delete the attachment entry from the database for the translation there is no reason to even allow a file deletion from the filesystem.
+							add_filter( 'wp_delete_file', '__return_false', PHP_INT_MAX );
+						}
 						wp_delete_post( $trans_id, true );
+						if ( $post_type === 'attachment' ) {
+							remove_filter( 'wp_delete_file', '__return_false', PHP_INT_MAX );
+						}
 					}
 				}
 			}
@@ -229,6 +250,7 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 
 		$wp_api            = $this->sitepress->get_wp_api();
 		$term_count_update = new WPML_Update_Term_Count( $wp_api );
+		$flush_cache       = false;
 
 		$post           = get_post ( $post_id );
 		$source_post_status = $this->get_post_status( $post_id );
@@ -253,6 +275,7 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 			$this->sync_custom_fields ( $post_id, $translated_pid );
 			if ( $post_format ) {
 				set_post_format ( $translated_pid, $post_format );
+				$flush_cache = true;
 			}
 			if ( $post_date !== null ) {
 				$post_date_gmt = get_gmt_from_date ( $post_date );
@@ -266,30 +289,39 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 				}
 				$data[ 'post_status' ] = $post_status;
 				$wpdb->update ( $wpdb->posts, $data, array( 'ID' => $translated_pid ) );
-				wp_schedule_single_event( strtotime( $post_date_gmt . '+1 second' ), 'publish_future_post', array( $translated_pid ) );
+				$time = strtotime( $post_date_gmt . '+1 second' );
+				$time && wp_schedule_single_event( $time, 'publish_future_post', array( $translated_pid ) );
+				$flush_cache = true;
 			}
 			if ( $post_password !== null ) {
 				$wpdb->update ( $wpdb->posts, array( 'post_password' => $post_password ), array( 'ID' => $translated_pid ) );
+				$flush_cache = true;
 			}
 			if ( $post_status !== null && ! in_array( $this->get_post_status( $translated_pid ), array( 'auto-draft', 'draft', 'inherit', 'trash' ) ) ) {
 				$wpdb->update ( $wpdb->posts, array( 'post_status' => $post_status ), array( 'ID' => $translated_pid ) );
 				$term_count_update->update_for_post( $translated_pid );
+				$flush_cache = true;
 			} elseif ( $post_status == null && $this->sync_private_flag && $this->get_post_status( $translated_pid ) === 'private' ) {
 				$wpdb->update ( $wpdb->posts, array( 'post_status' => $this->get_post_status( $post_id ) ), array( 'ID' => $translated_pid ) );
 				$term_count_update->update_for_post( $translated_pid );
+				$flush_cache = true;
 			}
 			if ( $ping_status !== null ) {
 				$wpdb->update ( $wpdb->posts, array( 'ping_status' => $ping_status ), array( 'ID' => $translated_pid ) );
+				$flush_cache = true;
 			}
 			if ( $comment_status !== null ) {
 				$wpdb->update ( $wpdb->posts, array( 'comment_status' => $comment_status ), array( 'ID' => $translated_pid ) );
+				$flush_cache = true;
 			}
 			if ( $page_template !== null ) {
 				update_post_meta ( $translated_pid, '_wp_page_template', $page_template );
+				$flush_cache = true;
 			}
 			$this->sync_with_translations ( $translated_pid );
 		}
-		$this->maybe_fix_translated_parent( get_post_type( $post_id ) );
+		$post_type = get_post_type( $post_id );
+		$flush_cache = ( $post_type && $this->maybe_fix_translated_parent( $post_type ) ) || $flush_cache;
 
 		if ( $menu_order !== null && (bool) $translated_ids !== false ) {
 			$query = $wpdb->prepare(
@@ -299,6 +331,12 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 				$menu_order
 			);
 			$wpdb->query( $query );
+			$flush_cache = true;
+		}
+
+		// Delete translated post cache because we are making direct SQL queries.
+		if ( $translated_ids && $flush_cache ) {
+			array_map( 'clean_post_cache', $translated_ids );
 		}
 	}
 

@@ -4,15 +4,24 @@ namespace WPML\ST\TranslationFile;
 
 use wpdb;
 use WPML\Collect\Support\Collection;
+use WPML\FP\Fns;
+use WPML\FP\Just;
+use WPML\FP\Maybe;
+use WPML\FP\Nothing;
+use WPML\FP\Relation;
+use WPML\LIB\WP\Cache;
 use WPML\ST\Package\Domains as PackageDomains;
 use WPML_Admin_Texts;
-use function wpml_prepare_in;
-use WPML_Slug_Translation;
 use WPML_ST_Blog_Name_And_Description_Hooks;
 use WPML_ST_Translations_File_Dictionary;
 use WPML\ST\Shortcode;
+use WPML\ST\TranslationFile\StringCollation;
 
 class Domains {
+	use StringCollation;
+
+	const MO_DOMAINS_CACHE_GROUP = 'WPML_ST_CACHE';
+	const MO_DOMAINS_CACHE_KEY   = 'wpml_string_translation_has_mo_domains';
 
 	/** @var wpdb $wpdb */
 	private $wpdb;
@@ -23,17 +32,15 @@ class Domains {
 	/** @var WPML_ST_Translations_File_Dictionary $file_dictionary */
 	private $file_dictionary;
 
-	/** @var null|Collection $mo_domains */
-	private static $mo_domains;
-
 	/** @var null|Collection $jed_domains */
 	private static $jed_domains;
 
 	/**
 	 * Domains constructor.
 	 *
-	 * @param PackageDomains                       $package_domains
-	 * @param WPML_ST_Translations_File_Dictionary $file_dictionary
+	 * @param wpdb                                 $wpdb            The WordPress database instance.
+	 * @param PackageDomains                       $package_domains The package domains instance.
+	 * @param WPML_ST_Translations_File_Dictionary $file_dictionary The translations file dictionary.
 	 */
 	public function __construct(
 		wpdb $wpdb,
@@ -45,50 +52,72 @@ class Domains {
 		$this->file_dictionary = $file_dictionary;
 	}
 
+
 	/**
 	 * @return Collection
 	 */
 	public function getMODomains() {
-		if ( ! self::$mo_domains instanceof Collection ) {
-			$excluded_domains = self::getReservedDomains()
-									 ->merge( $this->getJEDDomains() );
+		$transient_key = self::MO_DOMAINS_CACHE_KEY;
 
-			$sql = "
-				SELECT DISTINCT context {$this->getCollateForContextColumn()}
-				FROM {$this->wpdb->prefix}icl_strings
-			";
-
-			self::$mo_domains = wpml_collect( $this->wpdb->get_col( $sql ) )
-				->diff( $excluded_domains )
-				->values();
-
+		$cacheItem = Cache::get( self::MO_DOMAINS_CACHE_GROUP, self::MO_DOMAINS_CACHE_KEY );
+		if ( $cacheItem instanceof Just ) {
+			return $cacheItem->get();
 		}
 
-		return self::$mo_domains;
-	}
+		// If not in object cache, try transient.
+		$transient = get_transient( $transient_key );
+		if ( false !== $transient ) {
+			return $transient;
+		}
 
-	/**
-	 * @return string
-	 */
-	private function getCollateForContextColumn() {
+		// If not in any cache, fetch from database.
+		$excluded_domains = self::getReservedDomains()->merge( $this->getJEDDomains() );
+
 		$sql = "
-			SELECT COLLATION_NAME
-			 FROM information_schema.columns
-			 WHERE TABLE_SCHEMA = '" . DB_NAME . "' AND TABLE_NAME = '{$this->wpdb->prefix}icl_strings' AND COLUMN_NAME = 'context'
+			SELECT DISTINCT context {$this->getCollateForContextColumn( $this->wpdb )}
+			FROM {$this->wpdb->prefix}icl_strings
 		";
 
-		$collation = $this->wpdb->get_var( $sql );
-		if ( ! $collation ) {
-			return '';
+		$mo_domains = wpml_collect( $this->wpdb->get_col( $sql ) )
+			->diff( $excluded_domains )
+			->values();
+
+		// If we don't get any data from DB, we set cache expire time to be 15 minutes so that cache refreshes in lesser time.
+		$cacheLifeTime = $mo_domains->count() <= 0 ? 15 * MINUTE_IN_SECONDS : HOUR_IN_SECONDS;
+
+		// Try to store in object cache first.
+		Cache::set(
+			self::MO_DOMAINS_CACHE_GROUP,
+			self::MO_DOMAINS_CACHE_KEY,
+			$cacheLifeTime,
+			$mo_domains
+		);
+
+		// Use transient as fallback only if object cache is not being used.
+		if ( ! wp_using_ext_object_cache() ) {
+			set_transient( $transient_key, $mo_domains, $cacheLifeTime );
 		}
 
-		list( $type ) = explode( '_', $collation );
-		if ( in_array( $type, [ 'utf8', 'utf8mb4' ] ) ) {
-			return 'COLLATE ' . $type . '_bin';
-		}
-
-		return '';
+		return $mo_domains;
 	}
+
+	public static function invalidateMODomainCache() {
+		static $invalidationScheduled = false;
+
+		delete_transient( self::MO_DOMAINS_CACHE_KEY );
+
+		if ( ! $invalidationScheduled ) {
+			$invalidationScheduled = true;
+			add_action(
+				'shutdown',
+				function () {
+					Cache::flushGroup( self::MO_DOMAINS_CACHE_GROUP );
+				}
+			);
+		}
+	}
+
+
 
 	/**
 	 * Returns a collection of MO domains that
@@ -101,7 +130,7 @@ class Domains {
 		$native_mo_domains = $this->file_dictionary->get_domains( 'mo', get_locale() );
 
 		return $all_mo_domains->reject(
-			function( $domain ) use ( $native_mo_domains ) {
+			function ( $domain ) use ( $native_mo_domains ) {
 				/**
 				 * Admin texts, packages, string shortcodes are handled separately,
 				 * so they are loaded on-demand.
@@ -126,8 +155,18 @@ class Domains {
 		return self::$jed_domains;
 	}
 
+	/**
+	 * @param string $domain
+	 *
+	 * @return bool
+	 */
+	public function hasNoNativeTranslationFile( $domain ) {
+		return ! wpml_collect( $this->file_dictionary->get_domains() )
+			->first( Relation::equals( $domain ) );
+	}
+
 	public static function resetCache() {
-		self::$mo_domains  = null;
+		self::invalidateMODomainCache();
 		self::$jed_domains = null;
 	}
 

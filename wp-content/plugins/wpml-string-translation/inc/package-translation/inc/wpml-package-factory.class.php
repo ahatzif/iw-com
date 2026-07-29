@@ -5,7 +5,12 @@ class WPML_ST_Package_Factory {
 	/** @var WPML_WP_Cache_Factory $cache_factory */
 	private $cache_factory;
 
-	public function __construct( WPML_WP_Cache_Factory $cache_factory = null ) {
+	/**
+	 * WPML_ST_Package_Factory constructor.
+	 *
+	 * @param WPML_WP_Cache_Factory|null $cache_factory Cache factory instance.
+	 */
+	public function __construct( ?WPML_WP_Cache_Factory $cache_factory = null ) {
 		$this->cache_factory = $cache_factory;
 		wp_cache_add_non_persistent_groups( __CLASS__ );
 	}
@@ -26,7 +31,7 @@ class WPML_ST_Package_Factory {
 	}
 
 	/**
-	 * @param array|WPML_Package $package_data
+	 * @param array|int|stdClass|WPML_Package $package_data
 	 *
 	 * @return WPML_WP_Cache_Item
 	 */
@@ -35,7 +40,7 @@ class WPML_ST_Package_Factory {
 			$this->cache_factory = new WPML_WP_Cache_Factory();
 		}
 
-		$package_key = md5( json_encode( $package_data ) );
+		$package_key = md5( (string) json_encode( $package_data ) );
 
 		return $this->cache_factory->create_cache_item( __CLASS__, $package_key );
 	}

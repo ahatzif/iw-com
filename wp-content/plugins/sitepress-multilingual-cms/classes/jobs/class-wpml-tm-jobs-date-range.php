@@ -19,7 +19,7 @@ class WPML_TM_Jobs_Date_Range {
 	 * @param DateTime|null $end
 	 * @param bool          $include_null_date
 	 */
-	public function __construct( DateTime $begin = null, DateTime $end = null, $include_null_date = false ) {
+	public function __construct( ?DateTime $begin = null, ?DateTime $end = null, $include_null_date = false ) {
 		$this->begin             = $begin;
 		$this->end               = $end;
 		$this->include_null_date = (bool) $include_null_date;

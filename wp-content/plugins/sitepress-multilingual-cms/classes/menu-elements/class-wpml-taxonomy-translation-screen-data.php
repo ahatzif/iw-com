@@ -2,8 +2,6 @@
 
 class WPML_Taxonomy_Translation_Screen_Data extends WPML_WPDB_And_SP_User {
 
-	const WPML_TAXONOMY_TRANSLATION_MAX_TERMS_RESULTS_SET = 1000;
-
 	/** @var  string $taxonomy */
 	private $taxonomy;
 
@@ -34,11 +32,12 @@ class WPML_Taxonomy_Translation_Screen_Data extends WPML_WPDB_And_SP_User {
 	 *
 	 * Also the index [trid][source_lang] holds the source language of the term group.
 	 *
+	 * @param ?int $id_term Only fetch the term with this id.
+	 *
 	 * @return array
 	 */
-	public function terms() {
+	public function terms( $id_term = null ) {
 		$terms_data                  = array(
-			'truncated' => 0,
 			'terms'     => array(),
 		);
 		$attributes_to_select        = array();
@@ -65,23 +64,22 @@ class WPML_Taxonomy_Translation_Screen_Data extends WPML_WPDB_And_SP_User {
 			),
 		);
 
-		$query_limit_cap = defined( 'WPML_TAXONOMY_TRANSLATION_MAX_TERMS_RESULTS_SET' ) ?
-			WPML_TAXONOMY_TRANSLATION_MAX_TERMS_RESULTS_SET : self::WPML_TAXONOMY_TRANSLATION_MAX_TERMS_RESULTS_SET;
-
 		$join_statements   = array();
 		$as                = $this->alias_statements( $attributes_to_select );
 		$join_statements[] = "{$as['t']} JOIN {$as['tt']} ON tt.term_id = t.term_id";
 		$join_statements[] = "{$as['i']} ON i.element_id = tt.term_taxonomy_id";
-		$from_clause       = $this->build_from_clause( join( ' JOIN ', $join_statements ), $attributes_to_select, $query_limit_cap );
+		$from_clause       = $this->build_from_clause( join( ' JOIN ', $join_statements ), $attributes_to_select, $id_term );
 		$select_clause     = $this->build_select_vars( $attributes_to_select );
 		$where_clause      = $this->build_where_clause( $attributes_to_select );
-		$full_statement    = "SELECT SQL_CALC_FOUND_ROWS {$select_clause} FROM {$from_clause} WHERE {$where_clause}";
+		$full_statement    = "SELECT {$select_clause} FROM {$from_clause} WHERE {$where_clause}";
 
 		$all_terms = $this->wpdb->get_results( $full_statement );
+		$count_statement = "SELECT COUNT( DISTINCT t.term_id ) FROM {$from_clause} WHERE {$where_clause}";
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$real_terms_count = (int) $this->wpdb->get_var( $count_statement );
 
-		$real_terms_count = (int) $this->wpdb->get_var( 'SELECT FOUND_ROWS()' );
-		if ( $real_terms_count > $query_limit_cap ) {
-			$terms_data['truncated'] = 1;
+		if ( ! is_array( $all_terms ) ) {
+			return $terms_data;
 		}
 
 		if ( function_exists( 'get_term_meta' ) ) {
@@ -225,18 +223,17 @@ class WPML_Taxonomy_Translation_Screen_Data extends WPML_WPDB_And_SP_User {
 	/**
 	 * @param string $from
 	 * @param array  $selects
-	 * @param int    $limit
+	 * @param ?int   $id_term
 	 *
 	 * @return string
 	 */
-	private function build_from_clause( $from, $selects, $limit ) {
+	private function build_from_clause( $from, $selects, $id_term ) {
 		return $from . sprintf(
-			" INNER JOIN ( 
-					SELECT trid FROM %s WHERE element_type = '%s' AND source_language_code IS NULL LIMIT %d
+			" INNER JOIN (
+					SELECT trid FROM %s WHERE " . ( $id_term ? "element_id = $id_term AND " : '' ) . "element_type = '%s' AND source_language_code IS NULL
 				  ) lm on lm.trid = %s.trid",
 			$this->wpdb->prefix . 'icl_translations',
 			'tax_' . $this->taxonomy,
-			$limit,
 			$selects[ $this->wpdb->prefix . 'icl_translations' ]['alias']
 		);
 	}

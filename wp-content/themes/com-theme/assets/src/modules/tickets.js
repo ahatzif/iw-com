@@ -258,13 +258,13 @@ export default class extends module {
         while (container.children.length < quantity) {
             const fragment = template.content.cloneNode(true);
             const visitor = fragment.querySelector('[data-ticket-visitor]');
-            const select = visitor?.querySelector('[data-ticket-visitor-field="category-id"]');
-            const validOptions = select
-                ? [...select.options].filter(option => option.value !== '')
+            const categoryField = visitor?.querySelector('[data-ticket-visitor-field="category-id"]');
+            const validOptions = categoryField?.tagName === 'SELECT'
+                ? [...categoryField.options].filter(option => option.value !== '')
                 : [];
 
-            if (select && validOptions.length === 1) {
-                select.value = validOptions[0].value;
+            if (categoryField?.tagName === 'SELECT' && validOptions.length === 1) {
+                categoryField.value = validOptions[0].value;
             }
 
             if (visitor) {
@@ -272,6 +272,7 @@ export default class extends module {
             }
 
             container.appendChild(fragment);
+            this.call('update', container, 'app');
         }
 
         [...container.querySelectorAll('[data-ticket-visitor]')].forEach((visitor, index) => {
@@ -283,16 +284,17 @@ export default class extends module {
     }
 
     updateVisitorPrice(visitor) {
-        const select = visitor.querySelector('[data-ticket-visitor-field="category-id"]');
+        const categoryField = visitor.querySelector('[data-ticket-visitor-field="category-id"]');
         const priceElement = visitor.querySelector('[data-ticket-visitor-price]');
-        const selectedOption = select?.selectedOptions?.[0];
-        const price = selectedOption?.value
-            ? Number(selectedOption.dataset.price) || 0
-            : 0;
+        const category = this.categories.get(visitor.dataset.categoryKey);
+        const subcategory = category?.subcategories?.find(
+            item => item.value === categoryField?.value,
+        );
+        const price = subcategory ? Number(subcategory.price) || 0 : 0;
 
         visitor.dataset.ticketPrice = String(price);
         if (priceElement) {
-            priceElement.textContent = selectedOption?.value ? this.formatPrice(price) : '';
+            priceElement.textContent = subcategory ? this.formatPrice(price) : '';
         }
     }
 
@@ -398,7 +400,20 @@ export default class extends module {
         this.state.step = step;
         this.render();
 
+        if (step === 2) {
+            requestAnimationFrame(() => {
+                this.call('update', false, 'Scroll');
+                this.call(
+                    'scrollTo',
+                    { target: this.form || this.el, options: { offset: 0 } },
+                    'Scroll',
+                );
+            });
+            return;
+        }
+
         const steps = this.el.querySelector('[data-ticket-steps]');
+        const stepsAnchor = this.el.querySelector('[data-ticket-steps-anchor]');
         if (!steps) return;
 
         requestAnimationFrame(() => {
@@ -406,7 +421,11 @@ export default class extends module {
             const offset = -(header?.offsetHeight || 0);
 
             this.call('update', false, 'Scroll');
-            this.call('scrollTo', { target: steps, options: { offset } }, 'Scroll');
+            this.call(
+                'scrollTo',
+                { target: stepsAnchor || steps, options: { offset } },
+                'Scroll',
+            );
         });
     }
 
@@ -425,13 +444,19 @@ export default class extends module {
             return;
         }
 
+        const visitors = this.getVisitors();
+
+        if (visitors.some(visitor => !visitor['category-id'])) {
+            this.showError(this.config?.strings?.selectTicketType);
+            return;
+        }
+
         if (!this.form?.checkValidity()) {
             this.form?.reportValidity();
             this.showError(this.config?.strings?.selectTicketType);
             return;
         }
 
-        const visitors = this.getVisitors();
         const formData = new FormData();
 
         formData.append('action', this.config.action);
@@ -503,6 +528,10 @@ export default class extends module {
                 stepNumber === this.state.step ? 'step' : 'false',
             );
         });
+
+        const summary = this.el.querySelector('[data-ticket-summary]');
+        summary?.classList.toggle('lg:sticky', this.state.step !== 2);
+        summary?.classList.toggle('lg:top-[16rem]', this.state.step !== 2);
     }
 
     renderCalendar() {
@@ -511,10 +540,8 @@ export default class extends module {
 
         if (!calendar || !monthLabel) return;
 
-        monthLabel.textContent = new Intl.DateTimeFormat(
-            this.config?.locale || 'el-GR',
-            { month: 'long', year: 'numeric' },
-        ).format(this.currentMonth).toLocaleUpperCase(this.config?.locale || 'el-GR');
+        const monthName = this.config?.months?.[this.currentMonth.getMonth()] || '';
+        monthLabel.textContent = `${monthName} ${this.currentMonth.getFullYear()}`.trim();
 
         calendar.querySelectorAll('[data-ticket-calendar-cell]').forEach(cell => cell.remove());
 
@@ -747,16 +774,16 @@ export default class extends module {
         if (!button) return;
 
         const isPurchaseStep = this.state.step === 3;
+        const label = button.querySelector('[data-button-label]');
 
         button.disabled = this.isSubmitting || !this.canContinue();
         button.classList.toggle('is-purchase', isPurchaseStep && this.canContinue());
-        button.textContent = this.isSubmitting
-            ? (this.config?.strings?.addingToCart || '')
-            : (
-                isPurchaseStep
-                    ? (this.config?.strings?.addToCart || '')
-                    : (this.config?.strings?.next || '')
-            );
+        button.classList.toggle('loading', this.isSubmitting);
+        if (label) {
+            label.textContent = isPurchaseStep
+                ? (this.config?.strings?.addToCart || '')
+                : (this.config?.strings?.next || '');
+        }
         button.setAttribute('aria-busy', this.isSubmitting ? 'true' : 'false');
     }
 

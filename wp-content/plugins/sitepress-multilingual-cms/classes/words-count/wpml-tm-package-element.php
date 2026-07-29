@@ -18,7 +18,7 @@ class WPML_TM_Package_Element extends WPML_TM_Translatable_Element {
 		$id,
 		WPML_TM_Word_Count_Records $word_count_records,
 		WPML_TM_Word_Count_Single_Process $single_process,
-		WPML_ST_Package_Factory $st_package_factory = null
+		?WPML_ST_Package_Factory $st_package_factory = null
 	) {
 		$this->st_package_factory = $st_package_factory;
 		parent::__construct( $id, $word_count_records, $single_process );

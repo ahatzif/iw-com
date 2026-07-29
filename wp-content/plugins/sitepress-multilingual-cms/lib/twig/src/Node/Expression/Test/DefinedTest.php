@@ -31,7 +31,7 @@ use WPML\Core\Twig\Node\Expression\TestExpression;
  */
 class DefinedTest extends \WPML\Core\Twig\Node\Expression\TestExpression
 {
-    public function __construct(\WPML\Core\Twig_NodeInterface $node, $name, \WPML\Core\Twig_NodeInterface $arguments = null, $lineno)
+    public function __construct(\WPML\Core\Twig_NodeInterface $node, $name, ?\WPML\Core\Twig_NodeInterface $arguments = null, $lineno = 0)
     {
         if ($node instanceof \WPML\Core\Twig\Node\Expression\NameExpression) {
             $node->setAttribute('is_defined_test', \true);

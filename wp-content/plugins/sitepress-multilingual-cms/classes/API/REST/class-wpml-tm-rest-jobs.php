@@ -10,6 +10,8 @@ use WPML\FP\Fns;
 use WPML\FP\Maybe;
 use WPML\LIB\WP\User;
 use WPML\TM\ATE\Review\Cancel;
+use WPML\TM\Jobs\JobLog;
+use WPML\Translation\CancelJobsServiceFactory;
 use function WPML\FP\pipe;
 use function WPML\FP\partial;
 use function WPML\FP\invoke;
@@ -213,7 +215,8 @@ class WPML_TM_REST_Jobs extends WPML_REST_Base {
 
 			$model = $this->view_model->build(
 				$this->jobs_repository->get( $criteria ),
-				$this->jobs_repository->get_count( $criteria )
+				$this->jobs_repository->get_count( $criteria ),
+				$criteria
 			);
 
 			$model['last_picked_up_date'] = $this->wpml_tm_last_picked_up->get();
@@ -258,6 +261,15 @@ class WPML_TM_REST_Jobs extends WPML_REST_Base {
 	 * @return array|WP_Error
 	 */
 	public function cancel_jobs( WP_REST_Request $request ) {
+		$rawParams = $request->get_json_params();
+
+		JobLog::maybeInitRequest();
+		JobLog::createNewGroup(
+			JobLog::GROUP_ID_JOB_LIFECYCLE,
+			'Cancel jobs (admin)',
+			[ 'requested_jobs' => $rawParams ]
+		);
+
 		try {
 			// $validateParameter :: [id, type] -> bool
 			$validateParameter = pipe( Obj::prop( 'type' ), [ \WPML_TM_Job_Entity::class, 'is_type_valid' ] );
@@ -273,18 +285,58 @@ class WPML_TM_REST_Jobs extends WPML_REST_Base {
 				];
 			};
 
-			$jobs = \wpml_collect( $request->get_json_params() )
+			$jobs = \wpml_collect( $rawParams )
 				->filter( $validateParameter )
 				->map( $getJob )
 				->filter()
-				->map( Fns::tap( invoke( 'set_status' )->with( ICL_TM_NOT_TRANSLATED ) ) )
-				->map( Fns::tap( [ $this->update_jobs, 'update_state' ] ) );
+				->filter( function ( $job ) {
+					// All modern jobs use this class type. Only old fashioned "string" jobs did not.
+					// So, this condition is true as long as a user does not try to cancel some archaic string jobs.
+					return $job instanceof WPML_TM_Post_Job_Entity;
+				} );
+
+			$jobIds = $jobs->map( invoke( 'get_translate_job_id' ) )->values()->toArray();
+
+			// Structured as a list of {job_id} objects so recordEntityIds picks
+			// up each id individually and populates the per-request entityIds
+			// index — supports `findRequestsByEntity('job_id', X)` later.
+			$jobInfoList = array_map(
+				function ( $id ) {
+					return [ 'job_id' => $id ];
+				},
+				$jobIds
+			);
+
+			JobLog::add( 'cancel_jobs_resolved', [
+				'requested_count' => is_array( $rawParams ) ? count( $rawParams ) : 0,
+				'resolved_count'  => $jobs->count(),
+				'jobs'            => $jobInfoList,
+			] );
+
+			$cancelJobsService = CancelJobsServiceFactory::create();
+			$result            = $cancelJobsService->cancelJobs( $jobIds );
+
+			JobLog::add( 'cancel_jobs_service_done', [
+				'jobs'   => $jobInfoList,
+				'result' => $result,
+			] );
 
 			do_action( 'wpml_tm_jobs_cancelled', $jobs->toArray() );
 
+			JobLog::add( 'cancel_jobs_completed', [
+				'cancelled_count' => $jobs->count(),
+			] );
+
 			return $jobs->map( $jobEntityToArray )->values()->toArray();
 		} catch ( Exception $e ) {
+			JobLog::addError( 'cancel_jobs_failed', [
+				'error' => $e->getMessage(),
+				'file'  => $e->getFile(),
+				'line'  => $e->getLine(),
+			] );
 			return new WP_Error( 500, $e->getMessage() );
+		} finally {
+			JobLog::finishCurrentGroup();
 		}
 	}
 
@@ -296,7 +348,7 @@ class WPML_TM_REST_Jobs extends WPML_REST_Base {
 	 * @return array|string
 	 */
 	public function get_allowed_capabilities( WP_REST_Request $request ) {
-		return array( WPML_Manage_Translations_Role::CAPABILITY, WPML_Translator_Role::CAPABILITY );
+		return [ User::CAP_ADMINISTRATOR, User::CAP_MANAGE_TRANSLATIONS, User::CAP_TRANSLATE ];
 	}
 
 	/**

@@ -13,8 +13,8 @@ class WPML_TM_Word_Count_Records {
 
 	public function __construct(
 		WPML_TM_Word_Count_Post_Records $post_records,
-		WPML_ST_Word_Count_Package_Records $package_records = null,
-		WPML_ST_Word_Count_String_Records $string_records = null
+		?WPML_ST_Word_Count_Package_Records $package_records = null,
+		?WPML_ST_Word_Count_String_Records $string_records = null
 	) {
 		$this->post_records    = $post_records;
 		$this->package_records = $package_records;

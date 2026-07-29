@@ -4,6 +4,11 @@ use WPML\FP\Obj;
 use WPML\LIB\WP\Nonce;
 use WPML\LIB\WP\User;
 use WPML\Media\Option;
+use WPML\MediaTranslation\PostWithMediaFiles;
+use WPML\Core\BackgroundTask\Service\BackgroundTaskService;
+use function WPML\Container\make;
+use WPML\Records\Translations as TranslationRecords;
+use WPML\TM\API\Jobs;
 
 class WPML_Media_Attachments_Duplication {
 
@@ -19,7 +24,17 @@ class WPML_Media_Attachments_Duplication {
 
 	private $language_resolution;
 
+	/** @var PostWithMediaFilesFactory $post_media_factory */
+	private $post_media_factory;
+
+	/** @var BackgroundTaskService */
+	private $background_task_service;
+
 	private $original_thumbnail_ids = array();
+
+	private $save_post_queue = [];
+
+	private $translated_posts = [];
 
 	/**
 	 * WPML_Media_Attachments_Duplication constructor.
@@ -29,11 +44,21 @@ class WPML_Media_Attachments_Duplication {
 	 *
 	 * @internal param WPML_WP_API $wpml_wp_api
 	 */
-	public function __construct( SitePress $sitepress, WPML_Model_Attachments $attachments_model, wpdb $wpdb, WPML_Language_Resolution $language_resolution ) {
-		$this->sitepress           = $sitepress;
-		$this->attachments_model   = $attachments_model;
-		$this->wpdb                = $wpdb;
-		$this->language_resolution = $language_resolution;
+	public function __construct(
+		SitePress $sitepress,
+		WPML_Model_Attachments $attachments_model,
+		wpdb $wpdb,
+		WPML_Language_Resolution $language_resolution,
+		\WPML\MediaTranslation\PostWithMediaFilesFactory $post_media_factory,
+		BackgroundTaskService $background_task_service
+	) {
+		$this->sitepress               = $sitepress;
+		$this->attachments_model       = $attachments_model;
+		$this->post_media_factory      = $post_media_factory;
+		$this->wpdb                    = $wpdb;
+		$this->language_resolution     = $language_resolution;
+		$this->post_media_factory      = $post_media_factory;
+		$this->background_task_service = $background_task_service;
 	}
 
 	public function add_hooks() {
@@ -54,25 +79,70 @@ class WPML_Media_Attachments_Duplication {
 		$this->add_postmeta_hooks();
 
 		add_action( 'save_post', array( $this, 'save_post_actions' ), 100, 2 );
+		if ( Option::shouldHandleMediaAuto() ) {
+			add_action( 'wp_after_insert_post', array( $this, 'extract_media_ids_from_post_content_and_meta' ), 100, 3 );
+			add_action( 'woocommerce_after_product_object_save', array( $this, 'woocommerce_extract_media_ids_from_post_content_and_meta' ), 100, 2 );
+			add_action( 'current_screen', array( $this, 'maybe_duplicate_original_post_media' ) );
+		}
+		add_action( 'before_delete_post', array( $this, 'delete_post_media_usages' ), 10, 1 );
 		add_action( 'wpml_pro_translation_completed', array( $this, 'sync_on_translation_complete' ), 10, 3 );
 
-		add_action( 'wp_ajax_wpml_media_set_initial_language', array( $this, 'batch_set_initial_language' ) );
-		add_action( 'wp_ajax_wpml_media_translate_media', array( $this, 'batch_translate_media' ), 10, 0 );
-		add_action( 'wp_ajax_wpml_media_duplicate_media', array( $this, 'batch_duplicate_media' ), 10, 0 );
+		add_action( 'wp_ajax_wpml_media_translate_media', array( $this, 'ajax_batch_translate_media' ), 10, 0 );
+		add_action( 'wp_ajax_wpml_media_duplicate_media', array( $this, 'ajax_batch_duplicate_media' ), 10, 0 );
 		add_action( 'wp_ajax_wpml_media_duplicate_featured_images', array( $this, 'ajax_batch_duplicate_featured_images' ), 10, 0 );
 
-		add_action( 'wp_ajax_wpml_media_mark_processed', array( $this, 'batch_mark_processed' ), 10, 0 );
-		add_action( 'wp_ajax_wpml_media_scan_prepare', array( $this, 'batch_scan_prepare' ), 10, 0 );
+		add_action( 'wp_ajax_wpml_media_mark_processed', array( $this, 'ajax_batch_mark_processed' ), 10, 0 );
+		add_action( 'wp_ajax_wpml_media_scan_prepare', array( $this, 'ajax_batch_scan_prepare' ), 10, 0 );
+		add_action( 'wp_ajax_wpml_media_save_should_handle_media_auto_setting', array( $this, 'ajax_save_should_handle_media_auto_setting' ), 10, 0 );
 
 		add_action( 'wp_ajax_wpml_media_set_content_prepare', array( $this, 'set_content_defaults_prepare' ) );
 		add_action( 'wpml_loaded', array( $this, 'add_settings_hooks' ) );
+		add_action( 'admin_notices', array( $this, 'maybe_render_admin_notices' ), PHP_INT_MAX );
+
+		add_action( 'shutdown', [ $this, 'maybe_translate_medias_in_posts' ], 40 );
+
+		if (
+			Option::shouldShowHandleMediaAutoBannerAfterUpgrade() ||
+			Option::shouldShowHandleMediaAutoNotice30DaysAfterUpgrade() ||
+			$this->should_show_admin_notice_for_elementor_on_mt_homepage()
+		) {
+			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		}
+
+		if ( Option::shouldShowHandleMediaAutoBannerAfterUpgrade() || Option::shouldShowHandleMediaAutoNotice30DaysAfterUpgrade() ) {
+			add_action( 'wp_ajax_wpml_media_dismiss_should_handle_media_auto_banner', array( $this, 'ajax_dismiss_should_handle_media_auto_banner' ), 10, 0 );
+			add_action( 'wp_ajax_wpml_media_dismiss_should_handle_media_auto_notice', array( $this, 'ajax_dismiss_should_handle_media_auto_notice' ), 10, 0 );
+		}
+
+		add_action( 'wp_ajax_wpml_media_dismiss_admin_notice_for_elementor_on_mt_homepage_notice', array( $this, 'ajax_dismiss_admin_notice_for_elementor_on_mt_homepage_notice' ), 10, 0 );
+	}
+
+	public function enqueue_scripts() {
+		$handle = 'wpml-media-admin-notices';
+
+		wp_register_script(
+			$handle,
+			ICL_PLUGIN_URL . '/res/js/media/admin-notices.js',
+			[],
+			ICL_SITEPRESS_SCRIPT_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			$handle,
+			'wpml_media_admin_notices_data',
+			[
+				'nonce_wpml_media_dismiss_should_handle_media_auto_banner' => wp_create_nonce( 'wpml_media_dismiss_should_handle_media_auto_banner' ),
+				'nonce_wpml_media_dismiss_should_handle_media_auto_notice' => wp_create_nonce( 'wpml_media_dismiss_should_handle_media_auto_notice' ),
+				'nonce_wpml_media_dismiss_admin_notice_for_elementor_on_mt_homepage_notice' => wp_create_nonce( 'wpml_media_dismiss_admin_notice_for_elementor_on_mt_homepage_notice' ),
+			]
+		);
+
+		wp_enqueue_script( $handle );
 	}
 
 	public function add_settings_hooks() {
-		if ( User::getCurrent() && (
-			User::getCurrent()->has_cap( 'wpml_manage_media_translation' )
-			|| User::getCurrent()->has_cap( WPML_Manage_Translations_Role::CAPABILITY )
-			)
+		if ( User::getCurrent() && ( User::canManageTranslations() || User::hasCap( 'wpml_manage_media_translation' ) )
 		) {
 			add_action('wp_ajax_wpml_media_set_content_defaults', array($this, 'wpml_media_set_content_defaults') );
 		}
@@ -87,7 +157,7 @@ class WPML_Media_Attachments_Duplication {
 		$filter = [ $this, 'record_original_thumbnail_ids_and_sync' ];
 
 		$shouldRestoreFilters = remove_action( 'update_postmeta', $filter, 10 )
-								&& remove_action( 'delete_post_meta', $filter, 10 );
+			&& remove_action( 'delete_post_meta', $filter, 10 );
 
 		$callback();
 
@@ -102,7 +172,7 @@ class WPML_Media_Attachments_Duplication {
 		return $is_admin || $is_xmlrpc;
 	}
 
-	public function save_attachment_actions( $post_id ) {
+	public function save_attachment_actions( $post_id, $override_always_translate_media = false, $target_languages = null ) {
 		if ( $this->is_uploading_media_on_wpml_media_screen() ) {
 			return;
 		}
@@ -136,7 +206,7 @@ class WPML_Media_Attachments_Duplication {
 		if ( ! empty( $media_language ) ) {
 			$this->sitepress->set_element_language_details( $post_id, 'post_attachment', $trid, $media_language );
 
-			$this->save_translated_attachments( $post_id );
+			$this->save_translated_attachments( $post_id, $override_always_translate_media, $target_languages );
 			$this->update_attachment_metadata( $post_id );
 		}
 	}
@@ -184,6 +254,12 @@ class WPML_Media_Attachments_Duplication {
 					$attachment_meta_data = get_post_meta( $translation->element_id, '_wp_attachment_metadata' );
 					if ( isset( $attachment_meta_data[0]['file'] ) ) {
 						continue;
+					}
+
+					// Preserve thumbs file names. Otherwise they will be overwritten by the original attachment's thumbs even if they are translated.
+					// It happens when the original attachment is trashed or edited.
+					if ( isset( $attachment_meta_data[0]['sizes'] ) ) {
+						$metadata['sizes'] = $attachment_meta_data[0]['sizes'];
 					}
 
 					update_post_meta( $translation->element_id, '_wp_attachment_metadata', $metadata );
@@ -235,26 +311,25 @@ class WPML_Media_Attachments_Duplication {
 		add_action( 'edit_attachment', array( $this, 'save_attachment_actions' ) );
 	}
 
-	public function save_translated_attachments( $post_id ) {
+	public function save_translated_attachments( $post_id, $override_always_translate_media = false, $target_languages = null ) {
 		if ( $this->is_uploading_plugin_or_theme() && get_post_type( $post_id ) == 'attachment' ) {
 			return;
 		}
 
 		$language_details = $this->sitepress->get_element_language_details( $post_id, 'post_attachment' );
 		if ( isset( $language_details->language_code ) ) {
-			$this->translate_attachments( $post_id, $language_details->language_code );
+			$this->translate_attachments( $post_id, $language_details->language_code, $override_always_translate_media, $target_languages );
 		}
 	}
 
-	private function translate_attachments( $attachment_id, $source_language, $override_always_translate_media = false ) {
+	private function translate_attachments( $attachment_id, $source_language, $override_always_translate_media = false, $target_languages = null ) {
 		if ( ! $source_language ) {
 			return;
 		}
 
-		$settings         = get_option( '_wpml_media' );
-		$content_defaults = $settings['new_content_settings'];
-		if ( $override_always_translate_media || $content_defaults['always_translate_media'] ) {
+		if ( $override_always_translate_media || ( Obj::prop( 'always_translate_media', Option::getNewContentSettings() ) && ! Option::shouldHandleMediaAuto() ) ) {
 
+			/** @var SitePress $sitepress */
 			global $sitepress;
 
 			$original_attachment_id = false;
@@ -289,6 +364,15 @@ class WPML_Media_Attachments_Duplication {
 					// Original attachment is present
 					$original = get_post( $original_attachment_id );
 					$codes    = array_keys( $sitepress->get_active_languages() );
+					if ( is_array( $target_languages ) ) {
+						$codes = array_filter(
+							$codes,
+							function( $code ) use ( $target_languages ) {
+								return in_array( $code, $target_languages );
+							}
+						);
+					}
+
 					foreach ( $codes as $code ) {
 						// If translation is not present, create it
 						if ( ! in_array( $code, $translated_languages ) ) {
@@ -309,6 +393,8 @@ class WPML_Media_Attachments_Duplication {
 
 	public function make_duplicate( $master_post_id, $target_lang, $post_array, $target_post_id ) {
 		$translated_attachment_id = false;
+		$last_translated_attachment_id = false;
+
 		// Get Master Post attachments
 		$master_post_attachment_ids_prepared = $this->wpdb->prepare(
 			"SELECT ID FROM {$this->wpdb->posts} WHERE post_parent = %d AND post_type = %s",
@@ -321,6 +407,7 @@ class WPML_Media_Attachments_Duplication {
 
 		if ( $master_post_attachment_ids ) {
 			foreach ( $master_post_attachment_ids as $master_post_attachment_id ) {
+				$translated_attachment_id = false;
 
 				$attachment_trid = $this->sitepress->get_element_trid( $master_post_attachment_id, 'post_attachment' );
 
@@ -340,6 +427,8 @@ class WPML_Media_Attachments_Duplication {
 					}
 
 					if ( $translated_attachment_id ) {
+						$last_translated_attachment_id = $translated_attachment_id;
+
 						// Set the parent post, if not already set
 						$translated_attachment = get_post( $translated_attachment_id );
 						if ( $translated_attachment && ! $translated_attachment->post_parent ) {
@@ -379,13 +468,13 @@ class WPML_Media_Attachments_Duplication {
 			}
 		}
 
-		return $translated_attachment_id;
+		return $last_translated_attachment_id;
 	}
 
 	/**
-	 * @param int    $attachment_id
-	 * @param int    $parent_id
-	 * @param string $target_language
+	 * @param int            $attachment_id
+	 * @param int|false|null $parent_id
+	 * @param string         $target_language
 	 *
 	 * @return int|null
 	 */
@@ -409,7 +498,7 @@ class WPML_Media_Attachments_Duplication {
 			$translated_parent_id = $this->attachments_model->fetch_translated_parent_id( $duplicated_attachment, $parent_id, $target_language );
 
 			if ( null !== $duplicated_attachment ) {
-				if ( $duplicated_attachment->post_parent !== $translated_parent_id ) {
+				if ( (int) $duplicated_attachment->post_parent !== (int) $translated_parent_id ) {
 					$this->attachments_model->update_parent_id_in_existing_attachment( $translated_parent_id, $duplicated_attachment );
 				}
 			} else {
@@ -450,6 +539,189 @@ class WPML_Media_Attachments_Duplication {
 	}
 
 	/**
+	 * We need to create post attachment duplicates in two following cases(if new setting to handle Media is enabled(WPML 4.8+)):
+	 * 1) When receiving post translations for the referenced media to have a place where to store translated texts.
+	 * 2) When opening page to create or edit page translation in the WordPress Editor(Gutenberg or Legacy) to make the
+	 *    media files used in the original posts visible in Media Library popup window and available for the selection.
+	 *
+	 * Separate queue for posts is required in this method only for WordPress Editor(Gutenberg or Legacy Classical Editor).
+	 * It is not required when you are translating post which has attachments with ATE, AT or TEA.
+	 * To support case 2) we need to duplicate both referenced and copied attachments when we open add/edit post translation page.
+	 * But we should remove duplicates later for the copied attachments as they become redundant after that.
+	 *
+	 * @param \WP_Screen $screen
+	 */
+	public function maybe_duplicate_original_post_media( $screen ) {
+		if ( ! Option::shouldHandleMediaAuto() ) {
+			return;
+		}
+
+		$is_media_library_screen     = 'upload' === $screen->base;
+		/* phpcs:ignore WordPress.Security.NonceVerification.Recommended */
+		$is_media_translation_screen = isset( $_GET['page'] ) && 'wpml-media' === $_GET['page'];
+
+		if ( $is_media_library_screen || $is_media_translation_screen ) {
+			$this->maybe_clear_duplicated_copied_media_in_posts_queue();
+			return;
+		}
+
+		$original_post = $this->get_original_post();
+		if ( ! $original_post ) {
+			return;
+		}
+
+		if ( ! class_exists( 'WPML_WP_API' ) ) {
+			return;
+		}
+
+		$wpml_wp_api = new WPML_WP_API();
+		if ( ! $wpml_wp_api->is_new_post_page() && ! $wpml_wp_api->is_post_edit_page() && ! $wpml_wp_api->is_translation_queue_page() ) {
+			return;
+		}
+
+		$lang = null;
+		if ( isset( $_GET['language_code'] ) ) {
+			$lang = $_GET['language_code'];
+		} else if ( isset( $_GET['language'] ) ) {
+			$lang = $_GET['language'];
+		} else if ( isset( $_GET['lang'] ) ) {
+			$lang = $_GET['lang'];
+		}
+
+		if ( ! is_string( $lang ) || strlen( $lang ) < 2 ) {
+			return;
+		}
+
+		$post_media = $this->post_media_factory->create( $original_post->ID );
+
+		foreach ( $post_media->get_copied_and_referenced__media_ids() as $media_id ) {
+			$this->save_attachment_actions( $media_id, true, [ $lang ] );
+		}
+
+		$post_media->save_to_posts_queue_with_duplicated_copied_media();
+	}
+
+	public function delete_post_media_usages( $post_id ) {
+		$maybe_original_post = get_post( $post_id );
+		if ( ! $maybe_original_post ) {
+			return null;
+		}
+		$original_post_id = (int) SitePress::get_original_element_id( $maybe_original_post->ID, 'post_' . $maybe_original_post->post_type );
+
+		if ( $original_post_id !== (int) $post_id ) {
+			return null;
+		}
+
+		$post_media = $this->post_media_factory->create( $original_post_id );
+		$post_media->remove_usage_of_media_files_in_post();
+	}
+
+	/**
+	 * @return WP_Post|null
+	 */
+	private function get_original_post() {
+		/* phpcs:ignore WordPress.Security.NonceVerification.Recommended */
+		$has_trid = isset( $_GET['trid'] );
+		/* phpcs:ignore WordPress.Security.NonceVerification.Recommended */
+		$has_post = isset( $_GET['post'] );
+		/* phpcs:ignore WordPress.Security.NonceVerification.Recommended */
+		$has_job_id = isset( $_GET['job_id'] );
+
+		$original_post_id = null;
+
+		if ( $has_trid ) {
+			/* phpcs:ignore WordPress.Security.NonceVerification.Recommended */
+			$trid             = intval( $_GET['trid'] );
+			$original_post_id = SitePress::get_original_element_id_by_trid( $trid );
+		} elseif ( $has_post ) {
+			/* phpcs:ignore WordPress.Security.NonceVerification.Recommended */
+			$maybe_original_post_id = intval( $_GET['post'] );
+			$maybe_original_post    = get_post( $maybe_original_post_id );
+			if ( ! $maybe_original_post ) {
+				return null;
+			}
+			$original_post_id = (int) SitePress::get_original_element_id( $maybe_original_post_id, 'post_' . $maybe_original_post->post_type );
+
+			// We should duplicate media only when editing post translations and not the original posts.
+			if ( $original_post_id === $maybe_original_post_id ) {
+				return null;
+			}
+		} elseif ( $has_job_id ) {
+			/* phpcs:ignore WordPress.Security.NonceVerification.Recommended */
+			$job_id = intval( $_GET['job_id'] );
+			$job    = Jobs::get( $job_id );
+
+			if ( ! is_object( $job ) ) {
+				return null;
+			}
+
+			$original_post = TranslationRecords::getSourceByTrid( $job->trid );
+			if ( ! is_object( $original_post ) ) {
+				return null;
+			}
+
+			$original_post_id = $original_post->element_id;
+		}
+
+		if ( ! is_numeric( $original_post_id ) ) {
+			return null;
+		}
+
+		return get_post( (int) $original_post_id );
+	}
+
+	private function maybe_clear_duplicated_copied_media_in_posts_queue() {
+		$post_media = null;
+		$queue      = $this->sitepress->get_setting( PostWithMediaFiles::POSTS_QUEUE_WITH_DUPLICATED_COPIED_MEDIA_SETTING, array() );
+		foreach ( $queue as $post_id ) {
+			$post_media = $this->post_media_factory->create( $post_id );
+			$post_media->delete_duplicated_copied_media();
+		}
+		if ( $post_media ) {
+			$post_media->clear_posts_queue_with_duplicated_copied_media();
+		}
+	}
+
+	public function woocommerce_extract_media_ids_from_post_content_and_meta( $post, $update ) {
+		$post = get_post( $post );
+		$this->extract_media_ids_from_post_content_and_meta( $post, $update );
+	}
+
+	// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+	public function extract_media_ids_from_post_content_and_meta( $post, $update, $post_before = null ) {
+		if ( is_int( $post ) ) {
+			$post = get_post( $post );
+		}
+
+		if ( 'attachment' === $post->post_type ) {
+			return;
+		}
+
+		if ( (int) $post->ID === 0) {
+			return;
+		}
+
+		if ( ! $this->is_valid_post_to_process( $post->ID, $post->post_type, $post->post_status, false ) ) {
+			return;
+		}
+
+		if ( ! $this->is_original( $post ) ) {
+			return;
+		}
+
+		$post_media = $this->post_media_factory->create( $post->ID );
+		$post_media->extract_and_save_media_ids();
+	}
+
+	private function is_original( $post ) {
+		if ( 'revision' === $post->post_type ) {
+			$post = get_post( $post->post_parent );
+		}
+
+		return (int) $post->ID === (int) $this->sitepress->get_original_element_id( $post->ID, 'post_' . $post->post_type, false, false, false, true );
+	}
+
+	/**
 	 * @param int     $pidd
 	 * @param WP_Post $post
 	 */
@@ -460,6 +732,10 @@ class WPML_Media_Attachments_Duplication {
 
 		if ( $post->post_type !== 'attachment' && $post->post_status !== 'auto-draft' ) {
 			$this->sync_attachments( $pidd, $post );
+
+			if ( ! $this->is_original( $post ) ) {
+				$this->save_post_queue[] = $post;
+			}
 		}
 
 		if ( $post->post_type === 'attachment' ) {
@@ -469,6 +745,172 @@ class WPML_Media_Attachments_Duplication {
 				$this->synchronize_attachment_metadata( $metadata, $attachment_id );
 			}
 		}
+	}
+
+	function maybe_translate_medias_in_posts() {
+		foreach ( $this->save_post_queue as $post ) {
+			$all_meta = get_post_meta( $post->ID );
+			$data     = [];
+			$lang     = $this->sitepress->get_language_for_element( $post->ID, 'post_' . $post->post_type );
+
+			foreach ( $all_meta as $key => $value ) {
+				if ( strpos( $key, '_bricks_' ) === 0 ) {
+					$item = maybe_unserialize( $value[0] );
+					if ( ! is_array( $item ) ) {
+						continue;
+					}
+
+					$this->translate_bricks_media( $item, $lang );
+					$this->update_post_meta_without_double_escaping_slashes( $post->ID, $key, $item, $value[0] );
+				}
+
+				if ( strpos( $key, 'panels_data' ) === 0 ) {
+					$item = maybe_unserialize( $value[0] );
+					if ( ! is_array( $item ) ) {
+						continue;
+					}
+
+					$this->translate_siteorigin_media( $item, $lang );
+					$this->update_post_meta_without_double_escaping_slashes( $post->ID, $key, $item, $value[0] );
+				}
+			}
+		}
+	}
+
+	/**
+	 * @param int    $post_id
+	 * @param string $key
+	 * @param mixed  $item
+	 * @param string $original_serialized_item
+	 */
+	private function update_post_meta_without_double_escaping_slashes( $post_id, $key, $item, $original_serialized_item ) {
+		$new_serialized_item = maybe_serialize( $item );
+		if ( $original_serialized_item === $new_serialized_item ) {
+			return;
+		}
+
+		$this->wpdb->update(
+			$this->wpdb->postmeta,
+			[ 'meta_value' => $new_serialized_item ],
+			[ 'post_id' => $post_id, 'meta_key' => $key ],
+			[ '%s' ],
+			[ '%d', '%s' ]
+		);
+	}
+
+	private function translate_bricks_media( &$data, $lang ) {
+		$iterator = function( &$node ) use ( &$iterator, $lang ) {
+			if ( ! is_array( $node ) ) {
+				return;
+			}
+
+			if ( isset( $node['settings']['image']['id'] ) ) {
+				$node['settings']['image']['id'] = $this->get_translated_attachment_id( $node['settings']['image']['id'], $lang );
+			}
+
+			if ( isset( $node['settings']['items']['images'] ) && is_array( $node['settings']['items']['images'] ) ) {
+				foreach ( $node['settings']['items']['images'] as &$image ) {
+					if ( isset( $image['id'] ) ) {
+						$image['id'] = $this->get_translated_attachment_id( $image['id'], $lang );
+					}
+				}
+			}
+
+			if ( isset( $node['settings']['_background']['image']['id'] ) ) {
+				$node['settings']['_background']['image']['id'] = $this->get_translated_attachment_id( $node['settings']['_background']['image']['id'], $lang );
+			}
+
+			foreach ( $node as &$value ) {
+				if ( is_array( $value ) ) {
+					$iterator( $value );
+				}
+			}
+		};
+
+		$iterator( $data );
+	}
+
+	private function translate_siteorigin_media( &$data, $lang ) {
+		$iterator = function( &$node ) use ( &$iterator, $lang ) {
+			if ( ! is_array( $node ) ) {
+				return;
+			}
+
+			if ( isset( $node['option_name'] ) && $node['option_name'] === 'widget_sow-image' && isset( $node['image'] ) && is_numeric( $node['image'] ) ) {
+				$is_custom_alt_setup = isset( $node['alt'] ) && is_string( $node['alt'] ) && strlen( $node['alt'] ) > 0;
+				if ( ! $is_custom_alt_setup ) {
+					$node['image'] = $this->get_translated_attachment_id( $node['image'], $lang );
+				}
+			}
+
+			if ( isset( $node['option_name'] ) && $node['option_name'] === 'widget_sow-slider' && isset( $node['frames'] ) && is_array( $node['frames'] ) ) {
+				foreach ( $node['frames'] as &$image ) {
+					if ( isset( $image['foreground_image'] ) && is_numeric( $image['foreground_image'] ) ) {
+						$image['foreground_image'] = $this->get_translated_attachment_id( $image['foreground_image'], $lang );
+					}
+					if ( isset( $image['background_image'] ) && is_numeric( $image['background_image'] ) ) {
+						$image['background_image'] = $this->get_translated_attachment_id( $image['background_image'], $lang );
+					}
+				}
+			}
+
+			foreach ( $node as &$value ) {
+				if ( is_array( $value ) ) {
+					$iterator( $value );
+				}
+			}
+		};
+
+		$iterator( $data );
+	}
+
+	private function get_translated_attachment_id( $id, $lang ) {
+		if ( ! is_string( $lang ) ) {
+			return $id;
+		}
+
+		$key = $id . $lang;
+
+		if ( ! array_key_exists( $key, $this->translated_posts ) ) {
+			$factory = new WPML_Translation_Element_Factory( $this->sitepress );
+
+			$this->translated_posts[ $key ] = null;
+			$element                        = $factory->create_post( $id );
+			$translation                    = $element->get_translation( $lang, true );
+
+			if ( $translation ) {
+				$this->translated_posts[ $key ] = $translation->get_wp_object();
+			}
+		}
+
+		return is_object( $this->translated_posts[ $key ] ) ? $this->translated_posts[ $key ]->ID : $id;
+	}
+
+	/**
+	 * @param int     $pidd
+	 * @param string  $post_type
+	 * @param string  $post_status
+	 * @param boolean $check_if_is_translated_type
+	 *
+	 * @return boolean
+	 */
+	private function is_valid_post_to_process($pidd, $post_type, $post_status, bool $check_if_is_translated_type = true ) {
+		$is_invalid = (
+			( $check_if_is_translated_type && ! $this->sitepress->is_translated_post_type( $post_type ) )
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended
+			|| isset( $_POST['autosave'] )
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended
+			|| ( isset( $_POST['post_ID'] ) && (int) $_POST['post_ID'] !== (int) $pidd )
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended
+			|| ( isset( $_POST['post_type'] ) && 'revision' === $_POST['post_type'] )
+			|| 'revision' === $post_type
+			|| get_post_meta( $pidd, '_wp_trash_meta_status', true )
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.NonceVerification.Recommended
+			|| ( isset( $_GET['action'] ) && 'restore' === $_GET['action'] )
+			|| 'auto-draft' === $post_status
+		);
+
+		return ! $is_invalid;
 	}
 
 	/**
@@ -515,23 +957,14 @@ class WPML_Media_Attachments_Duplication {
 			}
 
 			// checking - if set duplicate media
-			if ( get_post_meta( $src_id, '_wpml_media_duplicate', true ) ) {
+			if ( $src_id && Option::shouldDuplicateMedia( (int) $src_id ) ) {
 				// duplicate media before first save
 				$this->duplicate_post_attachments( $pidd, $_GET['trid'], $src_lang, $this->sitepress->get_language_for_element( $pidd, 'post_' . $post_type ) );
 			}
 		}
 
 		// exceptions
-		if (
-			! $this->sitepress->is_translated_post_type( $post_type )
-			|| isset( $_POST['autosave'] )
-			|| ( isset( $_POST['post_ID'] ) && $_POST['post_ID'] != $pidd )
-			|| ( isset( $_POST['post_type'] ) && $_POST['post_type'] === 'revision' )
-			|| $post_type === 'revision'
-			|| get_post_meta( $pidd, '_wp_trash_meta_status', true )
-			|| ( isset( $_GET['action'] ) && $_GET['action'] === 'restore' )
-			|| $post_status === 'auto-draft'
-		) {
+		if ( ! $this->is_valid_post_to_process( $pidd, $post_type, $post_status ) ) {
 			return;
 		}
 
@@ -564,7 +997,7 @@ class WPML_Media_Attachments_Duplication {
 	 */
 	public function sync_post_thumbnail( $post_id, $request_post_thumbnail_id = null ) {
 
-		if ( $post_id && get_post_meta( $post_id, '_wpml_media_featured', true ) ) {
+		if ( $post_id && Option::shouldDuplicateFeatured( $post_id ) || Option::shouldHandleMediaAuto() ) {
 
 			if ( null === $request_post_thumbnail_id ) {
 				$request_post_thumbnail_id = filter_input(
@@ -649,10 +1082,12 @@ class WPML_Media_Attachments_Duplication {
 
 	private function are_translations_of_each_other( $post_id_1, $post_id_2 ) {
 		return $this->sitepress->get_element_trid( $post_id_1, 'post_' . get_post_type( $post_id_1 ) ) ===
-			   $this->sitepress->get_element_trid( $post_id_2, 'post_' . get_post_type( $post_id_2 ) );
+			$this->sitepress->get_element_trid( $post_id_2, 'post_' . get_post_type( $post_id_2 ) );
 	}
 
 	function duplicate_post_attachments( $pidd, $icl_trid, $source_lang = null, $lang = null ) {
+		$wpdb                           = $this->wpdb;
+		$pidd                           = ( is_numeric( $pidd ) ) ? (int) $pidd : null;
 		$request_post_icl_ajx_action    = filter_input( INPUT_POST, 'icl_ajx_action', FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_NULL_ON_FAILURE );
 		$request_post_icl_post_language = filter_input( INPUT_POST, 'icl_post_language', FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_NULL_ON_FAILURE );
 		$request_post_post_id           = filter_input( INPUT_POST, 'post_id', FILTER_SANITIZE_NUMBER_INT, FILTER_NULL_ON_FAILURE );
@@ -680,37 +1115,77 @@ class WPML_Media_Attachments_Duplication {
 
 		if ( $source_lang == null || $source_lang == '' ) {
 			// This is the original see if we should copy to translations
+			if ( Option::shouldDuplicateMedia( $pidd ) || Option::shouldDuplicateFeatured( $pidd ) || Option::shouldHandleMediaAuto() ) {
+				$active_language_codes  = array_keys( $this->sitepress->get_active_languages() );
+				$lang_codes_placeholder = implode( ',', array_fill( 0, count( $active_language_codes ), '%s' ) );
 
-			if ( $this->is_media_marked_to_duplication( $pidd )
-				 || $this->is_feature_image_marked_to_duplication( $pidd )
-			) {
-				$translations_prepared = $this->wpdb->prepare( "SELECT element_id FROM {$this->wpdb->prefix}icl_translations WHERE trid = %d", array( $icl_trid ) );
-				$translations          = $this->wpdb->get_col( $translations_prepared );
+				$translations = $wpdb->get_col(
+					$wpdb->prepare(
+					// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+						"SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE trid = %d AND language_code IN ( $lang_codes_placeholder )",
+						array_merge( [ $icl_trid ], $active_language_codes )
+					)
+				);
+				$translations = array_map( 'intval', $translations );
+
+				$source_attachments = $wpdb->get_col(
+					$wpdb->prepare(
+						'SELECT ID FROM ' . $wpdb->posts . ' WHERE post_parent = %d AND post_type = %s',
+						array( $pidd, 'attachment' )
+					)
+				);
+				$source_attachments = array_map( 'intval', $source_attachments );
+
+				$all_element_ids           = [];
+				$attachments_by_element_id = [];
+				foreach ( $translations as $element_id ) {
+					if ( $element_id && $element_id !== $pidd ) {
+						$all_element_ids[]                        = $element_id;
+						$attachments_by_element_id[ $element_id ] = [];
+					}
+				}
+				$all_attachments = [];
+				if ( count( $all_element_ids ) > 0 ) {
+					$all_attachments = $wpdb->get_results(
+						$wpdb->prepare(
+						// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
+							'SELECT ID, post_parent AS element_id FROM ' . $wpdb->posts . ' WHERE post_parent IN (' . wpml_prepare_in( $all_element_ids ) . ') AND post_type = %s',
+							array( 'attachment' )
+						),
+						ARRAY_A
+					);
+				}
+				foreach ( $all_attachments as $attachment ) {
+					$attachments_by_element_id[ (int) $attachment['element_id'] ][] = (int) $attachment['ID'];
+				}
 
 				foreach ( $translations as $element_id ) {
-					if ( $element_id && $element_id != $pidd ) {
-
+					if ( $element_id && $element_id !== $pidd ) {
 						$lang_prepared = $this->wpdb->prepare( "SELECT language_code FROM {$this->wpdb->prefix}icl_translations WHERE element_id = %d AND trid = %d", array( $element_id, $icl_trid ) );
 						$lang          = $this->wpdb->get_var( $lang_prepared );
 
-						if ( $this->is_media_marked_to_duplication( $element_id ) ) {
-							$source_attachments_prepared = $this->wpdb->prepare( "SELECT ID FROM {$this->wpdb->posts} WHERE post_parent = %d AND post_type = %s", array( $pidd, 'attachment' ) );
-							$source_attachments          = $this->wpdb->get_col( $source_attachments_prepared );
-							$attachments_prepared        = $this->wpdb->prepare( "SELECT ID FROM {$this->wpdb->posts} WHERE post_parent = %d AND post_type = %s", array( $element_id, 'attachment' ) );
-							$attachments                 = $this->wpdb->get_col( $attachments_prepared );
+						$should_duplicate_featured = Option::shouldDuplicateFeatured( $element_id ) || Option::shouldHandleMediaAuto();
 
-							foreach ( $source_attachments as $source_attachment_id ) {
-								foreach ( $attachments as $attachment_id ) {
-									$translation_attachment_id = icl_object_id( $attachment_id, 'attachment', false, $lang );
-									if ( ! $translation_attachment_id ) {
-										$this->create_duplicate_attachment_not_static( $source_attachment_id, $element_id, $lang );
-									}
+						if ( $should_duplicate_featured ) {
+							$attachments                           = $attachments_by_element_id[ $element_id ];
+							$has_missing_translation_attachment_id = false;
+
+							foreach ( $attachments as $attachment_id ) {
+								if ( ! icl_object_id( $attachment_id, 'attachment', false, $lang ) ) {
+									$has_missing_translation_attachment_id = true;
+									break;
 								}
+							}
+
+							$source_attachment_ids = $has_missing_translation_attachment_id ? $source_attachments : [];
+
+							foreach ( $source_attachment_ids as $source_attachment_id ) {
+								$this->create_duplicate_attachment_not_static( $source_attachment_id, $element_id, $lang );
 							}
 						}
 
 						$translation_thumbnail_id = get_post_meta( $element_id, '_thumbnail_id', true );
-						if ( $this->is_feature_image_marked_to_duplication( $element_id ) && empty( $translation_thumbnail_id ) ) {
+						if ( $should_duplicate_featured && empty( $translation_thumbnail_id ) ) {
 							$thumbnail_id = get_post_meta( $pidd, '_thumbnail_id', true );
 							if ( $thumbnail_id ) {
 								$t_thumbnail_id = icl_object_id( $thumbnail_id, 'attachment', false, $lang );
@@ -745,12 +1220,24 @@ class WPML_Media_Attachments_Duplication {
 
 			// exception for making duplicates. language info not set when this runs and creating the duplicated posts 3/3
 			if ( $request_post_icl_ajx_action === 'make_duplicates' ) {
-				$duplicate = get_post_meta( $source_id, '_wpml_media_duplicate', true );
+				$duplicate = Option::shouldDuplicateMedia( $source_id );
 			} else {
-				$duplicate = get_post_meta( $pidd, '_wpml_media_duplicate', true );
-				if ( ! $duplicate ) {
+				$duplicate = Option::shouldDuplicateMedia( $pidd, false );
+				if ( $duplicate === null ) {
 					// check the original state
-					$duplicate = get_post_meta( $source_id, '_wpml_media_duplicate', true );
+					$duplicate = Option::shouldDuplicateMedia( $source_id );
+				}
+			}
+
+			$copied_media_ids     = [];
+			$referenced_media_ids = [];
+
+			if ( Option::shouldHandleMediaAuto() ) {
+				$duplicate = true;
+				if ( is_numeric( $source_id ) ) {
+					$post_media           = $this->post_media_factory->create( $source_id );
+					$copied_media_ids     = $post_media->get_copied_media_ids();
+					$referenced_media_ids = $post_media->get_referenced_media_ids();
 				}
 			}
 
@@ -762,21 +1249,33 @@ class WPML_Media_Attachments_Duplication {
 					$translation_attachment_id = icl_object_id( $source_attachment_id, 'attachment', false, $lang );
 
 					if ( ! $translation_attachment_id ) {
+						if (
+							Option::shouldHandleMediaAuto() &&
+							in_array( $source_attachment_id, $copied_media_ids ) &&
+							! in_array( $source_attachment_id, $referenced_media_ids )
+						) {
+							continue;
+						}
+
 						self::create_duplicate_attachment( $source_attachment_id, $pidd, $lang );
 					} else {
 						$translated_attachment = get_post( $translation_attachment_id );
 						if ( $translated_attachment && ! $translated_attachment->post_parent ) {
 							$translated_attachment->post_parent = $pidd;
+							/** @phpstan-ignore-next-line (WP doc issue) */
 							wp_update_post( $translated_attachment );
 						}
 					}
 				}
 			}
 
-			$featured = get_post_meta( $pidd, '_wpml_media_featured', true );
-			if ( $featured === '' ) {
+			$featured = Option::shouldDuplicateFeatured( $pidd, false );
+			if ( $featured === null ) {
 				// check the original state
-				$featured = get_post_meta( $source_id, '_wpml_media_featured', true );
+				$featured = Option::shouldDuplicateFeatured( $source_id );
+			}
+			if ( Option::shouldHandleMediaAuto() ) {
+				$featured = true;
 			}
 
 			$translation_thumbnail_id = get_post_meta( $pidd, '_thumbnail_id', true );
@@ -796,28 +1295,6 @@ class WPML_Media_Attachments_Duplication {
 			}
 		}
 
-	}
-
-	/**
-	 * @param int $post_id
-	 *
-	 * @return bool
-	 */
-	private function is_media_marked_to_duplication( $post_id ) {
-		$t = get_post_meta( $post_id, '_wpml_media_duplicate', true );
-
-		return ! empty( $t );
-	}
-
-	/**
-	 * @param int $post_id
-	 *
-	 * @return bool
-	 */
-	private function is_feature_image_marked_to_duplication( $post_id ) {
-		$t = get_post_meta( $post_id, '_wpml_media_featured', true );
-
-		return ! empty( $t );
 	}
 
 	/**
@@ -891,7 +1368,6 @@ class WPML_Media_Attachments_Duplication {
 		);
 		$row          = $wpdb->get_row( $row_prepared );
 		if ( $row && $row->trid && ( $row->source_language_code == null || $row->source_language_code == '' ) ) {
-			update_post_meta( $post->ID, '_wpml_media_featured', 1 );
 
 			$translations = $sitepress->get_element_translations( $row->trid, 'post_' . $post->post_type );
 			foreach ( $translations as $translation ) {
@@ -916,22 +1392,17 @@ class WPML_Media_Attachments_Duplication {
 							update_post_meta( $translation->element_id, '_thumbnail_id', $thumbnails[ $post->ID ] );
 						}
 					}
-
-					// Double check that there is a _thumbnail_id set and in case update _wpml_media_featured
-					if ( get_post_meta( $translation->element_id, '_thumbnail_id', true ) ) {
-						update_post_meta( $translation->element_id, '_wpml_media_featured', 1 );
-					}
 				}
 			}
 		}
 	}
 
 	public function ajax_batch_duplicate_featured_images() {
-		if (
-			! isset( $_POST['nonce'] )
-			|| ! wp_verify_nonce( $_POST['nonce'], 'wpml_media_settings_actions' )
-		) {
-			wp_nonce_ays( '' );
+
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( $_POST['nonce'] ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'wpml_media_duplicate_featured_images' ) ) {
+			wp_send_json_error( esc_html__( 'Invalid request!', 'sitepress' ) );
 		}
 
 		$featured_images_left = array_key_exists( 'featured_images_left', $_POST ) && is_numeric( $_POST['featured_images_left'] )
@@ -958,10 +1429,9 @@ class WPML_Media_Attachments_Duplication {
 		// Response result.
 		$response = array( 'left' => max( $featured_images_left - $processed, 0 ) );
 		if ( $response['left'] ) {
-			$response['message'] = sprintf( __( 'Duplicating featured images. %d left', 'sitepress' ), $response['left'] );
+			$response['message'] = sprintf( __( 'Duplicating featured content: %d left. Stay here until complete. May take a few minutes.', 'sitepress' ), $response['left'] );
 		} else {
-			$this->set_media_duplication_meta_for_existing_posts( '_wpml_media_featured' );
-			$response['message'] = sprintf( __( 'Duplicating featured images: done!', 'sitepress' ), $response['left'] );
+			$response['message'] = sprintf( __( 'Duplicating featured content: 0 left. Stay here until complete. May take a few minutes.', 'sitepress' ), $response['left'] );
 		}
 
 		if ( $outputResult ) {
@@ -985,24 +1455,46 @@ class WPML_Media_Attachments_Duplication {
 		);
 	}
 
-	public function batch_duplicate_media( $outputResult = true ) {
-		$limit = 10;
+	public function ajax_batch_duplicate_media() {
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( $_POST['nonce'] ) : '';
 
+		if ( ! wp_verify_nonce( $nonce, 'wpml_media_duplicate_media' ) ) {
+			wp_send_json_error( esc_html__( 'Invalid request!', 'sitepress' ) );
+		}
+
+		return $this->batch_duplicate_media();
+	}
+
+	public function batch_duplicate_media( $outputResult = true ) {
+		$limit    = 10;
 		$response = array();
+
+		$count_sql = $this->wpdb->prepare(
+			"
+			SELECT COUNT(*) 
+				 FROM {$this->wpdb->posts} p1
+				 WHERE post_type = %s
+				 AND ID NOT IN (
+					 SELECT post_id FROM {$this->wpdb->postmeta} WHERE meta_key = %s
+				 )
+			",
+			array( 'attachment', 'wpml_media_processed' )
+		);
+		$found     = (int) $this->wpdb->get_var( $count_sql );
 
 		$attachments_prepared = $this->wpdb->prepare(
 			"
-            SELECT SQL_CALC_FOUND_ROWS p1.ID, p1.post_parent
-            FROM {$this->wpdb->posts} p1
-            WHERE post_type = %s
-            AND ID NOT IN
-            	(SELECT post_id FROM {$this->wpdb->postmeta} WHERE meta_key = %s)
-            ORDER BY p1.ID ASC LIMIT %d",
+			SELECT p1.ID, p1.post_parent 
+				 FROM {$this->wpdb->posts} p1
+				 WHERE post_type = %s
+				 AND ID NOT IN (
+					 SELECT post_id FROM {$this->wpdb->postmeta} WHERE meta_key = %s
+				 )
+				 ORDER BY p1.ID ASC LIMIT %d
+			",
 			array( 'attachment', 'wpml_media_processed', $limit )
 		);
-
-		$attachments = $this->wpdb->get_results( $attachments_prepared );
-		$found       = (int) $this->wpdb->get_var( 'SELECT FOUND_ROWS()' );
+		$attachments          = $this->wpdb->get_results( $attachments_prepared );
 
 		if ( $attachments ) {
 			foreach ( $attachments as $attachment ) {
@@ -1012,10 +1504,9 @@ class WPML_Media_Attachments_Duplication {
 
 		$response['left'] = max( $found - $limit, 0 );
 		if ( $response['left'] ) {
-			$response['message'] = sprintf( __( 'Duplicating media. %d left', 'sitepress' ), $response['left'] );
+			$response['message'] = sprintf( __( 'Duplicating content: %d left. Stay here until complete. May take a few minutes.', 'sitepress' ), $response['left'] );
 		} else {
-			$this->set_media_duplication_meta_for_existing_posts( '_wpml_media_duplicate' );
-			$response['message'] = sprintf( __( 'Duplicating media: done!', 'sitepress' ), $response['left'] );
+			$response['message'] = sprintf( __( 'Duplicating content: 0 left. Stay here until complete. May take a few minutes.', 'sitepress' ), $response['left'] );
 		}
 
 		if ( $outputResult ) {
@@ -1034,48 +1525,76 @@ class WPML_Media_Attachments_Duplication {
 		return max( $limit, 1 );
 	}
 
+	public function ajax_batch_translate_media() {
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( $_POST['nonce'] ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'wpml_media_translate_media' ) ) {
+			wp_send_json_error( esc_html__( 'Invalid request!', 'sitepress' ) );
+		}
+
+		return $this->batch_translate_media();
+	}
+
 	public function batch_translate_media( $outputResult = true ) {
 		$response = [];
 
-		$activeLanguagesCount = count( $this->sitepress->get_active_languages() );
+		$activeLanguages      = $this->sitepress->get_active_languages();
+		$activeLanguagesCount = count( $activeLanguages );
+		$placeholders         = implode( ',', array_fill( 0, $activeLanguagesCount, '%s' ) );
 		$limit                = $this->get_batch_translate_limit( $activeLanguagesCount );
 
-		$sql          = "
-            SELECT SQL_CALC_FOUND_ROWS p1.ID, p1.post_parent
-            FROM {$this->wpdb->prefix}icl_translations t
-            INNER JOIN {$this->wpdb->posts} p1
-            	ON t.element_id = p1.ID
-            LEFT JOIN {$this->wpdb->prefix}icl_translations tt
-            	ON t.trid = tt.trid
-			WHERE t.element_type = 'post_attachment'
-				AND t.source_language_code IS null
-			GROUP BY p1.ID, p1.post_parent
-			HAVING count(tt.language_code) < %d
-            LIMIT %d
-        ";
+		$count_sql = $this->wpdb->prepare(
+			"
+			SELECT COUNT(*) FROM (
+					SELECT p1.ID
+					FROM {$this->wpdb->prefix}icl_translations t
+					INNER JOIN {$this->wpdb->posts} p1
+						ON t.element_id = p1.ID AND p1.post_type = 'attachment'
+					LEFT JOIN {$this->wpdb->prefix}icl_translations tt
+						ON t.trid = tt.trid
+					WHERE t.element_type = 'post_attachment'
+						AND t.source_language_code IS NULL
+						AND tt.language_code IN ($placeholders)
+					GROUP BY p1.ID, p1.post_parent
+					HAVING COUNT(tt.language_code) < %d
+				) AS count_subquery
+			",
+			array_merge( array_keys( $activeLanguages ), array( $activeLanguagesCount ) )
+		);
+		$found     = (int) $this->wpdb->get_var( $count_sql );
 
-		$sql_prepared = $this->wpdb->prepare( $sql,
-			[
-				$activeLanguagesCount,
-				$limit
-			] );
-
-		$attachments = $this->wpdb->get_results( $sql_prepared );
-
-		$found = $this->wpdb->get_var( 'SELECT FOUND_ROWS()' );
+		// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+		$sql         = $this->wpdb->prepare(
+			"
+			SELECT p1.ID, p1.post_parent
+				FROM {$this->wpdb->prefix}icl_translations t
+				INNER JOIN {$this->wpdb->posts} p1
+					ON t.element_id = p1.ID AND p1.post_type = 'attachment'
+				LEFT JOIN {$this->wpdb->prefix}icl_translations tt
+					ON t.trid = tt.trid
+				WHERE t.element_type = 'post_attachment'
+					AND t.source_language_code IS NULL
+					AND tt.language_code IN ($placeholders)
+				GROUP BY p1.ID, p1.post_parent
+				HAVING COUNT(tt.language_code) < %d
+				LIMIT %d
+    		",
+			array_merge( array_keys( $activeLanguages ), array( $activeLanguagesCount, $limit ) )
+		);
+		$attachments = $this->wpdb->get_results( $sql );
 
 		if ( $attachments ) {
 			foreach ( $attachments as $attachment ) {
 				$lang = $this->sitepress->get_element_language_details( $attachment->ID, 'post_attachment' );
-				$this->translate_attachments( $attachment->ID, $lang->language_code, true );
+				$this->translate_attachments( $attachment->ID, ( is_object( $lang ) && property_exists( $lang, 'language_code' ) ) ? $lang->language_code : null, true );
 			}
 		}
 
 		$response['left'] = max( $found - $limit, 0 );
 		if ( $response['left'] ) {
-			$response['message'] = sprintf( esc_html__( 'Translating media. %d left', 'sitepress' ), $response['left'] );
+			$response['message'] = sprintf( esc_html__( 'Duplicating content: %d left. Stay here until complete. May take a few minutes.', 'sitepress' ), $response['left'] );
 		} else {
-			$response['message'] = sprintf( esc_html__( 'Translating media: done!', 'sitepress' ), $response['left'] );
+			$response['message'] = __( 'Duplicating content: 0 left. Stay here until complete. May take a few minutes.', 'sitepress' );
 		}
 
 		if ( $outputResult ) {
@@ -1086,29 +1605,50 @@ class WPML_Media_Attachments_Duplication {
 	}
 
 	public function batch_set_initial_language() {
+
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( $_POST['nonce'] ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'wpml_media_set_initial_language' ) ) {
+			wp_send_json_error( esc_html__( 'Invalid request!', 'sitepress' ) );
+		}
+
 		$default_language = $this->sitepress->get_default_language();
 		$limit            = 10;
 
-		$response             = array();
+		$response  = array();
+		$count_sql = $this->wpdb->prepare(
+			"
+			SELECT COUNT(ID) 
+				 FROM {$this->wpdb->posts}
+				 WHERE post_type = %s
+				 AND ID NOT IN (
+					 SELECT element_id FROM {$this->wpdb->prefix}icl_translations WHERE element_type = %s
+				 )
+			",
+			array( 'attachment', 'post_attachment' )
+		);
+		$found     = (int) $this->wpdb->get_var( $count_sql );
+
 		$attachments_prepared = $this->wpdb->prepare(
 			"
-            SELECT SQL_CALC_FOUND_ROWS ID FROM {$this->wpdb->posts} WHERE post_type = %s AND ID NOT IN
-            (SELECT element_id FROM {$this->wpdb->prefix}icl_translations WHERE element_type=%s) LIMIT %d",
-			array(
-				'attachment',
-				'post_attachment',
-				$limit,
-			)
+			SELECT ID 
+				 FROM {$this->wpdb->posts}
+				 WHERE post_type = %s
+				 AND ID NOT IN (
+					 SELECT element_id FROM {$this->wpdb->prefix}icl_translations WHERE element_type = %s
+				 )
+				 LIMIT %d
+			",
+			array( 'attachment', 'post_attachment', $limit )
 		);
 		$attachments          = $this->wpdb->get_col( $attachments_prepared );
-
-		$found = (int) $this->wpdb->get_var( 'SELECT FOUND_ROWS()' );
 
 		foreach ( $attachments as $attachment_id ) {
 			$this->sitepress->set_element_language_details( $attachment_id, 'post_attachment', false, $default_language );
 		}
 		$response['left'] = max( $found - $limit, 0 );
 		if ( $response['left'] ) {
+			// phpcs:ignore WordPress.WP.I18n.MissingTranslatorsComment
 			$response['message'] = sprintf( __( 'Setting language to media. %d left', 'sitepress' ), $response['left'] );
 		} else {
 			$response['message'] = sprintf( __( 'Setting language to media: done!', 'sitepress' ), $response['left'] );
@@ -1118,20 +1658,60 @@ class WPML_Media_Attachments_Duplication {
 		exit;
 	}
 
-	function batch_scan_prepare( $outputResult = true ) {
+	public function ajax_save_should_handle_media_auto_setting() {
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( $_POST['nonce'] ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'wpml_media_save_should_handle_media_auto_setting' ) ) {
+			wp_send_json_error( esc_html__( 'Invalid request!', 'sitepress' ) );
+		}
+
+		$isEnabled = (bool) $_POST['isEnabled'];
+		Option::setShouldHandleMediaAuto( $isEnabled );
+
+		if ( $isEnabled ) {
+			$endpoint = make( \WPML\TM\Settings\ProcessExistingMediaInPosts::class );
+			$this->background_task_service->add( $endpoint, wpml_collect( [] ) );
+		} else {
+			Option::setShouldShowHandleMediaAutoBannerAfterUpgrade();
+			Option::setShouldShowHandleMediaAutoNotice30DaysAfterUpgrade();
+		}
+
+		wp_send_json( [] );
+	}
+
+	public function ajax_batch_scan_prepare() {
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( $_POST['nonce'] ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'wpml_media_scan_prepare' ) ) {
+			wp_send_json_error( esc_html__( 'Invalid request!', 'sitepress' ) );
+		}
+
+		$this->batch_scan_prepare();
+	}
+
+	public function batch_scan_prepare( $outputResult = true ) {
 		$response = array();
 		$this->wpdb->delete( $this->wpdb->postmeta, array( 'meta_key' => 'wpml_media_processed' ) );
 
-		$this->add_missing_media_duplication_meta_values( '_wpml_media_featured' );
-		$this->add_missing_media_duplication_meta_values( '_wpml_media_duplicate' );
-		$response['message'] = __( 'Started...', 'sitepress' );
+		$response['message'] = '';
 
 		if ( $outputResult ) {
 			wp_send_json( $response );
 		}
 	}
 
+	public function ajax_batch_mark_processed() {
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( $_POST['nonce'] ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'wpml_media_mark_processed' ) ) {
+			wp_send_json_error( esc_html__( 'Invalid request!', 'sitepress' ) );
+		}
+
+		$this->batch_mark_processed();
+	}
+
 	public function batch_mark_processed( $outputResult = true ) {
+
 		$response                    = [];
 		$wpmlMediaProcessedMetaValue = 1;
 		$limit                       = 300;
@@ -1153,11 +1733,11 @@ class WPML_Media_Attachments_Duplication {
 		 * We join with the wp_postmeta table to also retrieve any related data of attachments in this table,
 		 * we only need the related data when the wp_postmeta.metavalue is null or != 1 because if it equals 1 then it doesn't need to be processed again
 		 */
-		$limitedAttachmentsWithMetaDataQuery = "SELECT posts.ID, post_meta.post_id, post_meta.meta_key, post_meta.meta_value 
-		FROM {$this->wpdb->posts} AS posts 
-		LEFT JOIN {$this->wpdb->postmeta} AS post_meta 
-		ON posts.ID = post_meta.post_id AND post_meta.meta_key = %s 
-		WHERE posts.post_type = %s AND (post_meta.meta_value IS NULL OR post_meta.meta_value != %d) 
+		$limitedAttachmentsWithMetaDataQuery = "SELECT posts.ID, post_meta.post_id, post_meta.meta_key, post_meta.meta_value
+		FROM {$this->wpdb->posts} AS posts
+		LEFT JOIN {$this->wpdb->postmeta} AS post_meta
+		ON posts.ID = post_meta.post_id AND post_meta.meta_key = %s
+		WHERE posts.post_type = %s AND (post_meta.meta_value IS NULL OR post_meta.meta_value != %d)
 		LIMIT %d";
 
 		$limitedAttachmentsWithMetaDataQueryPrepared = $this->wpdb->prepare( $limitedAttachmentsWithMetaDataQuery,
@@ -1183,8 +1763,8 @@ class WPML_Media_Attachments_Duplication {
 		 */
 		$attachmentHasNoMetaData = function ( $attachmentWithMetaData ) {
 			return Obj::prop( 'post_id', $attachmentWithMetaData ) === null &&
-			       Obj::prop( 'meta_key', $attachmentWithMetaData ) === null &&
-			       Obj::prop( 'meta_value', $attachmentWithMetaData ) === null;
+				Obj::prop( 'meta_key', $attachmentWithMetaData ) === null &&
+				Obj::prop( 'meta_value', $attachmentWithMetaData ) === null;
 		};
 
 		/**
@@ -1210,14 +1790,14 @@ class WPML_Media_Attachments_Duplication {
 			 */
 			$attachmentsWithMetaData = $this->wpdb->get_results( $limitedAttachmentsWithMetaDataQueryPrepared );
 
-			if ( count( $attachmentsWithMetaData ) ) {
+			if ( is_array( $attachmentsWithMetaData ) && count( $attachmentsWithMetaData ) ) {
 
 				/**
 				 * Filtering data to separate existing and non-existing attachments with metdata
 				 */
 				list( $notExistingMetaAttachmentIds, $existingAttachmentsWithMetaData ) = \WPML\FP\Lst::partition( $attachmentHasNoMetaData, $attachmentsWithMetaData );
 
-				if ( count( $notExistingMetaAttachmentIds ) ) {
+				if ( is_array( $notExistingMetaAttachmentIds ) && count( $notExistingMetaAttachmentIds ) ) {
 
 					/**
 					 * If we have attachments with no related data in wp_postmeta table, we start inserting values for it in wp_postmeta
@@ -1227,6 +1807,7 @@ class WPML_Media_Attachments_Duplication {
 					$notExistingAttachmentsIds = \WPML\FP\Lst::pluck( 'ID', $notExistingMetaAttachmentIds );
 
 					// Preparing placeholders to be used in INSERT query
+					/** @phpstan-ignore-next-line */
 					$attachmentMetaValuesPlaceholders = implode( ',', \WPML\FP\Lst::repeat( '(%d, %s, %d)', count( $notExistingAttachmentsIds ) ) );
 
 					// Preparing INSERT query
@@ -1234,6 +1815,7 @@ class WPML_Media_Attachments_Duplication {
 					$insertAttachmentsMetaQuery .= $attachmentMetaValuesPlaceholders;
 
 					// Preparing values to be inserted, at his point they're in separate arrays
+					/** @phpstan-ignore-next-line */
 					$insertAttachmentsMetaValues = array_map( $prepareInsertAttachmentsMetaValues, $notExistingAttachmentsIds );
 					// Merging all values together in one array to be used wpdb->prepare function so each value is placed in a placeholder
 					$insertAttachmentsMetaValues = array_merge( ...$insertAttachmentsMetaValues );
@@ -1298,8 +1880,6 @@ class WPML_Media_Attachments_Duplication {
 			$trid               = $this->wpdb->get_var( $trid_prepared );
 			if ( $trid ) {
 
-				update_post_meta( $attachment->post_parent, '_wpml_media_duplicate', 1 );
-
 				$attachments_prepared = $this->wpdb->prepare(
 					"SELECT ID FROM {$this->wpdb->posts} WHERE post_type = %s AND post_parent = %d",
 					array(
@@ -1351,7 +1931,8 @@ class WPML_Media_Attachments_Duplication {
 
 		// Duplicate the post meta of the source element the translation
 		$source_element_id = SitePress::get_original_element_id_by_trid( $trid );
-		if ( $source_element_id ) {
+		$post_type         = get_post_type( (int) $source_element_id );
+		if ( $source_element_id && 'attachment' === $post_type ) {
 			$this->update_attachment_metadata( $source_element_id );
 		}
 
@@ -1359,19 +1940,28 @@ class WPML_Media_Attachments_Duplication {
 	}
 
 	function set_content_defaults_prepare() {
-		$response = array( 'message' => __( 'Started...', 'sitepress' ) );
+
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( $_POST['nonce'] ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'wpml_media_set_content_prepare' ) ) {
+			wp_send_json_error( esc_html__( 'Invalid request!', 'sitepress' ) );
+		}
+
+		$response = array( 'message' => __( 'Saving settings...', 'sitepress' ) );
 		echo wp_json_encode( $response );
 		exit;
 	}
 
 	public function wpml_media_set_content_defaults() {
-		$nonce   = isset( $_POST['nonce'] ) ? sanitize_text_field( $_POST['nonce'] ) : '';
 
-		if ( wp_verify_nonce( $nonce, 'wpml_media_set_content_defaults' )  ) {
-			$this->set_content_defaults();
-		} else {
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( $_POST['nonce'] ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'wpml_media_set_content_defaults' ) ) {
 			wp_send_json_error( esc_html__( 'Invalid request!', 'sitepress' ) );
 		}
+
+		$this->set_content_defaults();
+
 	}
 
 	private function set_content_defaults() {
@@ -1387,6 +1977,8 @@ class WPML_Media_Attachments_Duplication {
 			'duplicate_featured'     => $duplicate_featured == 'true',
 		];
 
+		Option::setNewContentSettings( $content_defaults_option );
+
 		$settings                         = get_option( '_wpml_media' );
 		$settings['new_content_settings'] = $content_defaults_option;
 		$settings['translate_media_library_texts'] = $translateMediaLibraryTexts === 'true';
@@ -1395,37 +1987,167 @@ class WPML_Media_Attachments_Duplication {
 
 		$response = [
 			'result'  => true,
-			'message' => __( 'Settings saved', 'sitepress' ),
+			'message' => __( 'Done', 'sitepress' ),
 		];
 		wp_send_json_success( $response );
 	}
 
-	private function set_media_duplication_meta_for_existing_posts( $meta_key ) {
-		$this->wpdb->update(
-			$this->wpdb->postmeta,
-			[ 'meta_value' => 1 ],
-			[
-				'meta_key'   => $meta_key,
-				'meta_value' => 0,
-			]
+	/**
+	 * @return bool
+	 */
+	private function is_mt_homepage_screen() {
+		/* phpcs:ignore WordPress.Security.NonceVerification.Recommended */
+		return isset( $_GET['page'] ) && 'wpml-media' === $_GET['page'];
+	}
+
+	/**
+	 * @return bool
+	 */
+	private function should_show_admin_notice_for_elementor_on_mt_homepage() {
+		return (
+			$this->is_mt_homepage_screen() &&
+			! Option::isAdminNoticeForElementorOnMtHomepageDismissed() &&
+			is_admin() &&
+			is_plugin_active( 'elementor/elementor.php' )
 		);
 	}
 
-	private function add_missing_media_duplication_meta_values( $meta_key ) {
-		$excluded_post_types = [ 'attachment', 'wp_block' ];
-		$post_types          = wpml_collect( $this->sitepress->get_translatable_documents() )
-			->union( $this->sitepress->get_display_as_translated_documents() )
-			->map( Obj::prop( 'name' ) )
-			->diff( $excluded_post_types )
-			->toArray();
-
-		if ( $post_types ) {
-			$this->wpdb->query(
-				"INSERT INTO {$this->wpdb->postmeta} (post_id, meta_key, meta_value)
-				SELECT ID, '{$meta_key}', '0' FROM {$this->wpdb->posts} 
-				LEFT JOIN {$this->wpdb->postmeta} on ID = post_id AND meta_key = '{$meta_key}'
-				WHERE post_id IS NULL AND post_status='publish' AND post_type IN ('" . join( "','", $post_types ) . "')"
-			);
+	public function maybe_render_admin_notices() {
+		if ( ! defined( 'WPML_TM_FOLDER' ) ) {
+			return;
 		}
+
+		if ( $this->should_show_admin_notice_for_elementor_on_mt_homepage() ) {
+			wp_enqueue_style( 'otgs-notices' );
+			$this->render_admin_notice_for_elementor_on_mt_homepage();
+		}
+
+		if ( Option::shouldHandleMediaAuto() ) {
+			return;
+		}
+
+		$screen = get_current_screen();
+		if ( ! is_admin() || ! $screen ) {
+			return;
+		}
+
+		// Exclude on add or edit post pages.
+		$excluded_bases = [
+			'post',
+		];
+
+		if ( in_array( $screen->base, $excluded_bases, true ) ) {
+			return;
+		}
+
+		if ( Option::shouldShowHandleMediaAutoBannerAfterUpgrade() ) {
+			$this->render_admin_banner_about_automatic_media_detection();
+		}
+
+		if ( ! Option::shouldShowHandleMediaAutoBannerAfterUpgrade() && Option::shouldShowHandleMediaAutoNotice30DaysAfterUpgrade() ) {
+			wp_enqueue_style( 'otgs-notices' );
+			$this->render_admin_notice_about_automatic_media_detection();
+		}
+	}
+
+	private function render_admin_banner_about_automatic_media_detection() {
+		?>
+		<section id="admin_banner_about_automatic_media_detection" class="wpml-banner show" aria-labelledby="wpml-banner-disabled-header">
+			<h3>
+				<?php echo esc_html__( 'New in WPML 4.8 - Automatic image and media detection', 'sitepress' ); ?>
+				<button class="dismiss-button" aria-label="<?php echo esc_attr__( 'Close banner', 'sitepress' ); ?>"><span class="otgs-ico otgs-ico-cancel"></span></button>
+			</h3>
+			<p><?php echo esc_html__(
+					'WPML can now automatically detect what types of texts (alt, caption, title) your images use. ' .
+					'Enable this option to avoid duplicate fields in the translation editor and missing translations for your images.',
+					'sitepress'
+				); ?></p>
+			<div class="wpml-banner-actions">
+				<a id="wpml-media-settings-link" href="<?php echo $this->get_media_settings_link(); ?>">
+					<button id="wpml-media-settings-button" class="wpml-button base-btn button-with-progress">
+						<span class="button-text"><?php echo esc_html__( 'Enable it now', 'sitepress' ); ?></span>
+					</button>
+				</a>
+				<a
+					class="external-link"
+					href="https://wpml.org/documentation/translating-your-contents/using-the-translation-editor/switching-from-classic-to-advanced-translation-editor/?utm_source=plugin&amp;utm_medium=gui&amp;utm_campaign=cte-banner"
+					target="_blank"
+					aria-label=""
+				>
+					<span>
+						<?php echo esc_html__( 'Learn more about media translation', 'sitepress' ); ?>
+					</span>
+				</a>
+			</div>
+		</section>
+		<?php
+	}
+
+	public function ajax_dismiss_should_handle_media_auto_banner() {
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( $_POST['nonce'] ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'wpml_media_dismiss_should_handle_media_auto_banner' ) ) {
+			wp_send_json_error( esc_html__( 'Invalid request!', 'sitepress' ) );
+		}
+
+		Option::removeShouldShowHandleMediaAutoBannerAfterUpgrade();
+
+		wp_send_json( [] );
+	}
+
+	private function render_admin_notice_about_automatic_media_detection() {
+		?>
+		<div class="wpml-notices-list">
+			<div id="admin_banner_about_automatic_media_detection_after_30_days" class="warning notice-warning otgs-notice wpml-notices-list-notice">
+				<button class="dismiss-button dismiss-button-in-top-right" aria-label="<?php echo esc_attr__( 'Close banner', 'sitepress' ); ?>"><span class="otgs-ico otgs-ico-cancel"></span></button>
+				<p><?php echo esc_html__( 'We strongly recommend enabling WPML\'s automatic detection for image texts to avoid duplicated media fields and missing translations.', 'sitepress' ); ?>
+					<a href="https://wpml.org/documentation/translating-your-contents/using-the-translation-editor/switching-from-classic-to-advanced-translation-editor/?utm_source=plugin&amp;utm_medium=gui&amp;utm_campaign=cte-banner" class="external-link"><?php echo esc_html__( 'Learn more', 'sitepress' ); ?></a></p>
+				<a href="<?php echo $this->get_media_settings_link(); ?>">
+					<button class="wpml-button base-btn button-with-progress button-horizontal-padding">
+						<span class="button-text"><?php echo esc_html__( 'Enable it now', 'sitepress' ); ?></span>
+					</button>
+				</a>
+			</div>
+		</div>
+		<?php
+	}
+
+	public function ajax_dismiss_should_handle_media_auto_notice() {
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( $_POST['nonce'] ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'wpml_media_dismiss_should_handle_media_auto_notice' ) ) {
+			wp_send_json_error( esc_html__( 'Invalid request!', 'sitepress' ) );
+		}
+
+		Option::removeShouldShowHandleMediaAutoNotice30DaysAfterUpgrade();
+
+		wp_send_json( [] );
+	}
+
+	private function render_admin_notice_for_elementor_on_mt_homepage() {
+		?>
+		<div class="wpml-notices-list">
+			<div id="admin_banner_for_elementor_on_mt_homepage" class="warning notice-warning otgs-notice wpml-notices-list-notice">
+				<button class="dismiss-button dismiss-button-in-top-right" aria-label="<?php echo esc_attr__( 'Close banner', 'sitepress' ); ?>"><span class="otgs-ico otgs-ico-cancel"></span></button>
+				<p><?php echo esc_html__( 'As this site uses Elementor, changes you make here might not be visible on the front-end. In this case, go to Elementor settings and clear its cache.', 'sitepress' ); ?>
+			</div>
+		</div>
+		<?php
+	}
+
+	public function ajax_dismiss_admin_notice_for_elementor_on_mt_homepage_notice() {
+		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( $_POST['nonce'] ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'wpml_media_dismiss_admin_notice_for_elementor_on_mt_homepage_notice' ) ) {
+			wp_send_json_error( esc_html__( 'Invalid request!', 'sitepress' ) );
+		}
+
+		Option::setIsAdminNoticeForElementorOnMtHomepageDismissed();
+
+		wp_send_json( [] );
+	}
+
+	private function get_media_settings_link() {
+		return admin_url( 'admin.php?page=' . WPML_TM_FOLDER . WPML_Translation_Management::PAGE_SLUG_SETTINGS . '#' . WPML_Media_Settings::ID );
 	}
 }

@@ -14,9 +14,9 @@ use WPML\Element\API\Languages;
 add_action( 'plugins_loaded', 'icl_st_init' );
 
 function icl_st_init() {
-	global $sitepress_settings, $sitepress, $wpdb, $icl_st_err_str, $pagenow, $authordata;
+	global $sitepress_settings, $sitepress, $pagenow, $authordata;
 
-	if ( empty( $sitepress_settings['setup_complete'] ) || ( $pagenow === 'site-new.php' && isset( $_REQUEST['action'] ) && 'add-site' === $_REQUEST['action'] ) ) {
+	if ( empty( $sitepress_settings['setup_complete'] ) || ( 'site-new.php' === $pagenow && isset( $_REQUEST['action'] ) && 'add-site' === $_REQUEST['action'] ) ) {
 		return;
 	}
 
@@ -53,9 +53,8 @@ function icl_st_init() {
 	// handle po file upload
 
 	new WPML_PO_Import_Strings_Scripts();
-	$po_import_strings = new WPML_PO_Import_Strings();
+	$po_import_strings = WPML\Container\make( WPML_PO_Import_Strings::class );
 	$po_import_strings->maybe_import_po_add_strings();
-	$icl_st_err_str = $po_import_strings->get_errors();
 
 	// handle po export
 	if ( isset( $_POST['icl_st_pie_e'] ) && wp_verify_nonce( $_POST['_wpnonce'], 'icl_po_export' ) ) {
@@ -65,10 +64,10 @@ function icl_st_init() {
 		}
 		$_GET['show_results'] = 'all';
 		if ( $_POST['icl_st_e_context'] ) {
-			$_GET['context'] = filter_var( $_POST['icl_st_e_context'], FILTER_SANITIZE_STRING );
+			$_GET['context'] = (string) \WPML\API\Sanitize::string( $_POST['icl_st_e_context'] );
 		}
 
-		$_GET['translation_language'] = filter_var( $_POST['icl_st_e_language'], FILTER_SANITIZE_STRING );
+		$_GET['translation_language'] = (string) \WPML\API\Sanitize::string( $_POST['icl_st_e_language'] );
 		$strings                      = icl_get_string_translations();
 		if ( ! empty( $strings ) ) {
 			$po = icl_st_generate_po_file( $strings );
@@ -77,10 +76,10 @@ function icl_st_init() {
 		}
 		if ( ! isset( $_POST['icl_st_pe_translations'] ) ) {
 			$popot  = 'pot';
-			$poname = $_POST['icl_st_e_context'] ? filter_var( urlencode( $_POST['icl_st_e_context'] ), FILTER_SANITIZE_STRING ) : 'all_context';
+			$poname = $_POST['icl_st_e_context'] ? (string) \WPML\API\Sanitize::string( urlencode( $_POST['icl_st_e_context'] )) : 'all_context';
 		} else {
 			$popot  = 'po';
-			$poname = filter_var( $_GET['context'], FILTER_SANITIZE_STRING ) . '-' . filter_var( $_GET['translation_language'], FILTER_SANITIZE_STRING );
+			$poname = \WPML\API\Sanitize::string( $_GET['context'] ?? '' ) . '-' . \WPML\API\Sanitize::string( $_GET['translation_language'] ?? '' );
 		}
 		header( 'Content-Type: application/force-download' );
 		header( 'Content-Type: application/octet-stream' );
@@ -100,17 +99,11 @@ function icl_st_init() {
 	add_filter( 'widget_title', 'icl_sw_filters_widget_title', 0 );  // highest priority
 	add_filter( 'widget_text', 'icl_sw_filters_widget_text', 0 ); // highest priority
 
-	$widget_groups = $wpdb->get_results( "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE 'widget\\_%'" );
-	foreach ( $widget_groups as $w ) {
-		add_action( 'update_option_' . $w->option_name, 'icl_st_update_widget_title_actions', 5, 2 );
-	}
+	add_action( 'update_option', 'icl_st_update_widget_title_actions', 5, 3 );
 
 	add_action( 'update_option_widget_text', 'icl_st_update_text_widgets_actions', 5, 2 );
 	add_action( 'update_option_sidebars_widgets', 'wpml_st_init_register_widget_titles' );
 
-	if ( $icl_st_err_str ) {
-		add_action( 'admin_notices', 'icl_st_admin_notices' );
-	}
 	if ( isset( $_REQUEST['string-translated'] ) && $_REQUEST['string-translated'] == true ) {
 		add_action( 'admin_notices', 'icl_st_admin_notices_string_updated' );
 	}
@@ -143,11 +136,14 @@ function wpml_st_init_register_widget_titles() {
 		}
 		$name = preg_replace( '#-[0-9]+#', '', $aw );
 
-		$value = get_option( 'widget_' . $name );
+		$value = get_option( 'widget_' . $name, [] );
 		if ( isset( $value[ $suffix ]['title'] ) && $value[ $suffix ]['title'] ) {
 			$w_title = $value[ $suffix ]['title'];
 		} else {
 			$w_title                   = wpml_get_default_widget_title( $aw );
+			if ( ! isset( $value[ $suffix ] ) || ! is_array( $value[ $suffix ] ) ) {
+				$value[ $suffix ] = [];
+			}
 			$value[ $suffix ]['title'] = $w_title;
 			update_option( 'widget_' . $name, $value );
 		}
@@ -192,11 +188,11 @@ function wpml_get_default_widget_title( $id ) {
  *
  * @param string|array $context           The context for the string
  * @param string       $name              A name to help the translator understand what’s being translated
- * @param string       $value             The string value
+ * @param string|array $value             The string or array value
  * @param bool         $allow_empty_value This param is not being used
  * @param string       $source_lang       The language of the registered string. Defaults to 'en'
  *
- * @return int string_id of the just registered string or the id found in the database corresponding to the
+ * @return int|false|null string_id of the just registered string or the id found in the database corresponding to the
  *             input parameters
  * @throws \WPML\Auryn\InjectionException
  */
@@ -204,7 +200,7 @@ function icl_register_string( $context, $name, $value, $allow_empty_value = fals
 	global $WPML_String_Translation;
 
 	if ( ! $name ) {
-		$name = md5( $value );
+		$name = md5( is_array( $value ) ? (string) json_encode( $value ) : $value );
 	}
 
 	$strings_language    = $WPML_String_Translation->get_current_string_language( $name );
@@ -215,6 +211,11 @@ function icl_register_string( $context, $name, $value, $allow_empty_value = fals
 	} else {
 		$string_id = null;
 	}
+
+	/**
+	 * Action runs after string is registered
+	 */
+	do_action( 'wpml_st_string_registered' );
 
 	return $string_id;
 }
@@ -250,7 +251,7 @@ add_action( 'wpml_register_single_string', 'wpml_register_single_string_action',
 /**
  * @param string|array $context
  * @param string       $name
- * @param bool         $value
+ * @param bool|string  $value
  * @param bool         $allow_empty_value
  * @param null|bool    $has_translation
  * @param null|string  $target_lang
@@ -372,13 +373,15 @@ function icl_unregister_string( $context, $name ) {
 
 	if ( $string_id ) {
 		/**
-		 * This action is is fired before several strings are deleted at once.
+		 * This action is fired before several strings are deleted at once.
 		 *
-		 * @param array Here containing only the single string that is deleted.
+		 * @param array $string_ids Here containing only the single string that is deleted.
 		 *
 		 * @since 3.0.0
 		 */
 		do_action( 'wpml_st_before_remove_strings', [ $string_id ] );
+
+		wpml_st_flush_string_cache_for_ids( [ $string_id ] );
 
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}icl_strings WHERE id=%d", $string_id ) );
 		$wpdb->query(
@@ -396,6 +399,11 @@ function icl_unregister_string( $context, $name ) {
 	}
 
 	/**
+	 * Action that fires after string is unregistered
+	 */
+	do_action( 'wpml_st_string_unregistered' );
+
+	/**
 	 * This action is is fired when a string is deleted.
 	 *
 	 * @param array $string_id
@@ -409,14 +417,20 @@ function icl_unregister_string( $context, $name ) {
 function wpml_unregister_string_multi( array $string_ids ) {
 	global $wpdb;
 
+	if ( empty( $string_ids ) ) {
+		return;
+	}
+
 	/**
-	 * This action is is fired before several strings are deleted at once.
+	 * This action is fired before several strings are deleted at once.
 	 *
 	 * @param array $string_ids
 	 *
 	 * @since 3.0.0
 	 */
 	do_action( 'wpml_st_before_remove_strings', $string_ids );
+
+	wpml_st_flush_string_cache_for_ids( $string_ids );
 
 	$str = wpml_prepare_in( $string_ids, '%d' );
 	$wpdb->query(
@@ -429,11 +443,41 @@ function wpml_unregister_string_multi( array $string_ids ) {
 	$wpdb->query( "DELETE FROM {$wpdb->prefix}icl_string_positions WHERE string_id IN ({$str})" );
 
 	/**
-	 * This action is is fired when several strings are deleted at once.
+	 * This action is fired when several strings are deleted at once.
 	 *
 	 * @param array $string_ids
 	 */
 	do_action( 'icl_st_unregister_string_multi', $string_ids );
+
+	/**
+	 * Action that fires after strings are unregistered
+	 */
+	do_action( 'wpml_st_string_unregistered' );
+}
+
+/**
+ * Flushes the string cache for the given string IDs
+ *
+ * @param array $string_ids
+ */
+function wpml_st_flush_string_cache_for_ids( array $string_ids ) {
+	global $wpdb;
+
+	if ( empty( $string_ids ) ) {
+		return;
+	}
+
+	$str      = wpml_prepare_in( $string_ids, '%d' );
+	$contexts = $wpdb->get_col(
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		"SELECT DISTINCT context FROM {$wpdb->prefix}icl_strings WHERE id IN ( {$str} ) AND context != ''"
+	);
+
+	foreach ( $contexts as $context ) {
+		$group = 'WPML_Register_String_Filter--' . $context;
+		$cache = new WPML_WP_Cache( $group );
+		$cache->flush_group_cache();
+	}
 }
 
 /**
@@ -480,7 +524,7 @@ function wpml_translate_single_string_filter( $original_value, $context, $name, 
  * @api
  * @since 3.2
  */
-add_filter( 'wpml_translate_single_string', 'wpml_translate_single_string_filter', 10, 6 );
+add_filter( 'wpml_translate_single_string', 'wpml_translate_single_string_filter', 10, 5 );
 
 /**
  * Retrieve a string translation
@@ -581,9 +625,9 @@ function icl_update_string_translation(
 }
 
 /**
- * @param string     $string
- * @param string     $context
- * @param bool|false $name
+ * @param string       $string
+ * @param string       $context
+ * @param string|false $name
  *
  * @return int
  * @throws \WPML\Auryn\InjectionException
@@ -735,29 +779,6 @@ function icl_sw_must_track_strings() {
 	return false;
 }
 
-function icl_st_track_string( $text, $domain, $kind = ICL_STRING_TRANSLATION_STRING_TRACKING_TYPE_PAGE ) {
-
-	if ( is_multisite() && ms_is_switched() ) {
-		return;
-	}
-
-	require_once dirname( __FILE__ ) . '/gettext/wpml-string-scanner.class.php';
-
-	static $string_scanner = null;
-	if ( ! $string_scanner ) {
-		try {
-			$wp_filesystem  = wpml_get_filesystem_direct();
-			$string_scanner = new WPML_String_Scanner( $wp_filesystem, new WPML_ST_File_Hashing() );
-		} catch ( Exception $e ) {
-			trigger_error( $e->getMessage(), E_USER_WARNING );
-		}
-	}
-
-	if ( $string_scanner ) {
-		$string_scanner->track_string( $text, $domain, $kind );
-	}
-}
-
 /**
  * @param string $translation
  * @param string $text
@@ -788,16 +809,16 @@ function icl_sw_filters_gettext_with_context( $translation, $text, $_gettext_con
  * @param string       $translation
  * @param string       $single
  * @param string       $plural
- * @param string       $number
- * @param string|array $domain
- * @param string|false $_gettext_context
+ * @param string|int   $number
+ * @param string       $domain
+ * @param string       $_gettext_context
  *
  * @return string
  * @throws \WPML\Auryn\InjectionException
  * @deprecated since WPML ST 3.0.0
  *
  */
-function icl_sw_filters_ngettext( $translation, $single, $plural, $number, $domain, $_gettext_context = false ) {
+function icl_sw_filters_ngettext( $translation, $single, $plural, $number, $domain, $_gettext_context ) {
 	if ( $number == 1 ) {
 		return icl_sw_filters_gettext_with_context( $translation, $single, $_gettext_context, $domain );
 	} else {
@@ -828,7 +849,14 @@ function icl_sw_filters_nxgettext( $translation, $single, $plural, $number, $_ge
 function icl_st_register_user_strings_all() {
 	global $sitepress, $authordata;
 	$wpml_translated_users = new WPML_ST_User_Fields( $sitepress, $authordata );
-	return $wpml_translated_users->init_register_strings();
+	$processedIds = $wpml_translated_users->init_register_strings();
+
+	/**
+	 * Actions runs after user strings are registered
+	 */
+	do_action( 'wpml_st_string_registered' );
+
+	return $processedIds;
 }
 
 function icl_st_update_string_actions( $context, $name, $old_value, $new_value, $force_complete = false ) {
@@ -838,40 +866,76 @@ function icl_st_update_string_actions( $context, $name, $old_value, $new_value, 
 
 		$string_update = new WPML_ST_String_Update( $wpdb );
 		$string_update->update_string( $context, $name, $old_value, $new_value, $force_complete );
+
+		/**
+		 * Action that runs after registered strings are updated
+		 */
+		do_action( 'wpml_st_string_updated' );
 	}
 }
 
 /**
- * @param array<string,mixed> $old_options
- * @param array<string,mixed> $new_options
+ * @param string $name
+ * @param array<string,mixed> $old
+ * @param array<string,mixed> $new
  *
  * @throws \WPML\Auryn\InjectionException
  */
-function icl_st_update_widget_title_actions( $old_options, $new_options ) {
-
-	if ( isset( $new_options['title'] ) ) { // case of 1 instance only widgets
-		$buf = $new_options;
-		unset( $new_options );
-		$new_options[0] = $buf;
-		unset( $buf );
-		$buf = $old_options;
-		unset( $old_options );
-		$old_options[0] = $buf;
-		unset( $buf );
+function icl_st_update_widget_title_actions( $name, $old, $new ) {
+	if ( strpos( $name, 'widget_' ) !== 0 ) {
+		// No widget.
+		return;
 	}
 
-	$defaultLang = Languages::getDefaultCode();
+	// Normalise the widget arrays.
+	$new = ! is_array( $new ) || array_key_exists( 'title' , $new )
+		? [ $new ]
+		: $new;
+	$old = ! is_array( $old ) || array_key_exists( 'title' , $old )
+		? [ $old ]
+		: $old;
 
-	foreach ( $new_options as $k => $o ) {
-		if ( isset( $o['title'] ) ) {
-			if ( isset( $old_options[ $k ]['title'] ) && $old_options[ $k ]['title'] ) {
-				icl_st_update_string_actions( WPML_ST_WIDGET_STRING_DOMAIN, 'widget title - ' . md5( $old_options[ $k ]['title'] ), $old_options[ $k ]['title'], $o['title'] );
-			} else {
-				if ( $new_options[ $k ]['title'] ) {
-					icl_register_string( WPML_ST_WIDGET_STRING_DOMAIN, 'widget title - ' . md5( $new_options[ $k ]['title'] ), $new_options[ $k ]['title'], false, $defaultLang );
-				}
-			}
+	$name_prefix = 'widget title - ';
+
+	foreach ( $new as $index => $widget ) {
+		if (
+			! is_array( $widget ) || // There can be other data than arrays.
+			! array_key_exists( 'title', $widget )
+		) {
+			// No title at all. Nothing to translate.
+			continue;
 		}
+
+		if (
+			array_key_exists( $index, $old )
+			&& is_array( $old[ $index ] )
+			&& array_key_exists( 'title', $old[ $index ] )
+			&& $old[ $index ]['title']
+		) {
+			// EXISTING WIDGET - Update existing string.
+			icl_st_update_string_actions(
+				WPML_ST_WIDGET_STRING_DOMAIN,
+				$name_prefix . md5( $old[ $index ]['title'] ),
+				$old[ $index ]['title'],
+				$widget['title']
+			);
+			continue;
+		}
+
+		// NEW WIDGET.
+		// 1. Get default language once.
+		$defaultLang = isset( $defaultLang )
+			? $defaultLang
+			: Languages::getDefaultCode();
+
+		// 2. Register new widget title as translatable string.
+		icl_register_string(
+			WPML_ST_WIDGET_STRING_DOMAIN,
+			$name_prefix . md5( $new[ $index ]['title'] ),
+			$new[ $index ]['title'],
+			false,
+			$defaultLang
+		);
 	}
 }
 
@@ -889,7 +953,7 @@ function icl_st_update_text_widgets_actions( $old_options, $new_options ) {
 
 	$widget_text = get_option( 'widget_text' );
 	if ( is_array( $widget_text ) ) {
-	    $defaultLang = Languages::getDefaultCode();
+		$defaultLang = Languages::getDefaultCode();
 
 		foreach ( $widget_text as $k => $w ) {
 			if ( isset( $old_options[ $k ]['text'] ) && trim( $old_options[ $k ]['text'] ) && $old_options[ $k ]['text'] != $w['text'] ) {
@@ -918,13 +982,6 @@ function icl_st_get_contexts( $status ) {
 	return $wpml_strings->get_per_domain_counts( $status );
 }
 
-function icl_st_admin_notices() {
-	global $icl_st_err_str;
-	if ( $icl_st_err_str ) {
-		echo '<div class="error"><p>' . $icl_st_err_str . '</p></div>';
-	}
-}
-
 function icl_st_generate_po_file( $strings ) {
 
 	require_once WPML_ST_PATH . '/inc/gettext/wpml-po-parser.class.php';
@@ -938,6 +995,9 @@ function _icl_st_get_options_writes( $path ) {
 	static $found_writes = array();
 	if ( is_dir( $path ) ) {
 		$dh = opendir( $path );
+		if ( ! $dh ) {
+			return $found_writes;
+		}
 		while ( $file = readdir( $dh ) ) {
 			if ( $file == '.' || $file == '..' ) {
 				continue;
@@ -945,7 +1005,7 @@ function _icl_st_get_options_writes( $path ) {
 			if ( is_dir( $path . '/' . $file ) ) {
 				_icl_st_get_options_writes( $path . '/' . $file );
 			} elseif ( preg_match( '#(\.php|\.inc)$#i', $file ) ) {
-				$content = file_get_contents( $path . '/' . $file );
+				$content = (string) file_get_contents( $path . '/' . $file );
 				$int     = preg_match_all( '#(add|update)_option\(([^,]+),([^)]+)\)#im', $content, $matches );
 				if ( $int ) {
 					foreach ( $matches[2] as $m ) {
@@ -1038,56 +1098,10 @@ function icl_is_string_translation( $translation ) {
 
 }
 
-function icl_translation_add_string_translation( $rid, $translation, $lang_code ) {
-	global $wpdb;
-	foreach ( $translation as $key => $value ) {
-		if ( preg_match( '/string-(.*)/', $key, $match ) ) {
-			$string_id = $match[1];
-
-			$string_translation_id = $wpdb->get_var(
-				$wpdb->prepare(
-					"SELECT id
-                                                      FROM {$wpdb->prefix}icl_string_translations
-                                                      WHERE string_id=%d AND language=%s",
-					$string_id,
-					$lang_code
-				)
-			);
-
-			$md5_when_sent        = $wpdb->get_var(
-				$wpdb->prepare(
-					"	SELECT md5
-																		FROM {$wpdb->prefix}icl_string_status
-                														WHERE rid=%d AND string_translation_id=%d",
-					$rid,
-					$string_translation_id
-				)
-			);
-			$current_string_value = $wpdb->get_var(
-				$wpdb->prepare(
-					"	SELECT value
-																		FROM {$wpdb->prefix}icl_strings
-																		WHERE id=%d",
-					$string_id
-				)
-			);
-			if ( $md5_when_sent == md5( $current_string_value ) ) {
-				$status = ICL_TM_COMPLETE;
-			} else {
-				$status = ICL_TM_NEEDS_UPDATE;
-			}
-			$value = str_replace( '&#0A;', "\n", $value );
-			icl_add_string_translation( $string_id, $lang_code, html_entity_decode( $value ), $status );
-		}
-	}
-
-	return true;
-}
-
 function icl_st_admin_notices_string_updated() {
 	?>
 	<div class="updated">
-			<p><?php _e( 'Strings translations updated', 'wpml-string-translation' ); ?></p>
+			<p><?php _e( 'Translations for strings updated', 'wpml-string-translation' ); ?></p>
 	</div>
 	<?php
 }

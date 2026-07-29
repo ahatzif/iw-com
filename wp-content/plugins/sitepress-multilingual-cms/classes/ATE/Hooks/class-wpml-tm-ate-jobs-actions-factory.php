@@ -1,7 +1,7 @@
 <?php
 
 use function WPML\Container\make;
-use WPML\TM\ATE\ReturnedJobsQueue;
+use WPML\TM\ATE\ReturnedJobs;
 
 /**
  * Factory class for \WPML_TM_ATE_Jobs_Actions.
@@ -36,13 +36,15 @@ class WPML_TM_ATE_Jobs_Actions_Factory implements IWPML_Backend_Action_Loader, \
 			$ate_jobs = new WPML_TM_ATE_Jobs( $records );
 
 			$translator_activation_records = new WPML_TM_AMS_Translator_Activation_Records( new WPML_WP_User_Factory() );
+			$wp_api                        = new WPML_WP_API();
 
 			return new WPML_TM_ATE_Jobs_Actions(
 				$ate_api,
 				$ate_jobs,
 				$sitepress,
 				$current_screen,
-				$translator_activation_records
+				$translator_activation_records,
+				$wp_api
 			);
 		}
 

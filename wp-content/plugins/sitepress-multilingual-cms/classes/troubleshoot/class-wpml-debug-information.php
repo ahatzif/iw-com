@@ -8,6 +8,8 @@ class WPML_Debug_Information {
 	/** @var SitePress $sitepress */
 	protected $sitepress;
 
+	protected $info;
+
 	/**
 	 * @param wpdb      $wpdb
 	 * @param SitePress $sitepress
@@ -15,6 +17,7 @@ class WPML_Debug_Information {
 	public function __construct( $wpdb, $sitepress ) {
 		$this->wpdb      = $wpdb;
 		$this->sitepress = $sitepress;
+		$this->info  = new WPML_Support_Info( $this->wpdb );
 	}
 
 	public function run() {
@@ -52,7 +55,7 @@ class WPML_Debug_Information {
 				'PermalinkStructure' => get_option( 'permalink_structure' ),
 				'PostTypes'          => implode( ', ', get_post_types( '', 'names' ) ),
 				'PostStatus'         => implode( ', ', get_post_stati() ),
-				'RestEnabled'        => wpml_is_rest_enabled() ? 'Yes' : 'No',
+				'RestEnabled'        => wpml_is_rest_enabled(false) ? 'Yes' : 'No',
 			),
 			'Server'    => array(
 				'jQueryVersion'  => wp_script_is( 'jquery', 'registered' ) ? $GLOBALS['wp_scripts']->registered['jquery']->ver : __( 'n/a', 'bbpress' ),
@@ -61,15 +64,16 @@ class WPML_Debug_Information {
 				'ServerSoftware' => $_SERVER['SERVER_SOFTWARE'],
 			),
 			'PHP'       => array(
-				'MemoryLimit'     => ini_get( 'memory_limit' ),
-				'WP Memory Limit' => WP_MEMORY_LIMIT,
+				'MemoryLimit'     => $this->info->get_php_memory_limit(),
+				'WP Memory Limit' => $this->info->get_wp_memory_limit(),
+				'WP Max Memory'   => $this->info->get_wp_max_memory_limit(),
 				'UploadMax'       => ini_get( 'upload_max_filesize' ),
 				'PostMax'         => ini_get( 'post_max_size' ),
 				'TimeLimit'       => ini_get( 'max_execution_time' ),
 				'MaxInputVars'    => ini_get( 'max_input_vars' ),
 				'MBString'        => $this->sitepress->get_wp_api()->extension_loaded( 'mbstring' ),
 				'libxml'          => $this->sitepress->get_wp_api()->extension_loaded( 'libxml' ),
-			),
+			) + $this->get_opcache_info(),
 		);
 
 		return $core;
@@ -152,5 +156,97 @@ class WPML_Debug_Information {
 		}
 
 		return $json_data;
+	}
+
+	/**
+	 * Get OPcache status information
+	 *
+	 * @return array OPcache status details
+	 */
+	function get_opcache_info() {
+		$opcache_info = array();
+
+		// Check if OPcache extension is loaded
+		if ( ! function_exists( 'opcache_get_status' ) ) {
+			$opcache_info['OPcache'] = 'Not Installed';
+			return $opcache_info;
+		}
+
+		// Get OPcache status (false = don't include script details)
+		$status = @opcache_get_status( false );
+
+		// If status is false, OPcache is installed but disabled or restricted
+		if ( false === $status ) {
+			$opcache_info['OPcache'] = 'Installed but Disabled';
+			return $opcache_info;
+		}
+
+		// OPcache is enabled
+		$opcache_info['OPcache'] = 'Enabled';
+
+		// Add memory usage statistics if available
+		if ( isset( $status['memory_usage'] ) ) {
+			$memory = $status['memory_usage'];
+
+			// used_memory: Total bytes currently used by OPcache to store compiled scripts
+			$used_memory_mb = isset( $memory['used_memory'] )
+				? round( $memory['used_memory'] / 1024 / 1024, 2 )
+				: 0;
+
+			// free_memory: Total bytes still available for caching more scripts
+			$free_memory_mb = isset( $memory['free_memory'] )
+				? round( $memory['free_memory'] / 1024 / 1024, 2 )
+				: 0;
+
+			// wasted_memory: Bytes wasted due to restarts or invalidated scripts
+			$wasted_memory_mb = isset( $memory['wasted_memory'] )
+				? round( $memory['wasted_memory'] / 1024 / 1024, 2 )
+				: 0;
+
+			// current_wasted_percentage: Percentage of memory that is wasted
+			$wasted_percentage = isset( $memory['current_wasted_percentage'] )
+				? round( $memory['current_wasted_percentage'], 2 )
+				: 0;
+
+			// Calculate total memory and usage percentage
+			$total_memory_mb   = $used_memory_mb + $free_memory_mb + $wasted_memory_mb;
+			$usage_percentage  = $total_memory_mb > 0
+				? round( ( $used_memory_mb / $total_memory_mb ) * 100, 2 )
+				: 0;
+
+			$opcache_info['Memory Used']       = $used_memory_mb . ' MB';
+			$opcache_info['Memory Free']       = $free_memory_mb . ' MB';
+			$opcache_info['Memory Wasted']     = $wasted_memory_mb . ' MB (' . $wasted_percentage . '%)';
+			$opcache_info['Memory Total']      = $total_memory_mb . ' MB';
+			$opcache_info['Memory Usage']      = $usage_percentage . '%';
+		}
+
+		// Add hit/miss statistics if available
+		if ( isset( $status['opcache_statistics'] ) ) {
+			$stats = $status['opcache_statistics'];
+
+			// hits: Number of times a script was served from cache (fast path)
+			$hits = isset( $stats['hits'] ) ? $stats['hits'] : 0;
+
+			// misses: Number of times a script was not in cache and had to be compiled
+			$misses = isset( $stats['misses'] ) ? $stats['misses'] : 0;
+
+			// Calculate hit rate percentage
+			$total_requests = $hits + $misses;
+			$hit_rate       = $total_requests > 0
+				? round( ( $hits / $total_requests ) * 100, 2 )
+				: 0;
+
+			$opcache_info['Cache Hits']   = number_format( $hits );
+			$opcache_info['Cache Misses'] = number_format( $misses );
+			$opcache_info['Hit Rate']     = $hit_rate . '%';
+
+			// num_cached_scripts: Total number of scripts currently cached
+			if ( isset( $stats['num_cached_scripts'] ) ) {
+				$opcache_info['Cached Scripts'] = number_format( $stats['num_cached_scripts'] );
+			}
+		}
+
+		return $opcache_info;
 	}
 }

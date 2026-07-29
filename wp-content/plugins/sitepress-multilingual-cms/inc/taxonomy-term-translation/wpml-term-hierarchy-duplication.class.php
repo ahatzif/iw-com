@@ -15,7 +15,7 @@ class WPML_Term_Hierarchy_Duplication extends WPML_WPDB_And_SP_User {
 				unset( $taxonomies[ $key ] );
 			}
 		}
-		if ( (bool) $post_ids === true ) {
+		if ( (bool) $post_ids === true && ! empty( $taxonomies ) ) {
 			$need_sync_taxonomies = $duplicates_only === true
 				? $this->get_need_sync_new_dupl( $post_ids, $taxonomies )
 				: $this->get_need_sync_all_terms( $taxonomies, $post_ids );

@@ -91,14 +91,14 @@ class WPML_PHP_Functions {
 	 *
 	 * @see \WPML_WP_API::version_compare
 	 *
-	 * @param string $version1
-	 * @param string $version2
-	 * @param null   $operator
+	 * @param string  $version1
+	 * @param string  $version2
+	 * @param ?string $operator
 	 *
 	 * @return mixed
 	 */
 	public function version_compare( $version1, $version2, $operator = null ) {
-		return version_compare( $version1, $version2, $operator );
+		return version_compare( $version1 ?: '0.0.0', $version2 ?: '0.0.0', $operator );
 	}
 
 	/**
@@ -119,7 +119,7 @@ class WPML_PHP_Functions {
 	 *
 	 * @return bool
 	 */
-	public function error_log( $message, $message_type = null, $destination = null, $extra_headers = null ) {
+	public function error_log( $message, $message_type = 0, $destination = null, $extra_headers = null ) {
 		return error_log( $message, $message_type, $destination, $extra_headers );
 	}
 

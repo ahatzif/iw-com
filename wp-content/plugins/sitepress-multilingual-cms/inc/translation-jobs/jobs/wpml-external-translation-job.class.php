@@ -2,9 +2,12 @@
 
 require_once WPML_TM_PATH . '/inc/translation-jobs/jobs/wpml-translation-job.class.php';
 
+use WPML\Translation\TranslationElements\FieldCompression;
+
 class WPML_External_Translation_Job extends WPML_Element_Translation_Job {
 
 	function get_original_document() {
+	  $this->maybe_load_basic_data();
 
 		return apply_filters(
 			'wpml_get_translatable_item',
@@ -82,7 +85,7 @@ class WPML_External_Translation_Job extends WPML_Element_Translation_Job {
 		);
 
 		return $title_and_name !== null ? ( $title_and_name->name ?
-			base64_decode( $title_and_name->name )
-			: base64_decode( $title_and_name->title ) ) : '';
+			FieldCompression::decompress( $title_and_name->name )
+			: FieldCompression::decompress( $title_and_name->title ) ) : '';
 	}
 }

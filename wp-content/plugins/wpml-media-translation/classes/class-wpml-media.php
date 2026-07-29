@@ -39,20 +39,28 @@ class WPML_Media implements IWPML_Action {
 	private $menus_factory;
 
 	/**
+	 * @var WPML_Media_Image_Translate
+	 */
+	private $image_translator;
+
+	/**
 	 * WPML_Media constructor.
 	 *
-	 * @param SitePress                $sitepress
-	 * @param wpdb                     $wpdb
-	 * @param WPML_Media_Menus_Factory $menus_factory
+	 * @param SitePress                  $sitepress
+	 * @param wpdb                       $wpdb
+	 * @param WPML_Media_Menus_Factory   $menus_factory
+	 * @param WPML_Media_Image_Translate $image_translator
 	 */
-	public function __construct( SitePress $sitepress, wpdb $wpdb, WPML_Media_Menus_Factory $menus_factory ) {
-		$this->sitepress     = $sitepress;
-		$this->wpdb          = $wpdb;
-		$this->menus_factory = $menus_factory;
+	public function __construct( SitePress $sitepress, wpdb $wpdb, WPML_Media_Menus_Factory $menus_factory, WPML_Media_Image_Translate $image_translator ) {
+		$this->sitepress        = $sitepress;
+		$this->wpdb             = $wpdb;
+		$this->menus_factory    = $menus_factory;
+		$this->image_translator = $image_translator;
 	}
 
 	public function add_hooks() {
 		add_action( 'wpml_loaded', array( $this, 'loaded' ), 2 );
+		add_action( 'init', array( $this, 'plugin_localization' ) );
 	}
 
 	public static function has_settings() {
@@ -65,7 +73,6 @@ class WPML_Media implements IWPML_Action {
 			return null;
 		}
 
-		$this->plugin_localization();
 
 		if ( is_admin() ) {
 			WPML_Media_Upgrade::run();
@@ -107,7 +114,36 @@ class WPML_Media implements IWPML_Action {
 		add_filter( 'WPML_filter_link', array( $this, 'filter_link' ), 10, 2 );
 		add_filter( 'icl_ls_languages', array( $this, 'icl_ls_languages' ), 10, 1 );
 
+		add_filter( 'wpml_media_id', [ $this, 'convertId' ], 10, 2 );
+		add_filter( 'wpml_media_url', [ $this, 'convertUrl' ], 10, 2 );
+
 		return null;
+	}
+
+	/**
+	 * @param int         $id
+	 * @param string|null $lang
+	 *
+	 * @return int
+	 */
+	public function convertId( $id, $lang = null ) {
+		return $this->sitepress->get_object_id( $id, 'attachment', true, $lang );
+	}
+
+	/**
+	 * @param string      $url
+	 * @param string|null $lang
+	 *
+	 * @return string
+	 */
+	public function convertUrl( $url, $lang = null ) {
+		if ( ! $lang ) {
+			$lang = $this->sitepress->get_current_language();
+		}
+
+		$convertedUrl = $this->image_translator->get_translated_image_by_url( $url, null, $lang );
+
+		return $convertedUrl ?: $url;
 	}
 
 	function is_admin_or_xmlrpc() {
@@ -123,7 +159,7 @@ class WPML_Media implements IWPML_Action {
 		return ( isset( $action ) && ( $action == 'upload-plugin' || $action == 'upload-theme' ) );
 	}
 
-	function plugin_localization() {
+	public function plugin_localization() {
 		load_plugin_textdomain( 'wpml-media', false, WPML_MEDIA_FOLDER . '/locale' );
 	}
 
@@ -349,7 +385,7 @@ class WPML_Media implements IWPML_Action {
 		$menu['order']      = 600;
 		$menu['page_title'] = $menu_label;
 		$menu['menu_title'] = $menu_label;
-		$menu['capability'] = 'edit_others_posts';
+		$menu['capability'] = WPML_Media::has_setup_run() ? 'edit_others_posts' : 'manage_options';
 		$menu['menu_slug']  = 'wpml-media';
 		$menu['function']   = array( $this, 'menu_content' );
 

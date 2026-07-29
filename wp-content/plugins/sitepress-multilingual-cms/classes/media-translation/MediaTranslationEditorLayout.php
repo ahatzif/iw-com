@@ -2,9 +2,22 @@
 
 namespace WPML\MediaTranslation;
 
+use WPML\Media\Option;
+use WPML\MediaTranslation\MediaField;
+
 class MediaTranslationEditorLayout implements \IWPML_Action {
+	
+	/**
+	 * @var MediaField
+	 */
+	private $media_field;
+	
+	public function __construct() {
+		$this->media_field = new MediaField();
+	}
+	
 	public function add_hooks() {
-		if ( \WPML_Media_Duplication_Setup::isTranslateMediaLibraryTextsEnabled() ) {
+		if ( Option::getTranslateMediaLibraryTexts() || Option::shouldHandleMediaAuto() ) {
 			add_filter( 'wpml_tm_job_layout', [ $this, 'group_media_fields' ] );
 			add_filter( 'wpml_tm_adjust_translation_fields', [ $this, 'set_custom_labels' ] );
 		}
@@ -42,7 +55,7 @@ class MediaTranslationEditorLayout implements \IWPML_Action {
 					'fields'     => $media_field,
 				];
 
-				$image       = wp_get_attachment_image_src( $attachment_id, [ 100, 100 ] );
+				$image       = wp_get_attachment_image_src( (int) $attachment_id, [ 100, 100 ] );
 				$image_field = [
 					'field_type' => 'wcml-image',
 					'divider'    => $media_field !== end( $media_fields ),
@@ -61,15 +74,20 @@ class MediaTranslationEditorLayout implements \IWPML_Action {
 	}
 
 	private function is_media_field( $field ) {
-		$media_field = [];
-		if ( is_string( $field ) && preg_match( '/^media_([0-9]+)_([a-z_]+)/', $field, $match ) ) {
-			$media_field = [
-				'attachment_id' => (int) $match[1],
-				'label'         => $match[2],
+		$result = $this->media_field->extractAttachmentIdAndMediaFields( $field );
+		
+		if ( $result ) {
+			if ( $result['media_field'] ) {
+				$result['media_field'] = $this->media_field->getFieldId( $result['media_field'] );
+			}
+
+			return [
+				'attachment_id' => $result['attachment_id'],
+				'label'         => $result['media_field'],
 			];
 		}
 
-		return $media_field;
+		return [];
 	}
 
 	public function set_custom_labels( $fields ) {
@@ -100,7 +118,7 @@ class MediaTranslationEditorLayout implements \IWPML_Action {
 				$label = __( 'Alt Text', 'wpml-media' );
 				break;
 			default:
-				$label = '';
+				$label = $media_field['label'];
 		}
 
 		return $label;

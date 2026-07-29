@@ -1,5 +1,7 @@
 <?php
 
+use WPML\FP\Str;
+
 class WPML_URL_Converter_Subdir_Strategy extends WPML_URL_Converter_Abstract_Strategy {
 	/** @var bool */
 	private $use_directory_for_default_lang;
@@ -86,6 +88,11 @@ class WPML_URL_Converter_Subdir_Strategy extends WPML_URL_Converter_Abstract_Str
 			return $source_url;
 		}
 
+		// We have no redirect rule for '/all/wp-json' ( only for '/lang/wp-json' ) so lets use the default one in all case.
+		if ( 'all' === $code && in_array( 'wp-json', explode( '/', $source_url ) ) ) {
+			return $source_url;
+		}
+
 		$source_url = $this->filter_source_url( $source_url );
 
 		$absolute_home_url = trailingslashit( preg_replace( '#^(http|https)://#', '', $this->get_url_helper()->get_abs_home() ) );
@@ -95,8 +102,12 @@ class WPML_URL_Converter_Subdir_Strategy extends WPML_URL_Converter_Abstract_Str
 		$code             = $this->get_language_of_current_dir( $code, '' );
 		$current_language = $this->get_language_of_current_dir( $current_language, '' );
 
-		$code             = isset( $this->language_codes_map[ $code ] ) ? $this->language_codes_map[ $code ] : $code;
-		$current_language = isset( $this->language_codes_map[ $current_language ] ) ? $this->language_codes_map[ $current_language ] : $current_language;
+		$code = null !== $code && isset( $this->language_codes_map[ $code ] )
+			? $this->language_codes_map[ $code ]
+			: $code;
+		$current_language = null !== $current_language && isset( $this->language_codes_map[ $current_language ] )
+			? $this->language_codes_map[ $current_language ]
+			: $current_language;
 
 		$source_url = str_replace(
 			[
@@ -167,7 +178,7 @@ class WPML_URL_Converter_Subdir_Strategy extends WPML_URL_Converter_Abstract_Str
 	}
 
 	/**
-	 * @return string|bool
+	 * @return string|false
 	 */
 	private function get_root_url() {
 		if ( null === $this->root_url ) {

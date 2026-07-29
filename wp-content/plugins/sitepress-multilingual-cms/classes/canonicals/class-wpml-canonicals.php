@@ -18,12 +18,12 @@ class WPML_Canonicals {
 	 *
 	 * @param SitePress                        $sitepress
 	 * @param WPML_Translation_Element_Factory $translation_element_factory
-	 * @param WPML_Translations                $wpml_translations
+	 * @param WPML_Translations|null           $wpml_translations
 	 */
 	public function __construct(
 		SitePress $sitepress,
 		WPML_Translation_Element_Factory $translation_element_factory,
-		WPML_Translations $wpml_translations = null
+		?WPML_Translations $wpml_translations = null
 	) {
 		$this->sitepress                   = $sitepress;
 		$this->translation_element_factory = $translation_element_factory;
@@ -171,7 +171,7 @@ class WPML_Canonicals {
 	}
 
 	/**
-	 * @param WPML_Post_Element $post_element
+	 * @param WPML_Translation_Element $post_element
 	 *
 	 * @return false|string
 	 */

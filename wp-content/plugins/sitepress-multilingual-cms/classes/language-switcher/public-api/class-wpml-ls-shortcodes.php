@@ -3,14 +3,20 @@
  * Class WPML_LS_Shortcodes
  */
 class WPML_LS_Shortcodes extends WPML_LS_Public_API {
+	// Important: Same length for disabled variant.
+	// Because plugins/themes may store the content serialized and a different
+	// characters length would break the serialization.
+	const LS                 = 'wpml_language_switcher';
+	const LS_WIDGET          = 'wpml_language_selector_widget';
+	const LS_FOOTER          = 'wpml_language_selector_footer';
 
 	public function init_hooks() {
 		if ( $this->sitepress->get_setting( 'setup_complete' ) ) {
-			add_shortcode( 'wpml_language_switcher', array( $this, 'callback' ) );
+			add_shortcode( self::LS, array( $this, 'callback' ) );
 
-			// Backward compatibility
-			add_shortcode( 'wpml_language_selector_widget', array( $this, 'callback' ) );
-			add_shortcode( 'wpml_language_selector_footer', array( $this, 'callback' ) );
+			// Backward compatibility.
+			add_shortcode( self::LS_WIDGET, array( $this, 'callback' ) );
+			add_shortcode( self::LS_FOOTER, array( $this, 'callback' ) );
 		}
 	}
 
@@ -26,8 +32,9 @@ class WPML_LS_Shortcodes extends WPML_LS_Public_API {
 		$args = $this->parse_legacy_shortcodes( $args, $tag );
 		$args = $this->convert_shortcode_args_aliases( $args );
 
-		return $this->render( $args, $content );
+		return $this->render( $args );
 	}
+
 
 	/**
 	 * @param array  $args

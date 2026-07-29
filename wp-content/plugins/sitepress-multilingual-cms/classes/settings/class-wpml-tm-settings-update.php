@@ -62,12 +62,12 @@ class WPML_TM_Settings_Update extends WPML_SP_User {
 					$sync_option[ $val ]                                    = $sync_new_setting;
 
 					if ( $this->is_making_type_translatable( $sync_new_setting, $sync_existing_setting ) ) {
+						$this->tm_instance->save_settings();
 						if ( $section_plural === 'taxonomies' ) {
 							$this->sitepress->verify_taxonomy_translations( $val );
 						} else {
 							$this->sitepress->verify_post_translations( $val );
 						}
-						$this->tm_instance->save_settings();
 					}
 				}
 			}

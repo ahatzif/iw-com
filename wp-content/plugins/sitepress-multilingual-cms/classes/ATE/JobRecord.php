@@ -19,7 +19,7 @@ class JobRecord {
 	 */
 	public $editTimestamp = 0;
 
-	public function __construct( stdClass $dbRow = null ) {
+	public function __construct( ?stdClass $dbRow = null ) {
 		if ( $dbRow ) {
 			$this->wpmlJobId = (int) $dbRow->job_id;
 			$this->ateJobId  = (int) $dbRow->editor_job_id;

@@ -49,7 +49,7 @@ if (!empty($youtube_video_id)) {
 
 
         <!-- modal-->
-        <div class="z-[100] fixed inset-0 bg-beige bg-opacity-90 py-80 opacity-0 pointer-events-none [&.active]:pointer-events-auto [&.active]:opacity-100 transition duration-300" data-youtube-player="modal">
+        <div class="z-[100] fixed inset-0 bg-blue/30 py-80 opacity-0 pointer-events-none [&.active]:pointer-events-auto [&.active]:opacity-100 transition duration-300" data-youtube-player="modal">
             <div class="flex items-center justify-center h-full" data-youtube-player="modal-inner">
                 <div class="w-full">
                     <div class="page-wrapper">

@@ -11,21 +11,28 @@ use WPML\FP\Obj;
 use function WPML\FP\pipe;
 use WPML\FP\Relation;
 use WPML\Setup\Option;
+use WPML\TM\ATE\TranslateEverything;
+use WPML\TM\Jobs\JobLog;
 
 class JobActions implements \IWPML_Action {
 
 	/** @var \WPML_TM_ATE_API $apiClient */
 	private $apiClient;
 
-	public function __construct( \WPML_TM_ATE_API $apiClient ) {
-		$this->apiClient = $apiClient;
+	/** @var TranslateEverything */
+	private $translateEverything;
+
+	public function __construct( \WPML_TM_ATE_API $apiClient, TranslateEverything $translateEverything ) {
+		$this->apiClient           = $apiClient;
+		$this->translateEverything = $translateEverything;
 	}
 
 	public function add_hooks() {
 		add_action( 'wpml_tm_job_cancelled', [ $this, 'cancelJobInATE' ] );
 		add_action( 'wpml_tm_jobs_cancelled', [ $this, 'cancelJobsInATE' ] );
-		add_action( 'wpml_set_translate_everything', [ $this, 'hideJobsAfterTranslationMethodChange' ] );
+		add_action( 'wpml_set_translate_everything', [ $this, 'onTranslateEverythingModeChanged' ], 10, 2 );
 		add_action( 'wpml_update_active_languages', [ $this, 'hideJobsAfterRemoveLanguage' ] );
+		add_action( 'wpml_cancel_all_automatic_jobs', [ $this, 'cancelAllAutomaticJobs' ], 10 );
 	}
 
 	public function cancelJobInATE( \WPML_TM_Post_Job_Entity $job ) {
@@ -35,7 +42,7 @@ class JobActions implements \IWPML_Action {
 	}
 
 	/**
-	 * @param \WPML_TM_Post_Job_Entity[]|\WPML_TM_Post_Job_Entity  $jobs
+	 * @param \WPML_TM_Post_Job_Entity[]|\WPML_TM_Post_Job_Entity|\stdClass[]|\stdClass  $jobs
 	 *
 	 * @return void
 	 */
@@ -49,29 +56,134 @@ class JobActions implements \IWPML_Action {
 			$jobs = [ $jobs ];
 		}
 
-		$getIds = pipe(
-			Fns::filter( invoke( 'is_ate_editor' ) ),
-			Fns::map( invoke( 'get_editor_job_id' ) )
-		);
-		$this->apiClient->cancelJobs( $getIds( $jobs ) );
+		// Normalize to stdObjects for backward compatibility
+		/** @var \stdClass[] $normalizedJobs */
+		$normalizedJobs = array_map( function( $job ) {
+			// Legacy WPML_TM_Post_Job_Entity -> stdClass
+			if ( $job instanceof \WPML_TM_Post_Job_Entity ) {
+				return (object) [
+					'editor'        => $job->get_editor(),
+					'editor_job_id' => $job->get_editor_job_id(),
+				];
+			}
+
+			return $job;
+		}, $jobs );
+
+		// Filter ATE jobs and extract editor_job_ids
+		$ateJobIds = array_values( array_filter( array_map( function( $job ) {
+			return ( isset( $job->editor ) && $job->editor === 'ate' && isset( $job->editor_job_id ) )
+				? $job->editor_job_id
+				: null;
+		}, $normalizedJobs ) ) );
+
+		if ( ! empty( $ateJobIds ) ) {
+			// Logs land inside whichever group is currently open (typically the
+			// "Cancel jobs (admin)" group from WPML_TM_REST_Jobs, or the TEA
+			// disable cancel group). If no group is open this is a no-op.
+			JobLog::add( 'cancel_jobs_in_ate', [
+				'ate_job_ids' => array_map(
+					function ( $id ) { return [ 'ate_job_id' => $id ]; },
+					$ateJobIds
+				),
+			] );
+			$this->apiClient->cancelJobs( $ateJobIds );
+		}
 	}
 
-	public function hideJobsAfterRemoveLanguage( $oldLanguages ) {
-		$removedLanguages = Lst::diff( array_keys( $oldLanguages ), array_keys( Languages::getActive() ) );
+	/**
+	 * @param array $oldLanguages
+	 * @return void
+	 */
+	public function hideJobsAfterRemoveLanguage( $oldLanguages = [] ) {
+		$oldLanguagesArray = is_array( $oldLanguages ) ? array_keys( $oldLanguages ) : [];
+		$removedLanguages = Lst::diff( $oldLanguagesArray, array_keys( Languages::getActive() ) );
 
 		if ( $removedLanguages ) {
 			$inProgressJobsSearchParams = self::getInProgressSearch()
+											  /** @phpstan-ignore-next-line */
 			                                  ->set_target_language( array_values( $removedLanguages ) );
 
 			$this->hideJobs( $inProgressJobsSearchParams );
 
-			Fns::map( [ Option::class, 'removeLanguageFromCompleted' ], $removedLanguages );
+			$this->translateEverything->markLanguagesAsUncompleted( $removedLanguages );
 		}
 	}
 
-	public function hideJobsAfterTranslationMethodChange( $translateEverythingActive ) {
-		if ( ! $translateEverythingActive ) {
+	/**
+	 * @param $translateEverythingActive
+	 * @param array{translateExisting: boolean, 'reviewMode': string} $options
+	 *
+	 * @return void
+	 */
+	public function onTranslateEverythingModeChanged( $translateEverythingActive, $options = [] ) {
+		JobLog::maybeInitRequest();
+		JobLog::createNewGroup(
+			JobLog::GROUP_ID_TRANSLATE_EVERYTHING,
+			'Translate Everything mode change',
+			[
+				'newState'          => $translateEverythingActive ? 'on' : 'off',
+				'translateExisting' => $options['translateExisting'] ?? null,
+				'reviewMode'        => $options['reviewMode'] ?? null,
+			]
+		);
+
+		try {
+			JobLog::add( 'tea_mode_changed', [
+				'active'             => (bool) $translateEverythingActive,
+				'translate_existing' => $options['translateExisting'] ?? false,
+				'review_mode'        => $options['reviewMode'] ?? null,
+			] );
+
+			if ( $translateEverythingActive ) {
+				$translateExistingContent = $options['translateExisting'] ?? false;
+				if ( $translateExistingContent ) {
+					JobLog::add( 'tea_kickoff_marking_uncompleted', [] );
+					$this->translateEverything->markEverythingAsUncompleted();
+				} else {
+					JobLog::add( 'tea_kickoff_no_existing', [] );
+					$this->translateEverything->markEverythingAsCompleted();
+				}
+			} else {
+				JobLog::add( 'tea_disabled_cancelling_jobs', [] );
+				$this->cancelAllAutomaticJobs();
+			}
+		} finally {
+			JobLog::finishCurrentGroup();
+		}
+	}
+
+	public function cancelAllAutomaticJobs() {
+		JobLog::maybeInitRequest();
+		// Nest into an existing parent group (e.g. the disable path from
+		// onTranslateEverythingModeChanged) if one is already open; otherwise
+		// open our own. Using isGroupOpen() — not wasRequestInitialised() —
+		// so that callers in an initialised-but-ungrouped state still get
+		// their own group instead of producing orphan log lines.
+		$ownsGroup = ! JobLog::isGroupOpen();
+		if ( $ownsGroup ) {
+			JobLog::createNewGroup(
+				JobLog::GROUP_ID_TRANSLATE_EVERYTHING,
+				'TEA cancel all automatic jobs',
+				[]
+			);
+		}
+
+		try {
+			JobLog::add( 'tea_cancel_all_started', [] );
 			$this->hideJobs( self::getInProgressSearch() );
+			JobLog::add( 'tea_cancel_all_finished', [] );
+		} catch ( \Throwable $e ) {
+			JobLog::addError( 'tea_cancel_all_failed', [
+				'error' => $e->getMessage(),
+				'file'  => $e->getFile(),
+				'line'  => $e->getLine(),
+			] );
+			throw $e;
+		} finally {
+			if ( $ownsGroup ) {
+				JobLog::finishCurrentGroup();
+			}
 		}
 	}
 

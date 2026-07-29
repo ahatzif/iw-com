@@ -13,16 +13,16 @@ class WPML_TM_Action_Helper {
 		return $package_helper->create_translation_package( $post );
 	}
 
-	public function add_translation_job( $rid, $translator_id, $translation_package, $batch_options = array() ) {
+	public function add_translation_job( $rid, $translator_id, $translation_package, $batch_options = array(), $sendFrom = null, $addJobLogs = false ) {
 
 		return $this->get_update_translation_action( $translation_package )
-					->add_translation_job( $rid, $translator_id, $translation_package, $batch_options );
+					->add_translation_job( $rid, $translator_id, $translation_package, $batch_options, $sendFrom, $addJobLogs );
 	}
 
 	/**
 	 * calculate post md5
 	 *
-	 * @param object|int $post
+	 * @param WP_Post|int $post
 	 *
 	 * @return string
 	 * @todo full support for custom posts and custom taxonomies
@@ -55,7 +55,7 @@ class WPML_TM_Action_Helper {
 			 * @internal
 			 *
 			 * @param string  $content
-			 * @param WP_Post $post
+			 * @param ?WP_Post $post
 			 */
 			$content = apply_filters( 'wpml_tm_post_md5_content', $content, $post );
 

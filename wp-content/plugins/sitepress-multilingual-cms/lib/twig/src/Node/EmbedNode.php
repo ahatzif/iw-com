@@ -21,7 +21,7 @@ use WPML\Core\Twig\Node\Expression\ConstantExpression;
 class EmbedNode extends \WPML\Core\Twig\Node\IncludeNode
 {
     // we don't inject the module to avoid node visitors to traverse it twice (as it will be already visited in the main module)
-    public function __construct($name, $index, \WPML\Core\Twig\Node\Expression\AbstractExpression $variables = null, $only = \false, $ignoreMissing = \false, $lineno, $tag = null)
+    public function __construct($name, $index, ?\WPML\Core\Twig\Node\Expression\AbstractExpression $variables = null, $only = \false, $ignoreMissing = \false, $lineno, $tag = null)
     {
         parent::__construct(new \WPML\Core\Twig\Node\Expression\ConstantExpression('not_used', $lineno), $variables, $only, $ignoreMissing, $lineno, $tag);
         $this->setAttribute('name', $name);

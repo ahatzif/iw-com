@@ -12,7 +12,7 @@ export default class extends module {
     init() {
 
         barba.init({
-            debug: true,
+            debug: false,
             timeout: 15000,
 
             prefetchIgnore: true,

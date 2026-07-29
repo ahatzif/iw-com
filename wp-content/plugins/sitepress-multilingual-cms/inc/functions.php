@@ -198,9 +198,9 @@ function icl_get_settings() {
 /**
  * Add settings link to plugin page.
  *
- * @param SitePress     $sitepress
- * @param array<string> $links
- * @param string        $file
+ * @param SitePress|null $sitepress
+ * @param array<string>  $links
+ * @param string         $file
  *
  * @return array
  */
@@ -240,14 +240,14 @@ if ( ! function_exists( 'icl_js_escape' ) ) {
  *
  * @return string|null The generated/stored ID or null if it wasn't possible to generate/store the value.
  */
-function wpml_get_site_id( $scope = WPML_Site_ID::SITE_SCOPES_GLOBAL, $create_new = false ) {
+function wpml_get_site_id( $scope = WPML_Site_ID::SITE_SCOPES_GLOBAL ) {
 	static $site_id;
 
 	if ( ! $site_id ) {
 		$site_id = new WPML_Site_ID();
 	}
 
-	return $site_id->get_site_id( $scope, $create_new );
+	return $site_id->get_site_id( $scope );
 }
 
 function _icl_tax_has_objects_recursive( $id, $term_id = -1, $rec = 0 ) {
@@ -299,12 +299,15 @@ function _icl_trash_restore_prompt() {
 		$post = get_post( intval( $_GET['post'] ) );
 		if ( isset( $post->post_status ) && $post->post_status == 'trash' ) {
 			$post_type_object = get_post_type_object( $post->post_type );
+			$delete_post_url  = get_delete_post_link( $post->ID, '', true );
 
-			$delete_post_link  = '<a href="' . esc_url( get_delete_post_link( $post->ID, '', true ) ) . '">' . esc_html__( 'delete it permanently', 'sitepress' ) . '</a>';
-			$restore_post_link = '<a href="' . wp_nonce_url( admin_url( sprintf( $post_type_object->_edit_link . '&amp;action=untrash', $post->ID ) ), 'untrash-post_' . $post->ID ) . '">' . esc_html__( 'restore', 'sitepress' ) . '</a>';
-			$ret               = '<p>' . sprintf( esc_html__( 'This translation is currently in the trash. You need to either %1$s or %2$s it in order to continue.' ), $delete_post_link, $restore_post_link );
+			if ( is_string( $delete_post_url ) ) {
+				$delete_post_link  = '<a href="' . esc_url( $delete_post_url ) . '">' . esc_html__( 'delete it permanently', 'sitepress' ) . '</a>';
+				$restore_post_link = '<a href="' . wp_nonce_url( admin_url( sprintf( $post_type_object->_edit_link . '&amp;action=untrash', $post->ID ) ), 'untrash-post_' . $post->ID ) . '">' . esc_html__( 'restore', 'sitepress' ) . '</a>';
+				$ret               = '<p>' . sprintf( esc_html__( 'This translation is currently in the trash. You need to either %1$s or %2$s it in order to continue.' ), $delete_post_link, $restore_post_link );
 
-			wp_die( $ret );
+				wp_die( $ret );
+			}
 		}
 	}
 }
@@ -320,7 +323,7 @@ function _icl_trash_restore_prompt() {
  * @deprecated 3.2 use 'wpml_admin_make_duplicates' action instead
  */
 function icl_makes_duplicates( $master_post_id ) {
-	wpml_admin_make_post_duplicates_action( $master_post_id );
+	wpml_admin_make_post_duplicates_action( (int) $master_post_id );
 }
 
 /**
@@ -363,7 +366,7 @@ function wpml_admin_make_post_duplicates_action( $master_post_id ) {
  * @deprecated 3.2 use 'wpml_make_post_duplicates' action instead
  */
 function icl_makes_duplicates_public( $master_post_id ) {
-	wpml_make_post_duplicates_action( $master_post_id );
+	wpml_make_post_duplicates_action( (int) $master_post_id );
 }
 
 /**
@@ -607,9 +610,9 @@ function icl_suppress_activation() {
 }
 
 /**
- * @param SitePress $sitepress
+ * @param SitePress|null $sitepress
  */
-function activate_installer( $sitepress = null ) {
+function activate_installer( ?SitePress $sitepress = null ) {
 	// installer hook - start
 	include_once WPML_PLUGIN_PATH . '/vendor/otgs/installer/loader.php'; // produces global variable $wp_installer_instance
 	$args = array(
@@ -703,6 +706,11 @@ function repair_el_type_collate() {
  * @param int    $component
  *
  * @return array|string|int|null
+ *
+ * @phpstan-return ($component is -1
+ *  ? array|null
+ *  : ($component is PHP_URL_PORT ? int|null : string|null)
+ *  )
  */
 function wpml_parse_url( $url, $component = -1 ) {
 	$ret = null;
@@ -801,15 +809,16 @@ function wpml_is_rest_request() {
 /**
  * @return bool
  */
-function wpml_is_rest_enabled() {
-	return make( \WPML\Core\REST\Status::class )->isEnabled();
+function wpml_is_rest_enabled(bool $useCache = true) {
+	global $wpml_dic;
+	return $wpml_dic->make( WPML\Infrastructure\WordPress\SharedKernel\Server\Application\CheckRestIsEnabled::class )->isEnabled($useCache);
 }
 
 function wpml_is_cli() {
 	return defined( 'WP_CLI' ) && WP_CLI;
 }
 
-function wpml_sticky_post_sync( SitePress $sitepress = null ) {
+function wpml_sticky_post_sync( ?SitePress $sitepress = null ) {
 	static $instance;
 
 	if ( ! $instance ) {
@@ -881,5 +890,60 @@ if ( ! function_exists( 'wpml_is_ajax' ) ) {
 		}
 
 		return ( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) && wpml_mb_strtolower( $_SERVER['HTTP_X_REQUESTED_WITH'] ) == 'xmlhttprequest' ) ? true : false;
+	}
+}
+
+if ( ! function_exists( 'wpml_get_flag_file_name' ) ) {
+	/**
+	 * wpml_get_flag_file_name - Returns the SVG or PNG flag file name based on language code if it exists in '/res/flags/' dir.
+	 *
+	 * @param $lang_code
+	 *
+	 * @return string
+	 * @since 4.6.0
+	 *
+	 */
+	function wpml_get_flag_file_name( $lang_code ) {
+		if ( file_exists( WPML_PLUGIN_PATH . '/res/flags/' . $lang_code . '.svg' ) ) {
+			$file = $lang_code . '.svg';
+		} elseif ( file_exists( WPML_PLUGIN_PATH . '/res/flags/' . $lang_code . '.png' ) ) {
+			$file = $lang_code . '.png';
+		} elseif ( file_exists( WPML_PLUGIN_PATH . '/res/flags/nil.svg' ) ) {
+			$file = 'nil.svg';
+		} else {
+			$file = 'nil.png';
+		}
+
+		return $file;
+	}
+}
+
+
+function wpml_is_st_loaded(): bool {
+	return defined( 'WPML_ST_VERSION' );
+}
+
+/**
+ * Triggers a user-level error/warning/notice message with WordPress 6.0+ compatibility.
+ *
+ * This function provides a backward-compatible wrapper for wp_trigger_error() (introduced in WP 6.4).
+ * On WordPress 6.4+, it uses wp_trigger_error() which respects WP_DEBUG settings.
+ * On older WordPress versions (6.0-6.3), it falls back to trigger_error().
+ *
+ * @since 4.6.13
+ *
+ * @param string $function_name The function name where the error occurred.
+ * @param string $message       The error message to display.
+ * @param int    $error_level   Optional. The error level. Default E_USER_NOTICE.
+ *                              Accepts E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE, E_USER_DEPRECATED.
+ *
+ * @return void
+ */
+function wpml_trigger_error( $function_name, $message, $error_level = E_USER_NOTICE ) {
+	if ( function_exists( 'wp_trigger_error' ) ) {
+		wp_trigger_error( $function_name, $message, $error_level );
+	} else {
+		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_trigger_error
+		trigger_error( $message, $error_level );
 	}
 }

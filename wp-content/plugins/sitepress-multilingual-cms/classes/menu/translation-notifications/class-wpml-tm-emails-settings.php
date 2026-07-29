@@ -7,6 +7,12 @@ class WPML_TM_Emails_Settings {
 	const NOTIFY_IMMEDIATELY      = 1;
 	const NOTIFY_DAILY            = 2;
 	const NOTIFY_WEEKLY           = 3;
+	const JOB_LIMITS              = 'job_limits';
+	const JOB_LIMITS_ALL          = 0;
+	const JOB_LIMITS_5            = 5;
+	const JOB_LIMITS_10           = 10;
+	const JOB_LIMITS_15           = 15;
+	const JOB_LIMITS_20           = 20;
 
 	/**
 	 * @var IWPML_Template_Service
@@ -37,8 +43,9 @@ class WPML_TM_Emails_Settings {
 			'strings'  => array(
 				'section_title_translator' => __( 'Notification emails to translators', 'wpml-translation-management' ),
 				'label_new_job'            => __( 'Notify translators when new jobs are waiting for them', 'wpml-translation-management' ),
+				'label_job_limits'         => __( 'Limit number of jobs included in the email to', 'sitepress' ),
 				'label_include_xliff'      => __( 'Include XLIFF files in the notification emails', 'wpml-translation-management' ),
-				'label_resigned_job'       => __( 'Notify translators when they are removed from jobs', 'wpml-translation-management' ),
+				'label_resigned_job'       => __( 'Notify translators when jobs are removed from their queue', 'sitepress' ),
 				'section_title_manager'    => __( 'Notification emails to the translation manager', 'wpml-translation-management' ),
 				'label_completed_job'      => esc_html__( 'Notify the translation manager when jobs are completed %s', 'wpml-translation-management' ),
 				'label_overdue_job'        => esc_html__( 'Notify the translation manager when jobs are late by %s days', 'wpml-translation-management' ),
@@ -80,6 +87,36 @@ class WPML_TM_Emails_Settings {
 						),
 					),
 					'disabled' => disabled( 0, $this->tm->settings['notification']['completed'], false ),
+				),
+				'job_limits' => array(
+					'options' => array(
+						array(
+							'label'   => __( 'Send all', 'sitepress' ),
+							'value'   => self::JOB_LIMITS_ALL,
+							'checked' => selected( self::JOB_LIMITS_ALL, $this->tm->settings['notification'][ self::JOB_LIMITS ], false ),
+						),
+						array(
+							'label'   => '5',
+							'value'   => self::JOB_LIMITS_5,
+							'checked' => selected( self::JOB_LIMITS_5, $this->tm->settings['notification'][ self::JOB_LIMITS ], false ),
+						),
+						array(
+							'label'   => '10',
+							'value'   => self::JOB_LIMITS_10,
+							'checked' => selected( self::JOB_LIMITS_10, $this->tm->settings['notification'][ self::JOB_LIMITS ], false ),
+						),
+						array(
+							'label'   => '15',
+							'value'   => self::JOB_LIMITS_15,
+							'checked' => selected( self::JOB_LIMITS_15, $this->tm->settings['notification'][ self::JOB_LIMITS ], false ),
+						),
+						array(
+							'label'   => '20',
+							'value'   => self::JOB_LIMITS_20,
+							'checked' => selected( self::JOB_LIMITS_20, $this->tm->settings['notification'][ self::JOB_LIMITS ], false ),
+						),
+					),
+					'disabled' => disabled( 0, $this->tm->settings['notification']['new-job'], false ),
 				),
 				'overdue'             => array(
 					'value'   => 1,

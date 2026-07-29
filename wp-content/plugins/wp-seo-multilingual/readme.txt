@@ -1,2 +1,2 @@
 === WPML SEO ===
-Stable tag: 2.1.1
+Stable tag: 2.2.5

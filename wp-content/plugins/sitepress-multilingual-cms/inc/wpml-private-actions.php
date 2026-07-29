@@ -15,11 +15,14 @@ function new_duplicated_terms_filter( $post_ids, $duplicates_only = true ) {
 		$collapsed = 'Taxonomy sync problem';
 
 		foreach ( $taxonomies as $taxonomy ) {
+			$tax = get_taxonomy( $taxonomy );
+			if ( ! $tax ) {
+				continue;
+			}
 			$text .= '<p><a href="admin.php?page='
 					 . WPML_PLUGIN_FOLDER . '/menu/taxonomy-translation.php&taxonomy='
-					. $taxonomy . '&sync=1">' . get_taxonomy_labels(
-						get_taxonomy( $taxonomy )
-					)->name . '</a></p>';
+				     . $taxonomy . '&sync=1">' .
+				    	get_taxonomy_labels( $tax )->name . '</a></p>';
 		}
 
 		$text .= '<p align="right"><a target="_blank" href="https://wpml.org/documentation/getting-started-guide/translating-post-categories-and-custom-taxonomies/?utm_source=plugin&utm_medium=gui&utm_campaign=wpmlcore#synchronizing-hierarchical-taxonomies">Help about translating taxonomy >></a></p>';
@@ -32,6 +35,30 @@ function new_duplicated_terms_filter( $post_ids, $duplicates_only = true ) {
 		$notice->set_collapsable( true );
 		$wpml_admin_notices = wpml_get_admin_notices();
 		$wpml_admin_notices->add_notice( $notice );
+
+		// Capture PostHog event when notice is displayed (only once per unique taxonomy set per hour).
+		$event_key = 'wpml_taxonomy_sync_event_captured_' . md5( serialize( $taxonomies ) );
+		if ( ! get_transient( $event_key ) ) {
+			$event_props = array(
+				'taxonomies_count' => count( $taxonomies ),
+				'taxonomies'       => $taxonomies,
+				'sync_scope'       => $duplicates_only ? 'duplicates_only' : 'all_terms',
+			);
+
+			\WPML\PostHog\Event\CaptureEvent::capture(
+				( new \WPML\Core\Component\PostHog\Application\Service\Event\EventInstanceService() )
+					->getTaxonomyHierarchySyncNoticeDisplayedEvent( $event_props )
+			);
+
+			// Set transient for 1 hour to prevent duplicate captures.
+			set_transient( $event_key, true, HOUR_IN_SECONDS );
+
+			// Register the key so cleanup can delete it by exact name.
+			$registry = get_transient( 'wpml_taxonomy_sync_capture_event_transient_keys' );
+			$registry = is_array( $registry ) ? $registry : [];
+			$registry[ $event_key ] = true;
+			set_transient( 'wpml_taxonomy_sync_capture_event_transient_keys', $registry, HOUR_IN_SECONDS );
+		}
 	} else {
 		remove_taxonomy_hierarchy_message();
 	}
@@ -40,6 +67,9 @@ function new_duplicated_terms_filter( $post_ids, $duplicates_only = true ) {
 add_action( 'wpml_new_duplicated_terms', 'new_duplicated_terms_filter', 10, 2 );
 
 function display_tax_sync_message( $post_id ) {
+	if ( ! is_admin() ) {
+		return;
+	}
 	do_action( 'wpml_new_duplicated_terms', array( 0 => $post_id ), false );
 }
 
@@ -52,14 +82,27 @@ function remove_taxonomy_hierarchy_message() {
 
 add_action( 'wpml_sync_term_hierarchy_done', 'remove_taxonomy_hierarchy_message' );
 
+function clear_taxonomy_sync_event_transients() {
+	// Clear all tracked event capture transients so future sync issues will be tracked.
+	$registry = get_transient( 'wpml_taxonomy_sync_capture_event_transient_keys' );
+	if ( is_array( $registry ) ) {
+		foreach ( array_keys( $registry ) as $key ) {
+			delete_transient( $key );
+		}
+	}
+	delete_transient( 'wpml_taxonomy_sync_capture_event_transient_keys' );
+}
+
+add_action( 'wpml_sync_term_hierarchy_done', 'clear_taxonomy_sync_event_transients' );
+
 /**
  * @return WPML_Notices
  */
 function wpml_get_admin_notices() {
-	global $wpml_admin_notices;
+	global $wpml_admin_notices, $sitepress;
 
 	if ( ! $wpml_admin_notices ) {
-		$wpml_admin_notices = new WPML_Notices( new WPML_Notice_Render() );
+		$wpml_admin_notices = new WPML_Notices( new WPML_Notice_Render(), $sitepress );
 		$wpml_admin_notices->init_hooks();
 	}
 

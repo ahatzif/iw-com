@@ -6,11 +6,16 @@
 
 
 add_action('wp_ajax_nopriv_iw-auth-register-check-mail', function () {
-    if ( ! isset($_REQUEST['security']) || ! wp_verify_nonce($_REQUEST['security'], 'iw-auth-register') ) {
+    if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Invalid request.', 'iw-theme' ) ], 405 );
+    }
+
+    $security = isset( $_POST['security'] ) ? sanitize_text_field( wp_unslash( $_POST['security'] ) ) : '';
+    if ( ! wp_verify_nonce( $security, 'iw-auth-register' ) ) {
         wp_send_json_error( [ 'message' => __('Invalid request.', 'iw-theme') ], 403);
     }
 
-    $email = isset($_REQUEST['user_email']) ? trim($_REQUEST['user_email']) : '';
+    $email = isset( $_POST['user_email'] ) ? sanitize_email( wp_unslash( $_POST['user_email'] ) ) : '';
     if (empty($email) || !is_email($email)) {
         wp_send_json_error([ 'message' => __('Email not valid.', 'iw-theme'), 'errors'  => ['user_email' => __('Το email δεν είναι έγκυρο', 'iw-theme')]], 400);
     }
@@ -21,6 +26,29 @@ add_action('wp_ajax_nopriv_iw-auth-register-check-mail', function () {
 });
 
 add_action('wp_ajax_nopriv_iw-auth-register', function () {
+    if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Invalid request.', 'iw-theme' ) ], 405 );
+    }
+
+    $security = isset( $_POST['security'] ) ? sanitize_text_field( wp_unslash( $_POST['security'] ) ) : '';
+    if ( ! wp_verify_nonce( $security, 'iw-auth-register' ) ) {
+        wp_send_json_error( [ 'message' => __( 'Invalid request.', 'iw-theme' ) ], 403 );
+    }
+
+    $request = wp_unslash( $_POST );
+    $user_email = isset( $request['user_email'] ) ? sanitize_email( $request['user_email'] ) : '';
+    $user_password = isset( $request['user_password'] ) ? (string) $request['user_password'] : '';
+    $user_password_confirm = isset( $request['user_password_confirm'] ) ? (string) $request['user_password_confirm'] : '';
+    $first_name = isset( $request['first_name'] ) ? sanitize_text_field( $request['first_name'] ) : '';
+    $last_name = isset( $request['last_name'] ) ? sanitize_text_field( $request['last_name'] ) : '';
+
+    if ( empty( $request['terms'] ) ) {
+        wp_send_json_error( [ 'message' => __( 'Please accept the terms of use.', 'iw-theme' ), 'errors' => [ 'terms' => __( 'Please accept the terms of use.', 'iw-theme' ) ] ], 400 );
+    }
+
+    if ( $user_password !== $user_password_confirm ) {
+        wp_send_json_error( [ 'message' => __( 'Passwords do not match.', 'iw-theme' ), 'errors' => [ 'user_password_confirm' => __( 'Passwords do not match.', 'iw-theme' ) ] ], 400 );
+    }
 
     do { // create random user name with prefix
         $userLogin = 'subscriber_' . sprintf("%010d", mt_rand(1, 999999));
@@ -32,11 +60,11 @@ add_action('wp_ajax_nopriv_iw-auth-register', function () {
 
     $userData = [
         'role' => 'subscriber',
-        'user_email' => $_REQUEST['user_email'],
+        'user_email' => $user_email,
         'user_login' => $userLogin,
-        'user_pass' =>  $_REQUEST['user_password'],
-        'first_name' => trim($_REQUEST['first_name']),
-        'last_name' => trim($_REQUEST['last_name']),
+        'user_pass' => $user_password,
+        'first_name' => $first_name,
+        'last_name' => $last_name,
     ];
 
     $error = false;
@@ -46,8 +74,8 @@ add_action('wp_ajax_nopriv_iw-auth-register', function () {
     $school_unit_id = $school_unit = false;
     $errors = [];
 
-    if( isset( $_REQUEST[ 'is_teacher' ] ) ){
-        if( empty( $school_unit_id = $_REQUEST['user_school_autocomplete'] ) ){
+    if( isset( $request[ 'is_teacher' ] ) ){
+        if( empty( $school_unit_id = $request['user_school_autocomplete'] ?? '' ) ){
             $error = true;
             $errors = [ 'user_school' => __("Παρακαλούμε επιλέξτε σχολείο.", "iw-theme")];
         } else {
@@ -58,17 +86,25 @@ add_action('wp_ajax_nopriv_iw-auth-register', function () {
             }
         }
     }
-    if ( ! $error && ! preg_match("/(?=^.{8,}$)(?=.*[!@#$%^&*]+)(?![.\n])(?=.*[a-z]).*$/", $_REQUEST['user_password'])) {
+    if ( ! $error && ! preg_match("/(?=^.{8,}$)(?=.*[!@#$%^&*]+)(?![.\n])(?=.*[a-z]).*$/", $user_password)) {
         $error = true;
-        $errors = [ 'password' => __("Invalid password.", "iw-theme")];
+        $errors = [ 'user_password' => __("Invalid password.", "iw-theme")];
     }
     if ( ! $error &&  ( ! is_email($userData['user_email']) || empty($userData['first_name']) || empty($userData['last_name']) ) ) {
         $error = true;
-        $errors = [ 'first_name' => __("Please provide all required fields.", "iw-theme")];
+        if ( ! is_email( $userData['user_email'] ) ) {
+            $errors['user_email'] = __( "Please provide a valid email address.", "iw-theme" );
+        }
+        if ( empty( $userData['first_name'] ) ) {
+            $errors['first_name'] = __( "Please provide your first name.", "iw-theme" );
+        }
+        if ( empty( $userData['last_name'] ) ) {
+            $errors['last_name'] = __( "Please provide your last name.", "iw-theme" );
+        }
     }
 
     if ( ! $error && IW_Custom_Auth_Activation::uses_sms( $activation_method ) ) {
-        $activation_phone = IW_Custom_Auth_Activation::normalize_phone( $_REQUEST['activation_phone'] ?? '' );
+        $activation_phone = IW_Custom_Auth_Activation::normalize_phone( $request['activation_phone'] ?? '' );
 
         if ( empty( $activation_phone ) ) {
             $error = true;
@@ -87,8 +123,8 @@ add_action('wp_ajax_nopriv_iw-auth-register', function () {
 
 
 
-    if( ! empty( $_REQUEST['user_birthday'] ) ){
-        $birthday = $_REQUEST['user_birthday'];
+    if( ! empty( $request['user_birthday'] ) ){
+        $birthday = sanitize_text_field( $request['user_birthday'] );
         if ( ! preg_match( '/^\d{2}\/\d{2}\/\d{4}$/', $birthday ) ) {
             $error = true;
             $errors['user_birthday'] = __("Η ημερομηνία γέννησης δεν είναι έγκυρη. Χρησιμοποιήστε μορφή ηη/μμ/εεεε.", "iw-theme");
@@ -109,12 +145,15 @@ add_action('wp_ajax_nopriv_iw-auth-register', function () {
     }
 
     if ($error) {
-        wp_send_json_error(['message' => $error, 'errors' => $errors ], 400);
+        wp_send_json_error([
+            'message' => $errors ? (string) reset( $errors ) : __( 'Please check your details.', 'iw-theme' ),
+            'errors'  => $errors,
+        ], 400);
     } else {
         $userId = wp_insert_user($userData);
         if (is_wp_error($userId)) {
-            $error = $userId->errors["existing_user_email"] ?? __("Error creating account.", "iw-theme");
-            if( $userId->errors["existing_user_email"] ){
+            $error = $userId->get_error_message() ?: __( "Error creating account.", "iw-theme" );
+            if ( 'existing_user_email' === $userId->get_error_code() ) {
                 $errors[ 'user_email' ] = __( 'Λυπούμαστε, αυτή η ηλ. διεύθυνση χρησιμοποιείται ήδη.', 'iw-theme' );
             }
             wp_send_json_error(['message' => $error, 'errors' => $errors ], 400);
@@ -175,7 +214,7 @@ add_action('wp_ajax_nopriv_iw-auth-register', function () {
             }
         }
 
-        if( isset( $_REQUEST[ 'newsletter' ] ) ){
+        if( isset( $request[ 'newsletter' ] ) && class_exists( 'IW_Mailchimp_Integration' ) ){
             IW_Mailchimp_Integration::insert_or_update_subscriber( false );
         }
 
@@ -187,8 +226,9 @@ add_action('wp_ajax_nopriv_iw-auth-register', function () {
 
 
         if( ! $mailSent && ! $smsSent ){
-            //wp_delete_user($userId);
-            wp_send_json_error([  'message' => __('Αυτή τη στιγμή δεν είναι δυνατή η εγγραφή σας για τεχνικούς λόγους. <br/>Παρακαλούμε προσπαθήστε αργότερα.', 'iw-theme') ] );
+            require_once ABSPATH . 'wp-admin/includes/user.php';
+            wp_delete_user( $userId );
+            wp_send_json_error([  'message' => __('Αυτή τη στιγμή δεν είναι δυνατή η εγγραφή σας για τεχνικούς λόγους. Παρακαλούμε προσπαθήστε αργότερα.', 'iw-theme') ], 500 );
         } else {
 
             // USER REGISTERED

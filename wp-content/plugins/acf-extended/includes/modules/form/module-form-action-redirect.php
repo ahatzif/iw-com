@@ -15,6 +15,7 @@ class acfe_module_form_action_redirect extends acfe_module_form_action{
         
         $this->name = 'redirect';
         $this->title = __('Redirect action', 'acfe');
+        $this->title_alt = __('Redirect', 'acfe');
         
         $this->item = array(
             'action' => 'redirect',
@@ -63,13 +64,8 @@ class acfe_module_form_action_redirect extends acfe_module_form_action{
         $url = apply_filters("acfe/form/submit_redirect_url/form={$form['name']}",     $url, $form, $action);
         $url = apply_filters("acfe/form/submit_redirect_url/action={$action['name']}", $url, $form, $action);
     
-        // sanitize
-        $url = trim($url);
-    
         // redirect
-        if(!empty($url)){
-            acfe_redirect($url);
-        }
+        acfe_redirect($url);
     
     }
     

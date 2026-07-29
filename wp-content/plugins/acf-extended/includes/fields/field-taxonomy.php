@@ -65,6 +65,87 @@ class acfe_field_taxonomy extends acfe_field_extend{
         
     }
     
+    
+    /**
+     * format_front_value
+     *
+     * @param $formatted
+     * @param $unformatted
+     * @param $post_id
+     * @param $field
+     * @param $form
+     *
+     * @return string
+     */
+    function format_front_value($formatted, $unformatted, $post_id, $field, $form){
+        
+        // vars
+        $value = acfe_as_array($unformatted);
+        $array = array();
+        
+        // loop values
+        foreach($value as $term_id){
+            
+            // get term
+            $term = get_term($term_id);
+            
+            // validate
+            if($term && !is_wp_error($term)){
+                $array[] = $term->name;
+            }
+            
+        }
+        
+        // merge
+        return implode(', ', $array);
+        
+    }
+    
+    
+    /**
+     * validate_front_value
+     *
+     * @param $valid
+     * @param $value
+     * @param $field
+     * @param $input
+     * @param $form
+     *
+     * @return false
+     */
+    function validate_front_value($valid, $value, $field, $input, $form){
+        
+        // bail early
+        if(!$this->pre_validate_front_value($valid, $value, $field, $form)){
+            return $valid;
+        }
+        
+        // cast array
+        $value = acfe_as_array($value);
+        
+        // loop values
+        foreach($value as $v){
+            
+            // get post
+            $term = get_term($v);
+            
+            // check term exists
+            if(!$term || is_wp_error($term)){
+                return false;
+            }
+            
+            // check if term is part of $field['taxonomy']
+            if(!in_array($term->taxonomy, (array) $field['taxonomy'], true)){
+                return false;
+            }
+            
+        }
+        
+        // return
+        return $valid;
+        
+    }
+    
 }
 
 acf_new_instance('acfe_field_taxonomy');

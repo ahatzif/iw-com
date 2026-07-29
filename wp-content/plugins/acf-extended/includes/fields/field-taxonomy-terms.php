@@ -6,7 +6,7 @@ if(!defined('ABSPATH')){
 
 if(!class_exists('acfe_field_taxonomy_terms')):
 
-class acfe_field_taxonomy_terms extends acf_field{
+class acfe_field_taxonomy_terms extends acfe_field{
     
     // vars
     var $save_post_terms = array();
@@ -267,7 +267,8 @@ class acfe_field_taxonomy_terms extends acf_field{
             'post_id'   => 0,
             's'         => '',
             'field_key' => '',
-            'paged'     => 0
+            'paged'     => 0,
+            'include'   => '',
         ));
         
         // load field
@@ -282,9 +283,14 @@ class acfe_field_taxonomy_terms extends acf_field{
         
         // vars
         $results = array();
+        
+        // include
+        if(!empty($options['include'])){
+            $args['include'] = $options['include'];
+        }
     
         // search
-        if($options['s'] !== '') {
+        if($options['s'] !== ''){
         
             // strip slashes (search may be integer)
             $s = wp_unslash(strval($options['s']));
@@ -292,6 +298,12 @@ class acfe_field_taxonomy_terms extends acf_field{
             // update vars
             $args['search'] = $s;
         
+        }
+        
+        // if there is an include set
+        // we will unset search to avoid attempting to further filter by the search term.
+        if(isset($args['include'])){
+            unset($args['s']);
         }
         
         //vars
@@ -378,7 +390,7 @@ class acfe_field_taxonomy_terms extends acf_field{
         
         // Allow Terms
         $choices = array();
-        $field['taxonomy'] = acf_get_array($field['taxonomy']);
+        $field['taxonomy'] = acfe_as_array($field['taxonomy']);
         
         if(!empty($field['allow_terms'])){
             
@@ -803,8 +815,8 @@ class acfe_field_taxonomy_terms extends acf_field{
     function prepare_field($field){
         
         // value
-        $value = acf_maybe_get($field, 'value');
-        $value = acf_get_array($value);
+        $value = acfe_get($field, 'value');
+        $value = acfe_as_array($value);
         
         // choices
         $field['choices'] = array();
@@ -899,7 +911,7 @@ class acfe_field_taxonomy_terms extends acf_field{
         // unarray values if radio
         if($field['type'] === 'radio'){
             
-            $values = acf_get_array($field['value']);
+            $values = acfe_as_array($field['value']);
             
             // check if value exists in choices and select it (in case of allowed terms)
             foreach($values as $value){
@@ -919,7 +931,14 @@ class acfe_field_taxonomy_terms extends acf_field{
         // fix acf 6.3.10 verify ajax nonce
         // pass custom 'nonce' as: 'acf_field_select_field_abcde12345'
         if($field['field_type'] === 'select' && $field['ajax'] && empty($field['nonce']) && acf_is_field_key($field['key'])){
-            $field['nonce'] = wp_create_nonce( 'acf_field_' . $this->name . '_' . $field['key'] );
+            
+            // assign key
+            // handle case where field is a clone
+            $key = !empty($field['_clone']) && isset($field['__key']) ? $field['__key'] : $field['key'];
+            
+            // assign nonce
+            $field['nonce'] = wp_create_nonce('acf_field_' . $this->name . '_' . $key);
+            
         }
         
         return $field;
@@ -957,7 +976,7 @@ class acfe_field_taxonomy_terms extends acf_field{
         if($field['load_terms']){
             
             // get valid terms
-            $value = acf_get_array($value);
+            $value = acfe_as_array($value);
             
             $taxonomy = $field['taxonomy'];
             
@@ -1040,7 +1059,7 @@ class acfe_field_taxonomy_terms extends acf_field{
             }
             
             // force value to array
-            $term_ids = acf_get_array($value);
+            $term_ids = acfe_as_array($value);
             
             // convert to int
             $term_ids = array_map('intval', $term_ids);
@@ -1101,7 +1120,7 @@ class acfe_field_taxonomy_terms extends acf_field{
     
         // Vars
         $is_array = is_array($value);
-        $value = acf_get_array($value);
+        $value = acfe_as_array($value);
     
         // Loop
         foreach($value as &$v){
@@ -1129,6 +1148,112 @@ class acfe_field_taxonomy_terms extends acf_field{
     
         // Return
         return $value;
+        
+    }
+    
+    
+    /**
+     * format_front_value
+     *
+     * @param $formatted
+     * @param $unformatted
+     * @param $post_id
+     * @param $field
+     * @param $form
+     *
+     * @return string
+     */
+    function format_front_value($formatted, $unformatted, $post_id, $field, $form){
+        
+        // vars
+        $value = acfe_as_array($unformatted);
+        $array = array();
+        
+        // loop values
+        foreach($value as $term_id){
+            
+            // get term
+            $term = get_term($term_id);
+            
+            // validate
+            if($term && !is_wp_error($term)){
+                $array[] = $term->name;
+            }
+            
+        }
+        
+        // merge
+        return implode(', ', $array);
+        
+    }
+    
+    
+    /**
+     * validate_front_value
+     *
+     * @param $valid
+     * @param $value
+     * @param $field
+     * @param $input
+     * @param $form
+     *
+     * @return false
+     */
+    function validate_front_value($valid, $value, $field, $input, $form){
+        
+        // bail early
+        if(!$this->pre_validate_front_value($valid, $value, $field, $form)){
+            return $valid;
+        }
+        
+        // cast array
+        $value = acfe_as_array($value);
+        
+        // loop values
+        foreach($value as $v){
+            
+            // get term
+            $term = get_term($v);
+            
+            // check post exists
+            if(!$term || is_wp_error($term)){
+                return false;
+            }
+            
+            // query terms
+            $query = $this->get_ajax_query(array(
+                'field_key' => $field['key'],
+                'post_id'   => $form['post_id'],
+                'include'   => $v,
+            ));
+            
+            // bail early
+            if(empty($query)){
+                return false;
+            }
+            
+            // get results
+            $results = acfe_get($query, 'results');
+            $results = acfe_as_array($results);
+            
+            // loop results
+            $found = false;
+            foreach($results as $result){
+                if((int) $result['id'] === (int) $v){
+                    $found = true;
+                    break;
+                }
+            }
+            
+            // term not found
+            if(!$found){
+                return false;
+            }
+            
+        }
+        
+        // return
+        return $valid;
         
     }
     
@@ -1173,7 +1298,7 @@ class acfe_field_taxonomy_terms extends acf_field{
     function get_terms($field, $args = array()){
         
         // taxonomy
-        $field['taxonomy'] = acf_get_array($field['taxonomy']);
+        $field['taxonomy'] = acfe_as_array($field['taxonomy']);
         
         // choices
         $choices = array();
@@ -1337,7 +1462,7 @@ class acfe_field_taxonomy_terms extends acf_field{
                     // sort into hierachial order
                     if(is_taxonomy_hierarchical($taxonomy)){
                         $keep = _get_term_children($id, $keep, $taxonomy);
-                        $keep = acf_get_array($keep);
+                        $keep = acfe_as_array($keep);
                     }
                     
                     $terms = array_merge($terms, $keep);

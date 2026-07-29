@@ -29,7 +29,6 @@ class WPML_Media_Help_Tab implements IWPML_Action {
 							$wpml_translation_dashboard
 						) . '</li>' .
 						 '</ul>' .
-						 '</ul>' .
 						 '<a href="https://wpml.org/documentation/getting-started-guide/media-translation/?utm_source=plugin&utm_medium=gui&utm_campaign=wpmlmedia">' . esc_html__( 'Learn more about WPML Media Translation', 'wpml-media' ) . '</a>',
 				)
 			);

@@ -5,83 +5,104 @@
          "": {
             "domain": "messages"
          },
-         "Your pending automatic translations will be canceled.": [
-            "Ihre ausstehenden automatischen Übersetzungen werden storniert."
+         "What should happen with your automatically translated content?": [
+            "Was soll mit Ihrem automatisch übersetzten Inhalt geschehen?"
          ],
-         "Save": [
-            "Speichern"
+         "Wait for review": [
+            "Auf Überprüfung warten"
          ],
-         "Go to the <a>Translation Management Dashboard</a> to translate your content.": [
-            "Rufen Sie das <a>Übersetzungsmanagement-Dashboard</a> auf, um Ihre Inhalte zu übersetzen."
+         "You check and approve translations before publishing.": [
+            "Sie prüfen und genehmigen Übersetzungen vor der Veröffentlichung."
          ],
-         "When automatic translation completes:": [
-            "Wenn die automatische Übersetzung fertig ist:"
+         "Your translators check and approve translations before publishing.": [
+            "Ihre Übersetzer prüfen und genehmigen Übersetzungen vor der Veröffentlichung."
          ],
-         "Publish and add to the review list": [
-            "Veröffentlichen und zur Überprüfungsliste hinzufügen"
+         "Publish and mark for review": [
+            "Veröffentlichen und zur Überprüfung markieren"
+         ],
+         "WPML publishes translations immediately but flags them for you to check at your convenience.": [
+            "WPML veröffentlicht Übersetzungen sofort, markiert sie aber für Sie zur späteren Überprüfung."
+         ],
+         "WPML publishes translations immediately but flags them for your translators to check at their convenience.": [
+            "WPML veröffentlicht Übersetzungen sofort, markiert sie aber für Ihre Übersetzer zur späteren Überprüfung."
          ],
          "Publish without review": [
             "Ohne Überprüfung veröffentlichen"
          ],
-         "Hold for review before publishing": [
-            "Vor Veröffentlichung auf Überprüfung warten"
+         "The system publishes translations straight away, skipping the review process.": [
+            "Das System veröffentlicht Übersetzungen sofort und überspringt den Überprüfungsprozess."
          ],
-         "Publish translations without a review": [
-            "Übersetzungen ohne Überprüfung veröffentlichen"
+         "Automatic translation": [
+            "Automatische Übersetzung"
          ],
-         "Publish translations and review them later": [
-            "Übersetzungen veröffentlichen und später überprüfen"
+         "What should happen with your automatically translated content": [
+            "Was soll mit Ihrem automatisch übersetzten Inhalt geschehen"
          ],
-         "Let me review the translations before publishing": [
-            "Mich die Übersetzungen vor der Veröffentlichung überprüfen lassen"
+         "Save settings": [
+            "Einstellungen speichern"
          ],
-         "Automatically translate my entire site’s content": [
-            "Den gesamten Inhalt meiner Website automatisch übersetzen"
+         "Translate drafts as I save them (consumes a bit more translation credits).": [
+            "Entwürfe beim Speichern übersetzen (verbraucht etwas mehr Übersetzungsguthaben)."
          ],
-         "How do you want to translate this site?": [
-            "Wie möchten Sie diese Website übersetzen?"
+         "Do you want to translate drafts automatically?": [
+            "Möchten Sie Entwürfe automatisch übersetzen lassen?"
          ],
-         "I want to choose which content to translate": [
-            "Ich möchte auswählen, welche Inhalte übersetzt werden sollen"
+         "This feature is only available when you enable \"Translate Everything Automatically\" from the %sTranslation Dashboard%s.": [
+            "Diese Funktion ist nur verfügbar, wenn Sie „Alles automatisch übersetzen“ im %sÜbersetzungs-Dashboard%s aktivieren."
          ],
-         "Yes, automatically translate all of my <s>existing posts and pages</s> right now, plus <s>new content</s> as I create it.": [
-            "Ja, jetzt alle meine <s>vorhandenen Beiträge und Seiten</s> übersetzen lassen, plus <s>neue Inhalte</s>, wenn ich diese erstelle."
+         "Don't translate drafts. Only translate when I publish content.": [
+            "Entwürfe nicht übersetzen. Nur übersetzen, wenn ich Inhalte veröffentliche."
          ],
-         "Automatically translate all of my <s>existing content</s> right now, plus <s>new content</s> as I create it.": [
-            "Jetzt alle meine <s>vorhandenen Inhalte</s> automatisch übersetzen, plus <s>neue Inhalte</s>, wenn ich diese erstelle."
+         "%d credits/word": [
+            "%d Guthaben/Wort"
          ],
-         "No, only automatically translate <s>new content</s>.": [
-            "Nein, nur <s>neue Inhalte</s> automatisch übersetzen."
+         "Informal": [
+            "Informell"
          ],
-         "Only automatically translate <s>new content</s>.": [
-            "Nur <s>neue Inhalte</s> automatisch übersetzen."
+         "Automatic": [
+            "Automatisch"
          ],
-         "Should WPML automatically translate your existing content?": [
-            "Soll WPML Ihre vorhandenen Inhalte automatisch übersetzen?"
+         "Formal": [
+            "Formell"
          ],
-         "Which content do you want to translate automatically?": [
-            "Welche Inhalte möchten Sie automatisch übersetzen?"
+         "Which translation engines do you want to use?": [
+            "Welche Übersetzungs-Engines möchten Sie verwenden?"
          ],
-         "Start translating automatically": [
-            "Beginnen Sie mit der automatischen Übersetzung"
+         "Automatic translation engines differ in translation style and supported language pairs.\nIf your preferred translation engine does not support a language pair that you want to use, we fall back to your next preferred engine that does support it.\n": [
+            "Automatische Übersetzungsprogramme unterscheiden sich im Übersetzungsstil und in den unterstützten Sprachpaaren.\nWenn Ihr bevorzugtes Übersetzungsprogramm ein Sprachpaar, das Sie verwenden möchten, nicht unterstützt, greifen wir auf Ihr nächstes bevorzugtes Programm zurück, das dieses unterstützt.\n"
          ],
-         "Create an account to start translating": [
-            "Erstellen Sie einen Account, um mit der automatischen Übersetzung zu starten"
+         "Drag & drop to sort from the most to the least preferred engine.": [
+            "Ziehen und ablegen, um von der bevorzugtesten zur am wenigsten bevorzugten Engine zu sortieren."
          ],
-         "WPML will use credits from your automatic translation account to translate your site immediately as you publish new content or update existing content.": [
-            "WPML wird Credits von Ihrem Account für automatische Übersetzung nutzen, um Ihre Website sofort zu übersetzen, wenn Sie neue Inhalte veröffentlichen oder vorhandene Inhalte aktualisieren."
+         "Choose the tone of your automatic translations.": [
+            "Wählen Sie den Ton Ihrer automatischen Übersetzungen."
          ],
-         "You can translate existing content from the Translation Management Dashboard.": [
-            "Sie können vorhandene Inhalte vom Übersetzungsmanagement-Dashboard aus übersetzen."
+         "Read more": [
+            "Mehr lesen"
          ],
-         "Cancel": [
-            "Abbrechen"
+         "Learn more": [
+            "Mehr erfahren"
          ],
-         "You must use the <s>Advanced Translation Editor</s> if you want to translate your content automatically.": [
-            "Sie müssen den <s>erweiterten Übersetzungs-Editor</s> aktivieren, wenn Sie Ihren Inhalt automatisch übersetzen wollen."
+         "On": [
+            "An"
          ],
-         "You currently use a translation service to translate your content. To translate your site automatically, first disconnect your translation service in your <a><s>Translation Management settings</s></a>.": [
-            "Sie verwenden aktuell einen Übersetzungsdienst zum Übersetzen Ihrer Inhalte. Um Ihre Website automatisch zu übersetzen, trennen Sie zuerst die Verbindung zu Ihrem Übersetzungsdienst in den <a><s>Übersetzungs-Management-Einstellungen</s></a>."
+         "Off": [
+            "Aus"
+         ],
+         "Could not load translation engines": [
+            "Übersetzungsmaschinen nicht geladen"
+         ],
+         "Could not update engine": [
+            "Übersetzungsmaschine nicht aktualisiert"
+         ],
+         "Could not save review mode": [
+            "Überprüfungsmodus nicht gespeichert"
+         ],
+         "Could not save translate everything drafts": [
+            "Konnte die Entwürfe für 'Alles übersetzen' nicht speichern"
+         ],
+         "Settings saved successfully": [
+            "Einstellungen erfolgreich gespeichert"
          ]
       }
    }

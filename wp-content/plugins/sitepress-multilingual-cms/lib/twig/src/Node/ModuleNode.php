@@ -26,7 +26,7 @@ use WPML\Core\Twig\Source;
  */
 class ModuleNode extends \WPML\Core\Twig\Node\Node
 {
-    public function __construct(\WPML\Core\Twig_NodeInterface $body, \WPML\Core\Twig\Node\Expression\AbstractExpression $parent = null, \WPML\Core\Twig_NodeInterface $blocks, \WPML\Core\Twig_NodeInterface $macros, \WPML\Core\Twig_NodeInterface $traits, $embeddedTemplates, $name, $source = '')
+    public function __construct(\WPML\Core\Twig_NodeInterface $body, ?\WPML\Core\Twig\Node\Expression\AbstractExpression $parent = null, ?\WPML\Core\Twig_NodeInterface $blocks = null, ?\WPML\Core\Twig_NodeInterface $macros = null, ?\WPML\Core\Twig_NodeInterface $traits = null, $embeddedTemplates = null, $name = '', $source = '')
     {
         if (!$name instanceof \WPML\Core\Twig\Source) {
             @\trigger_error(\sprintf('Passing a string as the $name argument of %s() is deprecated since version 1.27. Pass a \\Twig\\Source instance instead.', __METHOD__), \E_USER_DEPRECATED);

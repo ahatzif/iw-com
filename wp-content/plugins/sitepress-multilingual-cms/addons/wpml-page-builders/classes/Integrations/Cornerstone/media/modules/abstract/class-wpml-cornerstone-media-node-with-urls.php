@@ -1,5 +1,6 @@
 <?php
 
+// phpcs:disable WordPress.WP.I18n.NonSingularStringLiteralText, WordPress.WP.I18n.LowLevelTranslationFunction, WordPress.WP.I18n.TooManyFunctionArgs, WordPress.WP.I18n.NonSingularStringLiteralDomain
 abstract class WPML_Cornerstone_Media_Node_With_URLs extends WPML_Cornerstone_Media_Node {
 
 	/** @return array */
@@ -17,8 +18,7 @@ abstract class WPML_Cornerstone_Media_Node_With_URLs extends WPML_Cornerstone_Me
 			if ( ! empty( $node_data[ $key ] ) ) {
 				list( $attachment_id, $type ) = explode( ':', $node_data[ $key ], 2 );
 				if ( is_numeric( $attachment_id ) ) {
-					$attachment_id     = apply_filters( 'wpml_object_id', $attachment_id, 'attachment', true, $target_lang ); 
-					$node_data[ $key ] = $attachment_id . ':' . $type;
+					$node_data[ $key ] = $this->media_translate->translate_id( (int) $attachment_id, $target_lang ) . ':' . $type;
 				} else {
 					$node_data[ $key ] = $this->media_translate->translate_image_url( $node_data[ $key ], $target_lang, $source_lang );
 				}

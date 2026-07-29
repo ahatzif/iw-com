@@ -15,35 +15,50 @@ class WPML_Slug_Filter extends WPML_Full_PT_API {
 	 */
 	public function __construct( &$wpdb, &$sitepress, &$post_translations ) {
 		parent::__construct( $wpdb, $sitepress, $post_translations );
-		add_filter( 'pre_term_slug', array( $this, 'pre_term_slug_filter' ), 10, 2 );
+		add_filter( 'wp_unique_term_slug', array( $this, 'wp_unique_term_slug' ), 10, 3 );
+		add_filter( 'wp_insert_term_duplicate_term_check', array( $this, 'wp_insert_term_duplicate_term_check' ), 10, 4 );
+
 		add_filter( 'wp_unique_post_slug', array( $this, 'wp_unique_post_slug' ), 100, 6 );
 	}
 
 	/**
-	 * @param String $slug
-	 * @param String $taxonomy
-	 * Filters slug input, so to ensure uniqueness of term slugs.
+	 * @param string $slug
+	 * @param object $term
+	 * @param string $original_slug
 	 *
-	 * @return String Either the original slug or a new slug that has been generated from the original one in order to
-	 *                ensure slug uniqueness.
+	 * @return string
 	 */
-	public function pre_term_slug_filter( $slug, $taxonomy ) {
-		if ( ( isset( $_REQUEST['tag-name'] ) || isset( $_REQUEST['name'] ) )
-			 && ( ( isset( $_REQUEST['action'] ) && $_REQUEST['action'] === 'add-tag' ) )
-		) {
-			$lang = $this->lang_term_slug_save( $taxonomy );
-			if ( $slug === '' ) {
-				if ( isset( $_REQUEST['tag-name'] ) ) {
-					$slug = sanitize_title( $_REQUEST['tag-name'] );
-				} elseif ( isset( $_REQUEST['name'] ) ) {
-					$slug = sanitize_title( $_REQUEST['name'] );
-				}
-			}
-			$slug = $slug !== '' ? WPML_Terms_Translations::term_unique_slug( $slug, $taxonomy, $lang ) : $slug;
+	public function wp_unique_term_slug( $slug, $term, $original_slug ): string {
+		if ( $slug !== $original_slug ) {
+			$lang = $this->lang_term_slug_save( $term->taxonomy );
+			$slug = WPML_Terms_Translations::term_unique_slug( $original_slug, $term->taxonomy, $lang, $term->parent );
 		}
 
 		return $slug;
 	}
+
+	/**
+	 * @param stdClass $duplicate_term Duplicate term row from terms table, if found.
+	 * @param string   $term           Term being inserted.
+	 * @param string   $taxonomy       Taxonomy name.
+	 * @param array    $args           Array of arguments passed to `wp_insert_term()`.
+	 *
+	 * @return stdClass|null
+	 */
+	public function wp_insert_term_duplicate_term_check( $duplicate_term, $term, $taxonomy, $args ) {
+		if ( $duplicate_term ) {
+
+			$lang   = $this->lang_term_slug_save( $taxonomy );
+			$parent = isset( $args['parent'] ) ? (int) $args['parent'] : 0;
+
+			if ( ! WPML_Terms_Translations::term_slug_exists( $duplicate_term->slug, $taxonomy, $lang, $parent ) ) {
+				$duplicate_term = null;
+			}
+		}
+
+		return $duplicate_term;
+	}
+
 
 	private function lang_term_slug_save( $taxonomy ) {
 		$active_lang_codes = array_keys( $this->sitepress->get_active_languages() );
@@ -102,7 +117,7 @@ class WPML_Slug_Filter extends WPML_Full_PT_API {
 		) {
 			$suffix = 2;
 			do {
-				$alt_post_name   = _truncate_post_slug( $slug, 200 - ( strlen( $suffix ) + 1 ) ) . "-$suffix";
+				$alt_post_name   = _truncate_post_slug( $slug, 200 - ( strlen( (string) $suffix ) + 1 ) ) . "-$suffix";
 				$suffix ++;
 			} while ( $this->post_slug_exists( $post_id, $post_language, $alt_post_name, $post_type, $post_parent ) );
 			$slug = $alt_post_name;

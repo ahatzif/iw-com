@@ -18,7 +18,9 @@ class WPML_Media_Screen_Options_Factory implements IWPML_Backend_Action_Loader {
 			$options[]   = array(
 				'key'  => 'per_page',
 				'args' => array(
-					'label'   => __( 'Number of items per page:', 'wpml-media' ),
+					// Labels should be untranslated at this point.
+					// The plugin translations will be loaded later.
+					'label'   => 'Number of items per page:',
 					'default' => get_option( $option_name, 20 ),
 					'option'  => $option_name,
 				),

@@ -53,7 +53,7 @@ class NodeTraverser
         }
         return $node;
     }
-    protected function traverseForVisitor(\WPML\Core\Twig\NodeVisitor\NodeVisitorInterface $visitor, \WPML\Core\Twig_NodeInterface $node = null)
+    protected function traverseForVisitor(\WPML\Core\Twig\NodeVisitor\NodeVisitorInterface $visitor, ?\WPML\Core\Twig_NodeInterface $node = null)
     {
         if (null === $node) {
             return;

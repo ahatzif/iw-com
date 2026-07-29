@@ -19,16 +19,16 @@ class WPML_ST_Slug_Custom_Type {
 	/**
 	 * WPML_ST_Slug_Custom_Type constructor.
 	 *
-	 * @param string $name
-	 * @param bool   $display_as_translated
-	 * @param bool   $slug
-	 * @param bool   $slug_translation
+	 * @param string   $name
+	 * @param bool     $display_as_translated
+	 * @param string   $slug
+	 * @param string   $slug_translation
 	 */
 	public function __construct( $name, $display_as_translated, $slug, $slug_translation ) {
-		$this->name                  = $name;
-		$this->display_as_translated = $display_as_translated;
-		$this->slug                  = $slug;
-		$this->slug_translation      = $slug_translation;
+		$this->name                  = $name ?: '';
+		$this->display_as_translated = (bool) $display_as_translated;
+		$this->slug                  = $slug ?: '';
+		$this->slug_translation      = $slug_translation ?: '';
 	}
 
 
@@ -66,6 +66,9 @@ class WPML_ST_Slug_Custom_Type {
 	public function is_using_tags() {
 		$pattern = '#%([^/]+)%#';
 
-		return preg_match( $pattern, $this->slug ) || preg_match( $pattern, $this->slug_translation );
+		$slug = isset($this->slug) && is_string($this->slug) ? $this->slug : '';
+		$slug_translation = isset($this->slug_translation) && is_string($this->slug_translation) ? $this->slug_translation : '';
+
+		return preg_match($pattern, $slug) || preg_match($pattern, $slug_translation);
 	}
 }

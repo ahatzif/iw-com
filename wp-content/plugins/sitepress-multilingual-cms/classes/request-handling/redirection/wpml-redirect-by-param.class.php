@@ -67,10 +67,16 @@ class WPML_Redirect_By_Param extends WPML_Redirection {
 		} elseif ( count( $translatable_params = array_intersect_key( $query_params, $this->term_like_params ) ) === 1 ) {
 			/** @var WPML_Term_Translation $wpml_term_translations */
 			global $wpml_term_translations;
-			$potential_translation = $wpml_term_translations->term_id_in(
-				$query_params[ ( $parameter = key( $translatable_params ) ) ],
-				$lang_code
-			);
+
+			$termId = $query_params[ ( $parameter = key( $translatable_params ) ) ];
+			if ( is_array( $termId ) ) {
+				$termId = $termId[0];
+			}
+
+      if ( ! ctype_digit( $termId ) ) {
+        return false;
+      }
+			$potential_translation = $wpml_term_translations->term_id_in( (int) $termId, $lang_code );
 		}
 		/** @var String $parameter */
 		return isset( $potential_translation, $parameter ) ? array( $parameter, $potential_translation ) : false;
@@ -80,7 +86,7 @@ class WPML_Redirect_By_Param extends WPML_Redirection {
 	 * @param string $query_params_string
 	 * @param string $lang_code
 	 *
-	 * @return bool|string
+	 * @return array|false
 	 */
 	private function needs_redirect( $query_params_string, $lang_code ) {
 		global $sitepress;
@@ -152,10 +158,10 @@ class WPML_Redirect_By_Param extends WPML_Redirection {
 
 		if ( isset( $query_args['p'] ) ) {
 			$element_id   = $query_args['p'];
-			$element_type = 'post_' . get_post_type( $element_id );
+			$element_type = 'post_' . get_post_type( (int) $element_id );
 		} elseif ( isset( $query_args['cat'] ) ) {
 			$element_id   = $query_args['cat'];
-			$term         = get_term( $element_id );
+			$term         = get_term( (int) $element_id );
 			$element_type = 'tax_' . $term->taxonomy;
 		}
 

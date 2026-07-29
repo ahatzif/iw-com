@@ -34,7 +34,7 @@ class WPML_TF_Feedback_Edit {
 		WPML_TF_Feedback_Query $feedback_query,
 		WPML_TF_Data_Object_Storage $feedback_storage,
 		WPML_TF_Data_Object_Storage $message_storage,
-		WPML_TP_Client_Factory $tp_client_factory = null
+		?WPML_TP_Client_Factory $tp_client_factory = null
 	) {
 		$this->feedback_query    = $feedback_query;
 		$this->feedback_storage  = $feedback_storage;
@@ -52,7 +52,7 @@ class WPML_TF_Feedback_Edit {
 	public function update( $feedback_id, array $args ) {
 		$feedback = $this->feedback_query->get_one( $feedback_id );
 
-		if ( $feedback ) {
+		if ( $feedback instanceof WPML_TF_Feedback ) {
 			$this->update_feedback_content( $feedback, $args );
 			$this->add_message_to_feedback( $feedback, $args );
 			$this->assign_feedback_to_reviewer( $feedback, $args );

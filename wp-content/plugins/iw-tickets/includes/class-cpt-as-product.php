@@ -37,6 +37,7 @@ class CPT_As_Product {
         add_action( 'woocommerce_add_to_cart', [$this, 'maybe_create_ticket_hold'], 10, 6 );
         add_action( 'woocommerce_cart_item_removed', [$this, 'maybe_release_ticket_hold'], 10, 2 );
         add_action( 'woocommerce_cart_emptied', [$this, 'release_all_ticket_holds'] );
+        add_action( 'woocommerce_cart_loaded_from_session', [$this, 'remove_expired_ticket_items_from_cart'], 20, 1 );
         add_action( 'woocommerce_before_cart_display', [$this, 'remove_expired_ticket_items_from_cart'] );
         add_action( 'woocommerce_checkout_create_order', [$this, 'attach_hold_token_to_order'], 10, 2 );
         add_action( 'woocommerce_checkout_create_order_line_item', [ $this, 'attach_virtual_item_meta_to_order_item' ], 10, 4 );
@@ -523,15 +524,19 @@ class CPT_As_Product {
         IW_Tickets_DB::release_unattached_holds( $token );
     }
 
-    public function remove_expired_ticket_items_from_cart(): void {
-        if ( ! function_exists('WC') || ! WC()->cart || WC()->cart->is_empty() ) {
+    public function remove_expired_ticket_items_from_cart( $loaded_cart = null ): void {
+        $cart = $loaded_cart instanceof WC_Cart
+            ? $loaded_cart
+            : ( function_exists( 'WC' ) ? WC()->cart : null );
+
+        if ( ! $cart || $cart->is_empty() ) {
             return;
         }
 
         $now_ts = (int) current_time( 'timestamp' );
         $removed_any = false;
 
-        foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
+        foreach ( $cart->get_cart() as $cart_item_key => $cart_item ) {
             if ( empty( $cart_item['iw_item_type'] ) || $cart_item['iw_item_type'] !== 'tickets' ) {
                 continue;
             }
@@ -544,14 +549,14 @@ class CPT_As_Product {
             $token = self::get_existing_hold_token();
             $hold  = $token !== '' ? IW_Tickets_DB::get_hold_info( $cart_item ) : null;
             if ( ! $hold || empty( $hold->expires_at ) ) {
-                WC()->cart->remove_cart_item( $cart_item_key );
+                $cart->remove_cart_item( $cart_item_key );
                 $removed_any = true;
                 continue;
             }
 
             $expires_ts = strtotime( (string) $hold->expires_at );
             if ( ! $expires_ts || $expires_ts <= $now_ts ) {
-                WC()->cart->remove_cart_item( $cart_item_key );
+                $cart->remove_cart_item( $cart_item_key );
                 $removed_any = true;
                 continue;
             }
@@ -559,17 +564,39 @@ class CPT_As_Product {
             // Extra safety: if cart qty does not match hold qty, drop it to avoid inconsistent reservations.
             $cart_qty = ! empty( $cart_item['tickets_total'] ) ? (int) $cart_item['tickets_total'] : 0;
             if ( $cart_qty <= 0 || (int) $hold->qty !== $cart_qty ) {
-                WC()->cart->remove_cart_item( $cart_item_key );
+                $cart->remove_cart_item( $cart_item_key );
                 $removed_any = true;
                 continue;
             }
         }
 
         if ( $removed_any ) {
-            wc_add_notice(
+            $message = __( 'Κάποια εισιτήρια αφαιρέθηκαν από το καλάθι, επειδή έληξε ο χρόνος κράτησής τους. Παρακαλούμε επιλέξτε τα ξανά.', 'iw-theme' );
+            $expired_notice_messages = [
                 __( 'Κάποια επιλεγμένα slots έληξαν και αφαιρέθηκαν από το καλάθι. Παρακαλώ επιλέξτε ξανά.', 'iw-theme' ),
-                'error'
-            );
+                $message,
+            ];
+            $normalize_notice = static function ( $notice ): string {
+                $notice = html_entity_decode( wp_strip_all_tags( (string) $notice ), ENT_QUOTES, 'UTF-8' );
+
+                return trim( (string) preg_replace( '/\s+/u', ' ', $notice ) );
+            };
+            $expired_notice_messages = array_map( $normalize_notice, $expired_notice_messages );
+            $notices = wc_get_notices();
+
+            if ( ! empty( $notices['error'] ) && is_array( $notices['error'] ) ) {
+                $notices['error'] = array_values( array_filter(
+                    $notices['error'],
+                    static function ( $notice ) use ( $expired_notice_messages, $normalize_notice ): bool {
+                        $notice_text = is_array( $notice ) ? ( $notice['notice'] ?? '' ) : $notice;
+
+                        return ! in_array( $normalize_notice( $notice_text ), $expired_notice_messages, true );
+                    }
+                ) );
+                wc_set_notices( $notices );
+            }
+
+            wc_add_notice( $message, 'error' );
         }
     }
 

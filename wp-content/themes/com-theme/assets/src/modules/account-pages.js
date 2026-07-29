@@ -7,6 +7,7 @@ export default class extends module {
         super(m);
         this.events = { click: { 'link': 'linkClick', } };
         this.content = this.$( 'content' )[0];
+        this.notices = this.$( 'notices' )[0];
         this.html = document.getElementsByTagName('html')[0];
         this.currentEndpoint = this.getEndpointClass(this.el);
         this.onWishlistUpdated = this.onWishlistUpdated.bind(this);
@@ -29,6 +30,7 @@ export default class extends module {
             const parser = new DOMParser();
             const doc = parser.parseFromString(response.data, 'text/html');
             const newContent = doc.querySelector('[data-account-pages="content"]');
+            const newNotices = doc.querySelector('[data-account-pages="notices"]');
             const newAccountPages = doc.querySelector('[data-module-account-pages]');
             const newContentActiveLink = doc.querySelector('[data-account-pages="link-li"].is-active a');
             if (!newContent) throw new Error('Account content not found in response');
@@ -37,10 +39,13 @@ export default class extends module {
 
 
             this.content.innerHTML = newContent.innerHTML;
+            if (this.notices) {
+                this.notices.innerHTML = newNotices?.innerHTML ?? '';
+            }
             this.call('update', this.content, 'app');
             this.call('updateLazy', false, 'Scroll');
             if (scrollToAccount) {
-                this.call('scrollTo', { target: this.el, options: { offset: -document.querySelector( 'header' ).offsetHeight } }, 'Scroll');
+                this.call('scrollTo', { target: this.content, options: { offset: -document.querySelector( 'header' ).offsetHeight - 20 } }, 'Scroll');
             }
             this.el.querySelectorAll('.is-active[data-account-pages="link-li"]').forEach(li => li.classList.remove('is-active'));
             this.el.querySelectorAll(`[href="${href}"]`).forEach(a => a.closest('li')?.classList.add('is-active'));

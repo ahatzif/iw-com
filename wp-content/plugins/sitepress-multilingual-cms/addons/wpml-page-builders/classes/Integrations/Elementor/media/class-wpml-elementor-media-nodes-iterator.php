@@ -1,5 +1,6 @@
 <?php
 
+// phpcs:disable WordPress.WP.I18n.NonSingularStringLiteralText, WordPress.WP.I18n.LowLevelTranslationFunction, WordPress.WP.I18n.TooManyFunctionArgs, WordPress.WP.I18n.NonSingularStringLiteralDomain
 class WPML_Elementor_Media_Nodes_Iterator implements IWPML_PB_Media_Nodes_Iterator {
 
 	/** @var WPML_Elementor_Media_Node_Provider $node_provider */
@@ -10,7 +11,7 @@ class WPML_Elementor_Media_Nodes_Iterator implements IWPML_PB_Media_Nodes_Iterat
 	}
 
 	/**
-	 * @param array $data_array
+	 * @param array  $data_array
 	 * @param string $lang
 	 * @param string $source_lang
 	 *
@@ -25,7 +26,7 @@ class WPML_Elementor_Media_Nodes_Iterator implements IWPML_PB_Media_Nodes_Iterat
 			}
 
 			if ( isset( $node['settings'] ) ) {
-				$node["settings"] = $this->node_provider->get( 'all_nodes' )->translate( $node['settings'], $lang, $source_lang );
+				$node['settings'] = $this->node_provider->get( 'all_nodes' )->translate( $node['settings'], $lang, $source_lang );
 			}
 		}
 
@@ -48,7 +49,7 @@ class WPML_Elementor_Media_Nodes_Iterator implements IWPML_PB_Media_Nodes_Iterat
 	 */
 	private function is_valid_media_node( $node ) {
 		return isset( $node['elType'], $node['widgetType'], $node['settings'] )
-		       && 'widget' === $node['elType'];
+			&& 'widget' === $node['elType'];
 	}
 
 	/**
@@ -66,5 +67,12 @@ class WPML_Elementor_Media_Nodes_Iterator implements IWPML_PB_Media_Nodes_Iterat
 		}
 
 		return $node_data;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function get_media() {
+		return $this->node_provider->get_media();
 	}
 }

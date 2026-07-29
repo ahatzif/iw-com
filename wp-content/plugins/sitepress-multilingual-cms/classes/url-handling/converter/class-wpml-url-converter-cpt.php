@@ -7,9 +7,9 @@ class WPML_URL_Converter_CPT {
 	private $slash_helper;
 
 	/**
-	 * @param WPML_Slash_Management $slash_helper
+	 * @param WPML_Slash_Management|null $slash_helper
 	 */
-	public function __construct( WPML_Slash_Management $slash_helper = null ) {
+	public function __construct( ?WPML_Slash_Management $slash_helper = null ) {
 		if ( ! $slash_helper ) {
 			$slash_helper = new WPML_Slash_Management();
 		}

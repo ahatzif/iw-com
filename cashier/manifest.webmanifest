@@ -1,0 +1,25 @@
+{
+  "name": "COM Cashier",
+  "short_name": "Cashier",
+  "description": "COM cashier ticketing app",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f6f4ef",
+  "theme_color": "#17645d",
+  "icons": [
+    {
+      "src": "assets/images/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/images/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

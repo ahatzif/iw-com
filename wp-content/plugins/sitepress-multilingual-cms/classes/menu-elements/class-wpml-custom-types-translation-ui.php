@@ -43,7 +43,7 @@ class WPML_Custom_Types_Translation_UI {
 			$this->unlock_button_ui->render( $disabled, $unlocked, $radio_name, $unlocked_name );
 			echo $content_label;
 			?>
-			(<i><?php echo esc_html( $content_slug ); ?></i>)
+			<i>(<?php echo esc_html( $content_slug ); ?>)</i>
 		</div>
 		<?php
 		foreach ( $this->translation_modes->get_options() as $value => $label ) {
@@ -53,11 +53,13 @@ class WPML_Custom_Types_Translation_UI {
 					class="wpml-flex-table-cell text-center <?php echo $this->translation_option_class_names[ $value ]; ?>"
 					data-header="<?php echo esc_attr( $label ); ?>">
 				<input type="radio" name="<?php echo $radio_name; ?>"
-					   class="js-custom-post-mode"
+					   class="wpml-radio-native js-custom-post-mode"
 					   value="<?php echo esc_attr( $value ); ?>" <?php echo $disabled_state_for_mode['html_attribute']; ?>
 					   data-slug="<?php esc_attr_e( $content_slug ) ?>"
 					   data-name="<?php esc_attr_e( $content_label ) ?>"
 					   data-singular-name="<?php esc_attr_e( $content_label_singular ?: $content_label ) ?>"
+					   aria-label="<?php echo __('Select translation option', 'sitepress');?>"
+					   aria-describedby="<?php echo $this->translation_option_class_names[ $value ]; ?>"
 					<?php checked( $value, $current_translation_mode ); ?>
 				/>
 				<?php if ( $disabled_state_for_mode['reason_message'] ) { ?>
@@ -91,7 +93,8 @@ class WPML_Custom_Types_Translation_UI {
 		foreach ( $this->translation_modes->get_options() as $value => $label ) {
 			?>
 			<div
-					class="wpml-flex-table-cell text-center <?php echo $this->translation_option_class_names[ $value ]; ?>">
+				id="<?php echo $this->translation_option_class_names[ $value ];?>"
+				class="wpml-flex-table-cell text-center <?php echo $this->translation_option_class_names[ $value ]; ?>">
 				<?php echo wp_kses_post( $label ); ?>
 			</div>
 			<?php

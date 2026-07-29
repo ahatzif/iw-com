@@ -84,17 +84,18 @@ class HTML extends Base {
 				$elements       = $xpath->query( $query );
 				foreach ( $elements as $element ) {
 					list( $text, ) = $dom_handle->getPartialInnerHTML( $element );
+					$translation   = $this->getTranslation( $text, $lang, $block, $string_translations );
 					$block         = $this->updateTranslationInBlock(
 						$text,
-						$lang,
+						$this->apply_placeholders_for_html_entities( $translation ),
 						$block,
-						$string_translations,
 						$element,
 						$dom_handle
 					);
 				}
 			}
-			list( $block->innerHTML, ) = $dom_handle->getFullInnerHTML( $dom->documentElement );
+			$content          = $dom_handle->getFullInnerHTML( $dom->documentElement );
+			$block->innerHTML = $this->restore_placeholders_for_html_entities( reset( $content ) );
 
 		} elseif ( isset( $block->blockName, $block->innerHTML ) && '' !== trim( $block->innerHTML ) ) {
 
@@ -149,16 +150,14 @@ class HTML extends Base {
 
 	/**
 	 * @param string                 $text
-	 * @param string                 $lang
+	 * @param string                 $translation
 	 * @param \WP_Block_Parser_Block $block
-	 * @param array                  $string_translations
 	 * @param \DOMNode               $element
 	 * @param DOMHandle              $dom_handle
 	 *
 	 * @return \WP_Block_Parser_Block
 	 */
-	private function updateTranslationInBlock( $text, $lang, \WP_Block_Parser_Block $block, array $string_translations, $element, $dom_handle ) {
-		$translation = $this->getTranslation( $text, $lang, $block, $string_translations );
+	private function updateTranslationInBlock( $text, $translation, \WP_Block_Parser_Block $block, $element, $dom_handle ) {
 		if ( $translation ) {
 			$block = $dom_handle->applyStringTranslations( $block, $element, $translation, $text );
 			$dom_handle->setElementValue( $element, $translation );
@@ -172,7 +171,9 @@ class HTML extends Base {
 		if ( $translationFromPageBuilder === $text ) {
 			$string_id = $this->get_string_id( $block->blockName, $text );
 			if ( (int) Obj::path( [ $string_id, $lang, 'status' ], $string_translations ) === ICL_TM_COMPLETE ) {
-				return self::preserveNewLines( $text, $string_translations[ $string_id ][ $lang ]['value'] );
+				$translation = $string_translations[ $string_id ][ $lang ]['value'];
+				$translation = $this->encodeStandaloneLessThan( $translation );
+				return self::preserveNewLines( $text, $translation );
 			} else {
 				return null;
 			}
@@ -181,9 +182,22 @@ class HTML extends Base {
 		}
 	}
 
+	/**
+	 * Encodes standalone less-than characters to prevent DOMDocument truncation.
+	 *
+	 * @see https://onthegosystems.myjetbrains.com/youtrack/issue/wpmlpb-769/
+	 *
+	 * @param string $text
+	 *
+	 * @return string
+	 */
+	private function encodeStandaloneLessThan( $text ) {
+		return preg_replace( '/<(?![a-zA-Z][a-zA-Z0-9-:]*[\s\/>]|\/[a-zA-Z]|!)/', '&lt;', $text );
+	}
+
 	private static function preserveNewLines( $original, $translation ) {
 		$endsWith = function ( $find, $s ) {
-			return Str::sub( - Str::len( $find ), $s ) === $find; // @phpstan-ignore-line
+			return Str::sub( - Str::len( $find ), $s ) === $find;
 		};
 
 		if ( Str::startsWith( "\n", $original ) && ! Str::startsWith( "\n", $translation ) ) {
@@ -195,5 +209,59 @@ class HTML extends Base {
 		}
 
 		return $translation;
+	}
+
+	/**
+	 * HTML_ENTITY_PLACEHOLDERS
+	 * Some translations are applied using \DomHandler, which converts any HTML entity
+	 * back to it's character, i.e. &apos; becomes '.
+	 * At some places (like shortcode attributes) it breaks the attribute value, because
+	 * the delimter can use the same kind of quotes, i.e. [my attr='Some'value'] => broken.
+	 * To avoid this problem the HTML entities are replaced before parsing the content with
+	 * \DomDocument::loadHTML() and re-applied afterwards.
+	 */
+	const HTML_ENTITY_PLACEHOLDERS = [
+		'&apos;' => 'WPML_PLACEHOLDER_APOS',
+		'&quot;' => 'WPML_PLACEHOLDER_QUOT',
+	];
+
+	/**
+	 * Replaces HTML entities with WPML entity placeholders in given $content.
+	 * See self::HTML_ENTITY_PLACEHOLDERS for affected entities.
+	 *
+	 * @param string $content
+	 *
+	 * @return string
+	 */
+	private function apply_placeholders_for_html_entities( $content ) {
+		if ( empty( $content ) ) {
+			return $content;
+		}
+
+		return str_replace(
+			array_keys( self::HTML_ENTITY_PLACEHOLDERS ),
+			array_values( self::HTML_ENTITY_PLACEHOLDERS ),
+			$content
+		);
+	}
+
+	/**
+	 * Replaces WPML entity placeholders with HTML entities in given $content.
+	 * See self::HTML_ENTITY_PLACEHOLDERS for affected entities.
+	 *
+	 * @param string $content
+	 *
+	 * @return string
+	 */
+	private function restore_placeholders_for_html_entities( $content ) {
+		if ( empty( $content ) ) {
+			return $content;
+		}
+
+		return str_replace(
+			array_values( self::HTML_ENTITY_PLACEHOLDERS ),
+			array_keys( self::HTML_ENTITY_PLACEHOLDERS ),
+			$content
+		);
 	}
 }

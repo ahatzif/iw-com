@@ -20,13 +20,13 @@ class SaveManager extends SaveUser {
 	public function run( Collection $data ) {
 
 		// $setRole :: WP_User -> WP_User
-		$setRole = Fns::tap( invoke( 'add_cap' )->with( \WPML_Manage_Translations_Role::CAPABILITY ) );
+		$setRole = Fns::tap( invoke( 'add_cap' )->with( User::CAP_MANAGE_TRANSLATIONS ) );
 
 		return self::getUser( $data )
 		           ->map( $setRole )
 		           ->map( [ self::class, 'sendInstructions' ] )
 		           ->map( function( $user ) {
-					   do_action( 'wpml_tm_ate_synchronize_managers' );
+					   do_action( 'wpml_tm_ate_synchronize_managers', $user->ID );
 					   return true;
 				   } );
 	}
@@ -63,10 +63,12 @@ class SaveManager extends SaveUser {
 
 		$forceDisplayName = Fns::always( $adminUser->display_name );
 
-		$sendMail = partial( 'wp_mail', $to, $subject, $message, $headers );
+		$sendMail = function () use ( $to, $subject, $message, $headers ) {
+			return \WPML_Mail_Sender::send( $to, $subject, $message, $headers, array(), 'translation-manager-instructions' );
+		};
 
 		Hooks::callWithFilter( $sendMail, 'wp_mail_from_name', $forceDisplayName );
 
-		return true;
+		return $manager;
 	}
 }

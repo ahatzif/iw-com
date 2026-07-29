@@ -11,13 +11,19 @@ if ( ! function_exists( 'WPML\Container\make' ) ) {
 	 * Make returns a new instance otherwise returns a shared instance if the
 	 * class_name or an instance is set as shared using the share function
 	 *
-	 * @param string $class_name
-	 * @param array  $args
+	 * @param string     $class_name
+	 * @param array|null $args
 	 *
-	 * @return mixed
+	 * @return object
 	 * @throws \WPML\Auryn\InjectionException
+	 *
+     *
+     * @phpstan-template T of object
+     * @phpstan-param class-string<T> $class_name
+     *
+     * @phpstan-return T
 	 */
-	function make( $class_name = null, array $args = null ) {
+	function make( $class_name = null, ?array $args = null ) {
 		$make = function ( $class_name, $args = [] ) {
 			if ( class_exists( $class_name ) || interface_exists( $class_name ) ) {
 				return Container::make( $class_name, $args );
@@ -85,13 +91,13 @@ if ( ! function_exists( 'WPML\Container\execute' ) ) {
 	 *
 	 * Invoke the specified callable or class::method string, provisioning dependencies along the way
 	 *
-	 * @param mixed $callableOrMethodStr A valid PHP callable or a provisionable ClassName::methodName string
-	 * @param array $args                array specifying params with which to invoke the provisioned callable
+	 * @param mixed      $callableOrMethodStr A valid PHP callable or a provisionable ClassName::methodName string
+	 * @param array|null $args                array specifying params with which to invoke the provisioned callable
 	 *
 	 * @return mixed Returns the invocation result returned from calling the generated executable
 	 * @throws \WPML\Auryn\InjectionException
 	 */
-	function execute( $callableOrMethodStr = null, $args = null ) {
+	function execute( $callableOrMethodStr = null, ?array $args = null ) {
 		return call_user_func_array( curryN( 1, [ Container::class, 'execute' ] ), func_get_args() );
 	}
 }

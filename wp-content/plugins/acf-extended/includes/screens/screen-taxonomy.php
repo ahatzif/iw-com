@@ -101,9 +101,11 @@ class acfe_screen_taxonomy{
     
         // enhanced ui
         if(acf_get_setting('acfe/modules/ui')){
-    
+
+            // get screen
             $screen = get_current_screen();
-            
+
+            // do metaboxes
             do_meta_boxes($screen, 'normal', $term);
             do_meta_boxes($screen, 'side', $term);
             
@@ -240,10 +242,10 @@ class acfe_screen_taxonomy{
     function location_screen($screen){
     
         // add taxonomy term id and check term_id doesn't exist
-        if(acf_maybe_get($screen, 'taxonomy') && !acf_maybe_get($screen, 'term_id')){
+        if(acfe_get($screen, 'taxonomy') && !acfe_get($screen, 'term_id')){
             
             global $tag;
-            $screen['term_id'] = acfe_maybe_get($tag, 'term_id');
+            $screen['term_id'] = acfe_get($tag, 'term_id');
         
         }
         
@@ -253,6 +255,6 @@ class acfe_screen_taxonomy{
     
 }
 
-new acfe_screen_taxonomy();
+acf_new_instance('acfe_screen_taxonomy');
 
 endif;

@@ -2,6 +2,8 @@
 
 use WPML\FP\Obj;
 use WPML\TM\API\Job\Map;
+use WPML\TM\API\Jobs;
+use WPML\TM\Jobs\JobLog;
 
 abstract class WPML_TM_Update_Translation_Data_Action extends WPML_Translation_Job_Helper_With_API {
 
@@ -25,61 +27,118 @@ abstract class WPML_TM_Update_Translation_Data_Action extends WPML_Translation_J
 	/**
 	 * Adds a translation job record in icl_translate_job
 	 *
-	 * @param mixed               $rid
-	 * @param mixed               $translator_id
-	 * @param       $translation_package
-	 * @param array               $batch_options
+	 * @param mixed    $rid
+	 * @param mixed    $translator_id
+	 * @param array    $translation_package
+	 * @param array    $batch_options
+	 * @param int|null $sendFrom
+	 * @param bool     $addJobLogs
 	 *
 	 * @return bool|int
 	 */
-	function add_translation_job( $rid, $translator_id, array $translation_package, array $batch_options ) {
+	function add_translation_job( $rid, $translator_id, array $translation_package, array $batch_options, $sendFrom = null, $addJobLogs = false ) {
 		global $wpdb, $current_user;
 
-		$previousStatus = \WPML_TM_ICL_Translation_Status::makeByRid( $rid )->previous();
-		if (
-			$previousStatus->map( Obj::prop( 'status' ) )->getOrElse( null ) === (string) ICL_TM_ATE_CANCELLED
-		) {
-			$job_id = Map::fromRid( $rid );
-		} else {
-
-			$translation_status = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}icl_translation_status WHERE rid=%d", $rid ) );
-			$prev_translation = $this->get_translated_field_values( $rid, $translation_package );
-			if ( ! $current_user->ID ) {
-				$manager_id = $wpdb->get_var(
-					$wpdb->prepare(
-						"SELECT manager_id FROM {$wpdb->prefix}icl_translate_job WHERE rid=%d ORDER BY job_id DESC LIMIT 1",
-						$rid
-					)
-				);
-			} else {
-				$manager_id = $current_user->ID;
+		$jobId = $this->maybeRestoreATECancelledJobDueToInsufficientBalance( $rid );
+		if ( $jobId ) {
+			if ( $addJobLogs ) {
+				JobLog::add( 'icl_translate_job record restored from the previous state with jobId `' . $jobId . '` from rid `' . $rid . '`' );
 			}
+			return $jobId;
+		}
 
-			$translate_job_insert_data = array(
-				'rid'           => $rid,
-				'translator_id' => $translator_id,
-				'translated'    => 0,
-				'manager_id'    => (int) $manager_id,
+		$translation_status = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}icl_translation_status WHERE rid=%d", $rid ) );
+		$prev_translation = $this->get_translated_field_values( $rid, $translation_package );
+		if ( ! $current_user->ID ) {
+			$manager_id = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT manager_id FROM {$wpdb->prefix}icl_translate_job WHERE rid=%d ORDER BY job_id DESC LIMIT 1",
+					$rid
+				)
 			);
+		} else {
+			$manager_id = $current_user->ID;
+		}
 
-			if ( isset( $batch_options['deadline_date'] ) ) {
-				$translate_job_insert_data['deadline_date'] = $batch_options['deadline_date'];
-			}
+		$translate_job_insert_data = array(
+			'rid'           => $rid,
+			'translator_id' => $translator_id,
+			'translated'    => 0,
+			'manager_id'    => (int) $manager_id,
+		);
 
-			if ( isset( $translation_package['title'] ) ) {
-				$translate_job_insert_data['title'] = mb_substr( $translation_package['title'], 0, 160 );
-			}
+		if ( isset( $batch_options['deadline_date'] ) ) {
+			$translate_job_insert_data['deadline_date'] = $batch_options['deadline_date'];
+		}
 
-			$wpdb->insert( $wpdb->prefix . 'icl_translate_job', $translate_job_insert_data );
-			$job_id = $wpdb->insert_id;
+		if ( isset( $translation_package['title'] ) ) {
+			$translate_job_insert_data['title'] = WPML\FP\Str::truncate_bytes( $translation_package['title'], 160 );
+		}
 
-			$this->package_helper->save_package_to_job( $translation_package, $job_id, $prev_translation );
-			if ( (int) $translation_status->status !== ICL_TM_DUPLICATE ) {
-				$this->fire_notification_actions( $job_id, $translation_status, $translator_id );
-			}
+		$wpdb->insert( $wpdb->prefix . 'icl_translate_job', $translate_job_insert_data );
+		$job_id = $wpdb->insert_id;
+
+		if ( $addJobLogs ) {
+			JobLog::add(
+				'New icl_translate_job record created with jobId `' . $job_id . '` from rid `' . $rid . '`',
+				$translate_job_insert_data
+			);
+		}
+
+		$this->package_helper->save_package_to_job( $translation_package, $job_id, $prev_translation, $addJobLogs );
+		$this->maybeRemovedElementsBelongingToOldCompletedJobsToKeepTheTableClean( $rid );
+		if ( (int) $translation_status->status !== ICL_TM_DUPLICATE ) {
+			$this->fire_notification_actions( $job_id, $translation_status, $translator_id, $sendFrom );
 		}
 
 		return $job_id;
+	}
+
+	/**
+	 * @param int $rid
+	 *
+	 * @return void
+	 */
+	private function maybeRemovedElementsBelongingToOldCompletedJobsToKeepTheTableClean( int $rid ) {
+		global $wpdb;
+
+		$sql = "
+			DELETE t
+			FROM {$wpdb->prefix}icl_translate t
+			INNER JOIN (
+			    SELECT job_id
+			    FROM {$wpdb->prefix}icl_translate_job
+			    WHERE rid = %d
+			      AND job_id < (
+			          SELECT MAX(job_id)
+			          FROM {$wpdb->prefix}icl_translate_job
+			          WHERE rid = %d AND translated = 1
+			      )
+			) to_delete ON t.job_id = to_delete.job_id;
+		";
+
+		$sql = $wpdb->prepare( $sql, $rid, $rid );
+		$wpdb->query( $sql );
+	}
+
+	/**
+	 * If a user sends jobs to ATE, then realises that has insufficient balance and after that decides to cancel those jobs
+	 * we don't cancel them by hard on wpml side. Instead of that, we mark a job as ATE CANCELLED.
+	 *
+	 * If he later will buy credit and decides to send the content again to translation, we won't have to build those jobs
+	 * from scratch, which helps us safe recourses.
+	 *
+	 * @param $rid
+	 *
+	 * @return int|null
+	 */
+	private function maybeRestoreATECancelledJobDueToInsufficientBalance( $rid ) {
+		$previousStatus = \WPML\Translation\PreviousStateServiceFactory::create()->getByRid( $rid );
+		if ( $previousStatus && (int) $previousStatus['status'] === ICL_TM_ATE_CANCELLED ) {
+			return Map::fromRid( $rid );
+		}
+
+		return null;
 	}
 
 	/**
@@ -125,19 +184,39 @@ abstract class WPML_TM_Update_Translation_Data_Action extends WPML_Translation_J
 		return $prev_translations;
 	}
 
-	protected function fire_notification_actions( $job_id, $translation_status, $translator_id ) {
-		$job = wpml_tm_load_job_factory()->get_translation_job( $job_id, false, 0, true );
-		if ( $job && $translation_status->translation_service === 'local' ) {
-			if ( $this->get_tm_setting( array( 'notification', 'new-job' ) ) == ICL_TM_NOTIFICATION_IMMEDIATELY ) {
-				if ( $job_id ) {
-					if ( empty( $translator_id ) ) {
-						do_action( 'wpml_tm_new_job_notification', $job );
-					} else {
-						do_action( 'wpml_tm_assign_job_notification', $job, $translator_id );
-					}
-				}
-			}
-			do_action( 'wpml_added_local_translation_job', $job_id );
+	/**
+	 * @param int|bool $job_id
+	 * @param object   $translation_status
+	 * @param mixed    $translator_id
+	 * @param int|null $sendFrom
+	 */
+	protected function fire_notification_actions( $job_id, $translation_status, $translator_id, $sendFrom = null ) {
+		if ( ! $job_id ) {
+			return;
 		}
+		if ( 'local' !== $translation_status->translation_service ) {
+			return;
+		}
+
+		$job = wpml_tm_load_job_factory()->get_translation_job( $job_id, false, 0, true );
+		if ( ! $job ) {
+			return;
+		}
+
+		if ( ICL_TM_NOTIFICATION_IMMEDIATELY === (int) $this->get_tm_setting( array( 'notification', 'new-job' ) ) ) {
+			// Delay sending notifications from the Translation Dashboard, instead of sending them right away.
+			// The delay groups all changes into the WPML_TM_Batch_Report::BATCH_REPORT_OPTION option from eventual multiple translation jobs,
+			// and dispatches them on WPML_TM_Batch_Report_Email_Process::process_emails(), triggered by the 'wpml_tm_jobs_notification' action.
+			$shouldDelay = (bool) Jobs::SENT_VIA_DASHBOARD === $sendFrom;
+			if ( empty( $translator_id ) ) {
+				$actionHandle = $shouldDelay ? 'wpml_tm_new_job_notification_with_delay' : 'wpml_tm_new_job_notification';
+				do_action( $actionHandle, $job );
+			} else {
+				$actionHandle = $shouldDelay ? 'wpml_tm_assign_job_notification_with_delay' : 'wpml_tm_assign_job_notification';
+				do_action( $actionHandle, $job, $translator_id );
+			}
+		}
+
+		do_action( 'wpml_added_local_translation_job', $job_id );
 	}
 }

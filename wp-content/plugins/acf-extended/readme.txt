@@ -3,9 +3,9 @@ Contributors: hwk-fr
 Donate link: https://www.acf-extended.com
 Tags: acf, custom fields, meta, admin, fields
 Requires at least: 4.9
-Tested up to: 6.7
+Tested up to: 7.0
 Requires PHP: 5.6
-Stable tag: 0.9.0.9
+Stable tag: 0.9.2.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -494,6 +494,280 @@ The content of the upcoming patch and work in progress features are all listed o
 
 == Changelog ==
 
+= 0.9.2.6 =
+
+**ACF Extended Pro 0.9.2.6:**
+
+* Field: AI Chat - New field that render a fully customizable LLM chat interface (WP 7.0+)
+* Field: AI Chat - Compatible with Text and Images generation at the moment
+* Field: AI Chat - The field is fully integrated with the new WP 7.0 Connectors core API
+* Field: AI Chat - More than a dozen settings (Model preference, Agent instruction, Max tokens...)
+* Field Settings: AI Fill - Added "Fill with AI" setting that display a link to open a chat modal
+* Field Settings: AI Fill - Any response can be applied or appended as value to the related field
+* Field Settings: AI Fill - Compatible with Code Editor, Text, Textarea and WYSIWYG fields
+
+**ACF Extended Basic 0.9.2.6:**
+
+* Module: Forms - Fixed security issue that could bypass the validation
+* Module: Forms - Fixed security issue when the form allows the user to choose their own role
+* Field Group: Moved `acfe_` settings into an array of `field_group[acfe]`
+* Field Group: Added `acfe/compatibility/legacy_field_group` setting to keep both structures
+* Field Group: This new structure keeps the Field Group array cleaner and more organized
+* Field Group: The same logic will be applied to ACF Fields progressively in future updates
+* Field Settings: Permissions - Added "Guest" option to target non-logged users specifically
+* Field Settings: Permissions - Moved the Permissions field setting into the "Validation" tab
+* General: Added `acfe_get()`, `acfe_set()`, `acfe_unset()`, `acfe_has()` helper functions
+* General: Added more helpers for array / object / string manipulation using dot notation
+* General: Cleaned and migrated old helpers into the new set of helper functions
+* General: More CSS tweaks to enhance compatibility with WP 7.0
+
+= 0.9.2.5 =
+
+**ACF Extended Pro 0.9.2.5:**
+
+* Field: Select - Enhanced "Stylised UI" compatibility on Woocommerce admin pages
+* Field: Select - This fix also applies to Countries, Currencies, Languages fields
+* Field: Phone Number - Fixed JS error on screen resize
+* Field: Phone Number - Fixed IP geolocation detection issues
+
+**ACF Extended Basic 0.9.2.5:**
+
+* Field: Image - Fixed Conditional Logic compatibility issue with ACF 6.8.1
+* Field: File - Fixed Conditional Logic compatibility issue with ACF 6.8.1
+* Module: Enhanced UI - Added compatibility layer for WP 7.0
+* Module: Enhanced UI - Added `acfe/modules/wp7_ui` setting for WP 7.0
+* General: Fixed various styling issues for WP 7.0
+* General: Enhanced helpers and version detection
+
+= 0.9.2.4 =
+
+**Deprecation Notice:**
+
+Support of ACF Pro 5.8 (2019) will be dropped on September 2026. Please upgrade to ACF Pro 5.9 or higher to maintain compatibility with future versions of ACF Extended.
+
+**ACF Extended Pro 0.9.2.4:**
+
+* Field: Phone Number - Reworked Geolocation request and moved to server-side
+* Field: Phone Number - Updated Geolocation IPInfo.io API endpoint
+* Field: Phone Number - Intl Tel Input Utils is now loaded locally (instead of CDN)
+* Field: Phone Number - Fixed country dropdown on mobile
+* Field: Phone Number - Fixed country dropdown compatibility with other Select2 fields
+* Field: Phone Number - Added `acfe/fields/phone_number/geolocation/api_params` hook
+* Field: Phone Number - Added `acfe/fields/phone_number/geolocation/custom_query` hook
+* Field: Phone Number - Added `acfe/fields/phone_number/args` JS hook
+* Field: Phone Number - Added `acfe/fields/phone_number/init` JS hook
+* Location: Advanced Locations - Fixed PHP notice in custom location rules
+* Location: Nav Menu item Type - Added "Post Type Archive", "Front Page" & "Posts Page"
+* Location: Nav Menu item Type - Added "Post Type" & "Taxonomy" selection
+* Location: Nav Menu item Type - Added "Top Level", "Parent" & "Children"
+* Location: Nav Menu item Order - Added Location Rule Type
+* Location: Post Screen - Fixed compatibility with ACF Taxonomy Field "Save Terms" setting
+* Module: Auto Sync - Fixed "Load Source" tooltip HTML
+* Module: Auto Sync - Fixed "Sync Available" screen columns render
+* Module: Auto Sync - Added missing text translation
+* Module: Scripts - Performance Converter - Fixed "Individual meta" setting being ignored
+* Module: Templates - Added compatibility with `get_field()` & `get_fields()` to retrieve values
+
+**ACF Extended Basic 0.9.2.4:**
+
+* Field: Clone - Added Role Permissions compatibility with "Display: Seamless"
+* Field: Tab - Added Role Permissions compatibility
+* Field: Flexible Content - Fixed missing "Apply" translation in copy/paste modal
+* Field: Flexible Content - Added "Async Layouts" nonce check
+* Field: Flexible Content - Added "Rename Layout" nonce check
+* Field Group: Category - Fixed error when using a custom admin url in some edge case
+* Field Group: Category - Removed listed item in the Appearance > Menus UI
+* Field Group: Local Tab - Fixed "Import" function when a Json file also exists
+* Module: Forms - Success > Apply Shortcode setting is now disabled by default
+* Module: Forms - Added `$form` argument in the `acfe/form/format_value` hook
+* Module: Performance Ultra - Fixed slashes in Post Revisions
+* Global: Added `acfe/ready` hook triggered once everything is loaded after `acfe/init`
+* Global: Added ACF Pro 5.8 support drop warning on WP Admin > Plugins page
+* Global: Fixed ACF Taxonomy "Create Term" modal style
+* Global: Updated Translation
+
+= 0.9.2.3 =
+
+**ACF Extended Pro 0.9.2.3:**
+
+* Field: Color Picker - Fixed "Color Palette" when copy/pasting with a Flexible Content
+* Field: Date Range Picker - Added "Return Type: Array (default) / String" setting
+* Field: Date Range Picker - Fixed popup priority when displayed inside a modal
+* Field: Flexible Content - Fixed "Search layouts" & "No layouts found" custom text display
+* Field: Flexible Content - Fixed render issue on multilingual setup with custom textdomain
+
+**ACF Extended Basic 0.9.2.3:**
+
+* Field: Flexible Content - Enhanced "Copy/Paste" feature to display a proper modal
+* Field: Repeater - Minor CSS tweaks to the "Stylised Button" setting
+* Field: Select - Fixed selected options when copy/pasting with a Flexible Content
+* Field: Select - Fixed Select2 becoming disabled when copy/pasting with a Flexible Content
+* Module: Enhanced UI - Fixed minor issue with Rankmath on the User Edit screen
+* Module: Forms - Enforced global reCaptcha validation if the field is present in a field group
+* Module: Forms - Added "Success message: Apply shortcodes" setting (enabled by default)
+* Module: Forms - Email - Shortcodes are now disabled by default in the email content
+* Module: Forms - Email - Added "Apply shortcodes" setting to enable shortcodes in the content
+
+= 0.9.2.2 =
+
+**ACF Extended Pro 0.9.2.2:**
+
+* Field: Fields - Added "Group by field group" setting
+* Field: Field Types - Added "Group by category" setting
+* Fields: Fixed missing "Add choice" button when using "Display: Checkbox" and "Allow Custom"
+
+**ACF Extended Basic 0.9.2.2:**
+
+* Module: Forms - Enforced front-end fields validation against their respective "Choices" settings
+* Module: Forms - Added security measure for forms allowing user role selection
+* Module: Forms - Added `acfe/form/validate_value` hook to validate fields individually on front
+* Module: Forms - Added `acfe/form/pre_validate_value` hook to bypass enforced validation
+* Module: Enhanced UI - Fixed missing metabox when visiting its own profile via `user-edit.php`
+* Field Group - Fixed "Display Title" not being displayed on screens with Enhanced UI (ACF 6.6+)
+
+= 0.9.2.1 =
+
+**ACF Extended Pro 0.9.2.1:**
+
+* Field: Flexible Content - Grid System - Fixed Copy/Paste "Secondary Button" in small columns
+* Field: Flexible Content - Grid System - Fixed multi-level Flexible Content icons in small columns
+* Field: Phone Number - Intl Tel Input JS library is now loaded on-demand
+* Field: Phone Number - Added initialization safe guard logic
+
+**ACF Extended Basic 0.9.2.1:**
+
+* Field: Flexible Content - Legacy Title/Toggle settings are now passed on Field Group update
+* Field: Flexible Content - Added `acfe/compatibility/legacy_title_toggle` to enforce migration
+* Field: Flexible Content - Added js action `acfe/fields/flexible_content/click_action_button`
+* Field: Flexible Content - Added js filter `acfe/fields/flexible_content/prevent_action_button`
+* Field: Flexible Content - Fixed `acf/fields/flexible_content/layout_title` `key` variation
+* Field: Flexible Content - Fixed "Copy/Paste" icon visibility in multi-level Flexible Content
+* Module: Performance Ultra - Fixed Post Revisions saving uncompressed meta with ACF 6.4+
+* Module: Form - Fixed Form render in the Flexible Content Dynamic Preview
+* Field Group: Fixed ACF popup box style on the Field Group screen
+* Global: Bump WP version up to 6.9
+
+= 0.9.2 =
+
+**Upgrade Notice:**
+
+This patch implements ACF 6.5+ Flexible Content render style. In case of customized WP Admin style with CSS rules overriding the Flexible Content style, please check your setup.
+
+**Security Notice:**
+
+This patch fixes a vulnerability affecting users running versions 0.9.0.5 through 0.9.1.1. Please update your plugin to ensure continued security and stability.
+
+**ACF Extended Pro 0.9.2:**
+
+* Field: Flexible Content - Select Modal - Added "Search Layouts" feature
+* Field: Flexible Content - Select Modal - Added "Search Layouts Input" setting
+* Field: Flexible Content - Select Modal - Added "Not Found Message" setting
+* Field: Flexible Content - Iframe Preview - Fixed responsive icons when duplicated
+* Field: Flexible Content - Iframe Preview - Fixed instruction tooltip with responsive
+* Field: Flexible Content - Grid System - Enhanced handle icons on small sized columns
+* Field: Flexible Content - Layouts Locations - Added compatibility with Advanced Locations
+* Field: Color Picker - Added "Advanced Settings" to use ACFE settings instead of ACF
+* Field: File Upload - Fixed minor CSS render issues
+* Module: Enhanced UI - Added "Enhanced Post UI" to improve "Save Draft/Preview" integration
+* Module: Enhanced UI - Added `acfe/modules/post_ui` setting
+* Fields: Countries/Languages/Currency - Fixed field initialization when duplicated
+* Global: Updates - Enhanced integration with ACF 6.3+ styles
+* Global: Updates - Fixed issue with slovak language on updates page
+
+**ACF Extended Basic 0.9.2:**
+
+* Field: Flexible Content - Implemented new ACF 6.5+ Flexible Content render style
+* Field: Flexible Content - Added Hide: "Disable", "Rename", "Top Actions" settings
+* Field: Flexible Content - Added Hide: "Expand All", "Collapse All", "Top Add Row" settings
+* Field: Flexible Content - Added "Close Button Label" setting to customize close button
+* Field: Flexible Content - Migrated ACFE "Edit Title" feature to new ACF 6.5+ logic
+* Field: Flexible Content - Migrated ACFE "Hide Layout" feature to new ACF 6.5+ logic
+* Field: Flexible Content - Adjusted ACF 6.5+ style to make it more consistent with WP style
+* Field: Flexible Content - Fixed various ACF 6.5+ style inconsistencies (border, spacing...)
+* Field: Flexible Content - Fixed various ACF 6.5+ bugs & added UX QOL
+* Field: Flexible Content - Unified Flexible Content markup across all ACF versions
+* Field: Flexible Content - Cleaned/renamed various ACFE Flexible Content class/markup
+* Field: Flexible Content - Enhanced settings integrations and fixed various visual issues
+* Field: Flexible Content - Fixed "Add Layout" button from layout actions
+* Field: Flexible Content - Fixed "Close Button" display when layout is displayed as "Table"
+* Field: Flexible Content - "Stylised Button" is now only available if "Add Row" isn't "Hidden"
+* Field: Flexible Content - Edit Modal - An "Edit" icon is now displayed by default
+* Field: Flexible Content - Edit Modal - This icon can be hidden using "Hide Collapse" setting
+* Field: Flexible Content - Select Modal - Modal "Title" now default to "Add Row" button label
+* Field: Flexible Content - Select Modal - Layouts are now displayed using grid css
+* Field: Flexible Content - Select Modal - Thumbnails are now displayed as `<img>`
+* Field: Flexible Content - Select Modal - Thumbnails are now displayed using a `2:1` ratio
+* Field: Flexible Content - Select Modal - Added `acfe/flexible/modal_select_categories` hook
+* Field: Flexible Content - Settings Modal - Added "Default Modal Size" setting
+* Field: Flexible Content - Settings Modal - Added "Close Button" & "Button Label" settings
+* Field: Repeater - Fixed ACF pagination feature with "Stylised Button" setting
+* Module: Enhanced UI - Added `acfe/modules/attachment_ui` setting
+* Module: Enhanced UI - Added `acfe/modules/term_ui` setting
+* Module: Enhanced UI - Added `acfe/modules/settings_ui` setting
+* Module: Enhanced UI - Added `acfe/modules/user_ui` setting
+* Module: Enhanced UI - Enhanced third party compatibility with `do_meta_boxes` on terms
+* Module: Enhanced UI - User Profile - Moved "Nickname" into its metabox to avoid confusion
+* Module: Forms - Enhanced Template Tags value escape logic
+* Module: Forms - Fixed Ajax Form security vulnerability
+* Module: Forms - Added Action types `title_alt` property for admin column display
+* Module: Forms - Added Actions admin column `acfe/form/admin_column/action_label` filters
+* Module: WP Options - Fixed "Edit Option" value type label
+* Module: WP Options - Added confirm tooltip when deleting an option
+* Field Group: Migrated ACFE "Display Title" setting to the native ACF logic (ACF 6.6+)
+* Field Group: Added "Display Title" in the Field Group List view (ACF 6.6+)
+* Field Settings: Instruction Tooltip - Fixed tooltip remaining visible indefinitely (ACF 6.5+)
+* Global: Plugins > ACF Tab - Fixed deprecated notice on PHP 8.1+
+* Global: Fixed HTML escape on various ACFE tooltips
+* Global: Updated build tools
+
+= 0.9.1.1 =
+
+**ACF Extended Pro 0.9.1.1:**
+
+* Field Group: Fixed error in the Field Group UI with ACF 6.5+
+* Field: Payment - Stripe gateway now use the wrapper text color as placeholder color
+* Field: Post Object - Fixed "Inline Post Edit" feature with ACF 6.5+
+
+**ACF Extended Basic 0.9.1.1:**
+
+* Field: Flexible Content - Added compatibility with ACF 6.5+
+* Field: Flexible Content - Legacy render style (ACF 6.4) is enforced to maintain compatibility
+* Field: Flexible Content - New ACF 6.5 render style will be implemented in a future patch
+* Field: Flexible Content - Fixed "Dynamic Preview" when displaying values with `acfe_form()`
+* Field: Slug - Fixed PHP 8 warning during field validation
+* Fields: Instructions Tooltip - Enhanced text sanitization to allow custom HTML
+* Module: Form - Reset `$_FILES` as `array()` to respect PHP standards
+* Module: Options Pages - moved to "Tools" WP admin menu to avoid confusion with ACF Options Pages
+* Module: Performance - Fixed "Save as Individual Meta" regression on post creation
+* Module: Performance - Fixed "Save as Individual Meta" revision restoration on an empty post
+* Global: Fixed PHP 8 warning during initial setup
+* Global: ACFE Modal - Small CSS tweaks
+* Global: Added compatibility with ACF 6.5+
+
+= 0.9.1 =
+
+**ACF Extended Pro 0.9.1:**
+
+* Field: Flexible Content - Added "Dynamic Preview Iframe" feature
+* Field: Flexible Content - Added "Dynamic Preview Responsive" feature
+* Field: Flexible Content - "Dynamic Preview Iframe" render previews in isolated iframes
+* Field: Flexible Content - "Dynamic Preview Responsive" allows to switch container preview size
+* Field: Address - Cleaned unused argument
+* Field: Google Map - Added `acfe_render_google_map()` compatibility with sub fields
+* Field: Google Map - Enhanced `acfe_render_google_map()` compatibility with Dynamic Preview
+* Field: Radio - Fixed "Custom Choice" render
+* Field: WYSIWYG - Enhanced `source_code` modal reset stylesheet
+* Field Group Location: Renamed "Dashboard" to "WP Dashboard" for consistency
+* Module: Forms - Ajax submission now redraw form on submission
+
+**ACF Extended Basic 0.9.1:**
+
+* Field: Advanced Link - Enhanced malformed values handling
+* Field: Flexible Content - Added `acfe/flexible/toggle_hide` filter to control row visibility
+* Field: reCaptcha - Enhanced error handling when using incorrect API key
+* Field: Taxonomy Terms - Fixed ajax nonce verification when field is cloned
+* Module: Forms - Enhanced File/Image/Gallery "Uploaded To" logic using related Form Action
+
 = 0.9.0.9 =
 
 **ACF Extended Pro 0.9.0.9:**
@@ -934,7 +1208,7 @@ The content of the upcoming patch and work in progress features are all listed o
 * Module: Scripts - Bumped "Clean Orphan Meta" script version to 1.1
 * Module: Scripts - Added "Script Launcher" to easily launch scripts using hooks
 * Module: Settings - Added `modules/scripts/demo` setting
-* General: ACF Updates screen has been uniformized accross 5.10.x to ACF 6.0.x versions
+* General: ACF Updates screen has been uniformized across 5.10.x to ACF 6.0.x versions
 
 **ACF Extended Basic 0.8.8.11:**
 

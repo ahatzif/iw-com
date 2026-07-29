@@ -18,6 +18,7 @@ class WPML_Compatibility_Divi implements \IWPML_DIC_Action, \IWPML_Backend_Actio
 	public function add_hooks() {
 		if ( $this->sitepress->is_setup_complete() ) {
 			add_action( 'init', [ $this, 'load_resources_if_they_are_required' ], 10, 0 );
+			add_filter( 'divi_off_canvas_should_load', [ $this, 'should_load_off_canvas' ] );
 			add_filter( 'et_builder_load_actions', [ $this, 'load_builder_for_ajax_actions' ] );
 
 			add_action( 'admin_init', [ $this, 'display_warning_notice' ], 10, 0 );
@@ -65,22 +66,39 @@ class WPML_Compatibility_Divi implements \IWPML_DIC_Action, \IWPML_Backend_Actio
 	}
 
 	public function load_resources_if_they_are_required() {
+		if ( $this->is_wpml_page() ) {
+			$this->register_layouts();
+		}
+	}
+
+	/**
+	 * @param bool $shouldLoad
+	 *
+	 * @return bool
+	 */
+	public function should_load_off_canvas( $shouldLoad ) {
+		return $shouldLoad || $this->is_wpml_page();
+	}
+
+	/**
+	 * @return bool
+	 */
+	private function is_wpml_page() {
 		if ( ! isset( $_GET['page'] ) || ! is_admin() ) { /* phpcs:ignore */
-			return;
+			return false;
 		}
 
 		$pages = [ self::get_duplication_action_page() ];
 		if ( self::is_tm_active() ) {
 			$pages[] = self::get_translation_dashboard_page();
 			$pages[] = self::get_translation_editor_page();
+			$pages[] = self::get_settings_page();
 		}
 		if ( self::is_sl_active() ) {
 			$pages[] = self::get_sl_page();
 		}
 
-		if ( in_array( $_GET['page'], $pages, true ) ) { /* phpcs:ignore */
-			$this->register_layouts();
-		}
+		return in_array( $_GET['page'], $pages, true ); /* phpcs:ignore */
 	}
 
 	private static function get_translation_dashboard_page() {
@@ -99,6 +117,10 @@ class WPML_Compatibility_Divi implements \IWPML_DIC_Action, \IWPML_Backend_Actio
 		return 'wpml-sticky-links';
 	}
 
+	private static function get_settings_page() {
+		return constant( 'WPML_TM_FOLDER' ) . '/menu/settings';
+	}
+
 	private static function is_tm_active() {
 		return defined( 'WPML_TM_FOLDER' );
 	}
@@ -108,14 +130,8 @@ class WPML_Compatibility_Divi implements \IWPML_DIC_Action, \IWPML_Backend_Actio
 	}
 
 	private function register_layouts() {
-		/**
-		 * @phpstan-ignore-next-line
-		 */
 		if ( function_exists( 'et_builder_should_load_framework' ) && ! et_builder_should_load_framework() ) {
 			if ( function_exists( 'et_builder_register_layouts' ) ) {
-				/**
-				 * @phpstan-ignore-next-line
-				 */
 				et_builder_register_layouts();
 			} else {
 				$lib_file = ET_BUILDER_DIR . 'feature/Library.php';
@@ -124,6 +140,7 @@ class WPML_Compatibility_Divi implements \IWPML_DIC_Action, \IWPML_Backend_Actio
 					&& defined( 'ET_BUILDER_DIR' )
 					&& file_exists( $lib_file )
 				) {
+					/* @phpstan-ignore-next-line */
 					require_once $lib_file;
 				}
 
@@ -190,7 +207,7 @@ class WPML_Compatibility_Divi implements \IWPML_DIC_Action, \IWPML_Backend_Actio
 		$handle_content = false;
 
 		preg_match( '/global_module="([0-9]+)"/', $shortcode['attributes'], $matches );
-		$excluded = json_decode( get_post_meta( $matches[1], '_et_pb_excluded_global_options', true ), true );
+		$excluded = json_decode( get_post_meta( (int) $matches[1], '_et_pb_excluded_global_options', true ), true );
 
 		if ( is_array( $excluded ) && count( $excluded ) > 0 ) {
 			$attributes = $this->get_translatable_shortcode_attributes( $shortcode['tag'] );

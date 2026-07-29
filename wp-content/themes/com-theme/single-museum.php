@@ -10,16 +10,14 @@ while ( have_posts() ) :
 	the_post();
 
 	$museum_id = get_the_ID();
+	$is_all_museums_ticket = com_theme_is_all_museums_ticket( $museum_id );
+	$all_museums_slider_items = $is_all_museums_ticket ? com_theme_all_museums_slider_items( $museum_id ) : [];
 	$title_id = wp_unique_id( 'museum-title-' );
 	$hero_image_id = com_theme_museum_image_id( $museum_id, 'hero_image' );
 	$hero_background_id = com_theme_attachment_id( get_field( 'hero_background', $museum_id ) );
 	$gallery_image_id = com_theme_attachment_id( get_field( 'gallery_image', $museum_id ) ) ?: $hero_image_id;
 	$ticket_link = get_field( 'ticket_link', $museum_id );
-	$ticket_url = com_theme_link_url( $ticket_link );
-	if ( $ticket_url === '' && function_exists( 'get_tickets_permalink' ) ) {
-		$ticket_url = (string) get_tickets_permalink( $museum_id );
-	}
-	$ticket_url = $ticket_url ?: com_theme_option_page_url( 'buy_tickets_page', 'buy-tickets' );
+	$ticket_url = com_theme_museum_ticket_url( $museum_id, $ticket_link );
 	$ticket_label = ! empty( $ticket_link['title'] ) ? $ticket_link['title'] : __( 'Εισιτήρια', 'com-theme' );
 	$ticket_target = $ticket_link['target'] ?? '';
 	$address = (string) get_field( 'address', $museum_id );
@@ -45,8 +43,22 @@ while ( have_posts() ) :
 	<main>
 		<section class="relative grid overflow-hidden lg:h-[110rem]" aria-labelledby="<?php echo esc_attr( $title_id ); ?>">
 			<div class="col-start-1 row-start-1 mt-[30rem] h-[54rem] overflow-hidden mix-blend-multiply opacity-40 lg:h-[74rem]" aria-hidden="true">
-				<?php if ( $hero_background_id ) : ?>
-					<?php echo wp_get_attachment_image( $hero_background_id, 'full', false, [ 'class' => 'relative left-0 top-[-8.97%] h-[129.79%] w-full max-w-none object-cover', 'alt' => '' ] ); ?>
+				<?php if ( $is_all_museums_ticket && $all_museums_slider_items ) : ?>
+					<?php get_template_part( 'templates/parts/all-museums-slider', null, [
+						'items'         => $all_museums_slider_items,
+						'classes'       => 'size-full overflow-hidden',
+						'image_size'    => 'full',
+						'image_classes' => 'relative left-0 top-[-8.97%] h-[129.79%] w-full max-w-none object-cover',
+					] ); ?>
+				<?php elseif ( $hero_background_id ) : ?>
+					<?php get_template_part( 'templates/parts/image', null, [
+						'id'       => $hero_background_id,
+						'size'     => 'full',
+						'classes'  => 'relative left-0 top-[-8.97%] h-[129.79%] w-full max-w-none object-cover',
+						'alt'      => '',
+						'lazy'     => false,
+						'parallax' => false,
+					] ); ?>
 				<?php else : ?>
 					<img src="<?php echo esc_url( get_theme_file_uri( '/assets/images/com/museums-hero-background.png' ) ); ?>" alt="" class="relative left-0 top-[-8.97%] h-[129.79%] w-full max-w-none object-cover">
 				<?php endif; ?>
@@ -74,9 +86,28 @@ while ( have_posts() ) :
 						</div>
 					</div>
 
-					<?php if ( $hero_image_id ) : ?>
+					<?php if ( $is_all_museums_ticket && $all_museums_slider_items ) : ?>
 						<div class="mt-60 aspect-[calc(599/540)] w-full overflow-hidden rounded-[2rem] lg:absolute lg:bottom-0 lg:right-0 lg:mt-0 lg:w-[59.9rem]">
-							<?php echo wp_get_attachment_image( $hero_image_id, 'full', false, [ 'class' => 'size-full object-cover', 'alt' => get_the_title() ] ); ?>
+							<?php get_template_part( 'templates/parts/all-museums-slider', null, [
+								'items'           => $all_museums_slider_items,
+								'classes'         => 'relative size-full overflow-hidden bg-blue',
+								'image_size'      => 'full',
+								'image_classes'   => 'size-full object-cover',
+								'overlay_classes' => 'absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-blue/35 to-transparent',
+								'show_caption'    => true,
+								'caption_classes' => 'absolute bottom-25 left-25 right-25 z-1 text-[1.1rem] font-medium leading-none tracking-[.18em] text-white',
+							] ); ?>
+						</div>
+					<?php elseif ( $hero_image_id ) : ?>
+						<div class="mt-60 aspect-[calc(599/540)] w-full overflow-hidden rounded-[2rem] lg:absolute lg:bottom-0 lg:right-0 lg:mt-0 lg:w-[59.9rem]">
+							<?php get_template_part( 'templates/parts/image', null, [
+								'id'       => $hero_image_id,
+								'size'     => 'full',
+								'classes'  => 'size-full object-cover',
+								'alt'      => get_the_title(),
+								'lazy'     => false,
+								'parallax' => false,
+							] ); ?>
 						</div>
 					<?php endif; ?>
 				</div>
@@ -157,10 +188,30 @@ while ( have_posts() ) :
 			</section>
 		<?php endif; ?>
 
-		<?php if ( $gallery_image_id ) : ?>
+		<?php if ( $is_all_museums_ticket && $all_museums_slider_items ) : ?>
+			<section class="px-1/12 pb-100 pt-100 md:px-4/24 lg:px-0" aria-label="<?php esc_attr_e( 'Φωτογραφίες μουσείων', 'com-theme' ); ?>">
+				<div class="mx-auto aspect-[calc(960/540)] w-full overflow-hidden rounded-[1rem] lg:w-[96rem]">
+					<?php get_template_part( 'templates/parts/all-museums-slider', null, [
+						'items'           => $all_museums_slider_items,
+						'classes'         => 'relative size-full overflow-hidden bg-blue',
+						'image_size'      => 'full',
+						'image_classes'   => 'size-full object-cover',
+						'overlay_classes' => 'absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-blue/35 to-transparent',
+						'show_caption'    => true,
+						'caption_classes' => 'absolute bottom-25 left-25 right-25 z-1 text-[1.1rem] font-medium leading-none tracking-[.18em] text-white',
+					] ); ?>
+				</div>
+			</section>
+		<?php elseif ( $gallery_image_id ) : ?>
 			<section class="px-1/12 pb-100 pt-100 md:px-4/24 lg:px-0" aria-label="<?php esc_attr_e( 'Εικόνα μουσείου', 'com-theme' ); ?>">
 				<div class="mx-auto aspect-[calc(960/540)] w-full overflow-hidden rounded-[1rem] lg:w-[96rem]">
-					<?php echo wp_get_attachment_image( $gallery_image_id, 'full', false, [ 'class' => 'size-full object-cover', 'alt' => get_the_title() ] ); ?>
+					<?php get_template_part( 'templates/parts/image', null, [
+						'id'       => $gallery_image_id,
+						'size'     => 'full',
+						'classes'  => 'size-full object-cover',
+						'alt'      => get_the_title(),
+						'parallax' => false,
+					] ); ?>
 				</div>
 			</section>
 		<?php endif; ?>
@@ -169,8 +220,8 @@ while ( have_posts() ) :
 			<section class="px-1/12 pb-90 md:px-4/24 lg:px-0 lg:pb-[16rem]" aria-labelledby="related-title">
 				<div class="mx-auto w-full lg:w-[95.7rem]">
 					<div class="flex w-full flex-col gap-5 md:w-[60rem]">
-						<p class="text-[1rem] font-medium leading-none tracking-[.18em] text-blue/60"><?php esc_html_e( 'ΔΕΙΤΕ ΕΠΙΣΗΣ', 'com-theme' ); ?></p>
-						<h2 id="related-title" class="text-[2rem] font-normal leading-[1.2]"><?php esc_html_e( 'Άλλα Μουσεία του τόπου μας', 'com-theme' ); ?></h2>
+						<p class="text-[1rem] font-medium leading-none tracking-[.18em] text-blue/60"><?php echo esc_html( $is_all_museums_ticket ? com\theme::remove_accents( __( 'Περιλαμβάνει', 'com-theme' ) ) : __( 'ΔΕΙΤΕ ΕΠΙΣΗΣ', 'com-theme' ) ); ?></p>
+						<h2 id="related-title" class="text-[2rem] font-normal leading-[1.2]"><?php echo esc_html( $is_all_museums_ticket ? __( 'Τα μουσεία που μπορείτε να επισκεφθείτε', 'com-theme' ) : __( 'Άλλα Μουσεία του τόπου μας', 'com-theme' ) ); ?></h2>
 					</div>
 					<div class="mt-40 min-w-0" data-module-embla-carousel data-options='{"mobileOnly":true,"loop":true,"align":"start","dragFree":true}'>
 						<div class="w-full overflow-hidden md:overflow-visible" data-embla-carousel="swiper">

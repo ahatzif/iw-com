@@ -1,11 +1,5 @@
 <?php
 
-use WPML\API\Sanitize;
-
-if ( Sanitize::stringProp( 'sm', $_GET ) === 'basket' ) {
-    add_action( 'admin_enqueue_scripts', array( 'SitePress_Table_Basket', 'enqueue_js' ) );
-}
-
 abstract class WPML_TM_Menus {
 
 	protected $post_types;
@@ -21,7 +15,7 @@ abstract class WPML_TM_Menus {
 		$this->base_target_url    = dirname( __FILE__ );
 	}
 
-	public function display_main( WPML_UI_Screen_Options_Pagination $dashboard_pagination = null ) {
+	public function display_main( ?WPML_UI_Screen_Options_Pagination $dashboard_pagination = null ) {
 		$this->dashboard_pagination = $dashboard_pagination;
 		if ( true !== apply_filters( 'wpml_tm_lock_ui', false ) ) {
 			$this->render_main();
@@ -45,6 +39,9 @@ abstract class WPML_TM_Menus {
 
 	private function build_tabs() {
 		$tm_sub_menu = $this->get_current_shown_item();
+		?>
+		<div class="wpml-tab-wrapper">
+		<?php
 		foreach ( $this->tab_items as $id => $tab_item ) {
 			if ( ! isset( $tab_item['caption'] ) ) {
 				continue;
@@ -65,18 +62,26 @@ abstract class WPML_TM_Menus {
 				'nav-tab',
 				'nav-tab-' . $id,
 			);
+
 			if ( $tm_sub_menu === $id ) {
 				$classes[] = 'nav-tab-active';
 			}
 
 			$class = implode( ' ', $classes );
 			$href  = 'admin.php?page=' . WPML_TM_FOLDER . $this->get_page_slug() . '&sm=' . $id;
+
 			?>
 			<a class="<?php echo esc_attr( $class ); ?>" href="<?php echo esc_attr( $href ); ?>">
-				<?php echo $caption; ?>
+				<span><?php echo $caption; ?></span>
+				<?php if ( isset( $tab_item['description'] ) && ! empty( $tab_item['description'] ) ) : ?>
+					<?php echo wp_kses_post( $tab_item['description'] ); ?>
+				<?php endif; ?>
 			</a>
 			<?php
 		}
+		?>
+		</div>
+		<?php
 	}
 
 	private function build_content() {

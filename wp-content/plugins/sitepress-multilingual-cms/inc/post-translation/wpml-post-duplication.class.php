@@ -53,6 +53,22 @@ class WPML_Post_Duplication extends WPML_WPDB_And_SP_User {
 		$translations  = $wpml_post_translations->get_element_translations( $master_post_id, false, false );
 		if ( isset( $translations[ $lang ] ) ) {
 			$post_array[ 'ID' ] = $translations[ $lang ];
+			// Prevent self-duplication (data corruption protection) @see the ticket wpmldev-6326
+			if ( $post_array[ 'ID' ]  == $master_post_id ) {
+				wpml_trigger_error(
+					__FUNCTION__,
+					"WPML: Prevented self-duplication loop for post {$master_post_id} in language '{$lang}'. " .
+					"Data corruption detected: This typically occurs when a duplicated post's language_code is corrupted. " .
+					"While this protection prevents the duplication loop from occurring, it is important to identify and fix the underlying data corruption. " .
+					"Please report this issue to the WPML support team with the full error details for further investigation. " .
+					"To identify the root cause: Find duplicated posts for post {$master_post_id} by querying {$this->wpdb->prefix}postmeta table with meta_value={$master_post_id} and meta_key=_icl_lang_duplicate_of. " .
+					"For each duplicated post, check in {$this->wpdb->prefix}icl_translations if language_code is not '{$lang}'. If so, the data is corrupt and those records should be removed. " .
+					"[" . __FILE__ . ":" . __LINE__ . "]",
+					E_USER_WARNING
+				);
+				return true;
+			}
+
 			if ( WPML_WordPress_Actions::is_bulk_trash( $post_array[ 'ID' ] ) || WPML_WordPress_Actions::is_bulk_untrash( $post_array[ 'ID' ] ) ) {
 				return true;
 			}
@@ -138,7 +154,7 @@ class WPML_Post_Duplication extends WPML_WPDB_And_SP_User {
 		// as a taxonomy by WP.
 		if ( $this->sitepress->get_setting( 'sync_post_format' ) ) {
 			$_wp_post_format = get_post_format( $master_post_id );
-			set_post_format( $id, $_wp_post_format );
+			$_wp_post_format && set_post_format( $id, $_wp_post_format );
 		}
 		if ( $this->sitepress->get_setting( 'sync_comments_on_duplicates' ) ) {
 			$this->duplicate_comments( $master_post_id, $id );
@@ -148,6 +164,11 @@ class WPML_Post_Duplication extends WPML_WPDB_And_SP_User {
 		$status_helper->set_update_status( $id, false );
 		do_action( 'icl_make_duplicate', $master_post_id, $lang, $post_array, $id );
 		clean_post_cache( $id );
+
+		// See WPML_Query_Parser::maybe_adjust_name_var() and WPML_Name_Query_Filter::get_single_slug_adjusted_IDs()
+		if ( function_exists( 'wp_cache_supports' ) && wp_cache_supports( 'flush_group' ) ) {
+			wp_cache_flush_group( 'WPML_Page_Name_Query_Filter' );
+		}
 
 		return $id;
 	}

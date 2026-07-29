@@ -22,7 +22,7 @@ use WPML\Core\Twig\Node\Expression\AssignNameExpression;
 class ForNode extends \WPML\Core\Twig\Node\Node
 {
     protected $loop;
-    public function __construct(\WPML\Core\Twig\Node\Expression\AssignNameExpression $keyTarget, \WPML\Core\Twig\Node\Expression\AssignNameExpression $valueTarget, \WPML\Core\Twig\Node\Expression\AbstractExpression $seq, \WPML\Core\Twig\Node\Expression\AbstractExpression $ifexpr = null, \WPML\Core\Twig_NodeInterface $body, \WPML\Core\Twig_NodeInterface $else = null, $lineno, $tag = null)
+    public function __construct(\WPML\Core\Twig\Node\Expression\AssignNameExpression $keyTarget, \WPML\Core\Twig\Node\Expression\AssignNameExpression $valueTarget, \WPML\Core\Twig\Node\Expression\AbstractExpression $seq, ?\WPML\Core\Twig\Node\Expression\AbstractExpression $ifexpr = null, ?\WPML\Core\Twig_NodeInterface $body = null, ?\WPML\Core\Twig_NodeInterface $else = null, $lineno = 0, $tag = null)
     {
         $body = new \WPML\Core\Twig\Node\Node([$body, $this->loop = new \WPML\Core\Twig\Node\ForLoopNode($lineno, $tag)]);
         if (null !== $ifexpr) {

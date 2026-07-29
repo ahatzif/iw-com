@@ -13,7 +13,7 @@ class WPML_Absolute_To_Permalinks {
 	/** @var AutoAdjustIds $auto_adjust_ids */
 	private $auto_adjust_ids;
 
-	public function __construct( SitePress $sitepress, AutoAdjustIds $auto_adjust_ids = null ) {
+	public function __construct( SitePress $sitepress, ?AutoAdjustIds $auto_adjust_ids = null ) {
 		$this->sitepress       = $sitepress;
 		$this->auto_adjust_ids = $auto_adjust_ids ?: new AutoAdjustIds( $sitepress );
 	}
@@ -30,10 +30,11 @@ class WPML_Absolute_To_Permalinks {
 
 		$home    = rtrim( $this->sitepress->get_wp_api()->get_option( 'home' ), '/' );
 		$parts   = parse_url( $home );
-		$abshome = $parts['scheme'] . '://' . $parts['host'];
+		$port    = isset( $parts['port'] ) ? ':' . $parts['port'] : '';
+		$abshome = $parts['scheme'] . '://' . $parts['host'] . $port;
 		$path    = isset( $parts['path'] ) ? ltrim( $parts['path'], '/' ) : '';
 		$tx_qvs  = join( '|', $this->taxonomies_query->get_query_vars() );
-		$reg_ex  = '@<a([^>]+)?href="((' . $abshome . ')?/' . $path . '/?(' . $active_langs_reg_ex . ')?\?(p|page_id|cat_ID|' . $tx_qvs . ')=([0-9a-z-]+))(#?[^"]*)"([^>]+)?>@i';
+        $reg_ex  = '@<a([^>]+)?href="((' . $abshome . ')?/' . $path . '/?(' . $active_langs_reg_ex . ')?/?\?(p|page_id|cat_ID|' . $tx_qvs . ')=([^"&#]+))(#?[^"]*)"([^>]+)?>@iu';
 		$text    = preg_replace_callback( $reg_ex, [ $this, 'show_permalinks_cb' ], $text );
 
 		return $text;
@@ -90,7 +91,7 @@ class WPML_Absolute_To_Permalinks {
 	private function get_fragment( $url, $parts ) {
 		$fragment = $parts->fragment;
 		$fragment = $this->remove_query_in_wrong_lang( $fragment );
-		if ( $fragment != '' ) {
+		if ( is_string( $fragment ) && $fragment != '' ) {
 			$fragment = str_replace( '&#038;', '&', $fragment );
 			$fragment = str_replace( '&amp;', '&', $fragment );
 			if ( $fragment[0] == '&' ) {
@@ -108,7 +109,7 @@ class WPML_Absolute_To_Permalinks {
 	}
 
 	private function remove_query_in_wrong_lang( $fragment ) {
-		if ( $fragment != '' ) {
+		if ( is_string( $fragment ) && $fragment != '' ) {
 			$fragment = str_replace( '&#038;', '&', $fragment );
 			$fragment = str_replace( '&amp;', '&', $fragment );
 			$start    = $fragment[0];

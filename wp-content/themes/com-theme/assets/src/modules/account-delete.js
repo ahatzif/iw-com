@@ -91,7 +91,7 @@ export default class extends module {
             if (!response.data?.success) {
                 this.showMessage(
                     response.data?.data?.message
-                    || 'Δεν ήταν δυνατή η διαγραφή του λογαριασμού.'
+                    || this.el.dataset.deleteError
                 );
                 return;
             }
@@ -105,7 +105,7 @@ export default class extends module {
         } catch (error) {
             this.showMessage(
                 error.response?.data?.data?.message
-                || 'Παρουσιάστηκε ένα σφάλμα. Παρακαλούμε δοκιμάστε ξανά.'
+                || this.el.dataset.genericError
             );
         } finally {
             this.submitButton.disabled = false;

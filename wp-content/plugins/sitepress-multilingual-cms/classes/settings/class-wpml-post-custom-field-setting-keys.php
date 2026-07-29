@@ -43,7 +43,9 @@ class WPML_Post_Custom_Field_Setting_Keys {
 			'_wpml_media_duplicate',
 			'wpml_media_processed',
 			'_wpml_media_featured',
-			'_thumbnail_id'
+			'_thumbnail_id',
+			\WPML\MediaTranslation\PostWithMediaFiles::COPIED_MEDIA_IDS_SETTING,
+			\WPML\MediaTranslation\PostWithMediaFiles::REFERENCED_MEDIA_IDS_SETTING,
 		);
 	}
 }

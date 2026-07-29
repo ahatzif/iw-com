@@ -1,5 +1,7 @@
 <?php
 
+use WPML\PB\TranslationJob\Groups;
+
 class WPML_Gutenberg_Strings_Registration {
 
 	/** @var WPML\PB\Gutenberg\StringsInBlock\StringsInBlock $strings_in_blocks */
@@ -26,6 +28,9 @@ class WPML_Gutenberg_Strings_Registration {
 	/** @var callable $set_link_translations */
 	private $set_link_translations;
 
+	/** @var int */
+	private $sequence = 0;
+
 	public function __construct(
 		WPML\PB\Gutenberg\StringsInBlock\StringsInBlock $strings_in_blocks,
 		WPML_ST_String_Factory $string_factory,
@@ -44,13 +49,15 @@ class WPML_Gutenberg_Strings_Registration {
 
 	/**
 	 * @param WP_Post $post
-	 * @param array $package_data
+	 * @param array   $package_data
 	 */
 	public function register_strings( WP_Post $post, $package_data ) {
 		do_action( 'wpml_start_string_package_registration', $package_data );
+		/* phpcs:ignore WordPress.NamingConventions.ValidHookName.NotLowercase */
 		do_action( 'wpml_start_GB_register_strings', $post, $package_data );
 
-		$this->leftover_strings = $original_strings = $this->string_translation->get_package_strings( $package_data );
+		$original_strings       = $this->string_translation->get_package_strings( $package_data );
+		$this->leftover_strings = $original_strings;
 		$this->string_location  = 1;
 
 		$this->register_blocks(
@@ -63,6 +70,7 @@ class WPML_Gutenberg_Strings_Registration {
 
 		$this->reuse_translations->find_and_reuse_translations( $original_strings, $current_strings, $this->leftover_strings );
 
+		/* phpcs:ignore WordPress.NamingConventions.ValidHookName.NotLowercase */
 		do_action( 'wpml_end_GB_register_strings', $post, $package_data );
 		do_action( 'wpml_delete_unused_package_strings', $package_data );
 	}
@@ -74,10 +82,14 @@ class WPML_Gutenberg_Strings_Registration {
 	public function register_strings_from_widget( array $blocks, array $package_data ) {
 		do_action( 'wpml_start_string_package_registration', $package_data );
 
-		$this->leftover_strings = $original_strings = $this->string_translation->get_package_strings( $package_data );
+		$original_strings       = $this->string_translation->get_package_strings( $package_data );
+		$this->leftover_strings = $original_strings;
 		$this->string_location  = 1;
 
-		$this->register_blocks( $blocks, $package_data, null );
+		foreach ( $blocks as $blockId => $block ) {
+			$block['id'] = $blockId;
+			$this->register_blocks( [ $block ], $package_data, null, [ 'block-' . $blockId ] );
+		}
 
 		$current_strings = $this->string_translation->get_package_strings( $package_data );
 
@@ -87,15 +99,31 @@ class WPML_Gutenberg_Strings_Registration {
 	}
 
 	/**
-	 * @param array $blocks
-	 * @param array $package_data
+	 * @param array    $blocks
+	 * @param array    $package_data
+	 * @param int|null $post_id
+	 * @param array    $crumbs
 	 */
-	private function register_blocks( array $blocks, array $package_data, $post_id ) {
+	private function register_blocks( array $blocks, array $package_data, $post_id, $crumbs = [] ) {
 
 		foreach ( $blocks as $block ) {
-
 			$block   = WPML_Gutenberg_Integration::sanitize_block( $block );
 			$strings = $this->strings_in_blocks->find( $block );
+
+			/**
+			 * Replace the sequence with the image id if we want a thumbnail preview in ATE.
+			 *
+			 * @param int   $sequence
+			 * @param mixed $block
+			 */
+			$sequence  = apply_filters( 'wpml_pb_replace_sequence_with_attachment_id', $this->sequence, $block );
+			$group     = $this->getGroupIdOfBlock( $block, $sequence );
+			$newCrumbs = $crumbs;
+			if ( ! $this->isLayoutBlock( $block ) ) {
+				$newCrumbs[] = $group;
+			}
+
+			++$this->sequence;
 
 			if ( empty( $strings ) ) {
 				if ( $post_id ) {
@@ -104,28 +132,24 @@ class WPML_Gutenberg_Strings_Registration {
 			} else {
 				foreach ( $strings as $string ) {
 
-					if( $post_id && apply_filters( 'wpml_pb_register_strings_in_content', false, $post_id, $string->value ) ) {
+					if ( $post_id && apply_filters( 'wpml_pb_register_strings_in_content', false, $post_id, $string->value ) ) {
 						continue;
 					}
 
-					if ( 'LINK' === $string->type && ! $this->translate_link_targets->is_internal_url( $string->value ) ) {
-						$string->type = 'LINE';
-					}
+					$groupLabel = Groups::buildGroupLabel( $newCrumbs, $string->name );
 
 					do_action(
 						'wpml_register_string',
 						$string->value,
 						$string->id,
 						$package_data,
-						$string->name,
+						$groupLabel,
 						$string->type
 					);
 
 					$this->update_string_location( $package_data, $string );
 
-					// phpcs:disable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 					if ( 'core/heading' === $block->blockName ) {
-						// phpcs:enable
 						$wrap_tag = (string) isset( $block->attrs['level'] ) ? $block->attrs['level'] : 2;
 						$wrap_tag = 'h' . $wrap_tag;
 						$this->update_wrap_tag( $package_data, $string, $wrap_tag );
@@ -140,10 +164,18 @@ class WPML_Gutenberg_Strings_Registration {
 				}
 			}
 
-			if ( isset( $block->innerBlocks ) ) {
-				$this->register_blocks( $block->innerBlocks, $package_data, $post_id );
+			if ( ! empty( $block->innerBlocks ) ) {
+				$this->register_blocks( $block->innerBlocks, $package_data, $post_id, $newCrumbs );
 			}
 		}
+	}
+
+	private function isLayoutBlock( WP_Block_Parser_Block $block ): bool {
+		return isset( $block->attrs['layout'] );
+	}
+
+	private function getGroupIdOfBlock( WP_Block_Parser_Block $block, int $sequence ): string {
+		return str_replace( '/', '-', $block->blockName ) . '-' . $sequence;
 	}
 
 	private function update_string_location( array $package_data, stdClass $string_data ) {
@@ -152,7 +184,7 @@ class WPML_Gutenberg_Strings_Registration {
 
 		if ( $string_id ) {
 			$string->set_location( $this->string_location );
-			$this->string_location++;
+			++$this->string_location;
 		}
 	}
 
@@ -173,7 +205,9 @@ class WPML_Gutenberg_Strings_Registration {
 		}
 	}
 
-	/** @var string $string_value */
+	/**
+	 * @param string $string_value
+	 */
 	private function remove_string_from_leftovers( $string_value ) {
 		$string_hash = $this->string_translation->get_string_hash( $string_value );
 

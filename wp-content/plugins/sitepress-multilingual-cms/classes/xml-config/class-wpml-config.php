@@ -1,9 +1,14 @@
 <?php
 
 use WPML\Settings\PostType\Automatic;
+use WPML\Utils\XmlTranslatableIds;
 
 class WPML_Config {
+
 	const PATH_TO_XSD = WPML_PLUGIN_PATH . '/res/xsd/wpml-config.xsd';
+
+	/** @var bool $has_run */
+	static $has_run = false;
 
 	static $wpml_config_files = array();
 	static $active_plugins    = array();
@@ -37,12 +42,20 @@ class WPML_Config {
 
 	static function load_config_run() {
 		global $sitepress;
+
+		if ( self::$has_run ) {
+			return;
+		}
+
 		self::load_config_pre_process();
 		self::load_plugins_wpml_config();
 		self::load_theme_wpml_config();
+		self::load_global_wpml_config();
 		self::parse_wpml_config_files();
 		self::load_config_post_process();
 		$sitepress->save_settings();
+
+		self::$has_run = true;
 	}
 
 	static function get_custom_fields_translation_settings( $translation_actions = array( 0 ) ) {
@@ -277,19 +290,33 @@ class WPML_Config {
 
 	}
 
+	private static function load_global_wpml_config() {
+		$notices_config = (string) get_option( WPML_Config_Update::OPTION_KEY_GLOBAL_NOTICES_CONFIG );
+
+		if ( $notices_config ) {
+			self::$wpml_config_files[] = (object) [
+				'type'               => 'global',
+				'config'             => icl_xml2array( $notices_config ),
+				'admin_text_context' => WPML_Config_Update::CONFIG_KEY_GLOBAL_NOTICES,
+			];
+		}
+	}
+
 	static function parse_wpml_config_files() {
 		$config_all['wpml-config'] = array(
-			'custom-fields'              => array(),
-			'custom-fields-texts'        => array(),
-			'custom-term-fields'         => array(),
-			'custom-types'               => array(),
-			'taxonomies'                 => array(),
-			'admin-texts'                => array(),
-			'language-switcher-settings' => array(),
-			'shortcodes'                 => array(),
-			'shortcode-list'             => array(),
-			'gutenberg-blocks'           => array(),
-			'built-with-page-builder'    => array(),
+			'custom-fields'                 => array(),
+			'custom-fields-texts'           => array(),
+			'custom-term-fields'            => array(),
+			'custom-types'                  => array(),
+			'taxonomies'                    => array(),
+			'admin-texts'                   => array(),
+			'language-switcher-settings'    => array(),
+			'shortcodes'                    => array(),
+			'shortcode-list'                => array(),
+			'gutenberg-blocks'              => array(),
+			'built-with-page-builder'       => array(),
+			'allow-translatable-job-fields' => array(),
+			'notices'                       => array(),
 		);
 
 		$config_all_updated = false;
@@ -388,6 +415,8 @@ class WPML_Config {
 			$wpml_config_all = self::parse_config_index( $wpml_config_all, $wpml_config, 'widget', 'beaver-builder-widgets' );
 			$wpml_config_all = self::parse_config_index( $wpml_config_all, $wpml_config, 'widget', 'cornerstone-widgets' );
 			$wpml_config_all = self::parse_config_index( $wpml_config_all, $wpml_config, 'widget', 'siteorigin-widgets' );
+			$wpml_config_all = self::parse_config_index( $wpml_config_all, $wpml_config, 'allow-translatable-job-field', 'allow-translatable-job-fields' );
+			$wpml_config_all = self::parse_config_index( $wpml_config_all, $wpml_config, 'notice', 'notices' );
 
 			// language-switcher-settings
 			if ( isset( $wpml_config['language-switcher-settings']['key'] ) ) {
@@ -422,7 +451,8 @@ class WPML_Config {
 		global $iclTranslationManagement;
 
 		$setting_factory = $iclTranslationManagement->settings_factory();
-		$import          = new WPML_Custom_Field_XML_Settings_Import( $setting_factory, $config['wpml-config'] );
+		$xml_object_ids  = new XmlTranslatableIds();
+		$import          = new WPML_Custom_Field_XML_Settings_Import( $setting_factory, $xml_object_ids, $config['wpml-config'] );
 		$import->run();
 	}
 

@@ -34,10 +34,11 @@ class WPML_Page_Name_Query_Filter extends WPML_Name_Query_Filter_Translated {
 
 		$is_page_for_posts = 'page' == get_option( 'show_on_front' ) && (int) $pid === (int) get_option( 'page_for_posts' );
 		if ( $is_page_for_posts ) {
-			$page_query->query_vars['post_status'] = 'publish';
+			$page_query->query_vars['post_status'] = [ 'publish', 'private' ];
+			$page_query->query_vars['perm']        = 'readable';
 			$page_query->query_vars['name']        = '';
 			$page_query->query_vars['page_id']     = 0;
-			$page_query->post_status               = 'publish';
+			$page_query->post_status               = [ 'publish', 'private' ];
 			$page_query->is_page                   = false;
 			$page_query->is_singular               = false;
 			$page_query->is_home                   = true;

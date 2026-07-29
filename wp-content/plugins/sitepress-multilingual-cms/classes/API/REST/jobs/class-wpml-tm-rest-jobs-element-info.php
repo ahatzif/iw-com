@@ -129,7 +129,7 @@ class WPML_TM_Rest_Jobs_Element_Info {
 		$generalType = substr(
 			$job->get_element_type(),
 			0,
-			strpos( $job->get_element_type(), '_' )
+			strpos( $job->get_element_type(), '_' ) ?: 0
 		);
 
 		switch ( $generalType ) {
@@ -151,13 +151,16 @@ class WPML_TM_Rest_Jobs_Element_Info {
 
 		return [
 			'value' => $job->get_element_type(),
-			'label' => $label,
+			'label' => apply_filters( 'wpml_tm_job_list_element_label_filter', $label, $job->get_element_type() ),
 		];
 	}
 
 	private function get_post_types() {
 		if ( $this->post_types === null ) {
-			$this->post_types = \WPML\API\PostTypes::getTranslatableWithInfo();
+			$this->post_types = apply_filters(
+				'wpml_tm_job_list_post_types_filter',
+				\WPML\API\PostTypes::getTranslatableWithInfo()
+			);
 		}
 
 		return $this->post_types;

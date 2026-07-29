@@ -6,6 +6,14 @@
     --mobile-page-padding: max(1.5rem, calc(100vw/13/2));
     --max-vw: 100vw;
     --vw: min(var(--max-vw),100vw);
+    --iw-cookiebot-banner-background-color: #8185be;
+    --iw-cookiebot-banner-text-color: #31312f;
+    --iw-cookiebot-banner-button-background-color: #173276;
+    --iw-cookiebot-banner-button-text-color: #fff;
+    --iw-cookiebot-popup-background-color: #8185be;
+    --iw-cookiebot-popup-text-color: #31312f;
+    --iw-cookiebot-popup-button-background-color: #173276;
+    --iw-cookiebot-popup-button-text-color: #fff;
 }
 
 .is-woocommerce-page, .page-loading-is-active{
@@ -133,7 +141,7 @@
 .datepicker-picker .datepicker-view{ @apply mx-auto w-[26.6rem] md:w-[39.4rem];}
 .datepicker .datepicker-header{ @apply mb-30; }
 .datepicker .days-of-week{ @apply mb-30; }
-.datepicker-picker .dow{ @apply text-H7 md:text-H6 uppercase; }
+.datepicker-picker .dow{ @apply text-H7 md:text-H6; }
 .datepicker-controls .view-switch{ @apply text-dark text-H5 md:text-H4 !h-auto !p-0;  font-weight: 400 !important;}
 .datepicker .datepicker-cell.next{ @apply !invisible;}
 .datepicker .datepicker-cell.prev{ @apply !invisible;}
@@ -158,7 +166,7 @@
 .small .datepicker-picker .datepicker-view{ @apply w-[26.6rem] md:w-[39.4rem];}
 .datepicker .datepicker-header{ @apply mb-30; }
 .datepicker .days-of-week{ @apply mb-30; }
-.small .datepicker-picker .dow{ @apply text-H7 md:text-H6 uppercase; }
+.small .datepicker-picker .dow{ @apply text-H7 md:text-H6; }
 .datepicker-controls .view-switch{ @apply text-dark text-H5 md:text-H4 !h-auto !p-0;  font-weight: 400 !important;}
 .datepicker .datepicker-cell.next{ @apply !invisible;}
 .datepicker .datepicker-cell.prev{ @apply !invisible;}
@@ -179,15 +187,77 @@
 
 body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 duration-[500ms]; }
 
+/* 404 concepts */
+@keyframes com-404-card-drift {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(1.5deg); }
+    50% { transform: translate3d(0, -0.8rem, 0) rotate(0.6deg); }
+}
+
+@keyframes com-404-sign-nudge {
+    0%, 100% { transform: rotate(-5deg) translateX(0); }
+    50% { transform: rotate(-3deg) translateX(-0.6rem); }
+}
+
+@keyframes com-404-dot-wander {
+    0%, 100% { transform: translateX(0); opacity: .35; }
+    50% { transform: translateX(-5rem); opacity: 1; }
+}
+
+.com-404__history-number {
+    -webkit-text-stroke: 1px rgba(235, 230, 214, .65);
+    text-stroke: 1px rgba(235, 230, 214, .65);
+}
+
+.com-404__history-image img {
+    transition: transform 1.2s cubic-bezier(.2, .7, .2, 1);
+}
+
+.com-404__history-image:hover img {
+    transform: scale(1.035);
+}
+
+.com-404__playful-card {
+    animation: com-404-card-drift 6s ease-in-out infinite;
+    transform-origin: 50% 55%;
+}
+
+.com-404__road-sign {
+    animation: com-404-sign-nudge 4s ease-in-out infinite;
+}
+
+.com-404__wandering-dot {
+    animation: com-404-dot-wander 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .com-404__playful-card,
+    .com-404__road-sign,
+    .com-404__wandering-dot {
+        animation: none;
+    }
+
+    .com-404__history-image img {
+        transition: none;
+    }
+}
+
 /* WooCommerce purchase flow */
+body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="content"] {
+    visibility: hidden;
+}
+
 .com-purchase-flow .woocommerce-notices-wrapper,
+.is-account-page .woocommerce-notices-wrapper,
 .com-checkout .woocommerce-NoticeGroup {
     width: 100%;
 }
 
 .com-purchase-flow .woocommerce-error,
 .com-purchase-flow .woocommerce-message,
-.com-purchase-flow .woocommerce-info {
+.com-purchase-flow .woocommerce-info,
+.is-account-page .woocommerce-error,
+.is-account-page .woocommerce-message,
+.is-account-page .woocommerce-info {
     margin: 0 0 2rem;
     padding: 1.5rem 2rem;
     border: 1px solid currentColor;
@@ -195,12 +265,50 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
     list-style: none;
     font-size: 1.4rem;
     line-height: 1.35;
+    outline: 0;
 }
 
-.com-purchase-flow .woocommerce-error {
+.com-purchase-flow .woocommerce-error,
+.is-account-page .woocommerce-error {
     color: #fff;
-    border-color: #ff8a82;
-    background: rgba(255, 15, 0, .16);
+    border-color: #c52828;
+    background: #c52828;
+}
+
+.com-purchase-flow .woocommerce-message,
+.is-account-page .woocommerce-message {
+    color: #fff;
+    border-color: #00741d;
+    background: #00741d;
+}
+
+.com-purchase-flow .woocommerce-info,
+.is-account-page .woocommerce-info {
+    color: #fff;
+    border-color: #173276;
+    background: #173276;
+}
+
+.com-purchase-flow .woocommerce-error a,
+.com-purchase-flow .woocommerce-message a,
+.com-purchase-flow .woocommerce-info a,
+.is-account-page .woocommerce-error a,
+.is-account-page .woocommerce-message a,
+.is-account-page .woocommerce-info a {
+    color: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: .3rem;
+}
+
+.com-purchase-flow .woocommerce-error::before,
+.com-purchase-flow .woocommerce-message::before,
+.com-purchase-flow .woocommerce-info::before,
+.is-account-page .woocommerce-error::before,
+.is-account-page .woocommerce-message::before,
+.is-account-page .woocommerce-info::before {
+    display: none !important;
+    content: none !important;
 }
 
 .com-checkout-fields__grid {
@@ -228,7 +336,6 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
     font-size: 1.2rem;
     font-weight: 400;
     line-height: 1;
-    text-transform: uppercase;
 }
 
 .com-checkout-field__label .required,
@@ -242,33 +349,42 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
     width: 100%;
 }
 
-.com-checkout-field__control,
-.com-checkout-field input.input-text,
-.com-checkout-field select {
+.com-checkout form.woocommerce-checkout .com-checkout-field__control,
+.com-checkout form.woocommerce-checkout .com-checkout-field input.input-text,
+.com-checkout form.woocommerce-checkout .com-checkout-field select {
     display: block;
     width: 100%;
-    height: 5.8rem;
-    padding: 0 2.5rem;
+    height: 5.6rem;
+    padding: 0 2rem;
     border: 1px solid #fff;
-    border-radius: 1rem;
+    border-radius: .8rem;
     background: transparent;
     color: #fff;
-    font-size: 1.8rem;
+    font-size: 2rem;
+    font-weight: 400;
     line-height: 1.2;
     box-shadow: none;
+    -webkit-text-fill-color: #fff;
 }
 
-.com-checkout-field input.input-text::placeholder {
-    color: rgba(255, 255, 255, .55);
+.com-checkout form.woocommerce-checkout .com-checkout-field input.input-text::placeholder {
+    color: #fff;
+    opacity: 1;
+    -webkit-text-fill-color: #fff;
 }
 
-.com-checkout-field select option {
-    color: #173276;
+.com-checkout form.woocommerce-checkout .com-checkout-field select option {
+    background: #173276;
+    color: #fff;
 }
 
-.com-checkout-field.woocommerce-invalid input.input-text,
-.com-checkout-field.woocommerce-invalid select {
-    border-color: #ff8a82;
+.com-checkout form.woocommerce-checkout .com-checkout-field.woocommerce-invalid input.input-text,
+.com-checkout form.woocommerce-checkout .com-checkout-field.woocommerce-invalid select,
+.com-checkout form.woocommerce-checkout .com-checkout-field.woocommerce-invalid .select2-selection,
+.com-checkout form.woocommerce-checkout .com-checkout-field.woocommerce-validated input.input-text,
+.com-checkout form.woocommerce-checkout .com-checkout-field.woocommerce-validated select,
+.com-checkout form.woocommerce-checkout .com-checkout-field.woocommerce-validated .select2-selection {
+    border-color: #fff !important;
 }
 
 .com-checkout-field .select2-container {
@@ -276,18 +392,24 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
 }
 
 .com-checkout-field .select2-container .select2-selection--single {
-    height: 5.8rem;
-    border: 1px solid #fff;
-    border-radius: 1rem;
+    height: 5.6rem;
+    border: 1px solid #fff !important;
+    border-radius: .8rem;
     background: transparent;
+    color: #fff;
 }
 
 .com-checkout-field .select2-container .select2-selection--single .select2-selection__rendered {
-    height: 5.8rem;
-    padding: 0 4.5rem 0 2.5rem;
+    height: 5.6rem;
+    padding: 0 4.5rem 0 2rem;
     color: #fff;
-    font-size: 1.8rem;
-    line-height: 5.8rem;
+    font-size: 2rem;
+    line-height: 5.6rem;
+}
+
+.com-checkout-field .select2-container .select2-selection--single .select2-selection__placeholder {
+    color: #fff;
+    opacity: 1;
 }
 
 .com-checkout-field .select2-container .select2-selection--single .select2-selection__arrow {
@@ -296,8 +418,226 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
     transform: translateY(-50%);
 }
 
+.com-checkout-field .select2-container .select2-selection--single .select2-selection__arrow b {
+    border-color: #fff transparent transparent !important;
+    filter: brightness(0) invert(1);
+}
+
+.com-checkout-field .select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-color: transparent transparent #fff !important;
+}
+
+.com-checkout-field .select2-container--open .select2-selection--single {
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.woocommerce-checkout .select2-dropdown {
+    overflow: hidden;
+    border: 1px solid #fff;
+    border-top: 0;
+    border-radius: 0 0 .8rem .8rem;
+    background: #173276;
+    color: #fff;
+}
+
+.woocommerce-checkout .select2-search--dropdown {
+    padding: .8rem;
+}
+
+.woocommerce-checkout .select2-search--dropdown .select2-search__field {
+    height: 4rem;
+    padding: 0 1.2rem;
+    border: 1px solid #fff;
+    border-radius: .5rem;
+    background: transparent;
+    color: #fff;
+    font-size: 1.4rem;
+}
+
+.woocommerce-checkout .select2-search--dropdown .select2-search__field::placeholder {
+    color: #fff;
+    opacity: 1;
+}
+
+.woocommerce-checkout .select2-results__option {
+    padding: .9rem 1.5rem;
+    color: #fff;
+    font-size: 1.4rem;
+    line-height: 1.25;
+}
+
+.woocommerce-checkout .select2-results__option[aria-selected="true"] {
+    background: rgba(255, 255, 255, .15);
+}
+
+.woocommerce-checkout .select2-results__option--highlighted[aria-selected] {
+    background: rgba(255, 255, 255, .1);
+    color: #fff;
+}
+
 .com-checkout-field .optional {
     display: none;
+}
+
+.com-checkout-invoice-field {
+    min-width: 0;
+}
+
+.com-tax-number-lookup {
+    grid-column: 1 / -1;
+    min-width: 0;
+}
+
+.com-tax-number-lookup__control {
+    position: relative;
+}
+
+.com-tax-number-lookup__control input[name="billing_tax_number"] {
+    padding-right: 6rem !important;
+}
+
+.com-tax-number-lookup__search {
+    position: absolute;
+    right: 1.1rem;
+    bottom: 1.1rem;
+    display: inline-flex;
+    width: 3.4rem;
+    height: 3.4rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid currentColor;
+    border-radius: 9999px;
+    background: transparent;
+    color: inherit;
+    line-height: 1;
+    cursor: pointer;
+    transition: opacity .2s ease, background-color .2s ease, color .2s ease;
+}
+
+.com-tax-number-lookup__search span {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.com-tax-number-lookup__search svg {
+    display: block;
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.com-tax-number-lookup__search:hover {
+    opacity: .7;
+}
+
+.com-tax-number-lookup__search[hidden] {
+    display: none;
+}
+
+.com-tax-number-lookup__search:disabled {
+    cursor: wait;
+    opacity: .55;
+}
+
+.com-tax-number-lookup.is-loading .com-tax-number-lookup__search span {
+    animation: com-tax-lookup-spin .8s linear infinite;
+}
+
+.com-tax-number-lookup__description,
+.com-tax-number-lookup__error {
+    margin: .8rem 0 0;
+    font-size: 1.15rem;
+    line-height: 1.35;
+}
+
+.com-tax-number-lookup__error[hidden] {
+    display: none;
+}
+
+.com-tax-number-lookup__preview {
+    display: none;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-top: 1.2rem;
+    padding: 1.5rem;
+    border: 1px solid currentColor;
+    border-radius: .8rem;
+}
+
+.com-tax-number-lookup.is-verified .com-tax-number-lookup__preview {
+    display: flex;
+}
+
+.com-tax-number-lookup__preview strong,
+.com-tax-number-lookup__preview span {
+    display: block;
+}
+
+.com-tax-number-lookup__preview strong {
+    margin-bottom: .5rem;
+    font-size: 1.5rem;
+    line-height: 1.2;
+}
+
+.com-tax-number-lookup__preview span {
+    font-size: 1.2rem;
+    line-height: 1.4;
+}
+
+.com-tax-number-lookup__clear {
+    display: inline-flex;
+    width: 2.6rem;
+    height: 2.6rem;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid currentColor;
+    border-radius: 9999px;
+    background: transparent;
+    color: inherit;
+    font-size: 1.8rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.com-tax-number-lookup--checkout {
+    color: #fff;
+}
+
+.com-tax-number-lookup--checkout .com-tax-number-lookup__description {
+    color: #fff;
+}
+
+.com-tax-number-lookup--checkout .com-tax-number-lookup__error {
+    color: #fff;
+    font-weight: 600;
+}
+
+.com-checkout form.is-greek-invoice #billing_state_field,
+.com-checkout form.is-greek-invoice #billing_address_1_field,
+.com-checkout form.is-greek-invoice #billing_address_2_field,
+.com-checkout form.is-greek-invoice #billing_postcode_field,
+.com-checkout form.is-greek-invoice #billing_city_field,
+.com-checkout form.is-greek-invoice [data-invoice-field="billing_company_name"],
+.com-checkout .com-checkout-invoice-fields [data-invoice-field="billing_company_profession"],
+.com-checkout .com-checkout-invoice-fields [data-invoice-field="billing_tax_office"] {
+    display: none !important;
+}
+
+@keyframes com-tax-lookup-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .com-checkout-radio {
@@ -331,16 +671,74 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
     background: #8185be;
 }
 
-.com-checkout .woocommerce-checkout-payment {
+.com-checkout-button,
+.com-checkout #place_order {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 5.6rem;
+    padding: 1rem 3rem;
+    border: 1px solid #fff;
+    border-radius: .8rem;
+    background: transparent;
+    color: #ebe6d6;
+    font-size: 1.6rem;
+    cursor: pointer;
+    transition: background-color 200ms ease, color 200ms ease;
+}
+
+.com-checkout-button:hover,
+.com-checkout #place_order:hover {
+    background: #fff;
+    color: #173276;
+}
+
+@keyframes com-checkout-button-loading {
+    to { transform: rotate(360deg); }
+}
+
+.com-checkout form.woocommerce-checkout.is-updating,
+.com-checkout form.woocommerce-checkout.is-processing,
+.com-checkout form.woocommerce-checkout.is-updating *,
+.com-checkout form.woocommerce-checkout.is-processing * {
+    cursor: not-allowed !important;
+}
+
+.com-checkout #place_order:disabled {
+    cursor: wait;
+    opacity: .65;
+}
+
+.com-checkout #place_order.is-loading::before {
+    content: "";
+    width: 1.6rem;
+    height: 1.6rem;
+    margin-right: 1rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 9999px;
+    animation: com-checkout-button-loading .7s linear infinite;
+}
+
+.com-checkout form.woocommerce-checkout.is-updating .blockUI.blockOverlay,
+.com-checkout form.woocommerce-checkout.is-processing .blockUI.blockOverlay {
+    display: none !important;
+}
+
+.com-checkout .woocommerce-checkout #payment {
+    border-radius: 0;
+    background: transparent;
     color: #fff;
 }
 
-.com-checkout .wc_payment_methods {
+.com-checkout .woocommerce-checkout #payment ul.payment_methods {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
     margin: 0;
     padding: 0;
+    border: 0;
     list-style: none;
 }
 
@@ -351,7 +749,17 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
 }
 
 .com-checkout .wc_payment_method > input {
-    margin-right: 1rem;
+    width: 1.7rem;
+    height: 1.7rem;
+    margin: 0 1rem 0 0;
+    border: 1px solid #fff;
+    border-radius: 9999px;
+    background: transparent;
+    vertical-align: -.2rem;
+}
+
+.com-checkout .wc_payment_method > input:checked {
+    background: radial-gradient(circle, #8185be 0 35%, transparent 39%);
 }
 
 .com-checkout .wc_payment_method > label {
@@ -369,8 +777,20 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
     margin: 0;
 }
 
-.com-checkout .form-row.place-order {
+.com-checkout #payment .payment_method_cardlink_payment_gateway_woocommerce .payment_box {
+    padding: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 1.15rem;
+}
+
+.com-checkout #payment .payment_method_cardlink_payment_gateway_woocommerce .payment_box::before {
+    display: none;
+}
+
+.com-checkout .woocommerce-checkout #payment div.form-row.place-order {
     margin: 3rem 0 0;
+    padding: 0;
 }
 
 .com-checkout .woocommerce-terms-and-conditions-wrapper {
@@ -381,26 +801,6 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
 
 .com-checkout .woocommerce-terms-and-conditions-wrapper a {
     text-decoration: underline;
-}
-
-.com-checkout #place_order {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    min-height: 5.6rem;
-    padding: 1rem 3rem;
-    border: 1px solid #fff;
-    border-radius: 1rem;
-    background: #fff;
-    color: #173276;
-    font-size: 1.6rem;
-    cursor: pointer;
-    transition: background-color 200ms ease, color 200ms ease;
-}
-
-.com-checkout #place_order:hover {
-    background: #ebe6d6;
 }
 
 .com-checkout .blockUI.blockOverlay {
@@ -560,26 +960,6 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
     @apply hidden;
 }
 
-.account-page__content .woocommerce-error,
-.account-page__content .woocommerce-message,
-.account-page__content .woocommerce-info {
-    @apply mb-25 list-none rounded-[.8rem] border border-blue/20 bg-ochre-light px-20 py-15 text-[1.3rem] leading-[1.45];
-}
-
-.account-page__content .woocommerce-error {
-    @apply border-error/30 text-error;
-}
-
-.account-page__content .woocommerce-message {
-    @apply border-validated/30 text-validated;
-}
-
-.account-page__content .woocommerce-error a,
-.account-page__content .woocommerce-message a,
-.account-page__content .woocommerce-info a {
-    @apply font-bold underline underline-offset-4;
-}
-
 .account-form .form-row,
 .account-page__content .woocommerce-form-row {
     @apply mb-20 flex min-w-0 flex-col gap-10;
@@ -587,7 +967,7 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
 
 .account-form label,
 .account-page__content .woocommerce-form-row label {
-    @apply text-[1rem] font-medium uppercase tracking-[.1em] text-blue/70;
+    @apply text-[1rem] font-medium tracking-[.1em] text-blue/70;
 }
 
 .account-form input[type="text"],
@@ -632,6 +1012,227 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
     @apply !right-15 !top-1/2 !-translate-y-1/2;
 }
 
+.account-address-form {
+    @apply mt-40;
+}
+
+.account-address-form__section {
+    @apply m-0 border-0 p-0;
+}
+
+.account-address-form__section + .account-address-form__section {
+    @apply mt-40 border-t border-blue/15 pt-40;
+}
+
+.account-address-form__section-title {
+    @apply mb-25 block text-[1.2rem] font-bold tracking-[.12em] text-blue/60;
+}
+
+.account-address-form__grid {
+    @apply grid gap-x-20 gap-y-25 sm:grid-cols-2;
+}
+
+.account-address-form .account-address-field {
+    @apply m-0 flex w-full min-w-0 flex-col gap-10;
+}
+
+.account-address-form .account-address-field__row {
+    display: block !important;
+    float: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+.account-address-form .account-address-field--wide {
+    @apply sm:col-span-2;
+}
+
+.account-address-form .account-address-field label {
+    @apply text-[1.1rem] font-medium tracking-[.08em] text-blue/70;
+}
+
+.account-address-form .account-address-field__required-marker {
+    @apply hidden;
+}
+
+.account-address-form .account-address-field:has(.account-address-field__row.validate-required) .account-address-field__required-marker {
+    @apply inline;
+}
+
+.account-address-form .account-address-field .woocommerce-input-wrapper {
+    @apply block w-full;
+}
+
+.account-address-form .account-address-field input[type="text"],
+.account-address-form .account-address-field input[type="email"],
+.account-address-form .account-address-field input[type="tel"],
+.account-address-form .account-address-field input[type="number"],
+.account-address-form .account-address-field select,
+.account-address-form .account-address-field textarea,
+.account-address-form .account-address-field .select2-selection {
+    @apply min-h-[5.6rem] w-full rounded-[.8rem] border border-blue/45 bg-transparent px-20 text-[1.8rem] font-normal text-blue outline-none transition-[border-color,box-shadow,background-color];
+}
+
+.account-address-form .account-address-field input::placeholder,
+.account-address-form .account-address-field textarea::placeholder {
+    @apply text-transparent opacity-100;
+}
+
+.account-address-form .account-address-field input:focus,
+.account-address-form .account-address-field select:focus,
+.account-address-form .account-address-field textarea:focus,
+.account-address-form .account-address-field .select2-container--open .select2-selection {
+    @apply border-blue shadow-[0_0_0_1px_rgba(30,60,126,.2)];
+}
+
+.account-address-form .account-address-field .select2-container {
+    @apply !block !w-full;
+}
+
+.account-address-form .account-address-field .select2-selection {
+    @apply !flex !h-[5.6rem] !items-center;
+}
+
+.account-address-form .account-address-field .select2-selection__rendered {
+    @apply !w-full !p-0 !pr-30 !text-[1.8rem] !leading-none !text-blue;
+}
+
+.account-address-form .account-address-field .select2-selection__placeholder {
+    @apply !text-blue/35;
+}
+
+.account-address-form [data-address-field$="_state"] .select2-selection__placeholder,
+.account-address-form [data-address-field$="_country"] .select2-selection__placeholder {
+    font-size: 0 !important;
+}
+
+.account-address-form [data-address-field$="_state"] .select2-selection__placeholder::after,
+.account-address-form [data-address-field$="_country"] .select2-selection__placeholder::after {
+    @apply text-[1.8rem] text-blue/35;
+}
+
+.account-address-form [data-address-field$="_state"] .select2-selection__placeholder::after {
+    content: "Επιλέξτε περιφέρεια";
+}
+
+.account-address-form [data-address-field$="_country"] .select2-selection__placeholder::after {
+    content: "Επιλέξτε χώρα / περιοχή";
+}
+
+.account-address-form .account-address-field .select2-selection__arrow {
+    @apply !right-15 !top-1/2 !-translate-y-1/2;
+}
+
+.account-address-form .account-address-field .optional {
+    @apply hidden;
+}
+
+.account-address-form .account-address-field.woocommerce-invalid input,
+.account-address-form .account-address-field.woocommerce-invalid select,
+.account-address-form .account-address-field.woocommerce-invalid .select2-selection {
+    @apply border-error;
+}
+
+.account-address-form__radio-group {
+    @apply flex flex-wrap gap-x-40 gap-y-15;
+}
+
+.account-address-radio {
+    @apply relative inline-flex cursor-pointer items-center gap-12 text-[1.8rem] leading-none text-blue;
+}
+
+.account-address-radio input {
+    @apply absolute size-px overflow-hidden opacity-0;
+}
+
+.account-address-radio span {
+    @apply block size-[2.2rem] shrink-0 rounded-full border border-blue bg-white transition-[box-shadow,background-color];
+}
+
+.account-address-radio input:checked + span {
+    @apply bg-blue shadow-[inset_0_0_0_5px_white];
+}
+
+.account-address-radio input:focus-visible + span {
+    @apply outline outline-2 outline-offset-2 outline-blue;
+}
+
+.account-address-form__invoice-fields {
+    @apply hidden;
+}
+
+.account-address-form:has(input[name="billing_receipt_type"][value="invoice"]:checked) .account-address-form__invoice-fields {
+    @apply block;
+}
+
+.com-tax-number-lookup--account {
+    @apply text-blue;
+}
+
+.com-tax-number-lookup--account .com-tax-number-lookup__control {
+    @apply w-full;
+}
+
+.com-tax-number-lookup--account .com-tax-number-lookup__search {
+    @apply border-blue bg-blue text-white;
+}
+
+.com-tax-number-lookup--account .com-tax-number-lookup__description {
+    @apply text-blue/60;
+}
+
+.com-tax-number-lookup--account .com-tax-number-lookup__error {
+    @apply font-semibold text-error;
+}
+
+.com-tax-number-lookup--account .com-tax-number-lookup__preview {
+    @apply border-blue/30 bg-blue/[.04];
+}
+
+.account-address-form.is-greek-invoice [data-address-field="billing_state"],
+.account-address-form.is-greek-invoice [data-address-field="billing_address_1"],
+.account-address-form.is-greek-invoice [data-address-field="billing_address_2"],
+.account-address-form.is-greek-invoice [data-address-field="billing_postcode"],
+.account-address-form.is-greek-invoice [data-address-field="billing_city"],
+.account-address-form.is-greek-invoice [data-invoice-field="billing_company_name"],
+.account-address-form [data-invoice-field="billing_company_profession"],
+.account-address-form [data-invoice-field="billing_tax_office"] {
+    @apply hidden;
+}
+
+.account-address-form__actions {
+    @apply mt-45 flex flex-wrap items-center justify-between gap-20 border-t border-blue/15 pt-30;
+}
+
+.account-address-form__cancel {
+    @apply text-[1.3rem] font-medium underline underline-offset-4 transition-opacity hover:opacity-60;
+}
+
+.account-address-form__submit {
+    @apply inline-flex min-h-[5.6rem] cursor-pointer items-center justify-center rounded-[.8rem] border border-blue bg-blue px-30 text-[1.5rem] font-bold text-white transition-colors hover:bg-transparent hover:text-blue;
+}
+
+.woocommerce-account .select2-dropdown {
+    @apply overflow-hidden rounded-[.8rem] border-blue bg-white text-blue shadow-[0_1.2rem_3rem_rgba(30,60,126,.16)];
+}
+
+.woocommerce-account .select2-search--dropdown {
+    @apply p-8;
+}
+
+.woocommerce-account .select2-search--dropdown .select2-search__field {
+    @apply min-h-[3.8rem] rounded-[.6rem] border border-blue/35 px-10 text-[1.3rem] outline-none focus:border-blue;
+}
+
+.woocommerce-account .select2-results__option {
+    @apply px-12 py-8 text-[1.35rem] leading-[1.25];
+}
+
+.woocommerce-account .select2-results__option--highlighted[aria-selected],
+.woocommerce-account .select2-results__option[aria-selected="true"] {
+    @apply bg-blue text-white;
+}
+
 .account-page__content .required {
     @apply text-error;
 }
@@ -654,11 +1255,10 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
 }
 
 .account-page__content table.shop_table thead th {
-    @apply bg-ochre-light text-[1rem] font-bold uppercase tracking-[.08em] text-blue/60;
+    @apply bg-ochre-light text-[1rem] font-bold tracking-[.08em] text-blue/60;
 }
 
 .account-page__content table.shop_table .button,
-.account-page__content .woocommerce-Payment .button,
 .account-page__content > .button {
     @apply inline-flex min-h-40 items-center justify-center rounded-[.6rem] border border-blue bg-blue px-15 text-[1.2rem] font-bold text-white transition-colors hover:bg-transparent hover:text-blue;
 }
@@ -678,23 +1278,31 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
     @apply rounded-[1rem] bg-ochre-light p-20 text-[1.4rem] not-italic leading-[1.5];
 }
 
-.account-page__content .woocommerce-PaymentMethods {
-    @apply mb-25 list-none space-y-15 p-0;
-}
-
-.account-page__content .woocommerce-PaymentMethod {
-    @apply rounded-[.8rem] border border-blue/15 p-15;
-}
-
-.account-page__content .woocommerce-PaymentMethod label {
-    @apply flex items-center gap-10 text-[1.4rem] font-bold;
-}
-
-.account-page__content .woocommerce-PaymentBox {
-    @apply mt-15 rounded-[.6rem] bg-ochre-light p-15 text-[1.3rem];
-}
-
 @media (max-width: 767px) {
+    .account-address-form {
+        @apply mt-30;
+    }
+
+    .account-address-form__section + .account-address-form__section {
+        @apply mt-30 pt-30;
+    }
+
+    .account-address-form__grid {
+        @apply grid-cols-1;
+    }
+
+    .account-address-form__actions {
+        @apply flex-col-reverse items-stretch;
+    }
+
+    .account-address-form__cancel {
+        @apply self-center;
+    }
+
+    .account-address-form__submit {
+        @apply w-full;
+    }
+
     .account-page__content table.shop_table_responsive thead {
         @apply hidden;
     }

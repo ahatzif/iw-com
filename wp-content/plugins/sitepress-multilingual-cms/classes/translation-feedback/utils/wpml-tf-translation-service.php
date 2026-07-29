@@ -12,9 +12,9 @@ class WPML_TF_Translation_Service {
 	/**
 	 * WPML_TF_Translation_Service constructor.
 	 *
-	 * @param WPML_TP_Client_Factory $tp_client_factory
+	 * @param WPML_TP_Client_Factory|null $tp_client_factory
 	 */
-	public function __construct( WPML_TP_Client_Factory $tp_client_factory = null ) {
+	public function __construct( ?WPML_TP_Client_Factory $tp_client_factory = null ) {
 		$this->tp_client_factory = $tp_client_factory;
 	}
 

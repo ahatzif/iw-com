@@ -8,6 +8,11 @@ use WPML\PB\SiteOrigin\Modules\ModuleWithItemsFromConfig;
 class TranslatableNodes implements \IWPML_Page_Builders_Translatable_Nodes {
 
 	const SETTINGS_FIELD = 'panels_info';
+	const CHILDREN_FIELD = 'panels_data';
+
+	const WRAPPING_MODULES = [
+		'SiteOrigin_Panels_Widgets_Layout',
+	];
 
 	/**
 	 * Nodes to translate.
@@ -62,27 +67,27 @@ class TranslatableNodes implements \IWPML_Page_Builders_Translatable_Nodes {
 	 *
 	 * @param string          $node_id  Node id.
 	 * @param array           $settings Node settings.
-	 * @param \WPML_PB_String $string   String object.
+	 * @param \WPML_PB_String $pbString   String object.
 	 *
 	 * @return mixed
 	 */
-	public function update( $node_id, $settings, \WPML_PB_String $string ) {
+	public function update( $node_id, $settings, \WPML_PB_String $pbString ) {
 		foreach ( $this->getTranslatableNodes() as $node_data ) {
 			if ( $this->conditions_ok( $node_data, $settings ) ) {
 				foreach ( $node_data['fields'] as $field ) {
 					$field_key = $field['field'];
-					if ( $this->get_string_name( $node_id, $field, $settings ) === $string->get_name() ) {
+					if ( $this->get_string_name( $node_id, $field, $settings ) === $pbString->get_name() ) {
 						$pathInFlatField   = self::get_partial_path( $field_key );
 						$stringInFlatField = Obj::path( $pathInFlatField, $settings );
 
 						if ( is_string( $stringInFlatField ) ) {
-							$settings = Obj::assocPath( $pathInFlatField, $string->get_value(), $settings );
+							$settings = Obj::assocPath( $pathInFlatField, $pbString->get_value(), $settings );
 						}
 					}
 				}
 
 				foreach ( $this->get_integration_instances( $node_data ) as $node ) {
-					list( $key, $item ) = $node->update( $node_id, $settings, $string );
+					list( $key, $item ) = $node->update( $node_id, $settings, $pbString );
 					if ( $item ) {
 						if ( strpos( $key, '>' ) ) {
 							$pathInFlatField = $node->get_field_path( $key );
@@ -122,7 +127,7 @@ class TranslatableNodes implements \IWPML_Page_Builders_Translatable_Nodes {
 			}
 		}
 
-		return array_filter( $instances );
+		return $instances;
 	}
 
 	/**
@@ -182,4 +187,13 @@ class TranslatableNodes implements \IWPML_Page_Builders_Translatable_Nodes {
 		return apply_filters( 'wpml_siteorigin_modules_to_translate', [] );
 	}
 
+	/**
+	 * @param array $module
+	 *
+	 * @return bool
+	 */
+	public static function isWrappingModule( $module ) {
+		return isset( $module[ self::CHILDREN_FIELD ] ) &&
+			in_array( Obj::path( [ self::SETTINGS_FIELD, 'class' ], $module ), self::WRAPPING_MODULES, true );
+	}
 }

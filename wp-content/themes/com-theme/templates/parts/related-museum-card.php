@@ -21,7 +21,13 @@ $museum = wp_parse_args( $args['museum'] ?? [], [
 	</div>
 	<a href="<?php echo esc_url( $museum['url'] ); ?>" class="aspect-[calc(310/220)] w-full overflow-hidden rounded-[1rem]" aria-label="<?php echo esc_attr( $museum['title'] ); ?>">
 		<?php if ( $museum['image_id'] ) : ?>
-			<?php echo wp_get_attachment_image( $museum['image_id'], 'large', false, [ 'class' => 'size-full object-cover transition-transform duration-500 hover:scale-105', 'alt' => $museum['title'] ] ); ?>
+			<?php get_template_part( 'templates/parts/image', null, [
+				'id'       => $museum['image_id'],
+				'size'     => 'large',
+				'classes'  => 'size-full object-cover transition-transform duration-500 hover:scale-105',
+				'alt'      => $museum['title'],
+				'parallax' => false,
+			] ); ?>
 		<?php endif; ?>
 	</a>
 </article>

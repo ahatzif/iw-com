@@ -4,34 +4,30 @@
       "messages": {
          "": {
             "domain": "messages",
-            "lang": "en"
+            "plural_forms": "nplurals=2; plural=(n != 1);",
+            "lang": "sv_SE"
          },
-         "You can choose which posts to translate from the <strong>Translation Management Dashboard</strong>.": [
-            "Du kan välja vilka inlägg som ska översättas från <strong>instrumentpanelen Översättningshantering</strong>."
-         ],
-         "Yes, translate all of these posts automatically": [
-            "Ja, översätt alla inlägg automatiskt"
-         ],
-         "No, I want to translate some of these posts, but not all": [
-            "Nej, jag vill översätta några av de här inläggen, men inte alla"
-         ],
          "You must use the Advanced Translation Editor if you want to translate your content automatically.": [
             "Du måste använda Advanced Translation Editor om du vill översätta ditt innehåll automatiskt."
          ],
          "Synchronize translators and translation managers with ATE": [
-            "Synkronisera översättare och översättningshanterare med ATE"
+            "Synkronisera översättare och översättningsansvariga med ATE"
          ],
          "Please try again in a few minutes. If the problem persists, please contact %sWPML support%s.": [
-            "Försök igen om några minuter. Om problemet kvarstår, vänligen kontakta %sWPML-support%s."
+            "Försök igen om några minuter. Om problemet kvarstår, kontakta %sWPML-support%s."
          ],
          "Save": [
             "Spara"
          ],
          "Please confirm this translation setting": [
-            "Bekräfta denna översättningsinställning"
+            "Vänligen bekräfta denna översättningsinställning"
          ],
-         "Your site is set to translate all content automatically. When you make <PostTypesNames /> translatable, WPML will automatically translate the <NumberOfItems /> existing items.": [
-            "Webbplatsen är inställd på att översätta allt innehåll automatiskt. När du gör <PostTypesNames /> översättningsbart kommer WPML automatiskt att översätta befintliga objekt i <NumberOfItems />."
+         "Your site is set to translate all content automatically. When you make <PostTypesNames /> translatable, WPML will automatically translate the %1$d existing item.": [
+            "Din webbplats är inställd på att översätta allt innehåll automatiskt. När du gör <PostTypesNames /> översättningsbara kommer WPML automatiskt att översätta det %1$d befintliga objektet.",
+            "Din webbplats är inställd på att översätta allt innehåll automatiskt. När du gör <PostTypesNames /> översättningsbara kommer WPML automatiskt att översätta de %1$d befintliga objekten."
+         ],
+         "Your site is set to translate all content automatically. When you make <PostTypesNames /> translatable, WPML will automatically translate all future content.": [
+            "Din webbplats är inställd på att översätta allt innehåll automatiskt. När du gör <PostTypesNames /> översättningsbara kommer WPML automatiskt att översätta allt framtida innehåll."
          ],
          "Are you OK with paying for this?": [
             "Är du okej med att betala för detta?"
@@ -40,7 +36,16 @@
             "Avbryt"
          ],
          "Make translatable": [
-            "Gör översättningsbara"
+            "Gör översättningsbar"
+         ],
+         "Yes, translate <b>existing</b> and <b>future</b> content automatically": [
+            "Ja, översätt <b>befintligt</b> och <b>framtida</b> innehåll automatiskt"
+         ],
+         "Yes, but only translate <b>future</b> content automatically": [
+            "Ja, men översätt endast <b>framtida</b> innehåll automatiskt"
+         ],
+         "Yes, translate <b>future</b> content automatically": [
+            "Ja, översätt <b>framtida</b> innehåll automatiskt"
          ]
       }
    }

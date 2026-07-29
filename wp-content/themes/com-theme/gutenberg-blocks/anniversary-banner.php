@@ -17,7 +17,7 @@ $section_title_id = wp_unique_id( 'anniversary-title-' );
 		<div class="flex w-full flex-col gap-20 md:w-[48.3rem]">
 			<div class="flex flex-col gap-10">
 				<?php if ( $eyebrow ) : ?>
-					<p class="text-[1rem] font-medium uppercase leading-none tracking-[.18em]"><?php echo esc_html( $eyebrow ); ?></p>
+					<p class="text-[1rem] font-medium leading-none tracking-[.18em]"><?php echo esc_html( com\theme::remove_accents( $eyebrow ) ); ?></p>
 				<?php endif; ?>
 				<?php if ( $title ) : ?>
 					<h2 id="<?php echo esc_attr( $section_title_id ); ?>" class="text-[3.6rem] font-light leading-none"><?php echo wp_kses_post( $title ); ?></h2>

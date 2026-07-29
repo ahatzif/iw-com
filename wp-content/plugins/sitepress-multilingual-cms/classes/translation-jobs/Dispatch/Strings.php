@@ -28,7 +28,11 @@ class Strings {
 		$translators = array_fill_keys( $targetLanguages, User::getCurrentId() );
 
 		$batch = $buildBatch( $stringsForTranslation, $sourceLanguage, $translators );
-		$batch && $sendBatch( $messages, $batch );
+		if ( $batch ) {
+			$batch->setTranslationMode( 'auto' );
+			$batch->setHowToHandleExisting( \WPML_TM_Translation_Batch::HANDLE_EXISTING_OVERRIDE );
+			$sendBatch( $messages, $batch );
+		}
 	}
 
 
@@ -56,6 +60,7 @@ class Strings {
 
 		$messages->showForStrings( $ignoredStringsMessages, 'information' );
 
+		/** @phpstan-ignore-next-line */
 		return array_filter( $stringsToTranslation, Lst::length() );
 	}
 }

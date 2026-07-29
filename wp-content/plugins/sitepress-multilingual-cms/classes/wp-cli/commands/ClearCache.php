@@ -26,6 +26,7 @@ class ClearCache implements ICommand {
 	public function __invoke( $args, $assoc_args ) {
 		icl_cache_clear();
 		$this->cache_directory->remove();
+		\WPML_Translation_Roles_Records::delete_cache();
 
 		\WP_CLI::success( 'WPML cache cleared' );
 	}

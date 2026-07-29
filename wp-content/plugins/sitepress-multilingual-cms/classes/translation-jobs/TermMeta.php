@@ -5,6 +5,7 @@ namespace WPML\TM\Jobs;
 use WPML\FP\Fns;
 use WPML\FP\Obj;
 use WPML\FP\Str;
+use WPML\Translation\TranslationElements\FieldCompression;
 use function WPML\FP\pipe;
 
 class TermMeta {
@@ -25,7 +26,7 @@ class TermMeta {
 
 		$description = $wpdb->get_var( $wpdb->prepare( $sql, $iclTranslateJobId, $termTaxonomyId ) );
 
-		return $description ? base64_decode( $description ) : '';
+		return $description ? FieldCompression::decompress( $description ) : '';
 	}
 
 	/**
@@ -81,7 +82,11 @@ class TermMeta {
 
 		$rowset = $wpdb->get_results( $wpdb->prepare( $sql, $iclTranslateJobId, $termTaxonomyId ) );
 
-		return Fns::map( Obj::over( Obj::lensProp( 'field_data_translated' ), 'base64_decode' ), $rowset );
+		foreach ( $rowset as $row ) {
+			$row->field_data_translated = FieldCompression::decompress( $row->field_data_translated );
+		}
+
+		return $rowset;
 	}
 
 	/**
@@ -164,6 +169,7 @@ class TermMeta {
 				$carry[ $fieldName ] = [];
 			}
 
+			/** @var string $options */
 			$options = $extractOptions( $row, $fieldName );
 
 			/**
@@ -178,7 +184,7 @@ class TermMeta {
 			 *
 			 * If there are already data under wpcf-jakub-checkboxes-13 key, they are preserve too. The new values are appended.
 			 */
-			return Utils::insertUnderKeys( $metaKeys, $carry, base64_decode( $row->field_data_translated ) );
+			return Utils::insertUnderKeys( $metaKeys, $carry, FieldCompression::decompress( $row->field_data_translated ) );
 		};
 
 		$recreateJobElement = function ( $data, $fieldType ) use ( $termTaxonomyId ) {

@@ -84,6 +84,9 @@ class WPML_ST_String {
 			$this->language = $language;
 			$this->set_property( 'language', $language );
 			$this->update_status();
+
+			$key = md5( $this->get_context() . '_' . $this->get_name() );
+			wp_cache_delete( $key, 'wpml-string-translation' );
 		}
 	}
 
@@ -148,10 +151,12 @@ class WPML_ST_String {
 					$status = ICL_TM_NOT_TRANSLATED;
 				}
 			} else {
-				if ( in_array( ICL_TM_NOT_TRANSLATED, $translations ) ) {
+				if ( $this->areAllTranslationsComplete( $translations ) ) {
+					$status = ICL_TM_COMPLETE;
+				} elseif ( in_array( ICL_TM_COMPLETE, $translations ) ) {
 					$status = ICL_STRING_TRANSLATION_PARTIAL;
 				} else {
-					$status = ICL_TM_COMPLETE;
+					$status = ICL_TM_NOT_TRANSLATED;
 				}
 			}
 		} else {
@@ -164,6 +169,23 @@ class WPML_ST_String {
 
 		return $status;
 	}
+
+
+	/**
+	 * @param int[] $translations
+	 *
+	 * @return bool
+	 */
+	private function areAllTranslationsComplete( array $translations ) {
+		foreach ( $translations as $translation ) {
+			if ( $translation != ICL_TM_COMPLETE ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 
 	/**
 	 * @param array  $translations
@@ -179,12 +201,12 @@ class WPML_ST_String {
 	}
 
 	/**
-	 * @param string          $language
-	 * @param string|null     $value
-	 * @param int|bool|false  $status
-	 * @param int|null        $translator_id
-	 * @param string|int|null $translation_service
-	 * @param int|null        $batch_id
+	 * @param string           $language
+	 * @param string|null|bool $value
+	 * @param int|bool|false   $status
+	 * @param int|null         $translator_id
+	 * @param string|int|null  $translation_service
+	 * @param int|null         $batch_id
 	 *
 	 * @return bool|int id of the translation
 	 */
@@ -192,9 +214,6 @@ class WPML_ST_String {
 		if ( ! $this->exists() ) {
 			return false;
 		}
-
-		/** @var $ICL_Pro_Translation WPML_Pro_Translation */
-		global $ICL_Pro_Translation;
 
 		/** @var \stdClass $res */
 		$res = $this->wpdb->get_row(
@@ -224,6 +243,10 @@ class WPML_ST_String {
 			$translation_data['batch_id'] = $batch_id;
 		}
 		if ( ! is_null( $value ) ) {
+			if ( is_string( $value ) ) {
+				$value = $this->normalize_line_breaks( $value );
+			}
+
 			$translation_data['value'] = $value;
 		}
 		if ( $translator_id ) {
@@ -260,8 +283,21 @@ class WPML_ST_String {
 			$st_id = $this->wpdb->insert_id;
 		}
 
+		/** @var $ICL_Pro_Translation WPML_Pro_Translation */
+		global $ICL_Pro_Translation;
 		if ( $ICL_Pro_Translation ) {
-			$ICL_Pro_Translation->fix_links_to_translated_content( $st_id, $language, 'string' );
+			// Early stage link fixing in string translations.
+			// Keeping this for 3rd party page-builders compatibilty. Some of
+			// them do not use the post_content field to store the post content.
+			$ICL_Pro_Translation->fix_links_to_translated_content(
+				$st_id,
+				$language,
+				'string',
+				[
+					'value'     => $value,
+					'string_id' => $this->string_id,
+				]
+			);
 		}
 
 		icl_update_string_status( $this->string_id );
@@ -269,7 +305,9 @@ class WPML_ST_String {
 		 * @deprecated Use wpml_st_add_string_translation instead
 		 */
 		do_action( 'icl_st_add_string_translation', $st_id );
-		do_action( 'wpml_st_add_string_translation', $st_id );
+		do_action( 'wpml_st_add_string_translation', $st_id, $translation_data, $language, $this->string_id );
+
+		$this->flush_cache();
 
 		return $st_id;
 	}
@@ -294,6 +332,9 @@ class WPML_ST_String {
 	 */
 	protected function set_property( $property, $value ) {
 		$this->wpdb->update( $this->wpdb->prefix . 'icl_strings', array( $property => $value ), array( 'id' => $this->string_id ) );
+
+		// Action called after string is updated.
+		do_action( 'wpml_st_string_updated' );
 	}
 
 	/**
@@ -348,5 +389,57 @@ class WPML_ST_String {
 		}
 
 		return $this->string_properties;
+	}
+
+	/**
+	 * @param string $translation_string
+	 * @return string
+	 */
+	public function normalize_line_breaks( $translation_string ) {
+		$original_string = $this->get_value();
+		/**
+		 * If the original string has \r\n character, replace \n with \r\n in the translation string to display line break in emails, HTTP requests and some text-based protocols.
+		 */
+		if ( is_string( $original_string ) && strpos( $original_string, "\r\n" ) !== false ) {
+			$translation_string = preg_replace( '/(?<!\r)\n/', "\r\n", $translation_string );
+		}
+
+		return $translation_string;
+	}
+
+	private function flush_cache() {
+		$this->maybe_flush_slug_translation_cache();
+		// Add other cache flush methods here.
+	}
+
+
+	private function maybe_flush_slug_translation_cache() {
+		$string_name = $this->get_name();
+
+		if ( ! $string_name ) {
+			return;
+		}
+
+		$factory = new WPML_Slug_Translation_Records_Factory();
+
+		// Post slug.
+		if ( strpos( $string_name, 'URL slug:' ) !== false ) {
+			$factory->create( WPML_Slug_Translation_Factory::POST )->flush_cache();
+		}
+
+		// Tax slug.
+		if ( strpos( $string_name, 'tax slug' ) !== false ) {
+			$factory->create( WPML_Slug_Translation_Factory::TAX )->flush_cache();
+
+			if ( function_exists( 'wp_cache_supports' )
+				&& wp_cache_supports( 'flush_group' )
+			) {
+				// See WPML_ST_Term_Link_Filter::replace_slug_in_termlink() function.
+				wp_cache_flush_group( WPML_ST_Term_Link_Filter::CACHE_GROUP );
+
+				// See WPML_Tax_Permalink_Filters::cached_filter_tax_permalink() function.
+				wp_cache_flush_group( WPML_Tax_Permalink_Filters::CACHE_GROUP );
+			}
+		}
 	}
 }

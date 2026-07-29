@@ -12,10 +12,10 @@ class WPML_Translation_Element_Factory {
 	private $wpml_cache;
 
 	/**
-	 * @param SitePress     $sitepress
-	 * @param WPML_WP_Cache $wpml_cache
+	 * @param SitePress          $sitepress
+	 * @param WPML_WP_Cache|null $wpml_cache
 	 */
-	public function __construct( SitePress $sitepress, WPML_WP_Cache $wpml_cache = null ) {
+	public function __construct( SitePress $sitepress, ?WPML_WP_Cache $wpml_cache = null ) {
 		$this->sitepress  = $sitepress;
 		$this->wpml_cache = $wpml_cache;
 	}
@@ -47,5 +47,13 @@ class WPML_Translation_Element_Factory {
 
 	public function create_menu( $id ) {
 		return new WPML_Menu_Element( $id, $this->sitepress, $this->wpml_cache );
+	}
+
+	public function create_package( $id, $kind ) {
+		return new WPML_Package_Element( $id, $this->sitepress, $kind, $this->wpml_cache );
+	}
+
+	public function create_wpml_package( $package ) {
+		return new WPML_Package( $package );
 	}
 }

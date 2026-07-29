@@ -23,7 +23,7 @@ class acfe_module_options_page extends acfe_module{
         $this->post_type    = 'acfe-dop';
         $this->args         = array(
             'label'             => __('Options Pages', 'acfe'),
-            'show_in_menu'      => 'edit.php?post_type=acf-field-group',
+            'show_in_menu'      => 'tools.php',
             'hierarchical'      => true,
             'labels'            => array(
                 'name'          => __('Options Pages', 'acfe'),
@@ -187,27 +187,27 @@ class acfe_module_options_page extends acfe_module{
      */
     function update_item_hierarchy($item){
         
-        // get raw items
-        $raw_items = $this->get_raw_items();
+        // get db items
+        $db_items = $this->get_items('db');
         
         // loop
-        foreach($raw_items as $raw_item){
+        foreach($db_items as $db_item){
             
             // item is child
-            if($raw_item['menu_slug'] === $item['parent_slug']){
+            if($db_item['menu_slug'] === $item['parent_slug']){
                 
                 wp_update_post(array(
                     'ID'            => $item['ID'],
-                    'post_parent'   => $raw_item['ID'],
+                    'post_parent'   => $db_item['ID'],
                 ));
                 
             }
             
             // item is parent
-            if($item['menu_slug'] === $raw_item['parent_slug']){
+            if($item['menu_slug'] === $db_item['parent_slug']){
                 
                 wp_update_post(array(
-                    'ID'            => $raw_item['ID'],
+                    'ID'            => $db_item['ID'],
                     'post_parent'   => $item['ID'],
                 ));
                 
@@ -268,7 +268,7 @@ class acfe_module_options_page extends acfe_module{
         }
         
         // check existing options pages
-        $options_pages = acf_get_array(acf_get_options_pages());
+        $options_pages = acfe_as_array(acf_get_options_pages());
         
         foreach($options_pages as $slug => $options_page){
             

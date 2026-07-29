@@ -8,7 +8,11 @@ abstract class WPML_Menu_Sync_Functionality extends WPML_Full_Translation_API {
 	const STRING_NAME_LABEL_PREFIX = 'Menu Item Label ';
 	const STRING_NAME_URL_PREFIX   = 'Menu Item URL ';
 
+	/** @var array */
 	private $menu_items_cache;
+
+	/** @var array */
+	private $synced_page_menu_item_trids_cache;
 
 	/**
 	 * @param SitePress               $sitepress
@@ -18,7 +22,8 @@ abstract class WPML_Menu_Sync_Functionality extends WPML_Full_Translation_API {
 	 */
 	function __construct( &$sitepress, &$wpdb, &$post_translations, &$term_translations ) {
 		parent::__construct( $sitepress, $wpdb, $post_translations, $term_translations );
-		$this->menu_items_cache = array();
+		$this->menu_items_cache                  = array();
+		$this->synced_page_menu_item_trids_cache = array();
 	}
 
 	function get_menu_items( $menu_id, $translations = true ) {
@@ -242,11 +247,18 @@ abstract class WPML_Menu_Sync_Functionality extends WPML_Full_Translation_API {
 	 * @return int number of affected menu item translations
 	 */
 	function sync_page_menu_item_trids( $menu_item ) {
+		$disable_trids_cache = defined( 'WPML_DISABLE_MENU_SYNC_TRIDS_CACHE' )
+			&& WPML_DISABLE_MENU_SYNC_TRIDS_CACHE;
+
+		$menu_item_id = is_object( $menu_item ) && isset( $menu_item->ID ) ? (int) $menu_item->ID : 0;
+		if ( ! $disable_trids_cache && isset( $this->synced_page_menu_item_trids_cache[ $menu_item_id ] ) ) {
+			return 0;
+		}
+
 		$changed = 0;
 		if ( $menu_item->object_type === 'post_type' ) {
 			$translations = $this->post_translations->get_element_translations( $menu_item->ID );
 			if ( (bool) $translations === true ) {
-				get_post_meta( $menu_item->menu_item_parent, '_menu_item_object_id', true );
 				$orphans = $this->wpdb->get_results(
 					$this->get_page_orphan_sql(
 						array_keys( $translations ),
@@ -267,6 +279,8 @@ abstract class WPML_Menu_Sync_Functionality extends WPML_Full_Translation_API {
 				}
 			}
 		}
+
+		$this->synced_page_menu_item_trids_cache[ $menu_item_id ] = true;
 
 		return $changed;
 	}
@@ -417,36 +431,41 @@ abstract class WPML_Menu_Sync_Functionality extends WPML_Full_Translation_API {
 	private function get_page_orphan_sql( $existing_languages, $menu_item_id ) {
 		$wpdb = &$this->wpdb;
 
+		$existing_languages_in_clause = wpml_prepare_in( $existing_languages );
+
 		return $wpdb->prepare(
 			"SELECT it.element_id, it.language_code
-			FROM {$wpdb->prefix}icl_translations it
-			JOIN {$wpdb->posts} pt
-				ON pt.ID = it.element_id
-					AND pt.post_type = 'nav_menu_item'
-					AND it.element_type = 'post_nav_menu_item'
-					AND it.language_code NOT IN (" . wpml_prepare_in( $existing_languages ) . ")
-			JOIN {$wpdb->prefix}icl_translations io
-				ON io.element_id = %d
-					AND io.element_type = 'post_nav_menu_item'
-					AND io.trid != it.trid
-			JOIN {$wpdb->posts} po
-				ON po.ID = io.element_id
-					AND po.post_type = 'nav_menu_item'
-			JOIN {$wpdb->postmeta} mo
-				ON mo.post_id = po.ID
-					AND mo.meta_key = '_menu_item_object_id'
-			JOIN {$wpdb->postmeta} mt
-				ON mt.post_id = pt.ID
-					AND mt.meta_key = '_menu_item_object_id'
-			JOIN {$wpdb->prefix}icl_translations page_t
-				ON mt.meta_value = page_t.element_id
-					AND page_t.element_type = 'post_page'
-			JOIN {$wpdb->prefix}icl_translations page_o
-				ON mo.meta_value = page_o.element_id
-					AND page_o.trid = page_t.trid
-			WHERE ( SELECT COUNT(count.element_id)
-					FROM {$wpdb->prefix}icl_translations count
-					WHERE count.trid = it.trid ) = 1",
+        FROM {$wpdb->prefix}icl_translations it
+        JOIN {$wpdb->posts} pt
+            ON pt.ID = it.element_id
+            AND pt.post_type = 'nav_menu_item'
+            AND it.element_type = 'post_nav_menu_item'
+            AND it.language_code NOT IN ($existing_languages_in_clause)
+        JOIN {$wpdb->prefix}icl_translations io
+            ON io.trid != it.trid
+        JOIN {$wpdb->posts} po
+            ON po.ID = io.element_id
+            AND po.post_type = 'nav_menu_item'
+        JOIN {$wpdb->postmeta} mo
+            ON mo.post_id = po.ID
+            AND mo.meta_key = '_menu_item_object_id'
+        JOIN {$wpdb->postmeta} mt
+            ON mt.post_id = pt.ID
+            AND mt.meta_key = '_menu_item_object_id'
+        JOIN {$wpdb->prefix}icl_translations page_t
+            ON mt.meta_value = page_t.element_id
+            AND page_t.element_type = 'post_page'
+        JOIN {$wpdb->prefix}icl_translations page_o
+            ON mo.meta_value = page_o.element_id
+            AND page_o.element_type = 'post_page'
+            AND page_o.trid = page_t.trid
+        WHERE io.element_id = %d
+        AND io.element_type = 'post_nav_menu_item'
+        AND (
+            SELECT COUNT(count.element_id)
+            FROM {$wpdb->prefix}icl_translations count
+            WHERE count.trid = it.trid
+        ) = 1",
 			$menu_item_id
 		);
 	}

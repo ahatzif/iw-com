@@ -24,9 +24,22 @@ class WPML_TM_Options_Ajax {
 			if ( array_key_exists( 'document_status', $_POST ) ) {
 				$settings['translated_document_status'] = filter_var( $_POST['document_status'], FILTER_SANITIZE_NUMBER_INT, FILTER_NULL_ON_FAILURE );
 			}
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing
+			if ( array_key_exists( 'document_status_sync', $_POST ) ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Missing
+				$settings['translated_document_status_sync'] = filter_var( $_POST['document_status_sync'], FILTER_SANITIZE_NUMBER_INT, FILTER_NULL_ON_FAILURE );
+			}
 			if ( array_key_exists( 'page_url', $_POST ) ) {
 				$settings['translated_document_page_url'] = filter_var( $_POST['page_url'], FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_NULL_ON_FAILURE );
 			}
+
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing
+			if ( ! empty( $_POST['tm_block_retranslating_terms'] ) ) {
+				$settings['tm_block_retranslating_terms'] = 1;
+			} else {
+				$settings['tm_block_retranslating_terms'] = '';
+			}
+
 			if ( $settings ) {
 				$this->sitepress->save_settings( $settings );
 			}

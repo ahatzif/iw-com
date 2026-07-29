@@ -32,7 +32,7 @@ class Hooks implements \IWPML_Action {
 	public function ensureStrippedBasesAreNotTranslated() {
 		$settings = (array) get_option( self::GENERAL_OPTIONS_KEY, [] );
 
-		$isFeatureOn = function( $featureKey ) use ( $settings ) {
+		$isFeatureOn = function ( $featureKey ) use ( $settings ) {
 			return isset( $settings[ $featureKey ] ) && 'on' === $settings[ $featureKey ];
 		};
 

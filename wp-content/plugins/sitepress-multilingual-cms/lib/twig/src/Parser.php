@@ -267,7 +267,7 @@ class Parser implements \WPML\Core\Twig_ParserInterface
         $template->setIndex(\mt_rand());
         $this->embeddedTemplates[] = $template;
     }
-    public function addImportedSymbol($type, $alias, $name = null, \WPML\Core\Twig\Node\Expression\AbstractExpression $node = null)
+    public function addImportedSymbol($type, $alias, $name = null, ?\WPML\Core\Twig\Node\Expression\AbstractExpression $node = null)
     {
         $this->importedSymbols[0][$type][$alias] = ['name' => $name, 'node' => $node];
     }

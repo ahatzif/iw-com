@@ -14,7 +14,7 @@ class WPML_TM_Translatable_Element_Provider {
 	public function __construct(
 		WPML_TM_Word_Count_Records $word_count_records,
 		WPML_TM_Word_Count_Single_Process $single_process,
-		WPML_ST_Package_Factory $st_package_factory = null
+		?WPML_ST_Package_Factory $st_package_factory = null
 	) {
 		$this->word_count_records = $word_count_records;
 		$this->single_process     = $single_process;

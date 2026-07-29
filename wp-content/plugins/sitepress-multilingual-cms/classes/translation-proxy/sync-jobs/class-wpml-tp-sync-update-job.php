@@ -1,13 +1,12 @@
 <?php
 
-use WPML\FP\Relation;
+use WPML\FP\Obj;
 use \WPML\LIB\WP\Post;
 
 class WPML_TP_Sync_Update_Job {
 
 	private $strategies = array(
 		WPML_TM_Job_Entity::POST_TYPE    => 'update_post_job',
-		WPML_TM_Job_Entity::STRING_TYPE  => 'update_string_job',
 		WPML_TM_Job_Entity::PACKAGE_TYPE => 'update_post_job',
 		WPML_TM_Job_Entity::STRING_BATCH => 'update_post_job',
 	);
@@ -41,41 +40,6 @@ class WPML_TP_Sync_Update_Job {
 		return call_user_func( array( $this, $method ), $job );
 	}
 
-	/**
-	 * @param WPML_TM_Job_Entity $job
-	 *
-	 * @return WPML_TM_Job_Entity
-	 */
-	private function update_string_job( WPML_TM_Job_Entity $job ) {
-		if ( $job->get_tp_id() ) {
-			$this->wpdb->update(
-				$this->wpdb->prefix . 'icl_core_status',
-				array(
-					'status'      => $job->get_status(),
-					'tp_revision' => $job->get_revision(),
-					'ts_status'   => $this->get_ts_status_in_ts_format( $job ),
-				),
-				array( 'rid' => $job->get_tp_id() )
-			);
-		}
-
-		$data = array(
-			'status' => $job->get_status(),
-		);
-		if ( ICL_TM_NOT_TRANSLATED === $job->get_status() ) {
-			$data['translator_id'] = null;
-		}
-
-		$this->wpdb->update(
-			$this->wpdb->prefix . 'icl_string_translations',
-			$data,
-			array( 'id' => $job->get_id() )
-		);
-
-		icl_update_string_status( $job->get_original_element_id() );
-
-		return $job;
-	}
 
 	/**
 	 * @param WPML_TM_Job_Entity $job
@@ -83,12 +47,13 @@ class WPML_TP_Sync_Update_Job {
 	 * @return WPML_TM_Job_Entity
 	 */
 	private function update_post_job( WPML_TM_Job_Entity $job ) {
-		$job_id = $job->get_id();
+		$rid = $job->get_id();
 
 		if ( $job->get_status() === ICL_TM_NOT_TRANSLATED ) {
-			$prev_status = $this->get_job_prev_status( $job_id );
-			if ( $prev_status && Relation::propEq( 'needs_update', '1', $prev_status ) ) {
-				$this->wpdb->update( $this->wpdb->prefix . 'icl_translation_status', $prev_status, [ 'rid' => $job_id ] );
+			$prev_status = \WPML\Translation\PreviousStateServiceFactory::create()->getByRid( $rid );
+      if ( $prev_status && Obj::prop( 'needs_update', $prev_status ) ) {
+				$prev_status['_prevstate'] = null;
+				$this->wpdb->update( $this->wpdb->prefix . 'icl_translation_status', $prev_status, [ 'rid' => $rid ] );
 				$job->set_needs_update( true );
 				return $job;
 			}
@@ -101,7 +66,7 @@ class WPML_TP_Sync_Update_Job {
 				'tp_revision' => $job->get_revision(),
 				'ts_status'   => $this->get_ts_status_in_ts_format( $job ),
 			),
-			array( 'rid' => $job_id )
+			array( 'rid' => $rid )
 		);
 
 		if (
@@ -118,19 +83,6 @@ class WPML_TP_Sync_Update_Job {
 		return $job;
 	}
 
-	private function get_job_prev_status( $job_id ) {
-		$previous_state = $this->wpdb->get_var(
-			$this->wpdb->prepare(
-				"SELECT _prevstate
-					FROM {$this->wpdb->prefix}icl_translation_status
-					WHERE rid=%d
-					LIMIT 1",
-				$job_id
-			)
-		);
-
-		return unserialize( $previous_state );
-	}
 
 	/**
 	 * In the db, we store the exact json format that we get from TS. It includes an extra ts_status key

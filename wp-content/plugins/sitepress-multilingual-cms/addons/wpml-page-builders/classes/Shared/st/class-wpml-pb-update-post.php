@@ -8,13 +8,10 @@ class WPML_PB_Update_Post {
 	private $package_data;
 	/** @var  IWPML_PB_Strategy $strategy */
 	private $strategy;
-	/** @var  wpdb $wpdb */
-	private $wpdb;
 	/** @var  SitePress $sitepress */
 	private $sitepress;
 
-	public function __construct( $wpdb, $sitepress, $package_data, IWPML_PB_Strategy $strategy ) {
-		$this->wpdb         = $wpdb;
+	public function __construct( $sitepress, $package_data, IWPML_PB_Strategy $strategy ) {
 		$this->sitepress    = $sitepress;
 		$this->package_data = $package_data;
 		$this->strategy     = $strategy;
@@ -58,6 +55,10 @@ class WPML_PB_Update_Post {
 	}
 
 	private function update_post( $translated_post_id, $original_post, $string_translations, $lang ) {
+		if ( WPML_PB_Last_Translation_Edit_Mode::is_native_editor( $translated_post_id) ) {
+			return;
+		}
+
 		$content_updater = $this->strategy->get_content_updater();
 		$content_updater->update( $translated_post_id, $original_post, $string_translations, $lang );
 	}

@@ -40,7 +40,7 @@ class PreloadThemeMoFile implements \IWPML_Action {
 		}
 
 		if ( $isEnabled && $domains->count() ) {
-			$this->getMOFilesByDomainsAndLocale( $domains, get_locale() )->map( function ( $fileResult ) {
+			$this->getMOFilesByDomainsAndLocale( $domains, determine_locale() )->map( function ( $fileResult ) {
 				load_textdomain( $fileResult->domain, $fileResult->file_path );
 			} );
 		}
@@ -60,6 +60,7 @@ class PreloadThemeMoFile implements \IWPML_Action {
 			WHERE domain IN ({$domainsClause}) AND file_path REGEXP %s
 		";
 
+		/** @var string $sql */
 		$sql = $this->wpdb->prepare(
 			$sql,
 			'((\\/|-)' . $locale . '(\\.|-))+'

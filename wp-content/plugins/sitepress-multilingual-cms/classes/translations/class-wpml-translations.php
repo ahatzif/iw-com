@@ -20,12 +20,28 @@ class WPML_Translations extends WPML_SP_User {
 	/**
 	 * WPML_Translations constructor.
 	 *
-	 * @param SitePress     $sitepress
-	 * @param WPML_WP_Cache $wpml_cache
+	 * @param SitePress          $sitepress
+	 * @param WPML_WP_Cache|null $wpml_cache
 	 */
-	public function __construct( SitePress $sitepress, WPML_WP_Cache $wpml_cache = null ) {
+	public function __construct( SitePress $sitepress, ?WPML_WP_Cache $wpml_cache = null ) {
 		parent::__construct( $sitepress );
 		$this->wpml_cache = $wpml_cache ? $wpml_cache : new WPML_WP_Cache( WPML_ELEMENT_TRANSLATIONS_CACHE_GROUP );
+	}
+
+	/**
+	 * Check the current user can, returns false for guest users.
+	 *
+	 * @param string $capability
+	 *
+	 * @return bool
+	 */
+	private function check_current_user_can( $capability ) {
+		$user_id = function_exists( 'get_current_user_id' ) ? get_current_user_id() : 0;
+		if ( 0 === $user_id ) {
+			return false;
+		}
+
+		return current_user_can( $capability );
 	}
 
 	/**
@@ -36,9 +52,24 @@ class WPML_Translations extends WPML_SP_User {
 	 * @return array<string,\stdClass>
 	 */
 	public function get_translations( $trid, $wpml_element_type, $skipPrivilegeChecking = false ) {
-		$cache_key_args = array_filter( array( $trid, $wpml_element_type, $this->skip_empty, $this->all_statuses, $this->skip_recursions ) );
-		$cache_key      = md5( wp_json_encode( $cache_key_args ) );
-		$cache_found    = false;
+		$edit_cap         = false;
+		$read_private_cap = false;
+
+		// Add the post type capabilities to the cache key.
+		if ( 0 === strpos( $wpml_element_type, 'post_' ) ) {
+			$post_type = substr( $wpml_element_type, 5 );
+			if ( $post_type ) {
+				$post_type_plural = $post_type . 's';
+				// Use a filter hook to allow users to modify the post type plural capability.
+				$post_type_plural = apply_filters( 'wpml_translations_post_type_plural_capability', $post_type_plural, $post_type );
+
+				$edit_cap         = $this->check_current_user_can( sprintf( 'edit_%s', $post_type_plural ) );
+				$read_private_cap = $this->check_current_user_can( sprintf( 'read_private_%s', $post_type_plural ) );
+			}
+		}
+
+		$cache_key   = self::build_cache_key( $trid, $wpml_element_type, $this->skip_empty, $this->all_statuses, $this->skip_recursions, $edit_cap, $read_private_cap );
+		$cache_found = false;
 
 		$temp_elements = $this->wpml_cache->get( $cache_key, $cache_found );
 		if ( ! $this->skip_cache && $cache_found ) {
@@ -91,6 +122,35 @@ class WPML_Translations extends WPML_SP_User {
 		}
 
 		return $translations;
+	}
+
+	/**
+	 * Builds the cache key used to store the element translations of a translation group.
+	 *
+	 * Kept as the single source of truth for the key format so that cache invalidation done elsewhere
+	 * (e.g. \WPML\TM\ATE\Download\Process) can target the exact same key that get_translations() reads
+	 * from and writes to.
+	 *
+	 * @param int    $trid
+	 * @param string $wpml_element_type
+	 * @param bool   $skip_empty
+	 * @param bool   $all_statuses
+	 * @param bool   $skip_recursions
+	 * @param bool   $edit_cap         Result of the `edit_{post_type}s` capability check.
+	 * @param bool   $read_private_cap Result of the `read_private_{post_type}s` capability check.
+	 *
+	 * @return string
+	 */
+	public static function build_cache_key( $trid, $wpml_element_type, $skip_empty, $all_statuses, $skip_recursions, $edit_cap = false, $read_private_cap = false ) {
+		$cache_key_args = array_filter( array( $trid, $wpml_element_type, $skip_empty, $all_statuses, $skip_recursions ) );
+
+		// Append the post type capabilities, matching the guard used in get_translations().
+		if ( 0 === strpos( $wpml_element_type, 'post_' ) && substr( $wpml_element_type, 5 ) ) {
+			$cache_key_args[] = $edit_cap;
+			$cache_key_args[] = $read_private_cap;
+		}
+
+		return md5( (string) wp_json_encode( $cache_key_args ) );
 	}
 
 	public function link_elements( WPML_Translation_Element $source_translation_element, WPML_Translation_Element $target_translation_element, $target_language = null ) {
@@ -243,13 +303,13 @@ class WPML_Translations extends WPML_SP_User {
 		if ( ! $this->all_statuses && 'post_attachment' !== $element_type && ! is_admin() ) {
 			$public_statuses_where = $this->get_public_statuses();
 			// the current user may not be the admin but may have read private post/page caps!
-			if ( current_user_can( 'read_private_pages' ) || current_user_can( 'read_private_posts' ) || $skipPrivilegeChecking ) {
-				$sql_parts['where'][] = ' AND (p.post_status IN (' . $public_statuses_where . ", 'draft', 'private', 'pending' ))";
+			if ( ( defined( 'WP_CLI' ) && WP_CLI ) || current_user_can( 'read_private_pages' ) || current_user_can( 'read_private_posts' ) || $skipPrivilegeChecking ) {
+				$sql_parts['where'][] = ' AND (p.post_status IN (' . $public_statuses_where . ", 'draft', 'private', 'pending', 'future'))";
 			} else {
 				$sql_parts['where'][] = ' AND (';
 				$sql_parts['where'][] = 'p.post_status  IN (' . $public_statuses_where . ') ';
 				if ( $uid = $this->sitepress->get_current_user()->ID ) {
-					$sql_parts['where'][] = $this->sitepress->get_wpdb()->prepare( " OR (post_status in ('draft', 'private', 'pending') AND  post_author = %d)", $uid );
+					$sql_parts['where'][] = $this->sitepress->get_wpdb()->prepare( " OR (post_status in ('draft', 'private', 'pending', 'future') AND  post_author = %d)", $uid );
 				}
 				$sql_parts['where'][] = ') ';
 			}

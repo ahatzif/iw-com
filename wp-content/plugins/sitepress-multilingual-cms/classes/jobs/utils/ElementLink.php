@@ -43,7 +43,7 @@ class ElementLink {
 
 	/**
 	 * @param \WPML_TM_Post_Job_Entity $job
-	 * @param string|null $elementId
+	 * @param string|int|null $elementId
 	 *
 	 * @return mixed|string|void
 	 */
@@ -59,7 +59,7 @@ class ElementLink {
 		$tmPostLink = apply_filters(
 			'wpml_document_view_item_link',
 			$tmPostLink,
-			'',
+			__( 'View', 'sitepress' ),
 			$job,
 			$job->get_element_type_prefix(),
 			$elementType

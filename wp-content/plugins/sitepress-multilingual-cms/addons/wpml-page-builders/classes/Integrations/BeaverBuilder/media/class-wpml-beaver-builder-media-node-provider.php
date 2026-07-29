@@ -2,13 +2,13 @@
 
 class WPML_Beaver_Builder_Media_Node_Provider {
 
-	/** @var WPML_Page_Builders_Media_Translate $media_translate */
+	/** @var IWPML_PB_Media_Find_And_Translate $media_translate */
 	private $media_translate;
 
 	/** @var WPML_Beaver_Builder_Media_Node[] */
 	private $nodes = array();
 
-	public function __construct( WPML_Page_Builders_Media_Translate $media_translate ) {
+	public function __construct( IWPML_PB_Media_Find_And_Translate $media_translate ) {
 		$this->media_translate = $media_translate;
 	}
 
@@ -44,5 +44,12 @@ class WPML_Beaver_Builder_Media_Node_Provider {
 		}
 
 		return $this->nodes[ $type ];
+	}
+
+	/**
+	 * @return array
+	 */
+	public function get_media() {
+		return $this->media_translate->get_used_media_in_post();
 	}
 }

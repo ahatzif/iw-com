@@ -23,7 +23,7 @@ $new_line_labels = array(
 	<div class="wpml-section-header">
 		<h3><?php esc_html_e( 'XLIFF file options', 'wpml-translation-management' ); ?></h3>
 	</div>
-	
+
 	<div class="wpml-section-content">
 
 		<form name="icl_xliff_options_form" id="icl_xliff_options_form" action="">
@@ -33,7 +33,7 @@ $new_line_labels = array(
 
 				<h4><?php esc_html_e( 'XLIFF version', 'wpml-translation-management' ); ?></h4>
 
-				<p>
+				<label>
 					<?php esc_html_e( 'Choose default format for XLIFF file:', 'wpml-translation-management' ); ?>
 
 					<select name="icl_xliff_version">
@@ -51,7 +51,7 @@ $new_line_labels = array(
 						}
 						?>
 					</select>
-				</p>
+				</label>
 			</div>
 
 			<div class="wpml-section-content-inner">
@@ -64,8 +64,8 @@ $new_line_labels = array(
 				<?php foreach ( $new_line_labels as $mode => $label ) { ?>
 					<p>
 						<label>
-							<input type="radio" name="icl_xliff_newlines"
-								   value="<?php echo esc_attr( $mode ); ?>"<?php checked( $xliff_newlines, $mode ); ?>/>
+							<input class="wpml-radio-native" type="radio" name="icl_xliff_newlines"
+								   value="<?php echo esc_attr( (string) $mode ); ?>"<?php checked( $xliff_newlines, $mode ); ?>/>
 							<?php echo esc_html( $label ); ?>
 						</label>
 					</p>
@@ -74,12 +74,12 @@ $new_line_labels = array(
 			</div>
 			<p class="buttons-wrap">
 				<span class="icl_ajx_response" id="icl_ajx_response"></span>
-				<input type="submit" class="button-primary"
+				<input type="submit" class="button-primary wpml-button base-btn"
 					   value="<?php esc_attr_e( 'Save', 'wpml-translation-management' ); ?>"/>
 			</p>
 		</form>
 	</div> <!-- .wpml-section-content -->
-	
+
 </div>
 
 

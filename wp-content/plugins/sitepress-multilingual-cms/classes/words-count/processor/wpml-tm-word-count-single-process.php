@@ -9,10 +9,10 @@ class WPML_TM_Word_Count_Single_Process {
 	private $dependencies_builder;
 
 	/**
-	 * @param IWPML_TM_Word_Count_Set[]           $setters
-	 * @param WPML_ST_String_Dependencies_Builder $dependencies_builder
+	 * @param IWPML_TM_Word_Count_Set[]                $setters
+	 * @param WPML_ST_String_Dependencies_Builder|null $dependencies_builder
 	 */
-	public function __construct( array $setters, WPML_ST_String_Dependencies_Builder $dependencies_builder = null ) {
+	public function __construct( array $setters, ?WPML_ST_String_Dependencies_Builder $dependencies_builder = null ) {
 		$this->setters              = $setters;
 		$this->dependencies_builder = $dependencies_builder;
 	}

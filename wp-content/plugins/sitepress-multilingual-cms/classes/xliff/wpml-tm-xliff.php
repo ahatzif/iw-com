@@ -26,6 +26,14 @@ class WPML_TM_XLIFF {
 	private $xliff_version;
 
 	/**
+	 * A custom schema to recognize the tool:source-language-domain and tool:target-language-domain attributes in the <file> tag
+	 * without invalidating the XLIFF file.
+	 *
+	 * @var string
+	 */
+	const XLIFF_CUSTOM_ATTRIBUTES_NAMESPACE = 'https://cdn.wpml.org/xliff/custom-attributes.xsd';
+
+	/**
 	 * WPML_TM_XLIFF constructor.
 	 *
 	 * @param string $xliff_version
@@ -50,7 +58,7 @@ class WPML_TM_XLIFF {
 	 */
 	public function setFileAttributes( $attributes ) {
 		foreach ( $attributes as $name => $value ) {
-			$this->file->setAttribute( $name, $value );
+			$this->file->setAttribute( $name, is_null( $value ) ? '' : $value );
 		}
 
 		return $this;
@@ -141,12 +149,20 @@ class WPML_TM_XLIFF {
 				$this->appendData( 'source', $trans_unit, $trans_unit_element );
 				$this->appendData( 'target', $trans_unit, $trans_unit_element );
 
-				if ( $trans_unit['note']['content'] ) {
+				if ( ! empty( $trans_unit['note']['content'] ) ) {
 					$note = $this->dom->createElement( 'note' );
 					// phpcs:disable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 					$note->nodeValue = 'wrap_tag:' . $trans_unit['note']['content'];
 					// phpcs:enable
 					$trans_unit_element->appendChild( $note );
+				}
+
+				if ( ! empty( $trans_unit['extradata'] ) && is_array( $trans_unit['extradata'] ) ) {
+					$tool_extradata_element = $this->dom->createElement( 'tool:extradata' );
+					foreach ( $trans_unit['extradata'] as $attr_name => $attr_value ) {
+						$tool_extradata_element->setAttribute( $attr_name, $attr_value );
+					}
+					$trans_unit_element->appendChild( $tool_extradata_element );
 				}
 
 				$this->trans_units[] = $trans_unit_element;
@@ -203,7 +219,9 @@ class WPML_TM_XLIFF {
 	public function toString() {
 		$this->compose();
 
-		return trim( $this->dom->saveXML() );
+		$xml = $this->dom->saveXML();
+
+		return $xml ? trim( $xml ) : '';
 	}
 
 	private function compose() {
@@ -246,6 +264,7 @@ class WPML_TM_XLIFF {
 		}
 		$this->root->setAttribute( 'version', $version );
 		$this->root->setAttribute( 'xmlns', 'urn:oasis:names:tc:xliff:document:' . $version );
+		$this->root->setAttribute( 'xmlns:tool', self::XLIFF_CUSTOM_ATTRIBUTES_NAMESPACE );
 	}
 
 }

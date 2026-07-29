@@ -29,16 +29,16 @@ class WPML_Resolve_Object_Url_Helper implements IWPML_Resolve_Object_Url {
 	private $wpml_post_translations;
 
 	/**
-	 * @param SitePress             $sitepress
-	 * @param WP_Query              $wp_query
-	 * @param WPML_Term_Translation $wpml_term_translations
-	 * @param WPML_Post_Translation $wpml_post_translations
+	 * @param SitePress|null             $sitepress
+	 * @param WP_Query|null              $wp_query
+	 * @param WPML_Term_Translation|null $wpml_term_translations
+	 * @param WPML_Post_Translation|null $wpml_post_translations
 	 */
 	public function __construct(
-		SitePress &$sitepress = null,
-		WP_Query &$wp_query = null,
-		WPML_Term_Translation $wpml_term_translations = null,
-		WPML_Post_Translation $wpml_post_translations = null
+		&$sitepress = null,
+		&$wp_query = null,
+		?WPML_Term_Translation $wpml_term_translations = null,
+		?WPML_Post_Translation $wpml_post_translations = null
 	) {
 		$this->sitepress              = &$sitepress;
 		$this->wp_query               = &$wp_query;
@@ -77,8 +77,9 @@ class WPML_Resolve_Object_Url_Helper implements IWPML_Resolve_Object_Url {
 					$new_url = get_permalink( $translations[ $lang_code ]->element_id );
 					break;
 				case 'tax':
+					/** @var WP_Term|false $term */
 					$term    = get_term_by( 'term_taxonomy_id', $translations[ $lang_code ]->element_id, $subtype );
-					$new_url = get_term_link( $term );
+					$new_url = $term ? get_term_link( $term ) : false;
 					break;
 			}
 

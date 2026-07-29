@@ -93,7 +93,7 @@ class acfe_template_tags{
                 
                 // unformat = field_type
                 // never format specific fields in unformat context
-                if($this->get_context('unformat') && in_array($field['type'], acf_get_array($this->get_context('unformat')))){
+                if($this->get_context('unformat') && in_array($field['type'], acfe_as_array($this->get_context('unformat')))){
                     $format = false;
                 }
                 
@@ -854,8 +854,8 @@ class acfe_template_tags{
         }
         
         // restore excluded tags
-        $string = str_replace('{!!', '{', $string);
-        $string = str_replace('!!}', '}', $string);
+        $string = str_replace('ACFE_ESCAPE_START', '{', $string);
+        $string = str_replace('ACFE_ESCAPE_END', '}', $string);
         
         // return
         return $string;
@@ -894,7 +894,14 @@ class acfe_template_tags{
                 $string = call_user_func_array($tag['resolver'], array($string));
                 
                 if($this->get_context('return') !== 'raw'){
-                    $string = acfe_array_to_string($string);
+                    
+                    // convert array into value
+                    if(is_array($string)){
+                        $string = acfe_array_first($string, function($val){
+                            return is_string($val) || is_numeric($val) || is_bool($val);
+                        }, false);
+                    }
+                    
                 }
                 
                 // stop loop
@@ -952,13 +959,17 @@ class acfe_template_tags{
                         
                         if($this->get_context('return') !== 'raw'){
                             
-                            // convert array value into string
-                            $replace = acfe_array_to_string($replace);
+                            // convert array into value
+                            if(is_array($replace)){
+                                $replace = acfe_array_first($replace, function($val){
+                                    return is_string($val) || is_numeric($val) || is_bool($val);
+                                }, false);
+                            }
                             
                             // escape brackets
                             if(!empty($replace) && is_string($replace)){
-                                $replace = str_replace('{', '{ ', $replace);
-                                $replace = str_replace('}', ' }', $replace);
+                                $replace = str_replace('{', 'ACFE_ESCAPE_START', $replace);
+                                $replace = str_replace('}', 'ACFE_ESCAPE_END', $replace);
                             }
                             
                         }
@@ -980,8 +991,8 @@ class acfe_template_tags{
                 if(!$resolver_executed){
                     
                     $replace = $search;
-                    $replace = str_replace('{', '{!!', $replace);
-                    $replace = str_replace('}', '!!}', $replace);
+                    $replace = str_replace('{', 'ACFE_ESCAPE_START', $replace);
+                    $replace = str_replace('}', 'ACFE_ESCAPE_END', $replace);
                     
                 }
                 
@@ -1024,34 +1035,10 @@ class acfe_template_tags{
      */
     function array_get($array, $key, $default = null){
         
-        // bail early if empty key
-        if(acf_is_empty($key)){
-            return $array;
-        }
+        $key = acfe_as_string($key, ':');
+        $key = str_replace(':', '.', $key);
         
-        // explode keys
-        if(!is_array($key)){
-            $key = explode(':', $key);
-        }
-        
-        $count = count($key);
-        $i=-1; foreach($key as $segment){ $i++;
-            
-            if(isset($array[ $segment ])){
-                
-                if($i+1 === $count){
-                    return $array[ $segment ];
-                }
-                
-                unset($key[ $i ]);
-                
-                return $this->array_get($array[ $segment ], $key, $default);
-                
-            }
-            
-        }
-        
-        return $default;
+        return acfe_get($array, $key, $default);
         
     }
     
@@ -1226,7 +1213,7 @@ class acfe_template_tags{
      */
     function has_context($name){
         
-        return acfe_array_get($this->context, $name) !== null;
+        return acfe_get($this->context, $name) !== null;
         
     }
     
@@ -1241,7 +1228,7 @@ class acfe_template_tags{
     function get_context($name = false, $default = null){
         
         if($name){
-            return acfe_array_get($this->context, $name, $default);
+            return acfe_get($this->context, $name, $default);
         }
         
         return $this->context;

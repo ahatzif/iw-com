@@ -20,11 +20,11 @@ abstract class WPML_Translation_Element extends WPML_SP_User {
 	/**
 	 * WPML_Translation_Element constructor.
 	 *
-	 * @param int           $id
-	 * @param SitePress     $sitepress
-	 * @param WPML_WP_Cache $wpml_cache
+	 * @param int                $id
+	 * @param SitePress          $sitepress
+	 * @param WPML_WP_Cache|null $wpml_cache
 	 */
-	public function __construct( $id, SitePress $sitepress, WPML_WP_Cache $wpml_cache = null ) {
+	public function __construct( $id, SitePress $sitepress, ?WPML_WP_Cache $wpml_cache = null ) {
 		if ( ! is_numeric( $id ) || $id <= 0 ) {
 			throw new InvalidArgumentException( 'Argument ID must be numeric and greater than 0.' );
 		}
@@ -60,26 +60,31 @@ abstract class WPML_Translation_Element extends WPML_SP_User {
 
 	abstract function get_element_id();
 
+	abstract public function get_element_type();
+
 	abstract function get_wpml_element_type();
 
 	/**
+	 * @param bool $skip_cache
+	 *
 	 * @return array
 	 */
-	private function get_element_translations() {
-		return $this->sitepress->get_element_translations( $this->get_trid(), $this->get_wpml_element_type() );
+	private function get_element_translations( $skip_cache = false ) {
+		return $this->sitepress->get_element_translations( $this->get_trid(), $this->get_wpml_element_type(), false, false, $skip_cache );
 	}
 
 	/**
 	 * @param string $language_code
+	 * @param bool   $skip_cache
 	 *
 	 * @return WPML_Translation_Element|null
 	 * @throws \InvalidArgumentException
 	 */
-	public function get_translation( $language_code ) {
+	public function get_translation( $language_code, $skip_cache = false ) {
 		if ( ! $language_code ) {
 			throw new InvalidArgumentException( 'Argument $language_code must be a non empty string.' );
 		}
-		$this->maybe_init_translations();
+		$this->maybe_init_translations( $skip_cache );
 
 		$translation = null;
 		if ( $this->element_translations && array_key_exists( $language_code, $this->element_translations ) ) {
@@ -97,12 +102,14 @@ abstract class WPML_Translation_Element extends WPML_SP_User {
 	}
 
 	/**
+	 * @param bool $skip_cache
+	 *
 	 * @return WPML_Translation_Element[]
 	 */
-	public function maybe_init_translations() {
+	public function maybe_init_translations( $skip_cache = false ) {
 		if ( ! $this->element_translations ) {
 			$this->element_translations = array();
-			$translations               = $this->get_element_translations();
+			$translations               = $this->get_element_translations( $skip_cache );
 			foreach ( $translations as $language_code => $element_data ) {
 
 				if ( ! isset( $element_data->element_id ) ) {
@@ -159,7 +166,7 @@ abstract class WPML_Translation_Element extends WPML_SP_User {
 	abstract function get_type( $element = null );
 
 	/**
-	 * @param null|stdClass $element_data null, or a standard object containing at least the `translation_id`, `language_code`, `element_id`, `source_language_code`, `element_type`, and `original` properties.
+	 * @param null|object $element_data null, or a standard object containing at least the `translation_id`, `language_code`, `element_id`, `source_language_code`, `element_type`, and `original` properties.
 	 *
 	 * @return WPML_Translation_Element
 	 */

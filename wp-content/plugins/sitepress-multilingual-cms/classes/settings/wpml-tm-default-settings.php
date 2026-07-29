@@ -16,6 +16,7 @@ class WPML_TM_Default_Settings implements IWPML_Action {
 	public function init_action() {
 		$this->maybe_update_notification( 'new-job', WPML_TM_Emails_Settings::NOTIFY_IMMEDIATELY );
 		$this->maybe_update_notification( 'include_xliff', (int) apply_filters( 'wpml_setting', 0, 'include_xliff_in_notification' ) );
+		$this->maybe_update_notification( 'job_limits', (int) apply_filters( 'wpml_setting', 0, 'job_limits_in_notification' ) );
 
 		if ( ! $this->has_notification( WPML_TM_Emails_Settings::COMPLETED_JOB_FREQUENCY ) ) {
 			if ( $this->has_notification( 'completed' ) ) {

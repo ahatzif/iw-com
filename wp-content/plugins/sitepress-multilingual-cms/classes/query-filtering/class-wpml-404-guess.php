@@ -45,8 +45,10 @@ class WPML_404_Guess extends WPML_Slug_Resolution {
 			$page_first = (bool) $query->get( 'pagename' );
 
 			$cache     = new WPML_WP_Cache( 'WPML_404_Guess' );
-			$cache_key = 'guess_cpt' . $name . wp_json_encode( $types ) . $page_first . $date_snippet;
-			$found     = false;
+
+			$can_read_private = current_user_can( 'read_private_posts' ) ? '1' : '0';
+			$cache_key        = 'guess_cpt' . $name . wp_json_encode( $types ) . $page_first . $date_snippet . $can_read_private;
+			$found            = false;
 			$ret       = $cache->get( $cache_key, $found );
 
 			if ( ! $found ) {
@@ -74,6 +76,11 @@ class WPML_404_Guess extends WPML_Slug_Resolution {
 		$where  = $this->wpdb->prepare( 'post_name = %s ', $name );
 		$where .= " AND post_type IN ('" . implode( "', '", $types ) . "')";
 		$where .= $date_snippet;
+
+		$private_status_clause = current_user_can( 'read_private_posts' )
+			? " OR post_status = 'private' "
+			: '';
+
 		/** @var \stdClass $res */
 		$res    = $this->wpdb->get_row(
 			"
@@ -84,7 +91,7 @@ class WPML_404_Guess extends WPML_Slug_Resolution {
 											    AND CONCAT('post_', p.post_type) = wpml_translations.element_type
 										        AND " . $this->query_filter->in_translated_types_snippet( false, 'p' ) . "
 										 WHERE $where
-										    AND ( post_status = 'publish'
+										    AND ( post_status = 'publish' {$private_status_clause}
 										        OR ( post_type = 'attachment'
 										             AND post_status = 'inherit' ) )
 										    " . $this->order_by_type_and_language_snippet( (bool) $date_snippet, $page_first ) . '

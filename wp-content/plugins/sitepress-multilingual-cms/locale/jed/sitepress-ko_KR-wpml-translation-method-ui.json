@@ -5,83 +5,104 @@
          "": {
             "domain": "messages"
          },
-         "Your pending automatic translations will be canceled.": [
-            "보류 중인 자동 번역이 취소됩니다."
+         "What should happen with your automatically translated content?": [
+            "자동으로 번역된 콘텐츠는 어떻게 처리되어야 하나요?"
          ],
-         "Save": [
-            "저장"
+         "Wait for review": [
+            "검토 대기"
          ],
-         "Go to the <a>Translation Management Dashboard</a> to translate your content.": [
-            "<a>번역 관리 대시보드</a>로 이동하여 컨텐츠를 번역 하십시오."
+         "You check and approve translations before publishing.": [
+            "게시하기 전에 번역을 확인하고 승인합니다."
          ],
-         "When automatic translation completes:": [
-            "자동 번역 완료 시:"
+         "Your translators check and approve translations before publishing.": [
+            "번역가가 게시하기 전에 번역을 확인하고 승인합니다."
          ],
-         "Publish and add to the review list": [
-            "발행 및 검토 목록에 추가"
+         "Publish and mark for review": [
+            "게시 후 검토용으로 표시"
+         ],
+         "WPML publishes translations immediately but flags them for you to check at your convenience.": [
+            "WPML은 번역을 즉시 게시하지만 귀하가 편리한 시간에 확인할 수 있도록 플래그를 표시합니다."
+         ],
+         "WPML publishes translations immediately but flags them for your translators to check at their convenience.": [
+            "WPML은 번역을 즉시 게시하지만 번역가가 편리한 시간에 확인할 수 있도록 플래그를 표시합니다."
          ],
          "Publish without review": [
-            "검토 없이 발행"
+            "검토 없이 게시"
          ],
-         "Hold for review before publishing": [
-            "발행 전 검토 대기"
+         "The system publishes translations straight away, skipping the review process.": [
+            "시스템이 검토 과정 없이 번역을 바로 게시합니다."
          ],
-         "Publish translations without a review": [
-            "검토 없이 번역 발행"
+         "Automatic translation": [
+            "자동 번역"
          ],
-         "Publish translations and review them later": [
-            "번역을 발행하고 나중에 검토하기"
+         "What should happen with your automatically translated content": [
+            "자동 번역된 콘텐츠에 대한 처리 방법"
          ],
-         "Let me review the translations before publishing": [
-            "발행하기 전에 번역을 검토하겠습니다."
+         "Save settings": [
+            "설정 저장"
          ],
-         "Automatically translate my entire site’s content": [
-            "전체 사이트 컨텐츠를 자동 번역"
+         "Translate drafts as I save them (consumes a bit more translation credits).": [
+            "초안을 저장할 때마다 번역합니다 (번역 크레딧을 조금 더 소비합니다)."
          ],
-         "How do you want to translate this site?": [
-            "이 사이트를 어떻게 번역하시겠습니까?"
+         "Do you want to translate drafts automatically?": [
+            "초안을 자동으로 번역하시겠습니까?"
          ],
-         "I want to choose which content to translate": [
-            "번역할 컨텐츠를 선택하겠습니다."
+         "This feature is only available when you enable \"Translate Everything Automatically\" from the %sTranslation Dashboard%s.": [
+            "이 기능은 %s번역 대시보드%s에서 <q id=\"q-first-1\">모든 것을 자동으로 번역</q>을 활성화한 경우에만 사용할 수 있습니다."
          ],
-         "Yes, automatically translate all of my <s>existing posts and pages</s> right now, plus <s>new content</s> as I create it.": [
-            "예. 지금 바로 <s>기존의 모든 글과 페이지</s>를 자동으로 번역하고 <s>새 컨텐츠</s>를 생성할 때 자동으로 번역합니다."
+         "Don't translate drafts. Only translate when I publish content.": [
+            "초안을 번역하지 않습니다. 콘텐츠를 게시할 때만 번역합니다."
          ],
-         "Automatically translate all of my <s>existing content</s> right now, plus <s>new content</s> as I create it.": [
-            "지금 바로 <s>기존 컨텐츠</s>를 자동으로 번역하고 <s>새 컨텐츠</s>를 생성할 때 자동으로 번역합니다."
+         "%d credits/word": [
+            "%d 크레딧/단어"
          ],
-         "No, only automatically translate <s>new content</s>.": [
-            "아니오. <s>새 컨텐츠</s>만 자동으로 번역합니다."
+         "Informal": [
+            "비격식체"
          ],
-         "Only automatically translate <s>new content</s>.": [
-            "<s>새 컨텐츠</s>만 자동으로 번역합니다."
+         "Automatic": [
+            "자동"
          ],
-         "Should WPML automatically translate your existing content?": [
-            "WPML이 기존 컨텐츠를 자동으로 번역하도록 하시겠습니까?"
+         "Formal": [
+            "격식체"
          ],
-         "Which content do you want to translate automatically?": [
-            "어떤 컨텐츠를 자동 번역하시겠습니까?"
+         "Which translation engines do you want to use?": [
+            "어떤 번역 엔진을 사용하시겠습니까?"
          ],
-         "Start translating automatically": [
-            "자동 번역 시작"
+         "Automatic translation engines differ in translation style and supported language pairs.\nIf your preferred translation engine does not support a language pair that you want to use, we fall back to your next preferred engine that does support it.\n": [
+            "자동 번역 엔진은 번역 스타일과 지원되는 언어 쌍이 다릅니다.\n선호하는 번역 엔진이 사용하고자 하는 언어 쌍을 지원하지 않는 경우, 지원하는 다음으로 선호하는 엔진으로 대체됩니다.\n"
          ],
-         "Create an account to start translating": [
-            "번역을 시작하려면 계정을 생성하세요."
+         "Drag & drop to sort from the most to the least preferred engine.": [
+            "가장 선호하는 엔진부터 가장 덜 선호하는 엔진 순으로 정렬하려면 드래그 앤 드롭하세요."
          ],
-         "WPML will use credits from your automatic translation account to translate your site immediately as you publish new content or update existing content.": [
-            "WPML은 새 컨텐츠를 발행하거나 기존 컨텐츠를 업데이트할 때 자동 번역 계정의 크레딧을 사용하여 사이트를 즉시 번역합니다."
+         "Choose the tone of your automatic translations.": [
+            "자동 번역의 어조를 선택하세요."
          ],
-         "You can translate existing content from the Translation Management Dashboard.": [
-            "번역 관리 대시보드에서 기존 컨텐츠를 번역할 수 있습니다."
+         "Read more": [
+            "더 읽기"
          ],
-         "Cancel": [
-            "취소"
+         "Learn more": [
+            "자세히 알아보기"
          ],
-         "You must use the <s>Advanced Translation Editor</s> if you want to translate your content automatically.": [
-            "컨텐츠를 자동 번역하려면 <s>고급 번역 편집기</s>를 사용해야 합니다."
+         "On": [
+            "켜기"
          ],
-         "You currently use a translation service to translate your content. To translate your site automatically, first disconnect your translation service in your <a><s>Translation Management settings</s></a>.": [
-            "현재 번역 서비스를 사용하여 컨텐츠를 번역하고 있습니다. 사이트를 자동으로 번역하려면 먼저 <a><s>Translation Management 설정</s></a>에서 번역 서비스 연결을 해제하십시오."
+         "Off": [
+            "끄기"
+         ],
+         "Could not load translation engines": [
+            "번역 엔진을 로드할 수 없습니다"
+         ],
+         "Could not update engine": [
+            "엔진을 업데이트할 수 없습니다"
+         ],
+         "Could not save review mode": [
+            "검토 모드를 저장할 수 없습니다"
+         ],
+         "Could not save translate everything drafts": [
+            "모든 것을 번역하는 초안을 저장할 수 없습니다"
+         ],
+         "Settings saved successfully": [
+            "설정이 성공적으로 저장되었습니다"
          ]
       }
    }

@@ -6,11 +6,14 @@ use \WPML\FP\Logic;
 use \WPML\FP\Lst;
 use \WPML\FP\Either;
 use \WPML\LIB\WP\Post;
+use WPML\Translation\TranslationElements\FieldCompression;
 use function \WPML\FP\curryN;
 use function \WPML\FP\pipe;
 use function \WPML\FP\invoke;
 use WPML\TM\Jobs\Utils;
 use WPML\FP\Relation;
+use WPML\FP\Obj;
+use WPML\TM\Jobs\JobLog;
 
 /**
  * Class WPML_Element_Translation_Package
@@ -19,15 +22,29 @@ use WPML\FP\Relation;
  */
 class WPML_Element_Translation_Package extends WPML_Translation_Job_Helper {
 
+	const PACKAGE_TYPE_EXTERNAL = 'external';
+	const PACKAGE_TYPE_POST     = 'post';
+
+	const POST_IS_ORIGINAL = 'original';
+	const POST_IS_UNKNOWN  = 'unknown';
+
 	/** @var WPML_WP_API $wp_api */
 	private $wp_api;
 
 	/**
+	 * @var array Cached objects.
+	 */
+	private static $cache = [
+		self::PACKAGE_TYPE_EXTERNAL => [],
+		self::PACKAGE_TYPE_POST     => [],
+	];
+
+	/**
 	 * The constructor.
 	 *
-	 * @param WPML_WP_API $wp_api An instance of the WP API.
+	 * @param WPML_WP_API|null $wp_api An instance of the WP API.
 	 */
-	public function __construct( WPML_WP_API $wp_api = null ) {
+	public function __construct( ?WPML_WP_API $wp_api = null ) {
 		global $sitepress;
 		if ( $wp_api ) {
 			$this->wp_api = $wp_api;
@@ -37,21 +54,68 @@ class WPML_Element_Translation_Package extends WPML_Translation_Job_Helper {
 	}
 
 	/**
+	 * @param int    $originalId
+	 * @param string $packageType
+	 * @param bool   $isOriginal
+	 *
+	 * @return array<string,string|array<string,string>>|null
+	 */
+	private function getCached( $originalId, $packageType, $isOriginal = false ) {
+		$originalPath = $isOriginal ? self::POST_IS_ORIGINAL : self::POST_IS_UNKNOWN;
+		return Obj::pathOr( null, [ $packageType, $originalId, $originalPath ], self::$cache );
+	}
+
+	/**
+	 * @param int                                       $originalId
+	 * @param string                                    $packageType
+	 * @param array<string,string|array<string,string>> $package
+	 * @param bool                                      $isOriginal
+	 */
+	private function setCached( $originalId, $packageType, $package, $isOriginal = false ) {
+		if ( ! in_array( $packageType, [ self::PACKAGE_TYPE_EXTERNAL, self::PACKAGE_TYPE_POST ], true ) ) {
+			return;
+		}
+		$originalPath = $isOriginal ? self::POST_IS_ORIGINAL : self::POST_IS_UNKNOWN;
+		self::$cache[ $packageType ][ $originalId ][ $originalPath ] = $package;
+	}
+
+	public function clearCache() {
+		self::$cache = [
+			self::PACKAGE_TYPE_EXTERNAL => [],
+			self::PACKAGE_TYPE_POST     => [],
+		];
+	}
+
+	/**
 	 * Create translation package
 	 *
 	 * @param \WPML_Package|\WP_Post|int $post
+	 * @param bool                       $isOriginal
 	 *
 	 * @return array<string,string|array<string,string>>
 	 */
-	public function create_translation_package( $post ) {
+	public function create_translation_package( $post, $isOriginal = false ) {
 
 		$package = array();
 		$post    = is_numeric( $post ) ? get_post( $post ) : $post;
 		if ( apply_filters( 'wpml_is_external', false, $post ) ) {
 			/** @var stdClass $post */
-			$post_contents = (array) $post->string_data;
 			$original_id   = isset( $post->post_id ) ? $post->post_id : $post->ID;
-			$type          = 'external';
+
+			JobLog::add( 'Creating external translation package for post `' . $original_id . '`' );
+
+			$type          = self::PACKAGE_TYPE_EXTERNAL;
+			$cachedPackage = $this->getCached( $original_id, $type, $isOriginal );
+			if ( null !== $cachedPackage ) {
+				JobLog::add( 'Found cached package for post `' . $original_id . '`' );
+				return $cachedPackage;
+			}
+
+			$post_contents = (array) $post->string_data;
+			JobLog::add(
+				'Creating post contents in translation package for post `' . $original_id . '`',
+				$post_contents
+			);
 
 			if ( isset( $post->title ) ) {
 				$package['title'] = apply_filters( 'wpml_tm_external_translation_job_title', $post->title, $original_id );
@@ -65,6 +129,17 @@ class WPML_Element_Translation_Package extends WPML_Translation_Job_Helper {
 				);
 			}
 		} else {
+			$original_id   = $post->ID;
+
+			JobLog::add( 'Creating translation package for post `' . $original_id . '`' );
+
+			$type          = self::PACKAGE_TYPE_POST;
+			$cachedPackage = $this->getCached( $original_id, $type, $isOriginal );
+			if ( null !== $cachedPackage ) {
+				JobLog::add( 'Found cached package for post `' . $original_id . '`' );
+				return $cachedPackage;
+			}
+
 			$home_url         = get_home_url();
 			$package['url']   = htmlentities( $home_url . '?' . ( 'page' === $post->post_type ? 'page_id' : 'p' ) . '=' . ( $post->ID ) );
 			$package['title'] = $post->post_title;
@@ -79,8 +154,6 @@ class WPML_Element_Translation_Package extends WPML_Translation_Job_Helper {
 				$post_contents['URL'] = $post->post_name;
 			}
 
-			$original_id = $post->ID;
-
 			$custom_fields_to_translate = \WPML\TM\Settings\Repository::getCustomFieldsToTranslate();
 
 			if ( ! empty( $custom_fields_to_translate ) ) {
@@ -93,8 +166,12 @@ class WPML_Element_Translation_Package extends WPML_Translation_Job_Helper {
 			}
 
 			$post_contents = array_merge( $post_contents, $this->get_taxonomy_fields( $post ) );
-			$type          = 'post';
+			JobLog::add(
+				'Creating post contents in translation package for post `' . $original_id . '`',
+				$post_contents
+			);
 		}
+
 		$package['contents']['original_id'] = array(
 			'translate' => 0,
 			'data'      => $original_id,
@@ -103,7 +180,57 @@ class WPML_Element_Translation_Package extends WPML_Translation_Job_Helper {
 
 		$package['contents'] = $this->buildEntries( $package['contents'], $post_contents );
 
-		return apply_filters( 'wpml_tm_translation_job_data', $package, $post );
+		$package = apply_filters( 'wpml_tm_translation_job_data', $package, $post, $isOriginal );
+		$this->setCached( $original_id, $type, $package, $isOriginal );
+		return $package;
+	}
+
+	/**
+     * Action for translation package per lang.
+	 *
+	 * This action is also used by wpml/wpml Word to Translate count.
+	 *
+	 * @param mixed $element For a post translation it should be a \WP_Post object.
+	 *
+	 * @return void
+	 */
+	public function do_action_before_creating_translation_package( $element ) {
+		if ( $element instanceof \WP_Post ) {
+			/**
+			 * Registers strings coming from page builder shortcodes
+			 *
+			 * @param  \WP_Post $post
+			 *
+			 * @since 4.3.16
+			 */
+			do_action( 'wpml_pb_register_all_strings_for_translation', $element );
+		}
+	}
+
+	/**
+     * Filter for translation package per lang.
+	 *
+	 * This filter is also used by wpml/wpml Word to Translate count.
+	 *
+	 * @param array  $package
+	 * @param mixed  $element For a post translation it should be a \WP_Post object.
+	 * @param string $lang
+	 *
+	 * @return array
+	 */
+	public function filter_translation_package_for_lang( $package, $element, $lang ) {
+		/**
+		 * Filter translation package before creating the translation job.
+		 *
+		 * @param array|false $translation_package
+		 * @param \WP_Post    $post
+		 * @param string      $targetLang
+		 *
+		 * @since 4.5.12
+		 */
+		$package = apply_filters( 'wpml_translation_package_by_language', $package, $element, $lang );
+
+		return $package;
 	}
 
 	private function buildEntries( $contents, $entries, $parentKey = '' ) {
@@ -128,11 +255,14 @@ class WPML_Element_Translation_Package extends WPML_Translation_Job_Helper {
 	 * @param array $translation_package
 	 * @param int   $job_id
 	 * @param array $prev_translation
+	 * @param bool  $addJobLogs
 	 */
-	public function save_package_to_job( array $translation_package, $job_id, $prev_translation ) {
+	public function save_package_to_job( array $translation_package, $job_id, $prev_translation, $addJobLogs = false ) {
 		global $wpdb;
 
 		$show = $wpdb->hide_errors();
+
+		$inserts = [];
 
 		foreach ( $translation_package['contents'] as $field => $value ) {
 			$job_translate = array(
@@ -154,7 +284,33 @@ class WPML_Element_Translation_Package extends WPML_Translation_Job_Helper {
 
 			$job_translate = $this->filter_non_translatable_fields( $job_translate );
 
-			$wpdb->insert( $wpdb->prefix . 'icl_translate', $job_translate );
+			$inserts[] = $wpdb->prepare(
+				'( %d, %d, %s, %s, %s, %d, %s, %s, %d )',
+				$job_translate['job_id'],
+				$job_translate['content_id'],
+				$job_translate['field_type'],
+				$job_translate['field_wrap_tag'],
+				$job_translate['field_format'],
+				$job_translate['field_translate'],
+        $job_translate['field_format'] === 'base64' ?
+          FieldCompression::compressAndTrack( $job_translate['field_data'], true, $job_translate['job_id'] ) :
+          $job_translate['field_data'],
+        $job_translate['field_format'] === 'base64' ?
+          FieldCompression::compressAndTrack( $job_translate['field_data_translated'], true, $job_translate['job_id'] ) :
+          $job_translate['field_data_translated'],
+				$job_translate['field_finished']
+			);
+		}
+
+		if ( $inserts ) {
+			$wpdb->query(
+				'INSERT INTO ' . $wpdb->prefix . 'icl_translate ' .
+				'(job_id, content_id, field_type, field_wrap_tag, field_format, field_translate, field_data, field_data_translated, field_finished) ' .
+				'VALUES ' . implode( ', ', $inserts )
+			);
+			if ( $addJobLogs ) {
+				JobLog::add( 'New icl_translate records created', $inserts );
+			}
 		}
 
 		$wpdb->show_errors( $show );
@@ -174,7 +330,17 @@ class WPML_Element_Translation_Package extends WPML_Translation_Job_Helper {
 				$data = base64_decode( $data );
 			}
 			$is_translatable = ! WPML_String_Functions::is_not_translatable( $data ) && apply_filters( 'wpml_translation_job_post_meta_value_translated', 1, $job_translate['field_type'] );
-			$is_translatable = (bool) apply_filters( 'wpml_tm_job_field_is_translatable', $is_translatable, $job_translate );
+
+			/**
+			 * Filters whether a translation job field is translatable.
+			 *
+			 * @param bool  $is_translatable Whether the field is translatable. Default value depends on previous logic.
+			 * @param array $job_translate   The WPML translation job object.
+			 * @param array $data            Additional data related to the translation job.
+			 *
+			 * @return bool
+			 */
+			$is_translatable = (bool) apply_filters( 'wpml_tm_job_field_is_translatable', $is_translatable, $job_translate, $data );
 			if ( ! $is_translatable ) {
 				$job_translate['field_translate']       = 0;
 				$job_translate['field_data_translated'] = $job_translate['field_data'];
@@ -346,7 +512,7 @@ class WPML_Element_Translation_Package extends WPML_Translation_Job_Helper {
 			// phpcs:disable WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
 			$package['contents'][ $cf ]           = array(
 				'translate' => 1,
-				'data'      => base64_encode( $custom_field_val ),
+				'data'      => base64_encode( (string) $custom_field_val ),
 				'format'    => 'base64',
 			);
 			$package['contents'][ $cf . '-name' ] = array(
@@ -386,7 +552,7 @@ class WPML_Element_Translation_Package extends WPML_Translation_Job_Helper {
 	 */
 	public static function preserve_numerics( $value, $name, $original_post_id, $single ) {
 		$get_original = function () use ( $original_post_id, $name, $single ) {
-			$meta = get_post_meta( $original_post_id, $name, $single );
+			$meta = get_post_meta( (int) $original_post_id, $name, $single );
 			return apply_filters( 'wpml_decode_custom_field', $meta, $name );
 		};
 		if ( is_numeric( $value ) && is_int( $get_original() ) ) {
@@ -443,10 +609,10 @@ class WPML_Element_Translation_Package extends WPML_Translation_Job_Helper {
 
 				// $getMeta :: int → string → object
 				$getMeta = curryN(
-					2,
-					function ( $termId, $key ) {
+					3,
+					function ( $termId, $termTaxonomyId, $key ) {
 						return (object) [
-							'id'   => $termId,
+							'id'   => $termTaxonomyId,
 							'key'  => $key,
 							'meta' => get_term_meta( $termId, $key ),
 						];
@@ -465,7 +631,7 @@ class WPML_Element_Translation_Package extends WPML_Translation_Job_Helper {
 
 				// $get :: [metakeys] → [[fieldId, $fieldVal]]
 				$get = pipe(
-					Fns::map( $getMeta( $term->term_taxonomy_id ) ),
+					Fns::map( $getMeta( $term->term_id, $term->term_taxonomy_id ) ),
 					Fns::filter( $hasMeta ),
 					Fns::map( $makeField )
 				);

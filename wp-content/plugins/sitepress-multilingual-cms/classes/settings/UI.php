@@ -13,6 +13,7 @@ use WPML\Setup\Option;
 use WPML\TM\ATE\AutoTranslate\Endpoint\GetNumberOfPosts;
 use WPML\TM\ATE\AutoTranslate\Endpoint\SetForPostType;
 use WPML\UIPage;
+use WPML\Setup\Endpoint\ATEDashboardScript;
 
 class UI implements \IWPML_Backend_Action {
 
@@ -30,8 +31,9 @@ class UI implements \IWPML_Backend_Action {
 			'name' => 'wpmlSettingsUI',
 			'data' => [
 				'endpoints'                 => [
-					'getCount'     => GetNumberOfPosts::class,
-					'setAutomatic' => SetForPostType::class,
+					'getCount'           => GetNumberOfPosts::class,
+					'setAutomatic'       => SetForPostType::class,
+					'ateDashboardScript' => ATEDashboardScript::class,
 				],
 				'shouldTranslateEverything' => Option::shouldTranslateEverything(),
 				'settingsUrl'               => admin_url( UIPage::getSettings() ),

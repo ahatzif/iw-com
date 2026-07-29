@@ -2,24 +2,6 @@ import { module } from 'modujs';
 import { Datepicker } from 'vanillajs-datepicker';
 import { DateRangePicker } from 'vanillajs-datepicker';
 
-
-
-const greekLocale = {
-    days: ["Κυριακή", "Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο"],
-    daysShort: ["Κυρ", "Δευ", "Τρι", "Τετ", "Πεμ", "Παρ", "Σαβ"],
-    daysMin: ["Κυρ", "Δευ", "Τρι", "Τετ", "Πεμ", "Παρ", "Σαβ"],
-    months: ["Ιανουάριος", "Φεβρουάριος", "Μάρτιος", "Απρίλιος", "Μάιος", "Ιούνιος", "Ιούλιος", "Αύγουστος", "Σεπτέμβριος", "Οκτώβριος", "Νοέμβριος", "Δεκέμβριος"],
-    monthsShort: ["Ιαν", "Φεβ", "Μαρ", "Απρ", "Μάι", "Ιουν", "Ιουλ", "Αυγ", "Σεπ", "Οκτ", "Νοε", "Δεκ"],
-    today: "Σήμερα",
-    clear: "Καθαρισμός",
-    weekStart: 1,
-    format: "d/m/yyyy"
-};
-Datepicker.locales.el = greekLocale;
-
-
-
-
 export default class extends module {
 
     options = {
@@ -59,6 +41,16 @@ export default class extends module {
                 console.warn('Invalid JSON in data-options:', datasetOptions);
             }
         }
+
+        const localeData = this.el.dataset.datepickerLocale;
+        if (localeData) {
+            try {
+                Datepicker.locales[this.options.language] = JSON.parse(localeData);
+            } catch (e) {
+                console.warn('Invalid JSON in data-datepicker-locale:', e);
+            }
+        }
+        this.holidayLabel = this.el.dataset.holidayLabel || '';
 
 
         this.extraOptions = {};
@@ -218,7 +210,7 @@ export default class extends module {
 
                     tooltip = this.holidayLabelByTs && this.holidayLabelByTs.has(ts)
                         ? this.holidayLabelByTs.get(ts)
-                        : 'Αργία';
+                        : this.holidayLabel;
                 }
 
                 // vanillajs-datepicker supports returning `tooltip` from beforeShowDay
@@ -297,7 +289,7 @@ export default class extends module {
             const ts = dayEl.dataset && dayEl.dataset.date ? Number(dayEl.dataset.date) : null;
             const label = (ts && this.holidayLabelByTs && this.holidayLabelByTs.has(ts))
                 ? this.holidayLabelByTs.get(ts)
-                : 'Αργία';
+                : this.holidayLabel;
 
             this.showHint(dayEl, label);
         }

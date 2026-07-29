@@ -3,6 +3,8 @@
 namespace WPML\Compatibility\Divi\Hooks;
 
 use WPML\LIB\WP\Hooks;
+use WPML\PB\Integrations\Divi\Helper;
+
 use function WPML\FP\spreadArgs;
 
 class GutenbergUpdate implements \IWPML_Backend_Action {
@@ -13,13 +15,25 @@ class GutenbergUpdate implements \IWPML_Backend_Action {
 	}
 
 	/**
-	 * @param string   $builtWithShortcodes
+	 * @param bool     $builtWithShortcodes
 	 * @param \WP_Post $post
 	 *
 	 * @return bool
 	 */
 	public static function isPostBuiltWithShortcodes( $builtWithShortcodes, $post ) {
-		return self::isDiviPost( $post->ID ) || $builtWithShortcodes;
+		if ( ! self::isDiviPost( $post->ID ) ) {
+			return $builtWithShortcodes;
+		}
+
+		if ( Helper::isPostUsingDivi5( $post->ID ) ) {
+			return $builtWithShortcodes;
+		}
+
+		if ( did_filter( 'divi_framework_portability_import_migrated_post_content' ) ) {
+			return $builtWithShortcodes;
+		}
+
+		return true;
 	}
 
 	/**

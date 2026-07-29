@@ -4,25 +4,26 @@
       "messages": {
          "": {
             "domain": "messages",
-            "lang": "en"
+            "plural_forms": "nplurals=2; plural=(n != 1);",
+            "lang": "nl_NL"
          },
          "Accepted": [
-            "Goedgekeurd"
+            "Geaccepteerd"
          ],
          "Approved!": [
             "Goedgekeurd!"
          ],
          "Loading the next translation for review...": [
-            "Laadt de volgende vertaling voor controle..."
+            "De volgende vertaling wordt geladen voor beoordeling..."
          ],
          "Back": [
             "Terug"
          ],
          "Turn off to not automatically load the next translation after finishing this review.": [
-            "Schakel deze optie uit om niet automatisch de volgende vertaling te laden na het voltooien van deze review."
+            "Uitschakelen om de volgende vertaling niet automatisch te laden na het voltooien van deze beoordeling."
          ],
-         "Turn on to automatically load the next translation after finishing this review.": [
-            "Schakel deze optie in om automatisch de volgende vertaling te laden na het voltooien van deze review."
+         "Turn on to automatically load the next translation after finishing this  .": [
+            "Inschakelen om de volgende vertaling automatisch te laden na het voltooien van deze beoordeling."
          ],
          "Edit": [
             "Bewerken"
@@ -30,26 +31,26 @@
          "Edit translation": [
             "Vertaling bewerken"
          ],
-         "There was an error in applying translation.": [
-            "Er was een fout bij het aanvragen van de vertaling."
-         ],
-         "Please wait, applying translation..": [
-            "Even geduld, vertaling aanvragen..."
-         ],
          "Next review": [
-            "Volgende review"
+            "Volgende beoordeling"
          ],
          "Publish this translation": [
-            "Publiceer deze vertaling"
+            "Deze vertaling publiceren"
          ],
          "Accept this translation": [
-            "Accepteer deze vertaling"
+            "Deze vertaling accepteren"
          ],
          "Published!": [
             "Gepubliceerd!"
          ],
-         "Reviewing the next translation...": [
-            "De volgende vertaling controleren..."
+         "Please wait, applying translation..": [
+            "Even geduld, vertaling wordt toegepast.."
+         ],
+         "There was an error in applying translation.": [
+            "Er is een fout opgetreden bij het toepassen van de vertaling."
+         ],
+         "Someone is already reviewing this translation. Please try again later.": [
+            "Iemand beoordeelt deze vertaling al. Probeer het later opnieuw."
          ]
       }
    }

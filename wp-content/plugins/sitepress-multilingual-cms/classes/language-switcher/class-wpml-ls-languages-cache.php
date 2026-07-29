@@ -19,10 +19,11 @@ class WPML_LS_Languages_Cache {
 			$cache_key_args[] = $wp_query->request;
 		}
 		$cache_key_args  = array_filter( $cache_key_args );
-		$this->cache_key = md5( wp_json_encode( $cache_key_args ) );
+		$this->cache_key = md5( (string) wp_json_encode( $cache_key_args ) );
 		$cache_group     = 'ls_languages';
 		$this->cache     = new WPML_WP_Cache( $cache_group );
 		wp_cache_add_non_persistent_groups( $cache_group );
+		$this->clear_comment_cache();
 	}
 
 	public function get() {
@@ -37,5 +38,15 @@ class WPML_LS_Languages_Cache {
 
 	public function set( $ls_languages ) {
 		$this->cache->set( $this->cache_key, $ls_languages );
+	}
+
+	/**
+	 * Clear comment cache groups to prevent comment hashes from affecting language switcher URLs.
+	 * This ensures that get_permalink() calls in get_ls_languages() don't include comment anchors.
+	 */
+	private function clear_comment_cache() {
+		if ( function_exists( 'wp_cache_delete' ) ) {
+			wp_cache_delete( 'last_changed', 'comment' );
+		}
 	}
 }

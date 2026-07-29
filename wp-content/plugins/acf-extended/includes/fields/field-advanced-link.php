@@ -72,8 +72,8 @@ class acfe_field_advanced_link extends acf_field{
         
         // vars
         $div = array(
-            'id'    => $field['id'],
-            'class' => $field['class'] . ' acf-link',
+            'id'        => $field['id'],
+            'class'     => $field['class'] . ' acf-link',
         );
     
         // subfields
@@ -194,6 +194,7 @@ class acfe_field_advanced_link extends acf_field{
             'ajax'              => 1,
             'ajax_action'       => 'acfe/fields/advanced_link/post_query',
             'choices'           => $this->get_post_choices($field),
+            'nonce'             => wp_create_nonce('acf_field_' . $field['type'] . '_' . $field['key']),
             'value'             => isset($value['type']) && $value['type'] === 'post' ? $value['value'] : '', // inject value based on type
             'conditional_logic' => array(
                 array(
@@ -314,11 +315,18 @@ class acfe_field_advanced_link extends acf_field{
             return $value;
         }
         
-        // if value is string then set as value
+        // allow to use string value
+        // in case the field was a text converted to advanced link
         if(is_string($value)){
-            $value = array('value' => $value);
+            
+            $value = array(
+                'type'  => 'url',
+                'value' => $value
+            );
+            
         }
         
+        // make sure the value is correctly formed (array)
         if(is_array($value)){
     
             // defaults array
@@ -328,18 +336,19 @@ class acfe_field_advanced_link extends acf_field{
                 'title'     => '',
                 'target'    => false,
             ));
-    
+            
             // handle old args
-            foreach(array('post', 'term') as $arg){
-        
-                if(isset($value[ $arg ])){
-            
-                    $value['value'] = $value[ $arg ];
-                    unset($value[ $arg ]);
-            
+            foreach(array('url', 'post', 'term') as $type){
+                
+                if($value['type'] === $type && isset($value[ $type ])){
+                    $value['value'] = $value[ $type ];
+                    break;
                 }
-        
+                
             }
+            
+            // remove old args
+            unset($value['url'], $value['post'], $value['term']);
             
         }
         
@@ -424,20 +433,20 @@ class acfe_field_advanced_link extends acf_field{
             return $value;
         }
         
-        // compatibility with string
+        // allow to update value with a simple url string
         if(is_string($value)){
-            $value = array('value' => $value);
-        }
-        
-        if($value['type'] === 'url' && !empty($value['value'])){
-            $value['url'] = $value['value'];
+            
+            $value = array(
+                'type'  => 'url',
+                'value' => $value
+            );
+            
         }
     
         // defaults
         $value = wp_parse_args($value, array(
             'type'   => 'url',
             'value'  => '',
-            'url'    => '',
             'title'  => '',
             'target' => '',
         ));
@@ -544,10 +553,10 @@ class acfe_field_advanced_link extends acf_field{
     function get_post_choices($field){
         
         // vars
-        $value = $field['value'];
+        $value = acfe_as_array($field['value']);
         $choices = array();
-        
-        if(empty($value)){
+
+        if(empty($value) || !isset($value['value'])){
             return $choices;
         }
         
@@ -594,12 +603,17 @@ class acfe_field_advanced_link extends acf_field{
      * ajax_query
      */
     function ajax_query(){
-        
+
+        // vars
+        $nonce        = acf_request_arg('nonce', '');
+        $key          = acf_request_arg('field_key', '');
+        $is_field_key = acf_is_field_key($key);
+
         // validate
-        if(!acf_verify_ajax()){
+        if(!acf_verify_ajax($nonce, $key, $is_field_key)){
             die();
         }
-        
+
         // get choices
         $response = $this->get_ajax_query($_POST);
         
@@ -636,6 +650,10 @@ class acfe_field_advanced_link extends acf_field{
         if(!$field){
             return false;
         }
+
+        if($field['type'] !== $this->name){
+            return false;
+        }
         
         // vars
         $results   = array();
@@ -662,7 +680,7 @@ class acfe_field_advanced_link extends acf_field{
         $args['post_type'] = acf_get_post_types();
         
         if(!empty($field['post_type'])){
-            $args['post_type'] = acf_get_array($field['post_type']);
+            $args['post_type'] = acfe_as_array($field['post_type']);
         }
         
         // taxonomy
@@ -760,7 +778,7 @@ class acfe_field_advanced_link extends acf_field{
         }
         
         // optgroup or single
-        $post_type = acf_get_array($args['post_type']);
+        $post_type = acfe_as_array($args['post_type']);
         if(count($post_type) === 1 && empty($post_types_archives)){
             $results = $results[0]['children'];
         }

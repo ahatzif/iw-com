@@ -33,7 +33,7 @@ class WPML_TM_Unsent_Jobs_Notice {
 	 * @param WPML_WP_API                              $wp_api
 	 * @param WPML_TM_Unsent_Jobs_Notice_Template|null $notice_template
 	 */
-	public function __construct( WPML_WP_API $wp_api, WPML_TM_Unsent_Jobs_Notice_Template $notice_template = null ) {
+	public function __construct( WPML_WP_API $wp_api, ?WPML_TM_Unsent_Jobs_Notice_Template $notice_template = null ) {
 		$this->wp_api          = $wp_api;
 		$this->notice_template = $notice_template;
 	}
@@ -155,6 +155,10 @@ class WPML_TM_Unsent_Jobs_Notice {
 	 * @return array
 	 */
 	private function get_jobs() {
-		return get_option( self::OPT_JOBS_NOT_NOTIFIED );
+		// Ensure we always return an array. When the option does not exist,
+		// get_option may return false, which triggers deprecation notices when
+		// treated as an array in PHP 8.1+.
+		$jobs = get_option( self::OPT_JOBS_NOT_NOTIFIED, array() );
+		return is_array( $jobs ) ? $jobs : array();
 	}
 }

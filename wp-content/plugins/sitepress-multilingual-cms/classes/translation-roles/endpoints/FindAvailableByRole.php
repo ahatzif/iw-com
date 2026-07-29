@@ -24,11 +24,12 @@ class FindAvailableByRole implements IHandler {
 			'translator' => \WPML_Translator_Records::class,
 			'manager'    => \WPML_Translation_Manager_Records::class,
 		];
+		$exact_match = $data->get( 'exactMatch' );
 
 		return Either::of( $data->get( 'role' ) )
 		             ->filter( Lst::includes( Fns::__, Obj::keys( $records ) ) )
 		             ->map( Obj::prop( Fns::__, $records ) )
 		             ->map( Fns::make() )
-		             ->map( invoke( 'search_for_users_without_capability' )->with( $search, self::USER_SEARCH_LIMIT ) );
+		             ->map( invoke( 'search_for_users_without_capability' )->with( $search, self::USER_SEARCH_LIMIT, $exact_match) );
 	}
 }

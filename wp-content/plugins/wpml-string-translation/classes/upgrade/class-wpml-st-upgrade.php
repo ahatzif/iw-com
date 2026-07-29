@@ -39,7 +39,7 @@ class WPML_ST_Upgrade {
 	 * @param SitePress                            $sitepress SitePress instance.
 	 * @param WPML_ST_Upgrade_Command_Factory|null $command_factory Upgrade Command Factory instance.
 	 */
-	public function __construct( SitePress $sitepress, WPML_ST_Upgrade_Command_Factory $command_factory = null ) {
+	public function __construct( SitePress $sitepress, ?WPML_ST_Upgrade_Command_Factory $command_factory = null ) {
 		$this->sitepress       = $sitepress;
 		$this->command_factory = $command_factory;
 	}
@@ -77,8 +77,12 @@ class WPML_ST_Upgrade {
 		$this->maybe_run( 'WPML_ST_Upgrade_DB_Longtext_String_Value' );
 		$this->maybe_run( 'WPML_ST_Upgrade_DB_Strings_Add_Translation_Priority_Field' );
 		$this->maybe_run( 'WPML_ST_Upgrade_DB_String_Packages_Word_Count' );
+		$this->maybe_run( 'WPML_ST_Upgrade_DB_String_Packages_Translator_Note' );
 		$this->maybe_run( '\WPML\ST\Upgrade\Command\RegenerateMoFilesWithStringNames' );
 		$this->maybe_run( \WPML\ST\Upgrade\Command\MigrateMultilingualWidgets::class );
+		$this->maybe_run( \WPML\ST\Upgrade\Command\UpgradeAutoregisteringStrings::class );
+		$this->maybe_run( \WPML\ST\Upgrade\Command\UpgradeWpSettingsStrings::class );
+		$this->maybe_run( \WPML\ST\Upgrade\Command\DeleteFileHashingOption::class );
 	}
 
 	/**
@@ -90,6 +94,7 @@ class WPML_ST_Upgrade {
 		// It has to be maybe_run.
 		$this->maybe_run( 'WPML_ST_Upgrade_MO_Scanning' );
 		$this->maybe_run( 'WPML_ST_Upgrade_DB_String_Packages_Word_Count' );
+		$this->maybe_run( 'WPML_ST_Upgrade_DB_String_Packages_Translator_Note' );
 	}
 
 	/**
@@ -98,6 +103,7 @@ class WPML_ST_Upgrade {
 	private function run_front_end() {
 		$this->maybe_run( 'WPML_ST_Upgrade_MO_Scanning' );
 		$this->maybe_run( 'WPML_ST_Upgrade_DB_String_Packages_Word_Count' );
+		$this->maybe_run( 'WPML_ST_Upgrade_DB_String_Packages_Translator_Note' );
 	}
 
 	/**
@@ -171,6 +177,7 @@ class WPML_ST_Upgrade {
 	 * @return bool
 	 */
 	public function has_command_been_executed( $class ) {
+		/** @phpstan-ignore-next-line */
 		$id       = call_user_func( [ $class, 'get_command_id' ] );
 		$settings = $this->sitepress->get_setting( 'st', [] );
 
@@ -183,6 +190,7 @@ class WPML_ST_Upgrade {
 	 * @param string $class Command class name.
 	 */
 	public function mark_command_as_executed( $class ) {
+		/** @phpstan-ignore-next-line */
 		$id                           = call_user_func( [ $class, 'get_command_id' ] );
 		$settings                     = $this->sitepress->get_setting( 'st', [] );
 		$settings[ $id . '_has_run' ] = true;

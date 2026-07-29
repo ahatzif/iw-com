@@ -17,7 +17,7 @@ class WPML_Post_Language_Filter extends WPML_Language_Filter_Bar {
 	}
 
 	public function register_scripts() {
-		wp_register_script( 'post-edit-languages', ICL_PLUGIN_URL . '/res/js/post-edit-languages.js', array( 'jquery' ), false, true );
+		wp_register_script( 'post-edit-languages', ICL_PLUGIN_URL . '/res/js/post-edit-languages.js', array( 'jquery' ), ICL_SITEPRESS_SCRIPT_VERSION, true );
 	}
 
 	public function post_language_filter() {

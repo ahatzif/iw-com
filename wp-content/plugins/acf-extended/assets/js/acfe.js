@@ -411,6 +411,78 @@
         return;
     }
 
+
+    /**
+     * acfe.isACF
+     *
+     * @param min
+     * @param max
+     *
+     * @returns {false|0|boolean|number}
+     */
+    acfe.isACF = function(min, max) {
+
+        // get version
+        var version = String(acf.get('acf_version'));
+        version = version.replace(/[^0-9.].*$/, ''); // remove any non-numeric characters (e.g. -beta)
+
+        // check only one version
+        if (typeof max === 'undefined') {
+            return acfe.versionCompare(version, '>=', min);
+        }
+
+        // check both versions
+        return acfe.versionCompare(version, '>=', min) && acfe.versionCompare(version, '<', max);
+
+    }
+
+
+    /**
+     * acfe.isWP
+     *
+     * @param min
+     * @param max
+     *
+     * @returns {false|0|boolean|number}
+     */
+    acfe.isWP = function(min, max) {
+
+        // get version
+        var version = String(acf.get('wp_version'));
+        version = version.replace(/[^0-9.].*$/, ''); // remove any non-numeric characters (e.g. -beta)
+
+        // check only one version
+        if (typeof max === 'undefined') {
+            return acfe.versionCompare(version, '>=', min);
+        }
+
+        // check both versions
+        return acfe.versionCompare(version, '>=', min) && acfe.versionCompare(version, '<', max);
+
+    }
+
+
+    /**
+     * acfe.isACF65
+     *
+     * Check if ACF version is 6.5+
+     *
+     * @deprecated since 0.9.2.5
+     *
+     * @returns {boolean|number}
+     */
+    acfe.isACF65 = function() {
+        acfe.deprecatedFunction('acfe.isACF65()', '0.9.2.5', "acfe.isACF('6.5')");
+        return acfe.isACF('6.5');
+    }
+
+})(jQuery);
+(function($) {
+
+    if (typeof acf === 'undefined' || typeof acfe === 'undefined') {
+        return;
+    }
+
     /**
      * acf.data.acfe
      *
@@ -1124,141 +1196,87 @@
      */
     acfe.Modal = acf.Model.extend({
 
-        data: {
-            modal: '',
-            title: '',
-            content: '',
-            footer: '',
-            class: '',
-            size: 'medium',
-            open: false,
-            destroy: false,
-            events: {},
-            onOpen: function() {},
-            onClose: function() {},
-        },
+        data: {},
+        modal: '', // modal id
+        title: '',
+        content: '',
+        footer: '',
+        class: '',
+        size: 'medium',
+        width: 0,
+        open: false,
+        destroy: false,
 
         eventScope: '.acfe-modal',
 
-        events: {
-            'changed': 'onChanged',
-            'click .close': 'onClickClose',
-        },
-
-        onChanged: function(e, $el, name, value, prevValue) {
-
-            if (acfe.inArray(name, ['title', 'content', 'footer', 'class', 'size'])) {
-                this.render();
-
-            } else if (name === 'open') {
-                this.checkOpen();
-            }
-
-        },
+        onOpen: function() {},
+        onClose: function() {},
 
         setup: function($el, args) {
 
+            // default case: 2 arguments
+            // acfe.newModal($el, {title: 'Hello World'})
+
+            // case: only one argument
+            // acfe.newModal({title: 'Hello World'}) > create jquery element
             if (!acfe.isJquery($el)) {
-
-                // set args & $el
                 args = $el;
-                $el = $('<div class="acfe-modal"></div>').appendTo('body');
-
+                $el = $('<div class="acfe-modal"></div>').appendTo('body'); // append modal to body
             }
 
             // set $el
+            // inherit: <div class="acfe-modal" data-title="Hello World" data-size="large"></div>
             this.$el = $el;
+            $.extend(this, $el.data());
 
-            // force object
+            // cast args as object
+            // inherit from args
             args = acfe.getObject(args);
-
-            // inherit $modal data
-            this.inherit($el);
-
-            // inherit args
-            this.inherit(args);
+            $.extend(this, args);
 
             // render
-            this.renderTemplates();
+            this.prepareRender();
             this.render();
-
-        },
-
-        initialize: function() {
-
-            this.addDataEvents();
-            this.checkOpen();
-
-        },
-
-        addDataEvents: function() {
-
-            if (!this.get('events')) {
-                return;
-            }
-
-            // vars
-            var events = this.get('events');
-            var delegateEventSplitter = /^(\S+)\s*(.*)$/;
-
-            for (var key in events) {
-
-                // match
-                var match = key.match(delegateEventSplitter);
-
-                // vars
-                var $el, args, event, selector, callback;
-
-                if (match[2]) {
-                    event = match[1];
-                    selector = match[2];
-                    callback = events[key];
-                } else {
-                    event = match[1];
-                    selector = '';
-                    callback = events[key];
-                }
-
-                // event
-                event = event + '.' + this.cid;
-
-                // callback
-                callback = this.proxyEvent(this.get(callback));
-
-                if (selector) {
-                    args = [event, selector, callback];
-                } else {
-                    args = [event, callback];
-                }
-
-                $el = this.$el;
-                $el.on.apply($el, args);
-
-            }
 
         },
 
         update: function(args) {
 
-            // force object
-            args = acfe.getObject(args);
-
-            // extract open
-            var open = acfe.extractVar(args, 'open');
-
-            // loop object
-            for (var [key, value] of Object.entries(args)) {
-                this.set(key, value);
+            // bail early
+            if (typeof args === 'undefined') {
+                return this;
             }
 
-            // execute open after all update
-            // this let define onOpen() callback and execute it
-            if (open) {
-                this.set('open', open);
+            // cast as object
+            args = acfe.getObject(args);
+            $.extend(this, args);
+
+            // render
+            this.render();
+
+            if (this.open) {
+                this.show();
             }
 
             // allow chaining
             return this;
+
+        },
+
+        initialize: function() {
+
+            // action
+            acf.doAction(`acfe/modal/init`, this);
+            acf.doAction(`acfe/modal/init/id=${this.modal}`, this);
+
+            if (this.open) {
+                this.show();
+            }
+
+            // add custom events
+            this.addEvents({
+                'click .close': 'onClickClose',
+            });
 
         },
 
@@ -1269,12 +1287,6 @@
             // allow chaining
             return this;
 
-        },
-
-        checkOpen: function() {
-            if (this.get('open')) {
-                this.open();
-            }
         },
 
         $wrapper: function() {
@@ -1293,7 +1305,7 @@
             return !acfe.isUndefined(val) ? this.$('> .acfe-modal-wrapper > .acfe-modal-footer').html(val) : this.$('> .acfe-modal-wrapper > .acfe-modal-footer');
         },
 
-        renderTemplates: function() {
+        prepareRender: function() {
 
             if (!this.$wrapper().length) {
                 this.$el.wrapInner('<div class="acfe-modal-wrapper"></div>');
@@ -1305,42 +1317,6 @@
 
         },
 
-        renderContent: function() {
-
-            // title
-            if (!this.$title().length && this.get('title')) {
-                this.$wrapper().prepend('<div class="acfe-modal-title"><span class="title"></span><button class="close"></button></div>');
-
-            } else if (!this.get('title')) {
-                this.$title().remove();
-            }
-
-            // footer
-            if (!this.$footer().length && this.get('footer')) {
-                this.$wrapper().append('<div class="acfe-modal-footer"></div>');
-
-            } else if (!this.get('footer')) {
-                this.$footer().remove();
-            }
-
-            // title
-            var title = acfe.isFunction(this.get('title')) ? this.get('title').apply(this) : this.get('title');
-            this.$title(title);
-
-            // content
-            if (this.get('content')) {
-
-                var content = acfe.isFunction(this.get('content')) ? this.get('content').apply(this) : this.get('content');
-                this.$content(content);
-
-            }
-
-            // footer
-            var footer = acfe.isFunction(this.get('footer')) ? this.get('footer').apply(this) : '<button class="button button-primary close">' + this.get('footer') + '</button>';
-            this.$footer(footer);
-
-        },
-
         render: function() {
 
             // render content
@@ -1349,12 +1325,16 @@
             // clear class
             this.$el.removeClass('-medium -large -full');
 
-            if (this.get('size')) {
-                this.$el.addClass('-' + this.get('size'));
+            if (this.size) {
+                this.$el.addClass('-' + this.size);
             }
 
-            if (this.get('class')) {
-                this.$el.addClass(this.get('class'));
+            if (this.class) {
+                this.$el.addClass(this.class);
+            }
+
+            if (this.width) {
+                this.$wrapper().css('max-width', this.width + 'px');
             }
 
             // hide tinymce buttons dropdown when scrolling modal
@@ -1367,19 +1347,58 @@
 
         },
 
-        open: function() {
+        renderContent: function() {
+
+            // append title html
+            if (!this.$title().length && this.title) {
+                this.$wrapper().prepend('<div class="acfe-modal-title"><span class="title"></span><button class="close"></button></div>');
+
+                // remove title html
+            } else if (this.title === false) {
+                this.$title().remove();
+            }
+
+            // append footer html
+            if (!this.$footer().length && this.footer) {
+                this.$wrapper().append('<div class="acfe-modal-footer"></div>');
+
+                // remove footer html
+            } else if (this.footer === false) {
+                this.$footer().remove();
+            }
+
+            // title
+            this.$title(acfe.isFunction(this.title) ? this.title.apply(this) : this.title);
+
+            // content
+            if (this.content) {
+                this.$content(acfe.isFunction(this.content) ? this.content.apply(this) : this.content);
+            }
+
+            // footer
+            if (this.footer) {
+                this.$footer(acfe.isFunction(this.footer) ? this.footer.apply(this) : '<button class="button button-large button-primary close">' + this.footer + '</button>');
+            }
+
+        },
+
+        show: function() {
 
             // add class
             this.$el.addClass('-open');
 
             // action
-            acf.doAction('acfe/modal/open', this);
+            acf.doAction(`acfe/modal/open`, this);
+            acf.doAction(`acfe/modal/open/id=${this.modal}`, this);
 
             // function
-            this.get('onOpen').apply(this);
+            this.onOpen.apply(this);
 
             // event
             this.trigger('open');
+
+            // property
+            this.open = true;
 
         },
 
@@ -1390,18 +1409,20 @@
             this.$el.removeClass('-open');
 
             // action
-            acf.doAction('acfe/modal/close', this);
+            acf.doAction(`acfe/modal/close`, this);
+            acf.doAction(`acfe/modal/close/id=${this.modal}`, this);
 
             // function
-            this.get('onClose').apply(this);
+            this.onClose.apply(this);
 
             // event
             this.trigger('close');
 
-            this.set('open', false);
+            // property
+            this.open = false;
 
             // destroy
-            if (this.get('destroy')) {
+            if (this.destroy) {
                 this.remove();
             }
 
@@ -1456,7 +1477,7 @@
 
         events: {
             'click .acfe-modal-overlay': 'onClick',
-            'keydown': 'onKeydown',
+            'keyup': 'onKeyUp',
         },
 
         getModals: function() {
@@ -1505,7 +1526,7 @@
 
         },
 
-        onKeydown: function(e) {
+        onKeyUp: function(e) {
             if (e.keyCode === 27 && $('body').hasClass('acfe-modal-opened')) {
                 e.preventDefault();
                 this.closeLastModal();
@@ -1568,7 +1589,7 @@
             if (modal) {
 
                 modal.update(data);
-                modal.open();
+                modal.show();
 
             }
 
@@ -1764,8 +1785,77 @@
 
     /**
      * Tooltip
+     *
+     * A fixed version of acf-js-tooltip which allow multiple tooltips on different elements with onclick support
      */
-    var tooltip = new acf.Model({
+    new acf.Model({
+        tooltip: false,
+        events: {
+            'mouseenter .acfe-js-tooltip': 'showTitle',
+            'mouseup .acfe-js-tooltip': 'hideTitle',
+            'mouseleave .acfe-js-tooltip': 'hideTitle',
+            'focus .acfe-js-tooltip': 'showTitle',
+            'blur .acfe-js-tooltip': 'hideTitle',
+            'keyup .acfe-js-tooltip': 'onKeyUp'
+        },
+        showTitle: function(e, $el) {
+
+            // vars
+            var title = $el.attr('title');
+
+            // bail early if no title
+            if (!title) {
+                return;
+            }
+
+            // clear title to avoid default browser tooltip
+            $el.attr('title', '');
+            $el.data('acfe-js-tooltip-title', title);
+
+            // esc html
+            title = acf.escHtml(title);
+
+            // create
+            if (!this.tooltip) {
+
+                this.tooltip = acf.newTooltip({
+                    text: title,
+                    target: $el
+                });
+
+                // update
+            } else {
+
+                this.tooltip.update({
+                    text: title,
+                    target: $el
+                });
+
+            }
+        },
+        hideTitle: function(e, $el) {
+
+            // hide tooltip
+            this.tooltip.hide();
+
+            // restore title
+            $el.attr('title', $el.data('acfe-js-tooltip-title'));
+
+        },
+        onKeyUp: function(e, $el) {
+            if (e.key === 'Escape') {
+                this.hideTitle(e, $el);
+            }
+        }
+    });
+
+
+    /**
+     * Field Tooltip
+     *
+     * Toggleable tooltip for fields
+     */
+    var fieldTooltip = new acf.Model({
 
         tooltips: {},
 
@@ -1814,7 +1904,7 @@
                 target: $el
             });
 
-            if (acfe.versionCompare(acf.get('wp_version'), '>=', '5.5')) {
+            if (acfe.isWP('5.5')) {
                 $el.removeClass('dashicons-info-outline').addClass('dashicons-remove');
             }
 
@@ -1830,7 +1920,7 @@
 
             this.tooltips[field.cid] = false;
 
-            if (acfe.versionCompare(acf.get('wp_version'), '>=', '5.5')) {
+            if (acfe.isWP('5.5')) {
                 $el.removeClass('dashicons-remove').addClass('dashicons-info-outline');
             }
 
@@ -1843,8 +1933,8 @@
             'hide_field': 'onHideField',
         },
         onHideField: function(field) {
-            if (tooltip.tooltips[field.cid]) {
-                tooltip.close(field, field.$el.find('.acfe-field-tooltip:first'));
+            if (fieldTooltip.tooltips[field.cid]) {
+                fieldTooltip.close(field, field.$el.find('.acfe-field-tooltip:first'));
             }
         }
     })
@@ -2255,47 +2345,172 @@
      *
      * @param data
      * @param message
+     * @param callback
      */
-    acfe.copyClipboard = function(data, message) {
+    acfe.copyClipboard = function(data, message, callback) {
+        new copyClipboard(data, message, callback);
+    }
 
-        // default message
-        message = acf.parseArgs(message, {
-            auto: acf.__('Data has been copied to your clipboard.'),
-            manual: acf.__('Please copy the following data to your clipboard.'),
-        });
 
-        // fallback for browsers that don't support navigator.clipboard
-        var fallbackCopy = function(data, message) {
+    /**
+     * copyClipboard
+     *
+     * message = {
+     *     auto: {
+     *         title: acf.__('Layout copied to clipboard'),
+     *         text: acf.__('You can now paste it anywhere using the "Paste Layout" secondary action.'),
+     *     },
+     *     manual: {
+     *         title: acf.__('Layout ready to be copied'),
+     *         text: acf.__('Please copy the following data to your clipboard.') + "<br /><br />" + acf.__('You can then paste it anywhere using the "Paste Layout" secondary action.'),
+     *     },
+     * }
+     */
+    var copyClipboard = acf.Model.extend({
 
-            var $input = $('<input type="text" style="clip:rect(0,0,0,0);clip-path:none;position:absolute;" value="" />').appendTo($('body'));
-            $input.attr('value', data).select();
+        data: null,
+        message: {
+            auto: {
+                title: acf.__('Content copied clipboard'),
+                text: '',
+            },
+            manual: {
+                title: acf.__('Content ready to be copied'),
+                text: acf.__('Please copy the following data to your clipboard:')
+            },
+        },
+        callback: acfe.newModal,
 
-            if (document.execCommand('copy')) {
-                alert(message.auto);
-            } else {
-                prompt(message.manual, data);
+        setup: function(data, message, callback) {
+
+            this.data = data;
+
+            if (message) {
+                this.message = message;
             }
 
-            $input.remove();
+            if (callback) {
+                this.callback = callback;
+            }
 
-        }
+        },
 
-        // navigator clipboard
-        if (navigator.clipboard) {
+        initialize: function() {
 
-            navigator.clipboard.writeText(data).then(function() {
-                alert(message.auto);
-                return true;
-            }).catch(function() {
-                fallbackCopy(data, message);
+            var args = {
+                title: this.message.auto.title,
+                destroy: true,
+                width: 400,
+                text: this.message.auto.text,
+                class: 'acfe-modal-fc-copy-layout',
+                input: false,
+                events: {
+                    'click textarea': 'onClickTextarea',
+                    'click .copy': 'onClickCopy',
+                },
+                content: function() {
+
+                    if (!this.input && !this.text) {
+                        return;
+                    }
+
+                    var html = '';
+
+                    html += `<div class="acfe-modal-spacer">`;
+                    html += `<div>${this.text}</div>`;
+
+                    if (this.input) {
+                        html += `<textarea readonly></textarea>`;
+                    }
+
+                    html += `</div>`;
+
+                    return html;
+
+                },
+                footer: function() {
+
+                    if (this.input) {
+                        return `<a href="#" class="button button-large close">${acf.__('Cancel')}</a> <a href="#" class="button button-large button-primary copy">${acf.__('Copy and close')}</a>`;
+                    }
+
+                    return `<a href="#" class="button button-large button-primary close">${acf.__('Close')}</a>`;
+                },
+                onOpen: function() {
+                    if (this.input) {
+                        var $textarea = this.$el.find('textarea');
+                        $textarea.val(this.input);
+                        $textarea.select();
+                    }
+                },
+                onClickTextarea: function(e, $el) {
+                    $el.select();
+                },
+                onClickCopy: function(e, $el) {
+
+                    e.preventDefault();
+
+                    var $textarea = this.$el.find('textarea');
+                    $textarea.select();
+                    document.execCommand("copy");
+                    this.close();
+
+                },
+            };
+
+
+            this.tryCopy().then(this.proxy(function(success) {
+                if (success) {
+
+                    // use callback
+                    if (this.callback) {
+                        this.callback(args);
+                    }
+
+                } else {
+                    args.title = this.message.manual.title;
+                    args.text = this.message.manual.text;
+                    args.input = this.data;
+                    acfe.newModal(args);
+                }
+            }));
+
+        },
+
+        tryCopy: function() {
+
+            var data = this.data;
+            var tryFallback = this.proxy(this.tryFallback);
+
+            return new Promise(function(resolve) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(data).then(function() {
+                        resolve(true);
+                    }).catch(function() {
+                        resolve(tryFallback());
+                    });
+                } else {
+                    resolve(tryFallback());
+                }
             });
+        },
 
-            // fallback
-        } else {
-            fallbackCopy(data, message);
-        }
+        tryFallback: function() {
 
-    }
+            var $textarea = $('<textarea style="position:absolute;left:-9999px;top:0;" />').appendTo('body');
+            $textarea.val(this.data).select();
+
+            var success = false;
+            try {
+                success = document.execCommand('copy');
+            } catch (e) {}
+
+            $textarea.remove();
+            return success;
+        },
+
+
+    });
 
 
     /**

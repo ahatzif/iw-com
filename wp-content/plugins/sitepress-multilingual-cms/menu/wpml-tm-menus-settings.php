@@ -3,6 +3,7 @@
 use WPML\API\Settings;
 use WPML\DocPage;
 use WPML\TM\Menu\TranslationMethod\TranslationMethodSettings;
+use WPML\LIB\WP\User;
 
 class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 
@@ -34,7 +35,7 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 
 			$this->mcsetup_sections['ml-content-setup-sec-wp-login'] = esc_html__( 'Login and registration pages', 'wpml-translation-management' );
 
-			if ( defined( 'WPML_ST_VERSION' ) ) {
+			if ( wpml_is_st_loaded() ) {
 				$this->mcsetup_sections['ml-content-setup-sec-4'] = esc_html__( 'Custom posts slug translation options', 'wpml-translation-management' );
 			}
 
@@ -76,6 +77,8 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 			if ( ! empty( $iclTranslationManagement->admin_texts_to_translate ) && function_exists( 'icl_register_string' ) ) {
 				$this->mcsetup_sections['ml-content-setup-sec-9'] = esc_html__( 'Admin Strings to Translate', 'wpml-translation-management' );
 			}
+			// Add the Reporting to wpml.org section
+			$this->mcsetup_sections['ml-content-setup-sec-reporting'] = esc_html__( 'Get a proactive support', 'sitepress' );
 		}
 
 		$this->get_translate_link_targets_ui()->add_hooks();
@@ -112,19 +115,19 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 		if ( $translate_link_targets->is_rescan_required() ) {
 			$this->tab_items['mcsetup']['caption'] = '<i class="otgs-ico-warning"></i>' . esc_html( $this->tab_items['mcsetup']['caption'] );
 		}
-		$this->tab_items['mcsetup']['callback']         = array( $this, 'build_content_mcs' );
-		$this->tab_items['mcsetup']['current_user_can'] = array(
-			'manage_options',
-			WPML_Manage_Translations_Role::CAPABILITY
-		);
+		$this->tab_items['mcsetup']['callback']         = [ $this, 'build_content_mcs' ];
+		$this->tab_items['mcsetup']['current_user_can'] = [
+			User::CAP_MANAGE_TRANSLATIONS,
+			User::CAP_ADMINISTRATOR,
+		];
 	}
 
 	private function build_translation_notifications_item() {
-		$this->tab_items['notifications'] = array(
+		$this->tab_items['notifications'] = [
 			'caption'          => esc_html__( 'Translation Notifications', 'wpml-translation-management' ),
-			'current_user_can' => WPML_Manage_Translations_Role::CAPABILITY,
-			'callback'         => array( $this, 'build_content_translation_notifications' ),
-		);
+			'current_user_can' => [ User::CAP_ADMINISTRATOR, User::CAP_MANAGE_TRANSLATIONS ],
+			'callback'         => [ $this, 'build_content_translation_notifications' ],
+		];
 	}
 
 	public function build_content_mcs() {
@@ -138,17 +141,18 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 		$translate_link_targets = new WPML_Translate_Link_Target_Global_State( $sitepress );
 		if ( $translate_link_targets->is_rescan_required() ) {
 			?>
-			<div class="update-nag">
-				<p>
-					<i class="otgs-ico-warning"></i>
-					<?php
-					echo esc_html__(
-						'There is new translated content on this site. You can scan posts and strings to adjust links to point to translated content.',
-						'wpml-translation-management'
-					);
-					?>
-				</p>
-				<p><?php echo $this->get_navigation_link( $this->get_translate_link_targets_ui()->get_id() ); ?></p>
+			<div class="update-nag scan-links-notice otgs-notice notice info" role="alert">
+				<div class="ant-alert-content">
+					<p>
+						<?php
+						echo esc_html__(
+							'New translations detected. Scan your content to update internal links so they point to the correct translated pages and posts.',
+							'sitepress'
+						);
+						?>
+					</p>
+					<span class="ant-alert-description"><?php echo $this->get_navigation_link( $this->get_translate_link_targets_ui()->get_id() ); ?></span>
+				</div>
 			</div>
 			<?php
 		}
@@ -156,20 +160,8 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 		$this->render_mcsetup_navigation_links();
 
 		if ( $this->should_show_mcsetup_section( 'ml-content-setup-sec-1' ) ) : ?>
-			<div class="wpml-section">
-				<div class="wpml-section-header">
-					<h3>
-						<?php echo esc_html__( 'Translation Mode', 'wpml-translation-management' ); ?>
-					</h3>
-					<a href="<?php echo DocPage::getTranslateAutomatically(); ?>" target="_blank" rel="noopener" class="wpml-external-link">
-						<?php esc_html_e( "How to translate your site's content", 'wpml-translation-management' ); ?>
-					</a>
-				</div>
+            <?php \WPML\UserInterface\Web\Core\Component\Preferences\Application\AutomaticTranslationsSectionController::render(); ?>
 
-				<div class="wpml-section-content">
-					<?php TranslationMethodSettings::render(); ?>
-				</div>
-			</div>
 
 			<div class="wpml-section" id="ml-content-setup-sec-1">
 				<?php
@@ -179,140 +171,188 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 				] );
 				$isClassicEditor        = (string) ICL_TM_TMETHOD_EDITOR === (string) $doc_translation_method;
 				$isATEEditor            = (string) ICL_TM_TMETHOD_ATE === (string) $doc_translation_method;
+				$editor_features = [
+					__( 'Side-by-side editing', 'sitepress' ),
+					__( 'Unique designs for translations', 'sitepress' ),
+					__( 'Glossary Support', 'sitepress' ),
+					__( 'Automatic Translation', 'sitepress' ),
+					__( 'Use your free automatic translation quota', 'sitepress' ),
+					__( 'Spell Checker', 'sitepress' ),
+					__( 'Safe HTML editing', 'sitepress' ),
+					__( 'Translation Memory', 'sitepress' ),
+				];
+
 				?>
 
-				<div class="wpml-section-header">
+				<div class="wpml-section-header translation-method-header">
 					<h3>
 						<?php echo esc_html__( 'Translation Editor', 'wpml-translation-management' ); ?>
 					</h3>
-					<a href="<?php echo DocPage::editorOptions(); ?>" target="_blank" rel="noopener" class="wpml-external-link">
-						<?php esc_html_e( 'Learn more about translation editor options', 'wpml-translation-management' ) ?>
-					</a>
-
 				</div>
 
-				<div class="wpml-section-content">
+				<div class="wpml-section-content translation-method-content">
 
 					<form id="icl_doc_translation_method" name="icl_doc_translation_method" action="">
 						<?php wp_nonce_field( 'icl_doc_translation_method_nonce', '_icl_nonce' ); ?>
 
 						<div class="wpml-section-content-inner">
-							<h4>
-								<?php
-
-								/* translators: Heading shown for selecting the editor to use with WPML's Translation Management when creating new content */
-								echo esc_html__( 'Editor for new translations', 'wpml-translation-management' );
-
-								?>
-							</h4>
-
-							<ul class="t_method">
-								<li>
-									<label>
-										<input type="radio" name="t_method" value="<?php echo ICL_TM_TMETHOD_ATE; ?>"
-											<?php
-											if ( $isATEEditor ) :
-												?>
-												checked="checked"<?php endif; ?> />
-										<?php
-										/* translators: Editor to use with WPML's Translation Management when creating new content */
-										echo esc_html__( 'Advanced Translation Editor (recommended)', 'wpml-translation-management' );
+							<div class="translation-method__table-container">
+								<table class="t_method__table">
+									<thead>
+									<tr>
+										<th></th>
+										<th>
+											<span class="recommendation-badge ate-recommended"><?php esc_html_e('Recommended', 'sitepress'); ?></span>
+											<span class="column-heading"><?php esc_html_e('Advanced Translation Editor', 'sitepress'); ?></span>
+										</th>
+										<th>
+											<span class="recommendation-badge"><?php esc_html_e('Legacy', 'sitepress'); ?></span>
+											<span class="column-heading"><?php esc_html_e('Classic Translation Editor', 'sitepress'); ?></span>
+										</th>
+									</tr>
+									</thead>
+									<tbody>
+									<?php
+									foreach ($editor_features as $index => $editor_feature) {
 										?>
-									</label>
-									<?php do_action( 'wpml_tm_mcs_' . ICL_TM_TMETHOD_ATE ); ?>
-								</li>
-								<li>
-									<label>
-										<input type="radio" name="t_method" value="<?php echo ICL_TM_TMETHOD_EDITOR; ?>"
-											<?php
-											if ( $isClassicEditor ) :
-												?>
-												checked="checked"<?php endif; ?> />
-										<?php
-										/* translators: Editor to use with WPML's Translation Management when creating new content */
-										echo esc_html__( "Classic Translation Editor", 'wpml-translation-management' );
-										?>
-									</label>
-								</li>
-							</ul>
-						</div>
-
-						<?php
-						$default_editor_for_old_jobs = get_option( WPML_TM_Old_Jobs_Editor::OPTION_NAME, null );
-						?>
-
-						<div class="wpml-section-content-inner">
-							<h4>
-								<?php
-
-								/* translators: heading shown for selecting the editor to use when updating content that was created with WPML's Classic Translation Editor */
-								esc_html_e( "Editor for translations previously created using Classic Translation Editor", 'wpml-translation-management' );
-
-								?>
-							</h4>
-							<ul class="<?php echo WPML_TM_Old_Jobs_Editor::OPTION_NAME; ?>">
-
-								<li>
-									<label>
-										<input
-												type="radio" name="<?php echo WPML_TM_Old_Jobs_Editor::OPTION_NAME; ?>"
-												value="<?php echo esc_attr( WPML_TM_Editors::WPML ); ?>"
-											<?php checked( $default_editor_for_old_jobs === WPML_TM_Editors::WPML ); ?> />
-										<?php
-
-										/* translators: Which editor to use when updating content that was created with WPML's Classic Translation Editor? */
-										esc_html_e( "Classic Translation Editor (recommended)", 'wpml-translation-management' );
-
-										?>
-									</label>
-								</li>
-								<li>
-									<label>
-										<input
-												type="radio" name="<?php echo WPML_TM_Old_Jobs_Editor::OPTION_NAME; ?>"
-												value="<?php echo esc_attr( WPML_TM_Editors::ATE ); ?>"
-											<?php checked( $default_editor_for_old_jobs === WPML_TM_Editors::ATE ); ?> />
-										<?php
-
-										/* translators: Which editor to use when updating content that was created with WPML's Classic Translation Editor? */
-										_e( "Advanced Translation Editor", 'wpml-translation-management' );
-
-										?>
-									</label>
-								</li>
-							</ul>
-						</div>
-
-						<?php do_action( 'wpml_doc_translation_method_below' ); ?>
-						<div class="wpml-section-content-inner">
-							<h4>
-								<?php echo esc_html__( 'Taxonomy visibility in the translation editor', 'wpml-translation-management' ) ?>
-							</h4>
-
-							<p id="tm_block_retranslating_terms">
-								<label>
-									<input
-											name="tm_block_retranslating_terms"
-											value="1"
-										<?php checked( icl_get_setting( 'tm_block_retranslating_terms' ), "1" ) ?>
-											type="checkbox"
-									/>
-									<?php echo esc_html__( "Only show taxonomy terms that haven't been translated yet", 'wpml-translation-management' ) ?>
-								</label>
-							</p>
+										<tr class="<?php if ($editor_feature === 'Translation Memory'): echo 'translation-memory-row'; endif; ?>">
+											<th scope="row" class="row-heading"><span><?php echo esc_html( $editor_feature ); ?></span></th>
+											<td class="check-td left">
+												<div class="check-container">
+													<i aria-label="<?php esc_html_e('Includes ' . $editor_feature, 'sitepress'); ?>" class="otgs-ico otgs-ico-ok"></i>
+												</div>
+											</td>
+											<?php if ($index < 2) { ?>
+												<td class="check-td right">
+													<div class="check-container">
+														<i aria-label="<?php esc_html_e('Includes ' . $editor_feature, 'sitepress'); ?>" class="otgs-ico otgs-ico-ok"></i>
+													</div>
+												</td>
+											<?php } else { ?>
+												<td class="right"><div class="check-container"></div></td>
+											<?php } ?>
+										</tr>
+									<?php } ?>
+									<tr>
+										<td></td>
+										<td class="choose-method left">
+											<label class="wpml-radio wpml-radio-green">
+												<input
+													type="radio" name="t_method" value="<?php echo ICL_TM_TMETHOD_ATE; ?>"
+													<?php if ( $isATEEditor ) :?>
+														checked="checked"
+													<?php endif; ?>
+												/>
+												<span class="wpml-radio-label"></span>
+											</label>
+										</td>
+										<td class="choose-method right">
+											<label class="wpml-radio wpml-radio-green">
+												<input
+													type="radio" name="t_method" value="<?php echo ICL_TM_TMETHOD_EDITOR; ?>"
+													<?php if ( $isClassicEditor ) :?>
+														checked="checked"
+													<?php endif; ?>
+												/>
+												<span class="wpml-radio-label"></span>
+											</label>
+										</td>
+									</tr>
+									<tr>
+										<td></td>
+										<td class="old-translations">
+												<label class="wpml-checkbox">
+													<?php
+													$default_editor_for_old_jobs = get_option( WPML_TM_Old_Jobs_Editor::OPTION_NAME, null );
+													$different_translation_designs_link = 'https://wpml.org/documentation/translating-your-contents/using-different-translation-editors-for-different-pages/?utm_source=plugin&utm_medium=gui&utm_campaign=core';
+													?>
+													<input disabled="disabled" name="wpml-old-jobs-editor" type="checkbox" value="<?php echo WPML_TM_Editors::ATE; ?>" <?php checked( $default_editor_for_old_jobs === WPML_TM_Editors::ATE ); ?> />
+													<span><?php esc_html_e('Use also for old translations created with the classic editor', 'sitepress'); ?></span>
+												</label>
+										</td>
+										<td></td>
+									</tr>
+									</tbody>
+								</table>
+							</div>
 						</div>
 
 						<p class="buttons-wrap">
 							<span class="icl_ajx_response" id="icl_ajx_response_dtm"> </span>
-							<input type="submit" class="button-primary"
+							<input type="submit" class="button-primary" style="display: none;"
 								   value="<?php echo esc_html__( 'Save', 'wpml-translation-management' ); ?>"/>
 						</p>
+
+
+
+						<div class="wpml-section-content-inner t_editor-faqs">
+							<h3>
+								<?php
+
+								/* translators: heading shown for selecting the editor to use when updating content that was created with WPML's Classic Translation Editor */
+								esc_html_e( "Translation Editor FAQ", 'sitepress' );
+
+								?>
+							</h3>
+							<div class="faqs">
+
+								<div class="faq">
+									<h4>
+										<?php esc_html_e('Can I have completely different designs for translations?', 'sitepress'); ?>
+									</h4>
+									<p>
+										<?php
+										/* translators: %s links */
+										echo sprintf( esc_html__( 'Yes, WPML allows you to use %1$scompletely different designs for translations%2$s.', 'sitepress' ), '<a href="' . esc_url( $different_translation_designs_link ) . '" target="_blank">', '</a>' );
+										?>
+									</p>
+								</div>
+								<div class="faq">
+									<h4>
+										<?php esc_html_e('Can I use my free automatic translation quota with the Classic Translation Editor?', 'sitepress'); ?>
+									</h4>
+									<p>
+										<?php esc_html_e('No. Automatic translation is only available via WPML’s Advanced Translator Editor, so you can only use your free quota using it.', 'sitepress'); ?>
+									</p>
+								</div>
+								<div class="faq">
+									<h4>
+										<?php esc_html_e('When should I use WPML’s Classic Translation Editor?', 'sitepress'); ?>
+									</h4>
+									<p>
+										<?php esc_html_e('We maintain WPML’s Classic Translation Editor as part of WPML for backward compatibility. You should only use it if you’ve started with the Classic Editor and are concerned about losing the translation history.', 'sitepress'); ?>
+									</p>
+								</div>
+							</div>
+						</div>
+
+						<?php do_action( 'wpml_doc_translation_method_below' ); ?>
 
 					</form>
 				</div>
 				<!-- .wpml-section-content -->
 
 			</div><!-- #ml-content-setup-sec-1 -->
+			<div
+				class="wpml-js-warning-modal-ate-for-old-translations hidden"
+				data-ok-btn-txt="<?php esc_attr_e( 'Yes, use Advanced Translation Editor for existing content', 'sitepress' ); ?>"
+				data-close-btn-txt="<?php esc_attr_e( 'Cancel', 'sitepress' ); ?>"
+			>
+				<div class="wpml-modal-content">
+					<div class="wpml-icon-wrap">
+						<i class="otgs-ico otgs-ico-wpml-string-translation"></i>
+					</div>
+					<h4><?php esc_html_e( 'You are about to use Advanced Translation Editor for your existing translations', 'sitepress' ); ?></h4>
+					<p>
+						<?php
+						esc_html_e(
+							'Some of your content was translated using the Classic Translation Editor. If you proceed, re-translating may overwrite or delete those translations.',
+							'sitepress'
+						);
+						?>
+					</p>
+				</div>
+			</div>
 		<?php endif; ?>
 
 		<?php if ( $this->should_show_mcsetup_section( 'ml-content-setup-sec-2' ) ) : ?>
@@ -338,25 +378,12 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 
 						<div class="wpml-section-content-inner">
 							<h4>
-								<?php echo esc_html__( 'Document status', 'wpml-translation-management' ); ?>
+								<?php echo esc_html__( 'When you receive completed translations', 'sitepress' ); ?>
 							</h4>
 							<ul>
 								<li>
 									<label>
-										<input type="radio" name="icl_translated_document_status" value="0"
-											<?php
-											checked(
-												(bool) icl_get_setting( 'translated_document_status' ),
-												false
-											);
-											?>
-										/>
-										<?php echo esc_html__( 'Draft', 'wpml-translation-management' ); ?>
-									</label>
-								</li>
-								<li>
-									<label>
-										<input type="radio" name="icl_translated_document_status" value="1"
+										<input class="wpml-radio-native" type="radio" name="icl_translated_document_status" value="1"
 											<?php
 											checked(
 												(bool) icl_get_setting( 'translated_document_status' ),
@@ -366,10 +393,23 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 										/>
 										<?php
 										echo esc_html__(
-											'Same as the original document',
-											'wpml-translation-management'
+											'Publish the translated post when original is also published (default)',
+											'sitepress'
 										)
 										?>
+									</label>
+								</li>
+								<li>
+									<label>
+										<input class="wpml-radio-native" type="radio" name="icl_translated_document_status" value="0"
+											<?php
+											checked(
+												(bool) icl_get_setting( 'translated_document_status' ),
+												false
+											);
+											?>
+										/>
+										<?php echo esc_html__( 'Save the translated post as a draft', 'sitepress' ); ?>
 									</label>
 								</li>
 							</ul>
@@ -377,10 +417,49 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 								<?php
 								echo esc_html__(
 									'Choose if translations should be published when received. Note: If Publish is selected, the translation will only be published if the original document is published when the translation is received.',
-									'wpml-translation-management'
+									'sitepress'
 								)
 								?>
 							</p>
+						</div>
+
+						<div class="wpml-section-content-inner">
+							<h4>
+								<?php echo esc_html__( 'When you publish the original post', 'sitepress' ); ?>
+							</h4>
+							<ul>
+								<li>
+									<label>
+										<input class="wpml-radio-native" type="radio" name="icl_translated_document_status_sync" value="1"
+											<?php
+											checked(
+												(bool) icl_get_setting( 'translated_document_status_sync' ),
+												true
+											);
+											?>
+										/>
+										<?php echo esc_html__( 'Publish the post translations', 'sitepress' ); ?>
+									</label>
+								</li>
+								<li>
+									<label>
+										<input class="wpml-radio-native" type="radio" name="icl_translated_document_status_sync" value="0"
+											<?php
+											checked(
+												(bool) icl_get_setting( 'translated_document_status_sync' ),
+												false
+											);
+											?>
+										/>
+										<?php
+										echo esc_html__(
+											'Do not publish the post translations',
+											'sitepress'
+										)
+										?>
+									</label>
+								</li>
+							</ul>
 						</div>
 
 						<div class="wpml-section-content-inner">
@@ -389,12 +468,12 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 							</h4>
 							<ul>
 								<li>
-									<label><input type="radio" name="icl_translated_document_page_url"
+									<label><input class="wpml-radio-native" type="radio" name="icl_translated_document_page_url"
 												  value="auto-generate"
 											<?php
 											if ( empty( $sitepress_settings['translated_document_page_url'] )
-											     || $sitepress_settings['translated_document_page_url']
-											        === 'auto-generate' ) :
+												|| $sitepress_settings['translated_document_page_url']
+												=== 'auto-generate' ) :
 
 												?>
 												checked="checked"<?php endif; ?> />
@@ -406,11 +485,27 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 										?>
 									</label>
 								</li>
+                                <li>
+									<label><input class="wpml-radio-native" type="radio" name="icl_translated_document_page_url"
+										value="force-generate"
+											<?php
+											if ( 'force-generate' === $sitepress_settings['translated_document_page_url'] ) :
+
+												?>
+												checked="checked"<?php endif; ?> />
+										<?php
+										echo esc_html__(
+											'Always auto-generate from title and overwrite any existing slug',
+											'sitepress'
+										)
+										?>
+									</label>
+								</li>
 								<li>
-									<label><input type="radio" name="icl_translated_document_page_url" value="translate"
+									<label><input class="wpml-radio-native" type="radio" name="icl_translated_document_page_url" value="translate"
 											<?php
 											if ( $sitepress_settings['translated_document_page_url']
-											     === 'translate' ) :
+												=== 'translate' ) :
 
 												?>
 												checked="checked"<?php endif; ?> />
@@ -423,11 +518,11 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 									</label>
 								</li>
 								<li>
-									<label><input type="radio" name="icl_translated_document_page_url"
+									<label><input class="wpml-radio-native" type="radio" name="icl_translated_document_page_url"
 												  value="copy-encoded"
 											<?php
 											if ( $sitepress_settings['translated_document_page_url']
-											     === 'copy-encoded' ) :
+												=== 'copy-encoded' ) :
 
 												?>
 												checked="checked"<?php endif; ?> />
@@ -443,16 +538,35 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 						</div>
 
 						<div class="wpml-section-content-inner">
+							<h4>
+								<?php echo esc_html__( 'Translated taxonomies', 'sitepress' ) ?>
+							</h4>
+
+							<p id="tm_block_retranslating_terms">
+								<label>
+									<input
+										class="wpml-checkbox-native"
+										name="tm_block_retranslating_terms"
+										value="1"
+										<?php checked( wpml_get_setting( 'tm_block_retranslating_terms' ), "1" ) ?>
+										type="checkbox"
+									/>
+									<?php echo esc_html__( "Don't show translated taxonomies in Translation Editor", 'sitepress' ) ?>
+								</label>
+							</p>
+						</div>
+
+						<div class="wpml-section-content-inner">
 							<p class="buttons-wrap">
 								<span class="icl_ajx_response" id="icl_ajx_response_tdo"> </span>
-								<input id="js-translated_document-options-btn" type="button" class="button-primary"
+								<input id="js-translated_document-options-btn" type="button" class="button-primary wpml-button base-btn"
 									   value="
 								<?php
-								       echo esc_attr__(
-									       'Save',
-									       'wpml-translation-management'
-								       )
-								       ?>
+									   echo esc_attr__(
+										   'Save',
+										   'wpml-translation-management'
+									   )
+									   ?>
 																																				  "/>
 							</p>
 						</div>
@@ -502,11 +616,11 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 
 						<p>
 							<label>
-								<input type="radio" name="icl_translation_pickup_method"
+								<input class="wpml-radio-native" type="radio" name="icl_translation_pickup_method"
 									   value="<?php echo ICL_PRO_TRANSLATION_PICKUP_XMLRPC; ?>"
 									<?php
 									if ( $sitepress_settings['translation_pickup_method']
-									     === ICL_PRO_TRANSLATION_PICKUP_XMLRPC ) :
+										=== ICL_PRO_TRANSLATION_PICKUP_XMLRPC ) :
 
 										?>
 										checked="checked"<?php endif ?>/>
@@ -521,11 +635,11 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 
 						<p>
 							<label>
-								<input type="radio" name="icl_translation_pickup_method"
+								<input class="wpml-radio-native" type="radio" name="icl_translation_pickup_method"
 									   value="<?php echo ICL_PRO_TRANSLATION_PICKUP_POLLING; ?>"
 									<?php
 									if ( $sitepress_settings['translation_pickup_method']
-									     === ICL_PRO_TRANSLATION_PICKUP_POLLING ) :
+										=== ICL_PRO_TRANSLATION_PICKUP_POLLING ) :
 
 										?>
 										checked="checked"<?php endif; ?> />
@@ -542,11 +656,11 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 						<p class="buttons-wrap">
 							<span class="icl_ajx_response" id="icl_ajx_response_tpm"> </span>
 							<input
-									id="translation-pickup-mode"
-									class="button-primary"
-									name="save"
-									value="<?php echo esc_attr__( 'Save', 'wpml-translation-management' ) ?>"
-									type="button"
+								id="translation-pickup-mode"
+								class="button-primary wpml-button base-btn"
+								name="save"
+								value="<?php echo esc_attr__( 'Save', 'wpml-translation-management' ) ?>"
+								type="button"
 							/>
 						</p>
 
@@ -633,6 +747,56 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 			<?php echo $this->get_translate_link_targets_ui()->render(); ?><!-- #ml-content-setup-sec-links-target -->
 		<?php endif; ?>
 
+		<?php if ( $this->should_show_mcsetup_section( 'ml-content-setup-sec-reporting' ) ) : ?>
+			<?php
+
+			$compatibility_reports_args = array(
+				'plugin_name'           => 'WPML',
+				'plugin_uri'            => 'http://wpml.org',
+				'plugin_site'           => 'wpml.org',
+				'use_styles'            => true,
+				'privacy_policy_url'    => 'https://wpml.org/documentation/privacy-policy-and-gdpr-compliance/?utm_source=plugin&utm_medium=gui&utm_campaign=core',
+				'plugin_repository'     => 'wpml',
+			);
+			?>
+			<div class="wpml-section wpml-section-wpml-theme-and-plugins-reporting" id="ml-content-setup-sec-reporting">
+				<div class="wpml-section-header">
+					<h3><?php esc_html_e( 'Get a proactive support', 'sitepress' ); ?></h3>
+				</div>
+				<div class="wpml-section-content">
+					<?php
+					$compatibility_reports_after_setup_args                   = $compatibility_reports_args;
+					$compatibility_reports_after_setup_args['custom_heading'] = '';
+					$compatibility_reports_after_setup_args['use_radio']      = true;
+
+					$compatibility_reports_after_setup_args['custom_description'] = esc_html__(
+						'WPML can send information about your site’s plugins, theme and content stats to wpml.org. 
+						This allows our support team to help you much faster and to contact you about potential problems and their solutions.',
+						'wpml-translation-management'
+					);
+
+					$compatibility_reports_after_setup_args['sharing_data_details_text'] = esc_html__(
+						'Full details of the info we’re proposing to share',
+						'wpml-translation-management'
+					);
+
+					$compatibility_reports_after_setup_args['sharing_data_details_url'] = "https://wpml.org/documentation/privacy-policy-and-gdpr-compliance/optional-data-sharing/?utm_source=plugin&utm_medium=gui&utm_campaign=wpml-settings";
+
+					$compatibility_reports_after_setup_args['custom_radio_label_yes'] = esc_html__(
+						'Yes, send this information to wpml.org to improve my site’s maintenance and support',
+						'sitepress'
+					);
+					$compatibility_reports_after_setup_args['custom_radio_label_no']  = esc_html__(
+						'No, don\'t send this information and skip maintenance alerts',
+						'sitepress'
+					);
+
+					do_action( 'otgs_installer_render_local_components_setting', $compatibility_reports_after_setup_args );
+					?>
+				</div>
+			</div><!-- #ml-content-setup-sec-reporting -->
+		<?php endif; ?>
+
 		<?php
 		wp_enqueue_script( 'wpml-tm-mcs' );
 		wp_enqueue_script( 'wpml-tm-mcs-translate-link-targets' );
@@ -666,7 +830,7 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 
 			<div class="wpml-section" id="translation-notifications-sec-3">
 				<p class="submit">
-					<input type="submit" class="button-primary"
+					<input type="submit" class="button-primary wpml-button base-btn"
 						   value="<?php echo esc_html__( 'Save', 'wpml-translation-management' ); ?>"/>
 				</p>
 			</div>
@@ -717,7 +881,7 @@ class WPML_TM_Menus_Settings extends WPML_TM_Menus {
 
 		if ( ! $this->translate_link_targets_ui ) {
 			$this->translate_link_targets_ui = new WPML_Translate_Link_Targets_UI(
-				__( 'Translate Link Targets', 'wpml-translation-management' ),
+				__( 'Update internal links', 'sitepress' ),
 				$wpdb,
 				$sitepress,
 				$ICL_Pro_Translation

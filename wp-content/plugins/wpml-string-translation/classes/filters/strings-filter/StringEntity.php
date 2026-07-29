@@ -3,7 +3,7 @@
 namespace WPML\ST\StringsFilter;
 
 class StringEntity {
-	/** @var string */
+	/** @var string|bool */
 	private $value;
 
 	/** @var string */
@@ -16,10 +16,10 @@ class StringEntity {
 	private $context;
 
 	/**
-	 * @param string $value
-	 * @param string $name
-	 * @param string $domain
-	 * @param string $context
+	 * @param string|bool $value
+	 * @param string      $name
+	 * @param string      $domain
+	 * @param string      $context
 	 */
 	public function __construct( $value, $name, $domain, $context = '' ) {
 		$this->value   = $value;
@@ -29,10 +29,18 @@ class StringEntity {
 	}
 
 	/**
-	 * @return string
+	 * @return string|bool
 	 */
 	public function getValue() {
 		return $this->value;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function hasValue() {
+		$value = $this->getValue();
+		return is_string( $value ) && strlen( $value ) > 0;
 	}
 
 	/**

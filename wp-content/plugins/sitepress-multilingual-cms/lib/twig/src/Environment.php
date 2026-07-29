@@ -114,7 +114,7 @@ class Environment
      *                   (default to -1 which means that all optimizations are enabled;
      *                   set it to 0 to disable).
      */
-    public function __construct(\WPML\Core\Twig\Loader\LoaderInterface $loader = null, $options = [])
+    public function __construct(?\WPML\Core\Twig\Loader\LoaderInterface $loader = null, $options = [])
     {
         if (null !== $loader) {
             $this->setLoader($loader);
@@ -131,6 +131,7 @@ class Environment
         $this->addExtension(new \WPML\Core\Twig\Extension\CoreExtension());
         $this->addExtension(new \WPML\Core\Twig\Extension\EscaperExtension($options['autoescape']));
         $this->addExtension(new \WPML\Core\Twig\Extension\OptimizerExtension($options['optimizations']));
+        $this->addExtension(new \WPML\Core\Twig\Extension\ConstantExtension());
         $this->staging = new \WPML\Core\Twig\Extension\StagingExtension();
         // For BC
         if (\is_string($this->originalCache)) {

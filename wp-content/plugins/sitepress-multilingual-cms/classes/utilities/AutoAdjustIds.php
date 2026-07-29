@@ -16,12 +16,12 @@ class AutoAdjustIds {
 	private $wp;
 
 	/**
-	 * @param SitePress   $sitepress
-	 * @param WPML_WP_API $wp
+	 * @param SitePress        $sitepress
+	 * @param WPML_WP_API|null $wp
 	 */
 	public function __construct(
 		SitePress $sitepress,
-		WPML_WP_API $wp = null
+		?WPML_WP_API $wp = null
 	) {
 		$this->sitepress = $sitepress;
 		$this->wp        = $wp ?: $sitepress->get_wp_api();

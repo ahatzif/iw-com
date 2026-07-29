@@ -15,19 +15,33 @@ class WPML_Fix_Type_Assignments extends WPML_WPDB_And_SP_User {
 	/**
 	 * Runs various database repair and cleanup actions on icl_translations.
 	 *
+	 * @param array $data
+	 *
 	 * @return int Number of rows in icl_translations that were fixed
 	 */
-	public function run() {
+	public function run( $data = [] ) {
+		$rows_left = 0;
+
 		$rows_fixed  = $this->fix_broken_duplicate_rows();
 		$rows_fixed += $this->fix_missing_original();
 		$rows_fixed += $this->fix_wrong_source_language();
+		$rows_fixed += $this->fix_broken_type_assignments();
 		$rows_fixed += $this->fix_broken_taxonomy_assignments();
 		$rows_fixed += $this->fix_broken_post_assignments();
-		$rows_fixed += $this->fix_broken_type_assignments();
+		$rows_fixed += $this->fix_mismatched_types();
+
+		$res = $this->fix_orphan_attachments( $data );
+
+		$rows_fixed += $res[0];
+		$rows_left  += $res[1];
+
 		icl_cache_clear();
 		wp_cache_init();
 
-		return $rows_fixed;
+		return [
+			'rowsFixed' => $rows_fixed,
+			'rowsLeft'  => $rows_left,
+		];
 	}
 
 	/**
@@ -144,6 +158,10 @@ class WPML_Fix_Type_Assignments extends WPML_WPDB_And_SP_User {
 	 * an original element and it's translation, by setting the original's type
 	 * on the corrupted translation rows.
 	 *
+	 * This needs to be run before fix_broken_post_assignments. If it is run after
+	 * then the element_type will be set to element_type of the source_language_code
+	 * which might not be the same as the post_type which is set in fix_broken_post_assignments.
+	 *
 	 * @return int number of rows fixed
 	 */
 	private function fix_broken_type_assignments() {
@@ -227,5 +245,85 @@ class WPML_Fix_Type_Assignments extends WPML_WPDB_And_SP_User {
 		}
 
 		return $rows_affected;
+	}
+
+	/**
+	 * Deletes the row for a translated element from icl_translations, where the translated element_type
+	 * is not the same as the original element_type in a trid. This is the final fix to run.
+	 * The previous fix should have associated the element_type with the matching type from the posts table.
+	 * If the translated type does not match the original type, then it needs to be deleted.
+	 *
+	 * @return int number of rows fixed
+	 */
+	private function fix_mismatched_types() {
+		$rows_affected = $this->wpdb->query(
+			"DELETE t
+				FROM {$this->wpdb->prefix}icl_translations t
+				JOIN {$this->wpdb->prefix}icl_translations o
+					ON o.trid = t.trid
+					AND o.language_code != t.language_code
+					AND o.source_language_code IS NULL
+					AND t.source_language_code IS NOT NULL
+					AND o.element_type <> t.element_type"
+		);
+
+		if ( 0 < $rows_affected ) {
+			do_action(
+				'wpml_translation_update',
+				array(
+					'type'          => 'delete',
+					'rows_affected' => $rows_affected,
+				)
+			);
+		}
+
+		return $rows_affected;
+	}
+
+	/**
+	 * @param array $data
+	 *
+	 *  @return array
+	 */
+	private function fix_orphan_attachments( $data ) {
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.Prepared, WordPress.DB.PreparedSQL.NotPrepared
+		$has_orphan_attachments = $this->wpdb->get_var(
+			"SELECT ID
+			FROM {$this->wpdb->posts} as posts
+			LEFT JOIN {$this->wpdb->prefix}icl_translations as translations
+			ON posts.ID = translations.element_id
+			WHERE posts.post_type = 'attachment'
+			AND translations.element_id IS NULL
+			LIMIT 0, 1"
+		);
+
+		if ( ! $has_orphan_attachments ) {
+			return [ 0, 0 ];
+		}
+
+		$default_language     = $this->sitepress->get_default_language();
+		$limit                = array_key_exists( 'limit', $data ) ? (int) $data['limit'] : 10;
+		$attachments_prepared = $this->wpdb->prepare(
+			"
+        SELECT SQL_CALC_FOUND_ROWS ID FROM {$this->wpdb->posts} WHERE post_type = %s AND ID NOT IN
+        (SELECT element_id FROM {$this->wpdb->prefix}icl_translations WHERE element_type=%s) LIMIT %d",
+			array(
+				'attachment',
+				'post_attachment',
+				$limit,
+			)
+		);
+
+		$attachments = $this->wpdb->get_col( $attachments_prepared );
+		$found       = (int) $this->wpdb->get_var( 'SELECT FOUND_ROWS()' );
+
+		foreach ( $attachments as $attachment_id ) {
+			$this->sitepress->set_element_language_details( $attachment_id, 'post_attachment', false, $default_language );
+		}
+
+		$left = max( $found - $limit, 0 );
+
+		return [ $limit, $left ];
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.Prepared, WordPress.DB.PreparedSQL.NotPrepared
 	}
 }

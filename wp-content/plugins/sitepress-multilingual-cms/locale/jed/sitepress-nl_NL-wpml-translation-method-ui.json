@@ -5,83 +5,104 @@
          "": {
             "domain": "messages"
          },
-         "Your pending automatic translations will be canceled.": [
-            "Je uitstaande automatische vertalingen zullen worden geannuleerd."
+         "What should happen with your automatically translated content?": [
+            "Wat moet er gebeuren met uw automatisch vertaalde inhoud?"
          ],
-         "Save": [
-            "Opslaan"
+         "Wait for review": [
+            "Wachten op beoordeling"
          ],
-         "Go to the <a>Translation Management Dashboard</a> to translate your content.": [
-            "Ga naar het <a>Translation Management Dashboard</a> om je inhoud te vertalen."
+         "You check and approve translations before publishing.": [
+            "U controleert en keurt vertalingen goed voordat ze worden gepubliceerd."
          ],
-         "When automatic translation completes:": [
-            "Wanneer de automatische vertaling voltooid is:"
+         "Your translators check and approve translations before publishing.": [
+            "Uw vertalers controleren en keuren vertalingen goed voordat ze worden gepubliceerd."
          ],
-         "Publish and add to the review list": [
-            "Publiceer en voeg toe aan de controleslijst."
+         "Publish and mark for review": [
+            "Publiceren en markeren voor beoordeling"
+         ],
+         "WPML publishes translations immediately but flags them for you to check at your convenience.": [
+            "WPML publiceert vertalingen onmiddellijk maar markeert ze zodat u ze op uw gemak kunt controleren."
+         ],
+         "WPML publishes translations immediately but flags them for your translators to check at their convenience.": [
+            "WPML publiceert vertalingen onmiddellijk maar markeert ze zodat uw vertalers ze op hun gemak kunnen controleren."
          ],
          "Publish without review": [
-            "Publiceren zonder controle"
+            "Publiceren zonder beoordeling"
          ],
-         "Hold for review before publishing": [
-            "Bewaren voor controle vóór publicatie"
+         "The system publishes translations straight away, skipping the review process.": [
+            "Het systeem publiceert vertalingen direct, waarbij het beoordelingsproces wordt overgeslagen."
          ],
-         "Publish translations without a review": [
-            "Vertalingen publiceren zonder controle"
+         "Automatic translation": [
+            "Automatische vertaling"
          ],
-         "Publish translations and review them later": [
-            "Vertalingen publiceren en later controleren"
+         "What should happen with your automatically translated content": [
+            "Wat er moet gebeuren met je automatisch vertaalde inhoud"
          ],
-         "Let me review the translations before publishing": [
-            "Laat me de vertalingen nog eens controleren voordat ik ze publiceer"
+         "Save settings": [
+            "Instellingen opslaan"
          ],
-         "Automatically translate my entire site’s content": [
-            "Vertaal automatisch de inhoud van mijn hele site"
+         "Translate drafts as I save them (consumes a bit more translation credits).": [
+            "Vertaal concepten terwijl ik ze opsla (verbruikt iets meer vertaalkredieten)."
          ],
-         "How do you want to translate this site?": [
-            "Hoe wil je deze site vertalen?"
+         "Do you want to translate drafts automatically?": [
+            "Wilt u concepten automatisch laten vertalen?"
          ],
-         "I want to choose which content to translate": [
-            "Ik wil kiezen welke inhoud vertaald moet worden"
+         "This feature is only available when you enable \"Translate Everything Automatically\" from the %sTranslation Dashboard%s.": [
+            "Deze functie is alleen beschikbaar wanneer u “Alles automatisch vertalen” inschakelt vanuit het %sVertaaldashboard%s."
          ],
-         "Yes, automatically translate all of my <s>existing posts and pages</s> right now, plus <s>new content</s> as I create it.": [
-            "Ja, vertaal nu automatisch al mijn <s>bestaande berichten en pagina's</s>, plus <s>new content</s> terwijl ik deze aanmaak."
+         "Don't translate drafts. Only translate when I publish content.": [
+            "Vertaal geen concepten. Vertaal alleen wanneer ik inhoud publiceer."
          ],
-         "Automatically translate all of my <s>existing content</s> right now, plus <s>new content</s> as I create it.": [
-            "Vertaal nu al mijn <s>existing content</s> automatisch, plus <s>new content</s> terwijl ik deze aanmaak."
+         "%d credits/word": [
+            "%d credits/woord"
          ],
-         "No, only automatically translate <s>new content</s>.": [
-            "Nee, vertaal alleen automatisch <s>new content</s>."
+         "Informal": [
+            "Informeel"
          ],
-         "Only automatically translate <s>new content</s>.": [
-            "Vertaal automatisch <s>new content</s>."
+         "Automatic": [
+            "Automatisch"
          ],
-         "Should WPML automatically translate your existing content?": [
-            "Moet WPML je bestaande inhoud automatisch vertalen?"
+         "Formal": [
+            "Formeel"
          ],
-         "Which content do you want to translate automatically?": [
-            "Welke inhoud wil je automatisch vertalen?"
+         "Which translation engines do you want to use?": [
+            "Welke vertaalmotoren wil je gebruiken?"
          ],
-         "Start translating automatically": [
-            "Automatisch vertalen starten"
+         "Automatic translation engines differ in translation style and supported language pairs.\nIf your preferred translation engine does not support a language pair that you want to use, we fall back to your next preferred engine that does support it.\n": [
+            "Automatische vertaalmachines verschillen in vertaalstijl en ondersteunde talenparen.\nAls je voorkeursvertaalmachine een talenpaar dat je wilt gebruiken niet ondersteunt, vallen we terug op je volgende voorkeursmachine die het wel ondersteunt.\n"
          ],
-         "Create an account to start translating": [
-            "Maak een account aan om met vertalen te beginnen"
+         "Drag & drop to sort from the most to the least preferred engine.": [
+            "Sleep en zet neer om te sorteren van de meest naar de minst geprefereerde motor."
          ],
-         "WPML will use credits from your automatic translation account to translate your site immediately as you publish new content or update existing content.": [
-            "WPML gebruikt credits van je automatische vertaalaccount om je site meteen te vertalen als je nieuwe inhoud publiceert of bestaande inhoud bijwerkt."
+         "Choose the tone of your automatic translations.": [
+            "Kies de toon van je automatische vertalingen."
          ],
-         "You can translate existing content from the Translation Management Dashboard.": [
-            "U kunt bestaande inhoud vertalen vanuit het Translation Management Dashboard."
+         "Read more": [
+            "Meer lezen"
          ],
-         "Cancel": [
-            "Annuleren"
+         "Learn more": [
+            "Meer informatie"
          ],
-         "You must use the <s>Advanced Translation Editor</s> if you want to translate your content automatically.": [
-            "Je moet de <s>Advanced Translation Editor</s> gebruiken als je je inhoud automatisch wilt laten vertalen."
+         "On": [
+            "Aan"
          ],
-         "You currently use a translation service to translate your content. To translate your site automatically, first disconnect your translation service in your <a><s>Translation Management settings</s></a>.": [
-            "Je gebruikt momenteel een vertaalservice om je inhoud te vertalen. Als je je site automatisch wilt laten vertalen, ontkoppel je eerst je vertaalservice in je <a><s>Translation Management settings</s></a>."
+         "Off": [
+            "Uit"
+         ],
+         "Could not load translation engines": [
+            "Kon vertaalmotoren niet laden"
+         ],
+         "Could not update engine": [
+            "Kon motor niet updaten"
+         ],
+         "Could not save review mode": [
+            "Kon beoordelingsmodus niet opslaan"
+         ],
+         "Could not save translate everything drafts": [
+            "Kon 'alles vertalen' concepten niet opslaan"
+         ],
+         "Settings saved successfully": [
+            "Instellingen succesvol opgeslagen"
          ]
       }
    }

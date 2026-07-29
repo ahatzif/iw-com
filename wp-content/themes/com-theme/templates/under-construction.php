@@ -9,8 +9,15 @@
 <body <?php body_class("group fixed top-0 left-0 right-0 bottom-0 text-16 "); ?>  data-barba="wrapper" >
     <?php wp_body_open(); ?>
     <div class="fixed inset-0 flex flex-col justify-center items-center gap-20" >
-        <?php if( ! empty( $logo_id = get_field( 'uc_logo', 'option' )  ) ) { ?>
-        <img src="<?php echo $logo_id[ 'url' ]; ?>" alt="" class="w-[20rem] h-auto">
+        <?php if( ! empty( $logo_id = com_theme_attachment_id( get_field( 'uc_logo', 'option' ) ) ) ) { ?>
+        <?php get_template_part( 'templates/parts/image', null, [
+            'id'       => $logo_id,
+            'size'     => 'full',
+            'classes'  => 'w-[20rem] h-auto',
+            'alt'      => '',
+            'lazy'     => false,
+            'parallax' => false,
+        ] ); ?>
         <?php } ?>
         <?php if( ! empty( $uc_text = get_field( 'uc_text', 'option' ) ) ) {  ?>
         <h1 class="font-normal text-[2rem] leading-none"><?php echo $uc_text ?></h1>
@@ -18,4 +25,3 @@
     </div>
 </body>
 </html>
-

@@ -1,5 +1,7 @@
 <?php
 
+use WPML\MediaTranslation\MediaField;
+
 class WPML_Media_Save_Translation implements IWPML_Action {
 
 	/**
@@ -23,6 +25,8 @@ class WPML_Media_Save_Translation implements IWPML_Action {
 	 */
 	private $translation_element_factory;
 
+	/** @var MediaField  */
+	private $media_field;
 
 	/**
 	 * WPML_Media_Save_Translation constructor.
@@ -31,12 +35,20 @@ class WPML_Media_Save_Translation implements IWPML_Action {
 	 * @param wpdb                             $wpdb
 	 * @param WPML_Media_File_Factory          $media_file_factory
 	 * @param WPML_Translation_Element_Factory $translation_element_factory
+	 * @param MediaField|null                  $media_field
 	 */
-	public function __construct( SitePress $sitepress, wpdb $wpdb, WPML_Media_File_Factory $media_file_factory, WPML_Translation_Element_Factory $translation_element_factory ) {
+	public function __construct(
+		SitePress $sitepress,
+		wpdb $wpdb,
+		WPML_Media_File_Factory $media_file_factory,
+		WPML_Translation_Element_Factory $translation_element_factory,
+		?MediaField $media_field = null
+	) {
 		$this->sitepress                   = $sitepress;
 		$this->wpdb                        = $wpdb;
 		$this->media_file_factory          = $media_file_factory;
 		$this->translation_element_factory = $translation_element_factory;
+		$this->media_field                 = null !== $media_field ? $media_field : new MediaField();
 	}
 
 	public function add_hooks() {
@@ -46,18 +58,28 @@ class WPML_Media_Save_Translation implements IWPML_Action {
 	public function save_media_translation() {
 
 		if ( wp_verify_nonce( $_POST['wpnonce'], 'media-translation' ) ) {
+
 			$post_array['ID']       = (int) $_POST['translated-attachment-id'];
 			$original_attachment_id = (int) $_POST['original-attachment-id'];
 			$translated_language    = sanitize_text_field( $_POST['translated-language'] );
 
+			if ( ! current_user_can( 'edit_post', (int) $original_attachment_id ) ) {
+				wp_send_json_error( array( 'error' => __( 'You are not allowed to edit this item.', 'wpml-media' ) ) );
+				return;
+			}
+
 			if ( isset( $_POST['translation']['title'] ) ) {
-				$post_array['post_title'] = sanitize_text_field( $_POST['translation']['title'] );
+				$post_array['post_title'] = $_POST['translation']['title'];
 			}
 			if ( isset( $_POST['translation']['caption'] ) ) {
-				$post_array['post_excerpt'] = sanitize_text_field( $_POST['translation']['caption'] );
+				$post_array['post_excerpt'] = $_POST['translation']['caption'];
 			}
 			if ( isset( $_POST['translation']['description'] ) ) {
-				$post_array['post_content'] = sanitize_text_field( $_POST['translation']['description'] );
+				$post_array['post_content'] = $_POST['translation']['description'];
+			}
+
+			if ( $this->should_restore_media() ) {
+				$post_array['post_mime_type'] = get_post_field( 'post_mime_type', $original_attachment_id );
 			}
 
 			if ( $post_array['ID'] ) {
@@ -82,6 +104,8 @@ class WPML_Media_Save_Translation implements IWPML_Action {
 					$this->get_post_lang_value()
 				);
 
+				( new WPML_WP_Cache( WPML_ELEMENT_TRANSLATIONS_CACHE_GROUP ) )->flush_group_cache();
+
 				if ( ! $this->has_media_upload() ) {
 					$this->copy_attached_file_info_from_original( $attachment_id, $original_attachment_id );
 				}
@@ -102,6 +126,33 @@ class WPML_Media_Save_Translation implements IWPML_Action {
 					'_wp_attachment_image_alt',
 					sanitize_text_field( $_POST['translation']['alt-text'] )
 				);
+			}
+
+			if ( ! empty( $_POST['translation']['custom-field'] )
+				&& is_array( $_POST['translation']['custom-field'] )
+			) {
+				$translation_fields = $_POST['translation']['custom-field'];
+				// Delete meta key first.
+				foreach ( $translation_fields as $meta_key => $meta_value ) {
+					$meta_key = $this->media_field->getFieldId( $meta_key );
+					delete_post_meta( $attachment_id, $meta_key );
+				}
+
+				// Add multiple values.
+				foreach ( $translation_fields as $meta_key => $meta_value ) {
+					$meta_key = $this->media_field->getFieldId( $meta_key );
+					if ( strpos( $meta_value, "\n" ) !== false || strpos( $meta_value, "\r\n" ) !== false ) {
+						$sanitized = sanitize_textarea_field( $meta_value );
+					} else {
+						$sanitized = sanitize_text_field( $meta_value );
+					}
+
+					add_post_meta(
+						$attachment_id,
+						$meta_key,
+						$sanitized
+					);
+				}
 			}
 
 			if ( 0 === strpos( get_post_field( 'post_mime_type', $original_attachment_id ), 'image/' ) ) {
@@ -146,11 +197,11 @@ class WPML_Media_Save_Translation implements IWPML_Action {
 	}
 
 	private function has_media_upload() {
-		return ! empty( $_POST['update-media-file'] );
+		return ! empty( $_POST['update-media-file'] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 	}
 
 	private function should_restore_media() {
-		return ! empty( $_POST['restore-media'] );
+		return ! empty( $_POST['restore-media'] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 	}
 
 	/**
@@ -163,7 +214,7 @@ class WPML_Media_Save_Translation implements IWPML_Action {
 
 		$post_element = $this->translation_element_factory->create( $original_attachment_id, 'post' );
 		$this->set_post_trid_value( $post_element->get_trid() );
-		$this->set_post_lang_value( $_POST['translated-language'] );
+		$this->set_post_lang_value( $_POST['translated-language'] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
 		add_filter( 'wpml_tm_save_post_trid_value', array( $this, 'get_post_trid_value' ) );
 		add_filter( 'wpml_tm_save_post_lang_value', array( $this, 'get_post_lang_value' ) );
@@ -258,7 +309,7 @@ class WPML_Media_Save_Translation implements IWPML_Action {
 
 			$file = $media_file_upload['upload'];
 
-			// delete previous media file + sizes
+			// delete previous media file + sizes.
 			$media_file = $this->media_file_factory->create( $attachment_id );
 			$media_file->delete();
 
@@ -271,6 +322,8 @@ class WPML_Media_Save_Translation implements IWPML_Action {
 			$post_data = $this->get_attachment_post_data( $file );
 			$this->wpdb->update( $this->wpdb->posts, $post_data, array( 'ID' => $attachment_id ) );
 			update_attached_file( $attachment_id, $file['file'] );
+
+			clean_post_cache( $attachment_id );
 
 			/**
 			 * Fires after attached file is updated
@@ -291,7 +344,19 @@ class WPML_Media_Save_Translation implements IWPML_Action {
 			 */
 			do_action( 'wpml_updated_attached_file', $attachment_id, $file, $translated_language_code );
 
-			wp_update_attachment_metadata( $attachment_id, wp_generate_attachment_metadata( $attachment_id, $file['file'] ) );
+			$attachment_metadata = wp_generate_attachment_metadata( $attachment_id, $file['file'] );
+
+			$current_attachment_metadata = wp_get_attachment_metadata( $attachment_id );
+
+			if ( $current_attachment_metadata && isset( $current_attachment_metadata['sizes'] ) ) {
+				$attachment_metadata['sizes'] = $current_attachment_metadata['sizes'];
+			}
+
+			wp_update_attachment_metadata( $attachment_id, $attachment_metadata );
+
+			if ( 'application/pdf' === $file['type'] ) {
+				wp_delete_file( $media_file_upload['thumb'] );
+			}
 
 			$this->mark_media_as_translated( $original_attachment_id, $translated_language_code );
 			do_action( 'wpml_added_media_file_translation', $original_attachment_id, $file, $translated_language_code );
@@ -299,5 +364,4 @@ class WPML_Media_Save_Translation implements IWPML_Action {
 			delete_transient( $transient_key );
 		}
 	}
-
 }

@@ -1018,31 +1018,44 @@ class IW_Cashier_Ticketing {
                 'id'    => 'all',
                 'label' => __( 'Όλα', 'iw-theme' ),
             ],
-            'permanent-exhibition' => [
+        ];
+
+        $supported_post_types = class_exists( 'IW_Ticketing' )
+            ? IW_Ticketing::get_supported_post_types()
+            : [];
+
+        if ( in_array( 'museum', $supported_post_types, true ) ) {
+            $filters['museum'] = [
+                'id'    => 'museum',
+                'label' => __( 'Μουσεία', 'iw-theme' ),
+            ];
+        }
+
+        if ( in_array( 'building', $supported_post_types, true ) || in_array( 'exhibition', $supported_post_types, true ) ) {
+            $filters['permanent-exhibition'] = [
                 'id'    => 'permanent-exhibition',
                 'label' => __( 'Μόνιμες Εκθέσεις', 'iw-theme' ),
-            ],
-            'temporary-exhibition' => [
+            ];
+            $filters['temporary-exhibition'] = [
                 'id'    => 'temporary-exhibition',
                 'label' => __( 'Περιοδικές Εκθέσεις', 'iw-theme' ),
-            ],
-            'guided-tour' => [
-                'id'    => 'guided-tour',
-                'label' => __( 'Ξεναγήσεις', 'iw-theme' ),
-            ],
-            'event' => [
-                'id'    => 'event',
-                'label' => __( 'Εκδηλώσεις', 'iw-theme' ),
-            ],
-            'learning-program' => [
-                'id'    => 'learning-program',
-                'label' => __( 'Εκπαιδευτικά Προγράμματα', 'iw-theme' ),
-            ],
-            'experience' => [
-                'id'    => 'experience',
-                'label' => __( 'Experiences', 'iw-theme' ),
-            ],
+            ];
+        }
+
+        $filter_labels = [
+            'guided-tour'     => __( 'Ξεναγήσεις', 'iw-theme' ),
+            'event'           => __( 'Εκδηλώσεις', 'iw-theme' ),
+            'learning-program'=> __( 'Εκπαιδευτικά Προγράμματα', 'iw-theme' ),
+            'experience'      => __( 'Experiences', 'iw-theme' ),
         ];
+        foreach ( $filter_labels as $post_type => $label ) {
+            if ( in_array( $post_type, $supported_post_types, true ) ) {
+                $filters[ $post_type ] = [
+                    'id'    => $post_type,
+                    'label' => $label,
+                ];
+            }
+        }
 
         return (array) apply_filters( 'iw_cashier_ticket_filters', $filters );
     }
@@ -1076,11 +1089,14 @@ class IW_Cashier_Ticketing {
 
         $selected_types = ! empty( $types )
             ? $types
-            : [ 'permanent-exhibition', 'temporary-exhibition', 'guided-tour', 'event', 'learning-program', 'experience' ];
+            : array_values( array_diff( array_keys( self::get_ticket_filters() ), [ 'all' ] ) );
 
         $has_permanent_exhibitions = in_array( 'permanent-exhibition', $selected_types, true );
         $has_temporary_exhibitions = in_array( 'temporary-exhibition', $selected_types, true );
         $post_types = [];
+        if ( in_array( 'museum', $selected_types, true ) ) {
+            $post_types[] = 'museum';
+        }
         if ( $has_permanent_exhibitions ) {
             $post_types[] = 'building';
             if ( $search !== '' ) {
@@ -1110,14 +1126,18 @@ class IW_Cashier_Ticketing {
             $query_limit = max( $query_limit, min( 800, max( 120, $limit * 12 ) ) );
         }
 
-        $meta_query = [
-            'relation'          => 'AND',
-            'cashier_is_abroad' => [
+        $has_museums = in_array( 'museum', $post_types, true );
+        $meta_query  = [
+            'relation' => 'AND',
+        ];
+
+        if ( ! $has_museums ) {
+            $meta_query['cashier_is_abroad'] = [
                 'key'     => 'is_abroad',
                 'compare' => '=',
                 'value'   => '0',
-            ],
-        ];
+            ];
+        }
 
         if ( $search === '' ) {
             $today = current_time( 'Ymd' );
@@ -1133,11 +1153,13 @@ class IW_Cashier_Ticketing {
                 'value'   => $today,
                 'type'    => 'NUMERIC',
             ];
-            $meta_query['cashier_is_permanent'] = [
-                'key'     => 'is_permanent',
-                'compare' => '=',
-                'value'   => '0',
-            ];
+            if ( ! $has_museums ) {
+                $meta_query['cashier_is_permanent'] = [
+                    'key'     => 'is_permanent',
+                    'compare' => '=',
+                    'value'   => '0',
+                ];
+            }
         }
 
         $orderby = [
@@ -1183,7 +1205,7 @@ class IW_Cashier_Ticketing {
                 continue;
             }
 
-            if ( $building_id > 0 && (int) ( $entry['building_id'] ?? 0 ) !== $building_id ) {
+            if ( $building_id > 0 && empty( $entry['all_locations'] ) && (int) ( $entry['building_id'] ?? 0 ) !== $building_id ) {
                 continue;
             }
 
@@ -1225,6 +1247,7 @@ class IW_Cashier_Ticketing {
         $source_title = self::cashier_title( get_the_title( $source_id ) );
         $ticket_title = self::cashier_title( get_the_title( $ticket_id ) );
         $type         = self::cashier_ticket_entry_type( $source_id, $ticket_id );
+        $all_locations = self::is_all_locations_ticket_post( $ticket_id );
         $building_id  = self::cashier_ticket_entry_building_id( $source_id, $ticket_id );
         $image        = self::cashier_ticket_entry_image( $source_id, $ticket_id );
         $dates        = self::cashier_ticket_entry_dates( $source_id, $type );
@@ -1246,6 +1269,7 @@ class IW_Cashier_Ticketing {
             'ticket_post_type' => get_post_type( $ticket_id ),
             'type'             => $type,
             'type_label'       => self::ticket_filter_label( $type ),
+            'all_locations'    => $all_locations,
             'building_id'      => $building_id,
             'building_title'   => $building_id > 0 ? self::plain_text( get_the_title( $building_id ) ) : '',
             'thumb'            => $image['thumb'],
@@ -1265,6 +1289,23 @@ class IW_Cashier_Ticketing {
         $thumbnail_id = get_post_thumbnail_id( $source_id );
         if ( ! $thumbnail_id && $ticket_id !== $source_id ) {
             $thumbnail_id = get_post_thumbnail_id( $ticket_id );
+        }
+
+        if ( ! $thumbnail_id && function_exists( 'get_field' ) ) {
+            foreach ( [ 'card_image', 'hero_image' ] as $field_name ) {
+                $image = get_field( $field_name, $source_id );
+                if ( is_numeric( $image ) ) {
+                    $thumbnail_id = absint( $image );
+                } elseif ( is_object( $image ) && isset( $image->ID ) ) {
+                    $thumbnail_id = absint( $image->ID );
+                } elseif ( is_array( $image ) ) {
+                    $thumbnail_id = absint( $image['ID'] ?? ( $image['id'] ?? 0 ) );
+                }
+
+                if ( $thumbnail_id ) {
+                    break;
+                }
+            }
         }
 
         if ( ! $thumbnail_id ) {
@@ -1462,7 +1503,35 @@ class IW_Cashier_Ticketing {
         return sprintf( '%s €', number_format_i18n( $price, floor( $price ) === $price ? 0 : 2 ) );
     }
 
+    protected static function is_all_locations_ticket_post( int $post_id ): bool {
+        if ( $post_id <= 0 ) {
+            return false;
+        }
+
+        $scope = (string) get_post_meta( $post_id, 'iw_ticket_scope', true );
+        $is_all_locations = in_array( $scope, [ 'all_locations', 'all_museums' ], true );
+
+        if ( ! $is_all_locations ) {
+            $flag = get_post_meta( $post_id, '_com_all_museums_ticket', true );
+            $is_all_locations = $flag === true || $flag === 1 || $flag === '1' || $flag === 'yes' || $flag === 'true';
+        }
+
+        return (bool) apply_filters( 'iw_cashier_ticket_entry_is_all_locations', $is_all_locations, $post_id );
+    }
+
     protected static function cashier_ticket_entry_building_id( int $source_id, int $ticket_id ): int {
+        if ( self::is_all_locations_ticket_post( $ticket_id ) || self::is_all_locations_ticket_post( $source_id ) ) {
+            return 0;
+        }
+
+        if ( get_post_type( $ticket_id ) === 'museum' ) {
+            return $ticket_id;
+        }
+
+        if ( get_post_type( $source_id ) === 'museum' ) {
+            return $source_id;
+        }
+
         if ( get_post_type( $ticket_id ) === 'building' ) {
             return $ticket_id;
         }
@@ -1553,6 +1622,10 @@ class IW_Cashier_Ticketing {
     }
 
     protected static function cashier_ticket_entry_type( int $source_id, int $ticket_id ): string {
+        if ( get_post_type( $ticket_id ) === 'museum' || get_post_type( $source_id ) === 'museum' ) {
+            return 'museum';
+        }
+
         if ( get_post_type( $ticket_id ) === 'building' || self::is_permanent_exhibition( $source_id ) ) {
             return 'permanent-exhibition';
         }

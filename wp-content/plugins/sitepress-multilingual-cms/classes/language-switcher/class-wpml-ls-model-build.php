@@ -22,6 +22,9 @@ class WPML_LS_Model_Build extends WPML_SP_User {
 		'css_classes'            => 'string',
 		'css_classes_link'       => 'string',
 		'backward_compatibility' => 'array',
+		'ls_aria_label'          => 'string',
+		'dropdown_ls_aria_label'   => 'string',
+		'dropdown_click_ls_aria_label' => 'string',
 	];
 
 	private $allowed_language_vars = [
@@ -40,6 +43,7 @@ class WPML_LS_Model_Build extends WPML_SP_User {
 		'backward_compatibility' => 'array',
 		'flag_width'             => 'int',
 		'flag_height'            => 'int',
+		'menu_item_label'        => 'string',
 	];
 
 	/**
@@ -68,6 +72,9 @@ class WPML_LS_Model_Build extends WPML_SP_User {
 		$vars['languages']             = $this->get_language_items( $slot, $template_data );
 		$vars['css_classes']           = $this->get_slot_css_classes( $slot );
 		$vars['css_classes_link']      = self::LINK_CSS_CLASS;
+		$vars['ls_aria_label']         = __( 'Language Switcher', 'sitepress' );
+		$vars['dropdown_ls_aria_label']  = __( 'Language switcher, press tab to navigate to other languages', 'sitepress' );
+		$vars['dropdown_click_ls_aria_label'] = __( 'Language switcher, click to open then tab to navigate', 'sitepress' );
 
 		$vars = $this->add_backward_compatibility_to_wrapper( $vars, $slot );
 
@@ -190,13 +197,26 @@ class WPML_LS_Model_Build extends WPML_SP_User {
 					$ret[ $code ]['flag_alt']   = ( $display_name || $display_native ) ? '' : $data['translated_name'];
 				}
 
+				$language_name = $data['translated_name'];
+
 				if ( $display_native ) {
 					$ret[ $code ]['native_name'] = $data['native_name'];
+					$language_name = $data['native_name'];
 				}
 
 				if ( $display_name ) {
 					$ret[ $code ]['display_name'] = $data['translated_name'];
 				}
+
+				if ( $display_name && $display_native ) {
+					$language_name = $data['translated_name'] . ' (' . $data['native_name'] . ')';
+				}
+
+				// Add menu item label for screen readers
+				$ret[ $code ]['menu_item_label'] = sprintf(
+					__( 'Switch to %s', 'sitepress' ),
+					$language_name
+				);
 
 				if ( $is_current_language ) {
 					$ret[ $code ]['is_current'] = true;
@@ -241,25 +261,9 @@ class WPML_LS_Model_Build extends WPML_SP_User {
 				$i++;
 			}
 
-			$ret = $this->order_menu_items( $ret, $this->sitepress->get_current_language() );
 		}
 
 		return $ret;
-	}
-
-	/**
-	 * @param array $menu_items
-	 *
-	 * @return array
-	 */
-	private function order_menu_items( $menu_items, $current_language ) {
-		if ( isset( $menu_items[$current_language] ) ) {
-			$current_language_value = $menu_items[$current_language];
-			unset($menu_items[$current_language]);
-			return array_merge([$current_language => $current_language_value], $menu_items);
-		} else {
-			return $menu_items;
-		}
 	}
 
 	/**

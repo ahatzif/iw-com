@@ -1,6 +1,7 @@
 <?php
 
 use WPML\API\Sanitize;
+use WPML\Core\Component\PostHog\Application\Service\Event\EventInstanceService;
 
 class WPML_LS_Admin_UI extends WPML_Templates_Factory {
 
@@ -50,7 +51,7 @@ class WPML_LS_Admin_UI extends WPML_Templates_Factory {
 	}
 
 	public function init_hooks() {
-		add_action( 'wpml_admin_languages_navigation_items', array( $this, 'languages_navigation_items_filter' ) );
+		add_filter( 'wpml_admin_languages_navigation_items', array( $this, 'languages_navigation_items_filter' ) );
 		add_action( 'wpml_admin_after_languages_url_format', array( $this, 'after_languages_url_format_action' ) );
 		add_action( 'wpml_admin_after_wpml_love', array( $this, 'after_wpml_love_action' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts_action' ) );
@@ -76,7 +77,8 @@ class WPML_LS_Admin_UI extends WPML_Templates_Factory {
 			wp_register_script(
 				'wpml-language-switcher-settings',
 				ICL_PLUGIN_URL . '/res/js/language-switchers-settings' . $suffix . '.js',
-				array( 'jquery', 'wp-util', 'jquery-ui-sortable', 'jquery-ui-dialog', 'wp-color-picker', 'wp-pointer' )
+				array( 'jquery', 'wp-util', 'jquery-ui-sortable', 'jquery-ui-dialog', 'wp-color-picker', 'wp-pointer' ),
+				ICL_SITEPRESS_SCRIPT_VERSION
 			);
 			wp_enqueue_script( 'wpml-language-switcher-settings' );
 
@@ -111,11 +113,48 @@ class WPML_LS_Admin_UI extends WPML_Templates_Factory {
 	public function save_settings_action() {
 		if ( $this->has_valid_nonce() && isset( $_POST['settings'] ) ) {
 			$new_settings = $this->parse_request_settings( 'settings' );
+
+			// Get old settings BEFORE saving to detect changes
+			$old_settings = $this->settings->get_settings();
+
 			$this->settings->save_settings( $new_settings );
+
+			// Captures PostHog event for footer LS enable/disable if it's changed.
+			$this->capturePostHogEventForFooterLSChange( $old_settings, $new_settings );
+
 			$this->maybe_complete_setup_wizard_step( $new_settings );
 			$this->sitepress->get_wp_api()->wp_send_json_success( esc_html__( 'Settings saved', 'sitepress' ) );
 		} else {
 			$this->sitepress->get_wp_api()->wp_send_json_error( esc_html__( "You can't do that!", 'sitepress' ) );
+		}
+	}
+
+	/**
+	 * Capture PostHog event when footer language switcher state changes
+	 *
+	 * @param array $oldSettings The settings before saving
+	 * @param array $newSettings The new settings being saved
+	 */
+	private function capturePostHogEventForFooterLSChange( $oldSettings, $newSettings ) {
+		// Get the old footer switcher state (from database/slot object)
+		$oldFooterLSEnabled = isset( $oldSettings['statics']['footer'] )
+		                      && $oldSettings['statics']['footer']->get( 'show' );
+
+		// Get the new footer switcher state (from POST data)
+		// Note: Unchecked checkboxes don't send any data, so the key won't exist
+		$newFooterLSEnabled = isset( $newSettings['statics']['footer']['show'] )
+		                      && ! empty( $newSettings['statics']['footer']['show'] );
+
+		// Only capture event if the state has changed
+		if ( $oldFooterLSEnabled !== $newFooterLSEnabled ) {
+			$eventProps = array(
+				'enabled' => $newFooterLSEnabled,
+				'source'  => 'languages_page',
+			);
+
+			\WPML\PostHog\Event\CaptureEvent::capture(
+				( new EventInstanceService() )->getFooterLanguageSwitcherToggledEvent( $eventProps )
+			);
 		}
 	}
 
@@ -164,15 +203,18 @@ class WPML_LS_Admin_UI extends WPML_Templates_Factory {
 	/**
 	 * @param string $key
 	 *
-	 * @return mixed|null|string
+	 * @return array
 	 */
 	private function parse_request_settings( $key ) {
 		$settings = array_key_exists( $key, $_POST ) ? $_POST[ $key ] : null;
 		$settings = Sanitize::string($settings, ENT_NOQUOTES);
 
-		$settings = urldecode( $settings );
-		parse_str( $settings, $settings_array );
-		return $settings_array;
+		if ( $settings ) {
+			parse_str( urldecode( $settings ), $settings_array );
+			return $settings_array;
+		}
+
+		return [];
 	}
 
 	/**
@@ -181,7 +223,9 @@ class WPML_LS_Admin_UI extends WPML_Templates_Factory {
 	private function has_valid_nonce() {
 		$nonce = Sanitize::stringProp( 'nonce', $_POST );
 
-		return (bool) wp_verify_nonce( $nonce, self::NONCE_NAME );
+		return $nonce
+			? (bool) wp_verify_nonce( $nonce, self::NONCE_NAME )
+			: false;
 	}
 
 	/**
@@ -387,17 +431,19 @@ class WPML_LS_Admin_UI extends WPML_Templates_Factory {
 				'text' => __( 'Add a comma-separated list of URL arguments that you want WPML to pass when switching languages.', 'sitepress' ),
 				'link' => array(
 					'text'   => __( 'Preserving URL arguments', 'sitepress' ),
-					'url'    => 'https://wpml.org/documentation/getting-started-guide/language-setup/language-switcher-options/?utm_source=plugin&utm_medium=gui&utm_campaign=wpmlcore#preserving-url-parameters',
+					'url'    => 'https://wpml.org/documentation/getting-started-guide/language-setup/language-switcher-options/preserve-url-arguments-when-switching-languages/?utm_source=plugin&utm_medium=gui&utm_campaign=languages',
 					'target' => '_blank',
 				),
+				'id'   => 'preserve_url_arguments_tooltip',
 			),
 			'additional_css'                => array(
 				'text' => __( 'Enter CSS to add to the page. This is useful when you want to add styling to the language switcher, without having to edit the CSS file on the server.', 'sitepress' ),
 				'link' => array(
 					'text'   => __( 'Styling the language switcher with additional CSS', 'sitepress' ),
-					'url'    => 'https://wpml.org/documentation/getting-started-guide/language-setup/language-switcher-options/?utm_source=plugin&utm_medium=gui&utm_campaign=wpmlcore#styling-the-language-switcher-with-additional-css',
+					'url'    => 'https://wpml.org/documentation/getting-started-guide/language-setup/language-switcher-options/how-to-fix-styling-and-css-issues-for-the-language-switchers/?utm_source=plugin&utm_medium=gui&utm_campaign=languages',
 					'target' => '_blank',
 				),
+				'id'   => 'additional_css_tooltip',
 			),
 			'section_post_translations'     => array(
 				'text' => __( 'You can display links to translation of posts before the post and after it. These links look like "This post is also available in..."', 'sitepress' ),
@@ -419,6 +465,7 @@ class WPML_LS_Admin_UI extends WPML_Templates_Factory {
 			),
 			'available_menus'               => array(
 				'text' => __( 'Select the menus, in which to display the language switcher.', 'sitepress' ),
+				'id'   => 'available_menus_tooltip',
 			),
 			'available_sidebars'            => array(
 				'text' => __( 'Select the widget area where to include the language switcher.', 'sitepress' ),
@@ -443,6 +490,7 @@ class WPML_LS_Admin_UI extends WPML_Templates_Factory {
 			),
 			'backwards_compatibility'       => array(
 				'text' => __( "Since WPML 3.6.0, the language switchers are not using CSS IDs and the CSS classes have changed. This was required to fix some bugs and match the latest standards. If your theme or your custom CSS is not relying on these old selectors, it's recommended to skip the backwards compatibility. However, it's still possible to re-activate this option later.", 'sitepress' ),
+				'id'   => 'backwards_compatibility_tooltip',
 			),
 			'show_in_footer'                => array(
 				'text' => __( "You can display a language switcher in the site's footer. You can customize and style it here.", 'sitepress' ),
@@ -539,7 +587,7 @@ class WPML_LS_Admin_UI extends WPML_Templates_Factory {
 	public function get_shortcode_actions_strings() {
 
 		$description_link_text = _x( "insert WPML's switchers in custom locations", 'Custom languuage switcher description: external link text', 'sitepress' );
-		$description_link_url  = 'https://wpml.org/documentation/getting-started-guide/language-setup/language-switcher-options/?utm_source=plugin&utm_medium=gui&utm_campaign=wpmlcore#custom-locations';
+		$description_link_url  = 'https://wpml.org/documentation/getting-started-guide/language-setup/language-switcher-options/adding-language-switchers-using-php-and-shortcodes/?utm_source=plugin&utm_medium=gui&utm_campaign=languages';
 		$description_link      = '<a href="' . $description_link_url . '" target="_blank">' . $description_link_text . '</a>';
 		$description           = _x( 'Need more options? See how you can %s.', 'Custom languuage switcher description: text', 'sitepress' );
 
@@ -578,6 +626,8 @@ class WPML_LS_Admin_UI extends WPML_Templates_Factory {
 		return array(
 			'confirmation_item_remove' => esc_html__( 'Do you really want to remove this item?', 'sitepress' ),
 			'leave_text_box_to_save'   => esc_html__( 'Leave the text box to auto-save', 'sitepress' ),
+			'menu_option_not_chosen'   => __( 'Choose which menu to display your language switcher', 'sitepress' ),
+			'widget_option_not_chosen' => __( 'Choose which widget to display your language switcher', 'sitepress' ),
 		);
 	}
 
@@ -593,7 +643,7 @@ class WPML_LS_Admin_UI extends WPML_Templates_Factory {
 			'title'                => __( 'Reset settings', 'sitepress' ),
 			'description'          => sprintf( esc_html__( 'This will change the settings of your language switchers %s to their defaults as set by the theme. Please note that some switchers may be removed and others may be added.', 'sitepress' ), '<strong>(' . $reset_locations . ')</strong>' ),
 			'theme_config_file'    => $theme_wpml_config_file,
-			'explanation_text'     => sprintf( esc_html__( '* Your theme has a %s file, which sets the default values for WPML.', 'sitepress' ), '<strong title="' . esc_attr( $theme_wpml_config_file ) . '">wpml-config.xml</strong>' ),
+			'explanation_text'     => sprintf( esc_html__( '* Your theme has a %s file, which sets the default values for WPML.', 'sitepress' ), '<strong title="' . esc_attr( (string) $theme_wpml_config_file ) . '">wpml-config.xml</strong>' ),
 			'confirmation_message' => __( 'Are you sure you want to reset to the default settings?', 'sitepress' ),
 			'restore_page_url'     => admin_url( 'admin.php?page=' . self::get_page_hook() . '&restore_ls_settings=1&nonce=' . wp_create_nonce( self::RESET_NONCE_NAME ) ),
 			'restore_button_label' => __( 'Restore default', 'sitepress' ),

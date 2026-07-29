@@ -10,9 +10,9 @@ $capture_html = static function ( callable $callback ): string {
 };
 ?>
 <div class="woocommerce-checkout-review-order-table overflow-hidden rounded-[1.5rem] bg-white text-blue">
-    <div class="space-y-30 p-30 md:p-60">
+    <div class="space-y-30 p-30 md:p-40">
         <?php do_action( 'woocommerce_review_order_before_cart_contents' ); ?>
-        <div class="space-y-40">
+        <div class="space-y-20">
             <?php foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) :
                 $product = apply_filters( 'woocommerce_cart_item_product', $cart_item['data'], $cart_item, $cart_item_key );
                 if ( ! $product || ! $product->exists() || empty( $cart_item['quantity'] ) || ! apply_filters( 'woocommerce_checkout_cart_item_visible', true, $cart_item, $cart_item_key ) ) {
@@ -22,14 +22,14 @@ $capture_html = static function ( callable $callback ): string {
                 <?php wc_get_template( 'cart/cart-item.php', [
                     'cart_item_key' => $cart_item_key,
                     'cart_item'     => $cart_item,
-                    'variant'       => 'summary',
+                    'variant'       => 'checkout-summary',
                 ] ); ?>
             <?php endforeach; ?>
         </div>
         <?php do_action( 'woocommerce_review_order_after_cart_contents' ); ?>
     </div>
 
-    <div class="border-t border-dashed border-blue-soft px-30 py-30 md:px-60">
+    <div class="relative border-t border-dashed border-blue-soft px-30 py-30 before:absolute before:-left-15 before:-top-15 before:size-30 before:rounded-full before:bg-blue before:content-[''] after:absolute after:-right-15 after:-top-15 after:size-30 after:rounded-full after:bg-blue after:content-[''] md:px-40">
         <?php foreach ( WC()->cart->get_coupons() as $code => $coupon ) :
             $coupon_html = $capture_html( static function () use ( $coupon ): void {
                 wc_cart_totals_coupon_html( $coupon );

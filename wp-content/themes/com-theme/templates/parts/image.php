@@ -22,7 +22,7 @@ if( ! empty( $id ) && ! empty( $imageData = acf_get_attachment( $id ) ) )  {
     ?>
 
     <img <?php if( $parallax) {  ?>data-parallax<?php } ?> <?php echo $attrs; ?>
-         alt="<?php echo esc_attr( ! empty( $alt ) ? $alt : $imageData[ 'title' ] ); ?>"
+         alt="<?php echo esc_attr( false !== $alt ? $alt : $imageData[ 'title' ] ); ?>"
          width="<?php echo $sizes[ $size . 'width' ]; ?>"
          height="<?php echo $sizes[ $size . 'height' ]; ?>"
         <?php if( $lazy ) { ?>

@@ -62,6 +62,9 @@ class WPML_Compatibility_Plugin_Fusion_Global_Element_Hooks extends BaseHooks im
 			add_filter( 'manage_fusion_tb_section_posts_columns', [ $this, 'add_language_column_header' ] );
 			add_action( 'manage_fusion_tb_section_custom_column', [ $this, 'add_language_column_content' ], 10, 2 );
 
+			add_filter( 'manage_fusion_form_posts_columns', [ $this, 'add_language_column_header' ] );
+			add_action( 'manage_fusion_form_custom_column', [ $this, 'add_language_column_content' ], 10, 2 );
+
 			add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
 			add_action( 'wp_ajax_' . self::ACTION, [ $this, 'get_template_translation_icons' ] );
 		}
@@ -127,7 +130,33 @@ class WPML_Compatibility_Plugin_Fusion_Global_Element_Hooks extends BaseHooks im
 	 * @return array
 	 */
 	public function add_language_column_header( $columns ) {
-		return $this->custom_columns->add_posts_management_column( $columns );
+		if ( $this->getLibraryPostTypeTranslatable() ) {
+			$columns = $this->custom_columns->add_posts_management_column( $columns );
+		}
+
+		return $columns;
+	}
+
+	/**
+	 * @return bool
+	 */
+	private function getLibraryPostTypeTranslatable() {
+		/* phpcs:ignore WordPress.Security.NonceVerification.Recommended */
+		if ( ! isset( $_GET['type'] ) ) {
+			return true;
+		}
+
+		/* phpcs:ignore WordPress.Security.NonceVerification.Recommended */
+		$type = 'template' === $_GET['type']
+			? 'fusion_template'
+			: 'fusion_element';
+
+		/* phpcs:ignore WordPress.Security.NonceVerification.Recommended */
+		if ( 'avada-forms' === $_GET['page'] ) {
+			$type = 'fusion_form';
+		}
+
+		return apply_filters( 'wpml_is_translated_post_type', false, $type );
 	}
 
 	public function enqueue_scripts() {
@@ -160,7 +189,10 @@ class WPML_Compatibility_Plugin_Fusion_Global_Element_Hooks extends BaseHooks im
 	 */
 	public function add_language_column_content( $column_name, $item = null ) {
 		$id = $item ? $item['id'] : null;
-		$this->custom_columns->add_content_for_posts_management_column( $column_name, $id );
+
+		if ( $id && $this->getLibraryPostTypeTranslatable() ) {
+			$this->custom_columns->add_content_for_posts_management_column( $column_name, $id );
+		}
 	}
 
 	public function get_template_translation_icons() {

@@ -1,5 +1,6 @@
 <?php
 
+// phpcs:disable WordPress.WP.I18n.NonSingularStringLiteralText, WordPress.WP.I18n.LowLevelTranslationFunction, WordPress.WP.I18n.TooManyFunctionArgs, WordPress.WP.I18n.NonSingularStringLiteralDomain
 class WPML_Beaver_Builder_Media_Nodes_Iterator implements IWPML_PB_Media_Nodes_Iterator {
 
 	/** @var WPML_Beaver_Builder_Media_Node_Provider $node_provider */
@@ -10,7 +11,7 @@ class WPML_Beaver_Builder_Media_Nodes_Iterator implements IWPML_PB_Media_Nodes_I
 	}
 
 	/**
-	 * @param array $data_array
+	 * @param array  $data_array
 	 * @param string $lang
 	 * @param string $source_lang
 	 *
@@ -21,8 +22,8 @@ class WPML_Beaver_Builder_Media_Nodes_Iterator implements IWPML_PB_Media_Nodes_I
 			if ( is_array( $data ) ) {
 				$data = $this->translate( $data, $lang, $source_lang );
 			} elseif ( is_object( $data )
-			           && isset( $data->type ) && 'module' === $data->type
-			           && isset( $data->settings ) && isset( $data->settings->type )
+				&& isset( $data->type ) && 'module' === $data->type
+				&& isset( $data->settings ) && isset( $data->settings->type )
 			) {
 				$data->settings = $this->translate_node( $data->settings, $lang, $source_lang );
 			}
@@ -33,8 +34,8 @@ class WPML_Beaver_Builder_Media_Nodes_Iterator implements IWPML_PB_Media_Nodes_I
 
 	/**
 	 * @param stdClass $settings
-	 * @param string $lang
-	 * @param string $source_lang
+	 * @param string   $lang
+	 * @param string   $source_lang
 	 *
 	 * @return stdClass
 	 */
@@ -46,5 +47,12 @@ class WPML_Beaver_Builder_Media_Nodes_Iterator implements IWPML_PB_Media_Nodes_I
 		}
 
 		return $settings;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function get_media() {
+		return $this->node_provider->get_media();
 	}
 }

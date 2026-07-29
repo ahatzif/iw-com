@@ -16,10 +16,10 @@ class WPML_TF_Backend_Document_Information extends WPML_TF_Document_Information 
 	/**
 	 * WPML_TF_Backend_Document_Information constructor.
 	 *
-	 * @param SitePress              $sitepress
-	 * @param WPML_TP_Client_Factory $tp_client_factory
+	 * @param SitePress                   $sitepress
+	 * @param WPML_TP_Client_Factory|null $tp_client_factory
 	 */
-	public function __construct( SitePress $sitepress, WPML_TP_Client_Factory $tp_client_factory = null ) {
+	public function __construct( SitePress $sitepress, ?WPML_TP_Client_Factory $tp_client_factory = null ) {
 		parent::__construct( $sitepress );
 		$this->tp_client_factory = $tp_client_factory;
 	}
@@ -160,7 +160,7 @@ class WPML_TF_Backend_Document_Information extends WPML_TF_Document_Information 
 			}
 		} else {
 			$post_author_id  = get_post_field( 'post_author', $this->id );
-			$translator_name = get_the_author_meta( 'display_name', $post_author_id );
+			$translator_name = get_the_author_meta( 'display_name', (int) $post_author_id );
 		}
 
 		return $translator_name;

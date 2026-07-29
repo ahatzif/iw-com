@@ -1,6 +1,7 @@
 <?php
 
 use WPML\FP\Obj;
+use WPML\LIB\WP\User;
 
 abstract class WPML_Translation_Job extends WPML_Translation_Job_Helper {
 	protected $basic_data;
@@ -23,8 +24,6 @@ abstract class WPML_Translation_Job extends WPML_Translation_Job_Helper {
 		$this->batch_id         = $batch_id ? $batch_id : TranslationProxy_Batch::update_translation_batch();
 		$this->blog_translators = $blog_translators ? $blog_translators : wpml_tm_load_blog_translators();
 	}
-
-	abstract public function cancel();
 
 	abstract public function get_original_element_id();
 
@@ -68,19 +67,22 @@ abstract class WPML_Translation_Job extends WPML_Translation_Job_Helper {
 	}
 
 	/**
-	 * Checks whether the input user is allowed to edit this job
+	 * Checks whether the input user is allowed to edit this job.
+	 *
+	 * If he is an administrator, he is allowed to edit any job.
+	 * If he is an editor, he is allowed to edit any job as long as he's able to translate such language pair.
+	 * Otherwise, we check two conditions:
+	 *  - job needs to be assigned to the user or to no one
+	 *  - user needs to be able to translate the language pair
 	 *
 	 * @param WP_User $user
 	 *
 	 * @return bool
 	 */
 	public function user_can_translate( $user ) {
-		$translator_id          = $this->get_translator_id();
-		$user_can_take_this_job = 0 === $translator_id
-								|| $this->is_current_user_allowed_to_translate(
-									$user,
-									$translator_id
-								);
+		if ( User::isAdministrator( $user ) ) {
+			return apply_filters( 'wpml_user_can_translate', true, $user );
+		}
 
 		$translator_has_job_language_pairs = $this->blog_translators->is_translator(
 			$user->ID,
@@ -90,9 +92,15 @@ abstract class WPML_Translation_Job extends WPML_Translation_Job_Helper {
 			] )
 		);
 
-		$user_can_translate = ( $user_can_take_this_job && $translator_has_job_language_pairs )
-							  || user_can( $user, 'manage_options' );
-		return apply_filters( 'wpml_user_can_translate', $user_can_translate, $user );
+		if ( $translator_has_job_language_pairs && User::isEditor( $user ) ) {
+			return apply_filters( 'wpml_user_can_translate', true, $user );
+		}
+
+		$translator_id          = $this->get_translator_id();
+		$user_can_take_this_job = 0 === $translator_id
+		                          || $this->is_current_user_allowed_to_translate( $user, $translator_id );
+
+		return apply_filters( 'wpml_user_can_translate', $user_can_take_this_job && $translator_has_job_language_pairs, $user );
 	}
 
 	/**
@@ -259,7 +267,6 @@ abstract class WPML_Translation_Job extends WPML_Translation_Job_Helper {
 		$data_array['batch_id']             = Obj::prop('batch_id', $job_data);
 		$data_array['source_language_code'] = Obj::prop('source_language_code', $this->basic_data);
 		$data_array['language_code']        = Obj::prop('language_code', $this->basic_data);
-		$data_array['translator_html']      = $this->get_translator_html( $this->basic_data );
 		$data_array['type']                 = $this->get_type();
 		$data_array['lang_text']            = $this->generate_lang_text();
 
@@ -296,91 +303,6 @@ abstract class WPML_Translation_Job extends WPML_Translation_Job_Helper {
 		return $service;
 	}
 
-	protected function get_translator_html( $job ) {
-
-		$job                  = (object) $job;
-		$current_service_name = TranslationProxy::get_current_service_name();
-		$translation_services = array( 'local', TranslationProxy::get_current_service_id() );
-
-		if ( isset( $job->translation_service ) && ! in_array( $job->translation_service, $translation_services ) ) {
-			$inactive_service     = $this->get_inactive_translation_service( $job->translation_service );
-			$current_service_name = $inactive_service->name;
-		}
-		$translator = '';
-
-		if ( Obj::prop( 'translation_service', $job ) !== 'local' ) {
-			try {
-				$project = TranslationProxy::get_current_project();
-				if ( $project ) {
-					$translator .= $current_service_name;
-				} else {
-					$translator .= esc_html( $job->translator_name );
-				}
-			} catch ( Exception $e ) {
-				// Just doesn't create the output
-			}
-		} elseif ( $job->status == ICL_TM_COMPLETE ) {
-			$translator_data = get_userdata( $job->translator_id );
-			$translator_name = $translator_data ? $translator_data->display_name : '';
-			$translator      = '<span class="icl-finished-local-name">' . $translator_name . '</span>';
-		} else {
-			$translator         .= '<span class="icl_tj_select_translator">';
-			$selected_translator = isset( $job->translator_id ) ? $job->translator_id : false;
-			$disabled            = false;
-			if ( $job->translation_service
-				 && $job->translation_service !== 'local'
-				 && is_numeric( $job->translation_service ) ) {
-				$selected_translator = TranslationProxy_Service::get_wpml_translator_id(
-					$job->translation_service,
-					$job->translator_id
-				);
-				$disabled            = true;
-			}
-
-			$job_id     = isset( $job->job_id ) ? $job->job_id : $job->id;
-			$local_only = isset( $job->local_only ) ? $job->local_only : true;
-			$args       = array(
-				'id'         => 'icl_tj_translator_for_' . $job_id,
-				'name'       => 'icl_tj_translator_for_' . ( $job_id ),
-				'from'       => $job->source_language_code,
-				'to'         => $job->language_code,
-				'selected'   => $selected_translator,
-				'services'   => $translation_services,
-				'disabled'   => $disabled,
-				'echo'       => false,
-				'local_only' => $local_only,
-			);
-
-			$translator .= wpml_tm_get_translators_dropdown()->render( $args );
-			$translator .= '<input type="hidden" id="icl_tj_ov_'
-						   . $job_id
-						   . '" value="'
-						   . (int) $job->translator_id
-						   . '" />';
-			$translator .= '<input type="hidden" id="icl_tj_ty_'
-						   . $job_id
-						   . '" value="'
-						   . strtolower( $this->get_type() )
-						   . '" />';
-			$translator .= '<span class="icl_tj_select_translator_controls" id="icl_tj_tc_' . ( $job_id ) . '">';
-			$translator .= '<input type="button" class="button-secondary icl_tj_ok" value="'
-						. __(
-							'Send',
-							'wpml-translation-management'
-						)
-						   . '" />&nbsp;';
-			$translator .= '<input type="button" class="button-secondary icl_tj_cancel" value="'
-						. __(
-							'Cancel',
-							'wpml-translation-management'
-						)
-						   . '" />';
-			$translator .= '</span>';
-		}
-
-		return $translator;
-	}
-
 	/**
 	 * Retrieves the batch ID associated to the job ID
 	 */
@@ -392,9 +314,9 @@ abstract class WPML_Translation_Job extends WPML_Translation_Job_Helper {
 	protected function generate_lang_text() {
 		$this->maybe_load_basic_data();
 
-		return $this->lang_code_to_name( $this->get_source_language_code() )
+		return $this->lang_code_to_name( (string) $this->get_source_language_code() )
 			   . html_entity_decode( ' &raquo; ' )
-			   . $this->lang_code_to_name( $this->get_language_code() );
+			   . $this->lang_code_to_name( (string) $this->get_language_code() );
 	}
 
 	/**

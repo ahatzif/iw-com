@@ -166,7 +166,7 @@ class acfe_field_flexible_content_preview{
      */
     function render_layout_settings($flexible, $layout, $prefix){
         
-        if(!acf_maybe_get($flexible, 'acfe_flexible_layouts_templates')){
+        if(!acfe_get($flexible, 'acfe_flexible_layouts_templates')){
             return;
         }
         
@@ -255,27 +255,21 @@ class acfe_field_flexible_content_preview{
     function render_field($field){
         
         // check setting
-        if(!acf_maybe_get($field, 'acfe_flexible_layouts_templates') || !acf_maybe_get($field, 'acfe_flexible_layouts_previews')){
+        if(!acfe_get($field, 'acfe_flexible_layouts_templates') || !acfe_get($field, 'acfe_flexible_layouts_previews')){
             return;
         }
-    
-        // vars
-        $name = $field['_name'];
-        $key = $field['key'];
-    
+        
         // vars
         global $is_preview;
         $is_preview = true;
     
-        // actions
-        do_action("acfe/flexible/enqueue",              $field, $is_preview);
-        do_action("acfe/flexible/enqueue/name={$name}", $field, $is_preview);
-        do_action("acfe/flexible/enqueue/key={$key}",   $field, $is_preview);
+        // render: global enqueue
+        acfe_flexible_render_enqueue($field);
     
-        // loop
+        // loop layouts
         foreach($field['layouts'] as $layout){
         
-            // Enqueue
+            // render: layout enqueue
             acfe_flexible_render_layout_enqueue($layout, $field);
         
         }
@@ -293,11 +287,11 @@ class acfe_field_flexible_content_preview{
      */
     function wrapper_attributes($wrapper, $field){
         
-        if(acf_maybe_get($field, 'acfe_flexible_layouts_placeholder')){
+        if(acfe_get($field, 'acfe_flexible_layouts_placeholder')){
             $wrapper['data-acfe-flexible-placeholder'] = 1;
         }
         
-        if(acf_maybe_get($field, 'acfe_flexible_layouts_templates') && acf_maybe_get($field, 'acfe_flexible_layouts_previews')){
+        if(acfe_get($field, 'acfe_flexible_layouts_templates') && acfe_get($field, 'acfe_flexible_layouts_previews')){
             $wrapper['data-acfe-flexible-placeholder'] = 1;
             $wrapper['data-acfe-flexible-preview'] = 1;
         }
@@ -320,7 +314,7 @@ class acfe_field_flexible_content_preview{
      */
     function prepare_layout($layout, $field, $i, $value, $prefix){
         
-        if(!acf_maybe_get($field, 'acfe_flexible_layouts_placeholder') && !acf_maybe_get($field, 'acfe_flexible_layouts_previews')){
+        if(!acfe_get($field, 'acfe_flexible_layouts_placeholder') && !acfe_get($field, 'acfe_flexible_layouts_previews')){
             return $layout;
         }
         
@@ -343,7 +337,7 @@ class acfe_field_flexible_content_preview{
         
         $html = false;
         
-        if(!empty($value) && acf_maybe_get($field, 'acfe_flexible_layouts_previews')){
+        if(!empty($value) && acfe_get($field, 'acfe_flexible_layouts_previews')){
             
             ob_start();
             
@@ -364,16 +358,13 @@ class acfe_field_flexible_content_preview{
         }
         
         ?>
-        
         <div <?php echo acf_esc_atts($placeholder); ?>>
             <a href="#" class="button">
                 <span class="dashicons dashicons-edit"></span>
             </a>
-            
             <div class="acfe-fc-overlay"></div>
             <div class="acfe-flexible-placeholder -preview"><?php echo $html; ?></div>
         </div>
-        
         <?php
         
         return $layout;
@@ -522,6 +513,8 @@ class acfe_field_flexible_content_preview{
         endif;
         
         acfe_reset_meta();
+        
+        $is_preview = false;
         
         return $this->return_or_die();
         

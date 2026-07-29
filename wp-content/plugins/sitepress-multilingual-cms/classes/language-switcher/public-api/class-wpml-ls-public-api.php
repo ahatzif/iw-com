@@ -19,16 +19,16 @@ class WPML_LS_Public_API {
 	/**
 	 * WPML_LS_Public_API constructor.
 	 *
-	 * @param WPML_LS_Settings     $settings
-	 * @param WPML_LS_Render       $render
-	 * @param SitePress            $sitepress
-	 * @param WPML_LS_Slot_Factory $slot_factory
+	 * @param WPML_LS_Settings          $settings
+	 * @param WPML_LS_Render            $render
+	 * @param SitePress                 $sitepress
+	 * @param WPML_LS_Slot_Factory|null $slot_factory
 	 */
 	public function __construct(
 		WPML_LS_Settings $settings,
 		WPML_LS_Render $render,
 		SitePress $sitepress,
-		WPML_LS_Slot_Factory $slot_factory = null
+		?WPML_LS_Slot_Factory $slot_factory = null
 	) {
 		$this->settings     = $settings;
 		$this->render       = $render;
@@ -38,17 +38,16 @@ class WPML_LS_Public_API {
 
 	/**
 	 * @param array       $args
-	 * @param string|null $twig_template
 	 *
 	 * @return string
 	 */
-	protected function render( $args, $twig_template = null ) {
+	protected function render( $args ) {
 		$defaults_slot_args = $this->get_default_slot_args( $args );
 		$slot_args          = array_merge( $defaults_slot_args, $args );
 
 		$slot = $this->get_slot_factory()->get_slot( $slot_args );
 		$slot->set( 'show', 1 );
-		$slot->set( 'template_string', $twig_template );
+		$slot->set( 'template_string', null );
 
 		if ( $slot->is_post_translations() ) {
 			$output = $this->render->post_translations_label( $slot );

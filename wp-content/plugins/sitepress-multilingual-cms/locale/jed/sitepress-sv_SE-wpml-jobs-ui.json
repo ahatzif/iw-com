@@ -4,22 +4,17 @@
       "messages": {
          "": {
             "domain": "messages",
-            "lang": "en"
+            "plural_forms": "nplurals=2; plural=(n != 1);",
+            "lang": "sv_SE"
          },
-         "Draft — Pending review": [
-            "Utkast — Väntar på granskning"
-         ],
-         "Complete": [
-            "Färdig"
-         ],
-         "Insufficient funds": [
-            "Otillräckliga medel"
-         ],
          "Start batch sync": [
             "Starta batchsynkronisering"
          ],
          "Cancel job": [
             "Avbryt jobb"
+         ],
+         "Continue reviewing": [
+            "Fortsätt granska"
          ],
          "Start downloading XLIFF file": [
             "Börja ladda ner XLIFF-fil"
@@ -28,13 +23,13 @@
             "Redigera"
          ],
          "Get translation": [
-            "Få översättning"
+            "Hämta översättning"
          ],
          "Resign": [
-            "Lämna"
+            "Avgå"
          ],
          "Review": [
-            "Recension"
+            "Granska"
          ],
          "Translate": [
             "Översätt"
@@ -52,22 +47,22 @@
             "Behåll översättningar som utkast"
          ],
          "Never mind. I want to review these translations.": [
-            "Glöm det. Jag vill granska dessa översättningar."
+            "Strunt samma. Jag vill granska dessa översättningar."
          ],
          "Cancel": [
             "Avbryt"
          ],
          "This will remove the selected jobs from the Translations Queue without publishing them. What would you like to do with the translations?": [
-            "Detta kommer att ta bort de valda jobben från översättningskön utan att publicera dem. Vad skulle du vilja göra med översättningarna?"
+            "Detta kommer att ta bort de valda jobben från översättningskön utan att publicera dem. Vad vill du göra med översättningarna?"
          ],
          "Cancel Translation Review": [
             "Avbryt översättningsgranskning"
          ],
          "Bulk actions": [
-            "Mängdåtgärder"
+            "Massåtgärder"
          ],
          "Apply": [
-            "Använd"
+            "Tillämpa"
          ],
          "Actions applied to multiple translation jobs can take a few seconds. Please do not leave the page.": [
             "Åtgärder som tillämpas på flera översättningsjobb kan ta några sekunder. Lämna inte sidan."
@@ -81,32 +76,53 @@
          "Assign": [
             "Tilldela"
          ],
-         "In progress": [
-            "Pågår"
-         ],
-         "Translation ready to download": [
-            "Översättning klar att ladda ner"
-         ],
-         "Completed": [
-            "Slutförd"
-         ],
-         "Published — Pending review": [
-            "Publicerad — Väntar på granskning"
-         ],
-         "Needs update": [
-            "Behöver uppdateras"
-         ],
          "Cancelled": [
             "Avbruten"
          ],
          "Needs translation": [
-            "Behöver översättning"
+            "Behöver översättas"
+         ],
+         "In progress": [
+            "Pågående"
+         ],
+         "Translation ready to download": [
+            "Översättning redo att laddas ner"
+         ],
+         "Completed": [
+            "Slutförd"
+         ],
+         "%s are immediately published because they don't support draft mode.": [
+            "%s publiceras omedelbart eftersom de inte stöder utkastläge."
+         ],
+         "Published — Pending review": [
+            "Publicerad – Väntar på granskning"
+         ],
+         "Draft — Pending review": [
+            "Utkast – Väntar på granskning"
+         ],
+         "Review in progress": [
+            "Granskning pågår"
+         ],
+         "Published — Review in progress": [
+            "Publicerad – Granskning pågår"
+         ],
+         "Draft — Review in progress": [
+            "Utkast – Granskning pågår"
+         ],
+         "Insufficient funds": [
+            "Otillräckliga medel"
+         ],
+         "Needs update": [
+            "Behöver uppdateras"
          ],
          "View original": [
-            "Se original"
+            "Visa original"
          ],
          "(no title)": [
             "(ingen titel)"
+         ],
+         "Automatic translation": [
+            "Automatisk översättning"
          ],
          "TP ID: %d": [
             "TP ID: %d"
@@ -116,6 +132,9 @@
          ],
          "Filter": [
             "Filter"
+         ],
+         "ID (%s)": [
+            "ID (%s)"
          ],
          "Title (%s)": [
             "Titel (%s)"
@@ -145,13 +164,10 @@
             "Rensa alla filter"
          ],
          "Any Translation Service": [
-            "Vilken översättningstjänst som helst"
+            "Valfri översättningstjänst"
          ],
          "Any WordPress Translator": [
-            "Vilken WordPress-översättare som helst"
-         ],
-         "ID (%s)": [
-            "ID (%s)"
+            "Valfri WordPress-översättare"
          ],
          "From": [
             "Från"
@@ -170,6 +186,15 @@
          ],
          "Select visible columns": [
             "Välj synliga kolumner"
+         ],
+         "Sort descending": [
+            "Sortera fallande"
+         ],
+         "Sort ascending": [
+            "Sortera stigande"
+         ],
+         "Cancel sorting": [
+            "Avbryt sortering"
          ],
          "The bulk action is running...": [
             "Massåtgärden körs..."
@@ -214,19 +239,22 @@
             "Åtgärder"
          ],
          "Batch name": [
-            "Batch-namn"
+            "Batchnamn"
+         ],
+         "Filter by %s": [
+            "Filtrera efter %s"
          ],
          "Title": [
             "Titel"
          ],
          "Approve translation reviews": [
-            "Godkänn översättningsrecensioner"
+            "Godkänn översättningsgranskningar"
          ],
          "Cancel jobs": [
             "Avbryt jobb"
          ],
          "Cancel translation reviews": [
-            "Avbryt översättningsrecensioner"
+            "Avbryt översättningsgranskningar"
          ],
          "Export to XLIFF %s": [
             "Exportera till XLIFF %s"
@@ -237,29 +265,29 @@
          "This action does not apply to any of the selected translation jobs": [
             "Denna åtgärd gäller inte för något av de valda översättningsjobben"
          ],
-         "Translations has been downloaded": [
+         "Translations have been downloaded": [
             "Översättningar har laddats ner"
          ],
          "Translation has been downloaded": [
-            "Översättning har laddats ner"
+            "Översättningen har laddats ner"
          ],
          "Translations could not be downloaded": [
-            "Översättningar kunde inte laddas ned"
+            "Översättningar kunde inte laddas ner"
          ],
          "Translation could not be downloaded": [
-            "Översättningen kunde inte laddas ned"
+            "Översättningen kunde inte laddas ner"
          ],
          "Approving translations reviews failed!": [
-            "Det gick inte att godkänna översättningsrecensioner!"
+            "Godkännande av översättningsgranskningar misslyckades!"
          ],
          "Failed approving translations for the following posts: ": [
-            "Det gick inte att godkänna översättningar för följande inlägg: "
+            "Misslyckades med att godkänna översättningar för följande inlägg: "
          ],
          "Translations reviews approved successfully!": [
-            "Översättningsrecensioner har godkänts!"
+            "Översättningsgranskningar godkändes framgångsrikt!"
          ],
          "No valid jobs selected to approve translations reviews!": [
-            "Inga giltiga jobb har valts för att godkänna översättningsrecensioner!"
+            "Inga giltiga jobb valda för att godkänna översättningsgranskningar!"
          ],
          "The translator has been assigned to the job": [
             "Översättaren har tilldelats jobbet"
@@ -280,19 +308,19 @@
             "Jobbet kunde inte avbrytas"
          ],
          "Translation reviews have been canceled": [
-            "Översättningsrecensioner har avbrutits"
+            "Översättningsgranskningar har avbrutits"
          ],
          "Translation review has been canceled": [
-            "Översättningsgranskning har avbrutits"
+            "Översättningsgranskningen har avbrutits"
          ],
          "Translation reviews could not be canceled": [
-            "Översättningsrecensioner kunde inte avbrytas"
+            "Översättningsgranskningar kunde inte avbrytas"
          ],
          "Translation review could not be canceled": [
-            "Översättningsgranskning kunde inte avbrytas"
+            "Översättningsgranskningen kunde inte avbrytas"
          ],
          "Sent on": [
-            "Skickat"
+            "Skickades den"
          ],
          "Deadline": [
             "Deadline"
@@ -316,10 +344,10 @@
             "Översatt av"
          ],
          "Download XLIFF file couldn't be finished": [
-            "Ladda ner XLIFF-fil kunde inte slutföras"
+            "Nedladdning av XLIFF-fil kunde inte slutföras"
          ],
          "Could not load jobs for export": [
-            "Det gick inte att ladda jobb för export"
+            "Kunde inte ladda jobb för export"
          ],
          "The export to XLIFF failed": [
             "Exporten till XLIFF misslyckades"
@@ -331,13 +359,13 @@
             "Importerade ett jobb"
          ],
          "Could not import any job": [
-            "Det gick inte att importera något jobb"
+            "Kunde inte importera något jobb"
          ],
          "Import failed!": [
-            "Importen misslyckades!"
+            "Import misslyckades!"
          ],
          "Loading translations queue": [
-            "Laddar översättningskön"
+            "Laddar översättningskö"
          ],
          "Loading translation jobs": [
             "Laddar översättningsjobb"
@@ -346,37 +374,35 @@
             "Jobb kunde inte laddas"
          ],
          "Specify some jobs to resign": [
-            "Ange några jobb att säga upp"
+            "Ange några jobb att avgå från"
          ],
          "We could not resign jobs: %s": [
-            "Vi kunde inte säga upp jobb: %s"
+            "Vi kunde inte avgå från jobb: %s"
          ],
          "Resigned from jobs": [
-            "Slutade på jobb"
+            "Avgick från jobb"
          ],
          "Resigned from job": [
-            "Slutade på jobb"
+            "Avgick från jobb"
          ],
          "Failed to resign from jobs": [
-            "Misslyckades med att sluta på jobb"
-         ],
-         "The Advanced Editor jobs synchronization": [
-            "Synkronisering av jobb i Advanced Editor"
+            "Misslyckades med att avgå från jobb"
          ],
          "The Advanced Editor jobs synchronization has failed": [
-            "Synkroniseringen av jobb i Advanced Editor misslyckades"
+            "Synkroniseringen av Advanced Editor-jobb misslyckades"
          ],
          "Synchronization with the Professional Translation service has failed": [
-            "Synkronisering med tjänsten för professionell översättning har misslyckats"
+            "Synkronisering med den professionella översättningstjänsten misslyckades"
          ],
-         "The Professional Translations jobs synchronization": [
-            "Synkroniseringen av professionella översättningsjobb"
+         "%d translation has been downloaded": [
+            "%d översättning har laddats ner",
+            "%d översättningar har laddats ner"
          ],
          "Batch sync finished successfully!": [
-            "Batchsynkronisering slutförd!"
+            "Batchsynkronisering slutfördes framgångsrikt!"
          ],
          "Batch sync couldn't be finished": [
-            "Batchsynkroniseringen kunde inte slutföras"
+            "Batchsynkronisering kunde inte slutföras"
          ]
       }
    }

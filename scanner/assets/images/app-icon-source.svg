@@ -1,0 +1,20 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="104" fill="#173276"/>
+  <g fill="#EBE6D6">
+    <path d="M96 184V126C96 109.431 109.431 96 126 96H184V120H126C122.686 120 120 122.686 120 126V184H96Z"/>
+    <path d="M328 96H386C402.569 96 416 109.431 416 126V184H392V126C392 122.686 389.314 120 386 120H328V96Z"/>
+    <path d="M416 328V386C416 402.569 402.569 416 386 416H328V392H386C389.314 392 392 389.314 392 386V328H416Z"/>
+    <path d="M184 416H126C109.431 416 96 402.569 96 386V328H120V386C120 389.314 122.686 392 126 392H184V416Z"/>
+  </g>
+  <g fill="#FFFFFF">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M148 148H244V244H148V148ZM172 172V220H220V172H172Z"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M268 148H364V244H268V148ZM292 172V220H340V172H292Z"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M148 268H244V364H148V268ZM172 292V340H220V292H172Z"/>
+    <rect x="268" y="268" width="24" height="24"/>
+    <rect x="316" y="268" width="24" height="24"/>
+    <rect x="340" y="292" width="24" height="24"/>
+    <rect x="268" y="316" width="24" height="48"/>
+    <rect x="292" y="340" width="48" height="24"/>
+    <rect x="316" y="304" width="24" height="24"/>
+  </g>
+</svg>

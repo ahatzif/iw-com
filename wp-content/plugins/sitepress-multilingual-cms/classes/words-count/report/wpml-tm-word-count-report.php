@@ -47,7 +47,7 @@ class WPML_TM_Word_Count_Report {
 		WPML_TM_Word_Count_Records $records,
 		SitePress $sitepress,
 		$requested_types_status,
-		WPML_Package_Helper $st_package_helper = null
+		?WPML_Package_Helper $st_package_helper = null
 	) {
 		$this->view                   = $view;
 		$this->records                = $records;

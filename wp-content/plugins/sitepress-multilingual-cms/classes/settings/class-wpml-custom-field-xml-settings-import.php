@@ -1,11 +1,15 @@
 <?php
 
+use WPML\Convert\Ids;
 use WPML\FP\Obj;
+use WPML\Utils\XmlTranslatableIds;
 
 class WPML_Custom_Field_XML_Settings_Import {
 
-	/** @var  WPML_Custom_Field_Setting_Factory $setting_factory */
+	/** @var WPML_Custom_Field_Setting_Factory $setting_factory */
 	private $setting_factory;
+	/** @var XmlTranslatableIds $xml_object_ids */
+	private $xml_object_ids;
 	/** @var  array $settings_array */
 	private $settings_array;
 
@@ -13,10 +17,12 @@ class WPML_Custom_Field_XML_Settings_Import {
 	 * WPML_Custom_Field_XML_Settings_Import constructor.
 	 *
 	 * @param WPML_Custom_Field_Setting_Factory $setting_factory
+	 * @param XmlTranslatableIds                $xml_object_ids
 	 * @param array                             $settings_array
 	 */
-	public function __construct( $setting_factory, $settings_array ) {
+	public function __construct( $setting_factory, $xml_object_ids, $settings_array ) {
 		$this->setting_factory = $setting_factory;
+		$this->xml_object_ids  = $xml_object_ids;
 		$this->settings_array  = $settings_array;
 	}
 
@@ -54,12 +60,19 @@ class WPML_Custom_Field_XML_Settings_Import {
 					if ( isset( $c[ 'attr' ][ 'convert_to_sticky' ] ) ) {
 						$setting->set_convert_to_sticky( (bool) $c[ 'attr' ][ 'convert_to_sticky' ] );
 					}
+					$setting->clear_from_translate_ids();
+					if ( $setting->status() === WPML_COPY_CUSTOM_FIELD && $this->xml_object_ids->hasTranslatableIds( $c ) ) {
+						$target_type = $this->xml_object_ids->getType( $c );
+						$target_slug = $this->xml_object_ids->getSlug( $c, $target_type );
+						$setting->set_field_translatable_ids( $target_type, $target_slug );
+					}
 					$setting->set_encoding( Obj::path( [ 'attr', 'encoding' ], $c ) );
 				}
 			}
 		}
 
 		$this->import_custom_field_texts();
+		$this->import_translatable_ids_in_custom_field_texts();
 	}
 
 	private function import_action( $c, $setting ) {
@@ -107,6 +120,23 @@ class WPML_Custom_Field_XML_Settings_Import {
 		}
 	}
 
+	private function import_translatable_ids_in_custom_field_texts() {
+		$config = $this->settings_array;
+
+		if ( isset( $config['custom-fields-texts']['key'] ) ) {
+			foreach( $config['custom-fields-texts']['key'] as $field ) {
+				$setting   = $this->setting_factory->post_meta_setting( $field['attr']['name'] );
+				$pathsData = $this->xml_object_ids->findPaths( $field );
+				$setting->clear_from_translate_ids();
+				if ( $pathsData ) {
+					foreach ( $pathsData as $path => $type_and_slug ) {
+						$setting->set_field_translatable_ids( $type_and_slug['type'], $type_and_slug['slug'], $path );
+					}
+				}
+			}
+		}
+	}
+
 	private function get_custom_field_texts_keys( $data ) {
 		if ( isset( $data['attr'] ) ) { // single
 			$data = array( $data );
@@ -115,7 +145,12 @@ class WPML_Custom_Field_XML_Settings_Import {
 		$sub_fields = array();
 
 		foreach( $data as $key ) {
-			$sub_fields[ $key['attr']['name'] ] = isset( $key['key'] ) ? $this->get_custom_field_texts_keys( $key['key'] ) : array();
+			if ( $this->xml_object_ids->hasTranslatableIds( $key ) ) {
+				continue;
+			}
+			$sub_fields[ $key['attr']['name'] ] = isset( $key['key'] )
+				? $this->get_custom_field_texts_keys( $key['key'] )
+				: $key['attr']['label'] ?? '';
 		}
 		return $sub_fields;
 	}

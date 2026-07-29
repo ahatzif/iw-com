@@ -1,6 +1,7 @@
 <?php
 
-use WPML\TM\ATE\ClonedSites\FingerprintGenerator;
+use WPML\FP\Maybe;
+use WPML\TM\ATE\API\FingerprintGenerator;
 use WPML\TM\ATE\Log\Entry;
 use WPML\TM\ATE\Log\Storage;
 use WPML\TM\ATE\Log\EventsTypes;
@@ -10,8 +11,11 @@ use WPML\FP\Relation;
 use WPML\FP\Either;
 use WPML\TM\ATE\API\ErrorMessages;
 use WPML\FP\Fns;
-use function WPML\FP\pipe;
+use WPML\TM\Jobs\JobLog;
+use WPML\TM\ATE\ClonedSites\MigrationLogger;
 use WPML\FP\Logic;
+use WPML\TM\ATE\API\CachedAMSAPI;
+use function WPML\FP\pipe;
 use function WPML\FP\invoke;
 /**
  * @author OnTheGo Systems
@@ -21,6 +25,8 @@ class WPML_TM_AMS_API {
 	const HTTP_ERROR_CODE_400 = 400;
 
 	private $auth;
+
+	/** @var WPML_TM_ATE_AMS_Endpoints */
 	private $endpoints;
 	private $wp_http;
 
@@ -34,28 +40,35 @@ class WPML_TM_AMS_API {
 	 */
 	private $fingerprintGenerator;
 
+	/**
+	 * @var \WPML\TM\ATE\API\AmsRequestSigner
+	 */
+	private $amsRequestSigner;
 
 	/**
 	 * WPML_TM_ATE_API constructor.
 	 *
-	 * @param WP_Http                    $wp_http
-	 * @param WPML_TM_ATE_Authentication $auth
-	 * @param WPML_TM_ATE_AMS_Endpoints  $endpoints
-	 * @param ClonedSitesHandler         $clonedSitesHandler
-	 * @param FingerprintGenerator       $fingerprintGenerator
+	 * @param WP_Http                                  $wp_http
+	 * @param WPML_TM_ATE_Authentication               $auth
+	 * @param WPML_TM_ATE_AMS_Endpoints                $endpoints
+	 * @param ClonedSitesHandler                       $clonedSitesHandler
+	 * @param FingerprintGenerator                     $fingerprintGenerator
+	 * @param \WPML\TM\ATE\API\AmsRequestSigner        $amsRequestSigner
 	 */
 	public function __construct(
 		WP_Http $wp_http,
 		WPML_TM_ATE_Authentication $auth,
 		WPML_TM_ATE_AMS_Endpoints $endpoints,
 		ClonedSitesHandler $clonedSitesHandler,
-		FingerprintGenerator $fingerprintGenerator
+		FingerprintGenerator $fingerprintGenerator,
+		?\WPML\TM\ATE\API\AmsRequestSigner $amsRequestSigner = null
 	) {
-		$this->wp_http              = $wp_http;
-		$this->auth                 = $auth;
-		$this->endpoints            = $endpoints;
-		$this->clonedSitesHandler   = $clonedSitesHandler;
-		$this->fingerprintGenerator = $fingerprintGenerator;
+		$this->wp_http                = $wp_http;
+		$this->auth                   = $auth;
+		$this->endpoints              = $endpoints;
+		$this->clonedSitesHandler     = $clonedSitesHandler;
+		$this->fingerprintGenerator   = $fingerprintGenerator;
+		$this->amsRequestSigner       = $amsRequestSigner ?: new \WPML\TM\ATE\API\AmsRequestSigner( $wp_http, $auth, $fingerprintGenerator );
 	}
 
 	/**
@@ -150,6 +163,78 @@ class WPML_TM_AMS_API {
 	}
 
 	/**
+	 * @return mixed|WP_Error|null
+	 */
+	public function get_translation_engines() {
+		$result = null;
+
+		$url = $this->endpoints->get_translation_engines();
+		$response = $this->signed_request( 'GET', $url );
+		if ( $this->response_has_body( $response ) ) {
+			$result = $this->get_errors( $response );
+			if ( ! is_wp_error( $result ) ) {
+				$result = json_decode( $response['body'], true );
+			}
+		}
+		return $result;
+	}
+
+
+	/**
+	 * @return mixed|WP_Error|null
+	 */
+	public function get_available_formalities() {
+		$result = null;
+
+		$url = $this->endpoints->get_available_formalities();
+		$response = $this->signed_request( 'GET', $url );
+		if ( $this->response_has_body( $response ) ) {
+			$result = $this->get_errors( $response );
+			if ( ! is_wp_error( $result ) ) {
+				$result = json_decode( $response['body'], true );
+			}
+		}
+		return $result;
+	}
+
+	/**
+	 * @return mixed|WP_Error|null
+	 */
+	public function getGlossaryCount() {
+		$result = $this->getSignedResult(
+			'GET',
+			$this->endpoints->get_glossary_counts()
+		);
+
+		return Maybe::of( $result )->reject( 'is_wp_error' );
+	}
+
+	/**
+	 * @param $engine_settings
+	 *
+	 * @return bool|WP_Error
+	 */
+	public function update_translation_engines( $engine_settings ) {
+		$result = false;
+
+		$url      = $this->endpoints->get_translation_engines();
+		$response = $this->signed_request( 'POST', $url, [ 'list' => $engine_settings ] );
+		if ( $this->response_has_body( $response ) ) {
+			$result = $this->get_errors( $response );
+			if ( ! is_wp_error( $result ) ) {
+				$result = json_decode( $response['body'], true );
+
+				CachedAMSAPI::clearCache();
+				do_action( 'wpml_tm_ate_translation_engines_updated' );
+
+				return \WPML\FP\Obj::propOr( false, 'success', $result );
+			}
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Used to register a manager and, at the same time, create a website in AMS.
 	 * This is called only when registering the site with AMS.
 	 * To register new managers or translators `\WPML_TM_ATE_AMS_Endpoints::get_ams_synchronize_managers`
@@ -162,8 +247,6 @@ class WPML_TM_AMS_API {
 	 * @return \WPML\FP\Either
 	 */
 	public function register_manager( WP_User $manager, array $translators, array $managers ) {
-		$uuid = wpml_get_site_id( WPML_TM_ATE::SITE_ID_SCOPE, false );
-
 		$makeRequest = $this->makeRegistrationRequest( $manager, $translators, $managers );
 
 		$logErrorResponse = $this->logErrorResponse();
@@ -173,19 +256,22 @@ class WPML_TM_AMS_API {
 		} );
 
 		$handleErrorResponse = $this->handleErrorResponse( $logErrorResponse, $getErrors );
-		$handleGeneralError  = $handleErrorResponse( Fns::identity(), pipe( [ ErrorMessages::class, 'invalidResponse' ], Either::left() ) );
-		$handle409Error      = $this->handle409Error( $handleErrorResponse, $makeRequest );
+		$handleGeneralError  = $handleErrorResponse(
+			Fns::identity(),
+			function( $response ) {
+				return Either::left( ErrorMessages::invalidResponse( get_site_url(), $response ) );
+			}
+		);
 
-		return Either::of( $uuid )
+		return Either::of( true )
 		             ->chain( $makeRequest )
-		             ->chain( $handle409Error )
 		             ->chain( $handleGeneralError )
 		             ->chain( $this->handleInvalidBodyError() )
 		             ->map( $this->saveRegistrationData( $manager ) );
 	}
 
 	private function makeRegistrationRequest( $manager, $translators, $managers ) {
-		$buildParams = function ( $uuid ) use ( $manager, $translators, $managers ) {
+		$buildParams = function () use ( $manager, $translators, $managers ) {
 			$manager_data     = $this->get_user_data( $manager, true );
 			$translators_data = $this->get_users_data( $translators );
 			$managers_data    = $this->get_users_data( $managers, true );
@@ -193,8 +279,6 @@ class WPML_TM_AMS_API {
 
 			$params                 = $manager_data;
 			$params['website_url']  = get_site_url();
-			$params['website_uuid'] = $uuid;
-
 			$params['translators']          = $translators_data;
 			$params['translation_managers'] = $managers_data;
 			if ( $sitekey ) {
@@ -204,86 +288,74 @@ class WPML_TM_AMS_API {
 			return $params;
 		};
 
-		$handleUnavailableATEError = function ( $response, $uuid ) {
+		$handleUnavailableATEError = function ( $response ) {
 			if ( is_wp_error( $response ) ) {
+				$website_url = get_site_url();
 				$this->log_api_error(
 					ErrorMessages::serverUnavailableHeader(),
-					[ 'responseError' => $response->get_error_message(), 'website_uuid' => $uuid ]
+					[ 'responseError' => $response->get_error_message(), 'website_url' => $website_url ]
 				);
-				$msg = $this->ping_healthy_wpml_endpoint() ? ErrorMessages::serverUnavailable( $uuid ) : ErrorMessages::offline( $uuid );
+				$msg = $this->ping_healthy_wpml_endpoint()
+					? ErrorMessages::serverUnavailable( $website_url, $response )
+					: ErrorMessages::offline( $website_url, $response );
 
 				return Either::left( $msg );
 			}
 
-			return Either::of( [ $response, $uuid ] );
+			return Either::of( $response );
 		};
 
-		return function ( $uuid ) use ( $buildParams, $handleUnavailableATEError ) {
-			$response = $this->request( 'POST', $this->endpoints->get_ams_register_client(), $buildParams( $uuid ) );
+		return function () use ( $buildParams, $handleUnavailableATEError ) {
+			$response = $this->request( 'POST', $this->endpoints->get_ams_register_client(), $buildParams() );
 
-			return $handleUnavailableATEError( $response, $uuid );
+			return $handleUnavailableATEError( $response );
 		};
 	}
 
 	private function logErrorResponse() {
-		return function ( $error, $uuid ) {
+		return function ( $error ) {
 			$this->log_api_error(
 				ErrorMessages::respondedWithError(),
 				[
-					'responseError' => $error->get_error_code() === 409 ? ErrorMessages::uuidAlreadyExists() : $error->get_error_message(),
-					'website_uuid'  => $uuid
+					'responseError' => $error->get_error_message(),
+					'website_url'   => get_site_url(),
 				]
 			);
 		};
 	}
 
 	private function handleErrorResponse($logErrorResponse, $getErrors) {
-		return \WPML\FP\curryN( 3, function ( $shouldHandleError, $errorHandler, $data ) use ( $logErrorResponse, $getErrors ) {
-			list( $response, $uuid ) = $data;
-
+		return \WPML\FP\curryN( 3, function ( $shouldHandleError, $errorHandler, $response ) use ( $logErrorResponse, $getErrors ) {
 			$error = $getErrors( $response );
 
 			if ( $shouldHandleError( $error ) ) {
-				$logErrorResponse( $error, $uuid );
+				$logErrorResponse( $error );
 
-				return $errorHandler( $uuid );
+				return $errorHandler( $response );
 			}
 
-			return Either::of( $data );
+			return Either::of( $response );
 		} );
 	}
 
-	private function handle409Error($handleErrorResponse, $makeRequest) {
-		$is409Error = Logic::both( Fns::identity(), pipe( invoke( 'get_error_code' ), Relation::equals( 409 ) ) );
-
-		return $handleErrorResponse($is409Error, function ( $uuid ) use ( $makeRequest ) {
-			$uuid = wpml_get_site_id( WPML_TM_ATE::SITE_ID_SCOPE, true );
-
-			return $makeRequest( $uuid );
-		} );
-	}
-
-	private function handleInvalidBodyError(  ) {
-		return function ( $data ) {
-			list( $response, $uuid ) = $data;
-
+	private function handleInvalidBodyError() {
+		return function ( $response ) {
 			if ( ! $this->response_has_keys( $response ) ) {
+				$website_url = get_site_url();
 				$this->log_api_error(
 					ErrorMessages::respondedWithError(),
-					[ 'responseError' => ErrorMessages::bodyWithoutRequiredFields(), 'response' => json_encode( $response ), 'website_uuid' => $uuid ]
+					[ 'responseError' => ErrorMessages::bodyWithoutRequiredFields(), 'response' => json_encode( $response ), 'website_url' => $website_url ]
 				);
 
-				return Either::left( ErrorMessages::invalidResponse( $uuid ) );
+				return Either::left( ErrorMessages::invalidResponse( $website_url, $response ) );
 			}
 
-			return Either::of( $data );
+			return Either::of( $response );
 		};
 	}
 
 	private function saveRegistrationData($manager) {
-		return function ( $data ) use ( $manager ) {
-			list( $response) = $data;
-
+		return function ( $response ) use ( $manager ) {
 			$registration_data = $this->get_registration_data();
 
 			$response_body = json_decode( $response['body'], true );
@@ -293,193 +365,107 @@ class WPML_TM_AMS_API {
 			$registration_data['shared']  = $response_body['shared_key'];
 			$registration_data['status']  = WPML_TM_ATE_Authentication::AMS_STATUS_ENABLED;
 
+			update_option(
+				WPML_Site_ID::SITE_ID_KEY . ':' . WPML_TM_ATE::SITE_ID_SCOPE,
+				$response_body['website_uuid'],
+				false
+			);
+
 			return $this->set_registration_data( $registration_data );
 		};
-
 	}
 
 	/**
 	 * Gets the data required by AMS to register a user.
 	 *
+	 * Ensures that critical user fields (email and display_name) are never empty.
+	 * If they are empty, generates fallback values and persists them to the database.
+	 *
 	 * @param WP_User $wp_user           The user from which data should be extracted.
 	 * @param bool    $with_name_details True if name details should be included.
 	 *
-	 * @return array
+	 * @return array User data array with 'email' and 'name' or detailed name fields.
 	 */
 	private function get_user_data( WP_User $wp_user, $with_name_details = false ) {
 		$data = array();
 
-		$data['email'] = $wp_user->user_email;
+		// wpmldev-5943
+		$data['email'] = $this->ensure_user_email_is_not_empty( $wp_user );
+		// wpmldev-5943
+		$display_name = $this->ensure_display_name_is_not_empty( $wp_user, $data['email'] );
 
+		// Add name fields based on requirements.
 		if ( $with_name_details ) {
-			$data['display_name'] = $wp_user->display_name;
+			$data['display_name'] = $display_name;
 			$data['first_name']   = $wp_user->first_name;
 			$data['last_name']    = $wp_user->last_name;
 		} else {
-			$data['name'] = $wp_user->display_name;
+			$data['name'] = $display_name;
 		}
 
 		return $data;
 	}
 
-	private function prepareClonedSiteArguments( $method ) {
-		$headers = [
-			'Accept'                                          => 'application/json',
-			'Content-Type'                                    => 'application/json',
-			FingerprintGenerator::NEW_SITE_FINGERPRINT_HEADER => $this->fingerprintGenerator->getSiteFingerprint(),
-		];
-
-		return [
-			'method'  => $method,
-			'headers' => $headers,
-		];
-	}
-
 	/**
-	 * @return array|WP_Error
+	 * Ensures user has a valid email address.
+	 *
+	 * If the user's email is empty, generates a placeholder email
+	 * and updates the user in the database.
+	 *
+	 * @param WP_User $wp_user The user object.
+	 *
+	 * @return string The user's email (real or generated).
 	 */
-	public function reportCopiedSite() {
-		return $this->processReport(
-			$this->endpoints->get_ams_site_copy(),
-			'POST'
+	private function ensure_user_email_is_not_empty( WP_User $wp_user ) {
+		if ( ! empty( $wp_user->user_email ) ) {
+			return $wp_user->user_email;
+		}
+
+		$fake_email = 'noreply-user-' . $wp_user->ID . '@placeholder.test';
+
+		wp_update_user(
+			array(
+				'ID'         => $wp_user->ID,
+				'user_email' => $fake_email,
+			)
 		);
+
+		return $fake_email;
 	}
 
 	/**
-	 * @return array|WP_Error
+	 * Ensures user has a valid display name.
+	 *
+	 * If the user's display name is empty, uses user_login as fallback,
+	 * or the email if user_login is also empty. Updates the user in the database.
+	 *
+	 * @param WP_User $wp_user       The user object.
+	 * @param string  $default_value The default value (used as final fallback).
+	 *
+	 * @return string The user's display name (real or generated).
 	 */
-	public function reportMovedSite() {
-		return $this->processReport(
-			$this->endpoints->get_ams_site_move(),
-			'PUT'
+	private function ensure_display_name_is_not_empty( WP_User $wp_user, string $default_value ) {
+		if ( ! empty( $wp_user->display_name ) ) {
+			return $wp_user->display_name;
+		}
+
+		$display_name = ! empty( $wp_user->user_login ) ? $wp_user->user_login : $default_value;
+
+		wp_update_user(
+			array(
+				'ID'           => $wp_user->ID,
+				'display_name' => $display_name,
+			)
 		);
+
+		return $display_name;
 	}
 
-	/**
-	 * @param array $response Response from reportMovedSite()
-	 *
-	 * @return bool|WP_Error
-	 */
-	public function processMoveReport( $response ) {
-		if ( ! $this->response_has_body( $response ) ) {
-			return new WP_Error( 'auth_error', 'Unable to report site moved.' );
-		}
+	private function getTimeout( int $minimum = 5 ): int {
+		$max_execution_time = ini_get( 'max_execution_time' );
+		$timeout = $max_execution_time ? (int) $max_execution_time / 2 : 1;
 
-		$response_body = json_decode( $response['body'], true );
-		if ( isset( $response_body['moved_successfully'] ) && (bool) $response_body['moved_successfully'] ) {
-			return true;
-		}
-
-		return new WP_Error( 'auth_error', 'Unable to report site moved.' );
-	}
-
-	/**
-	 * @param array $response_body body from reportMovedSite() response.
-	 *
-	 * @return bool
-	 */
-	private function storeAuthData( $response_body ) {
-		$setRegistrationDataResult = $this->updateRegistrationData( $response_body );
-		$setUuidResult             = $this->updateSiteUuId( $response_body );
-
-		return $setRegistrationDataResult && $setUuidResult;
-	}
-
-	/**
-	 * @param array $response_body body from reportMovedSite() response.
-	 *
-	 * @return bool
-	 */
-	private function updateRegistrationData( $response_body ) {
-		$registration_data = $this->get_registration_data();
-
-		$registration_data['secret'] = $response_body['new_secret_key'];
-		$registration_data['shared'] = $response_body['new_shared_key'];
-
-		return $this->set_registration_data( $registration_data );
-	}
-
-	/**
-	 * @param array $response_body body from reportMovedSite() response.
-	 *
-	 * @return bool
-	 */
-	private function updateSiteUuId( $response_body ) {
-		$this->override_site_id( $response_body['new_website_uuid'] );
-
-		return update_option(
-			WPML_Site_ID::SITE_ID_KEY . ':ate',
-			$response_body['new_website_uuid'],
-			false
-		);
-	}
-
-	private function sendSiteReportConfirmation() {
-		$url    = $this->endpoints->get_ams_site_confirm();
-		$method = 'POST';
-
-		$args = $this->prepareClonedSiteArguments( $method );
-
-		$url_parts = wp_parse_url( $url );
-
-		$registration_data         = $this->get_registration_data();
-		$query['new_shared_key']   = $registration_data['shared'];
-		$query['token']            = uuid_v5( wp_generate_uuid4(), $url );
-		$query['new_website_uuid'] = $this->auth->get_site_id();
-		$url_parts['query']        = http_build_query( $query );
-
-		$url = http_build_url( $url_parts );
-
-		$signed_url = $this->auth->signUrl( $method, $url );
-
-		$response = $this->wp_http->request( $signed_url, $args );
-
-		if ( $this->response_has_body( $response ) ) {
-			$response_body = json_decode( $response['body'], true );
-
-			return (bool) $response_body['confirmed'];
-		}
-
-		return new WP_Error( 'auth_error', 'Unable confirm site copied.' );
-	}
-
-	/**
-	 * @param string $url
-	 * @param string $method
-	 *
-	 * @return array|WP_Error
-	 */
-	private function processReport( $url, $method ) {
-		$args = $this->prepareClonedSiteArguments( $method );
-
-		$url_parts = wp_parse_url( $url );
-
-		$registration_data     = $this->get_registration_data();
-		$query['shared_key']   = $registration_data['shared'];
-		$query['token']        = uuid_v5( wp_generate_uuid4(), $url );
-		$query['website_uuid'] = $this->auth->get_site_id();
-		$url_parts['query']    = http_build_query( $query );
-
-		$url = http_build_url( $url_parts );
-
-		$signed_url = $this->auth->signUrl( $method, $url );
-
-		return $this->wp_http->request( $signed_url, $args );
-	}
-
-	/**
-	 * @param array $response Response from reportCopiedSite()
-	 *
-	 * @return bool
-	 */
-	public function processCopyReportConfirmation( $response ) {
-		if ( $this->response_has_body( $response ) ) {
-			$response_body = json_decode( $response['body'], true );
-
-			return $this->storeAuthData( $response_body ) && (bool) $this->sendSiteReportConfirmation();
-		}
-
-		return false;
+		return max( $timeout, $minimum );
 	}
 
 	/**
@@ -494,8 +480,11 @@ class WPML_TM_AMS_API {
 		$user_data = array();
 
 		foreach ( $users as $user ) {
-			$wp_user     = get_user_by( 'id', $user->ID );
-			$user_data[] = $this->get_user_data( $wp_user, $with_name_details );
+			$wp_user = get_user_by( 'id', $user->ID );
+
+			if ( $wp_user ) {
+				$user_data[] = $this->get_user_data( $wp_user, $with_name_details );
+			}
 		}
 
 		return $user_data;
@@ -579,7 +568,9 @@ class WPML_TM_AMS_API {
 	private function response_has_keys( $response ) {
 		$response_body = json_decode( $response['body'], true );
 
-		return array_key_exists( 'secret_key', $response_body ) && array_key_exists( 'shared_key', $response_body );
+		return array_key_exists( 'secret_key', $response_body )
+			&& array_key_exists( 'shared_key', $response_body )
+			&& array_key_exists( 'website_uuid', $response_body );
 	}
 
 	/**
@@ -672,9 +663,17 @@ class WPML_TM_AMS_API {
 	 *
 	 * @return array|WP_Error
 	 */
-	private function request( $method, $url, array $params = null ) {
-		$lock = $this->clonedSitesHandler->checkCloneSiteLock();
+	private function request( $method, $url, ?array $params = null ) {
+		$lock = $this->clonedSitesHandler->checkCloneSiteLock( $url );
 		if ( $lock ) {
+			JobLog::add(
+				'WPML_TM_AMS_API request lock check failed',
+				[
+					'method' => $method,
+					'url'    => $url,
+					'params' => $params,
+				]
+			);
 			return $lock;
 		}
 
@@ -688,14 +687,35 @@ class WPML_TM_AMS_API {
 		$args = [
 			'method'  => $method,
 			'headers' => $headers,
-			'timeout' => max( ini_get( 'max_execution_time' ) / 2, 5 ),
+			'timeout' => $this->getTimeout(),
 		];
 
 		if ( $params ) {
-			$args['body'] = wp_json_encode( $params, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+			$body = wp_json_encode( $params, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+			$args['body'] = $body ?: '';
 		}
 
-		$response = $this->wp_http->request( $this->add_versions_to_url( $url ), $args );
+		$versioned_url = $this->add_versions_to_url( $url );
+
+		JobLog::addExtraLogData( 'apiCall', $url );
+		JobLog::add(
+			'WPML_TM_AMS_API request',
+			[
+				'method'        => $method,
+				'url'           => $url,
+				'params'        => $params,
+				'versioned_url' => $versioned_url,
+				'args'          => $args,
+			]
+		);
+		$response = $this->wp_http->request( $versioned_url, $args );
+		JobLog::add(
+			'WPML_TM_AMS_API request response',
+			[
+				'response' => $response,
+			]
+		);
+		JobLog::removeExtraLogData( 'apiCall' );
 
 		if ( ! is_wp_error( $response ) ) {
 			$response = $this->clonedSitesHandler->handleClonedSiteError( $response );
@@ -711,7 +731,7 @@ class WPML_TM_AMS_API {
 	 *
 	 * @return array|WP_Error
 	 */
-	private function signed_request( $verb, $url, array $params = null ) {
+	private function signed_request( $verb, $url, ?array $params = null ) {
 		$verb       = strtoupper( $verb );
 		$signed_url = $this->auth->get_signed_url_with_parameters( $verb, $url, $params );
 
@@ -729,7 +749,9 @@ class WPML_TM_AMS_API {
 	 */
 	private function add_versions_to_url( $url ) {
 		$url_parts = wp_parse_url( $url );
+		$url_parts = $url_parts ?: [];
 		$query     = array();
+
 		if ( array_key_exists( 'query', $url_parts ) ) {
 			parse_str( $url_parts['query'], $query );
 		}
@@ -759,6 +781,16 @@ class WPML_TM_AMS_API {
 	/**
 	 * @return array|WP_Error
 	 */
+	public function getAccountBalances() {
+		return $this->getSignedResult(
+			'GET',
+			$this->endpoints->get_account_balances()
+		);
+	}
+
+	/**
+	 * @return array|WP_Error
+	 */
 	public function resumeAll() {
 		return $this->getSignedResult(
 			'GET',
@@ -780,14 +812,38 @@ class WPML_TM_AMS_API {
 		return Relation::propEq( 'updated_website', $siteId, $response );
 	}
 
+	public function unassign_sitekey( $sitekey ) {
+		$siteId = wpml_get_site_id( WPML_TM_ATE::SITE_ID_SCOPE );
+
+		return $this->getSignedResult(
+			'POST',
+			$this->endpoints->get_unassign_sitekey(),
+			[
+				'site_key'     => $sitekey,
+				'website_uuid' => $siteId,
+			]
+		);
+	}
+
 	/**
-	 * @param string     $verb
-	 * @param string     $url
-	 * @param array|null $params
+	 * Disconnects this site from its AMS organization.
 	 *
-	 * @return array|WP_Error
+	 * @return array|WP_Error Response body on success, WP_Error on failure.
 	 */
-	private function getSignedResult( $verb, $url, array $params = null ) {
+	public function disconnect() {
+		return $this->getSignedResult( 'POST', $this->endpoints->get_ams_disconnect() );
+	}
+
+	/**
+	 * Re-attaches this site to its previous AMS organization.
+	 *
+	 * @return array|WP_Error Response body on success, WP_Error on failure.
+	 */
+	public function connect() {
+		return $this->getSignedResult( 'POST', $this->endpoints->get_ams_connect() );
+	}
+
+	private function getSignedResult( $verb, $url, ?array $params = null ) {
 		$result = null;
 
 		$response = $this->signed_request( $verb, $url, $params );

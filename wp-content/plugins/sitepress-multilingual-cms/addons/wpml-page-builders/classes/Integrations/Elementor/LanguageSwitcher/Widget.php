@@ -8,11 +8,15 @@ class Widget extends Widget_Base {
 	/** @var WidgetAdaptor $adaptor */
 	private $adaptor;
 
-	public function __construct( $data = [], $args = null, WidgetAdaptor $adaptor = null ) {
+	/**
+	 * @param array              $data
+	 * @param array|null         $args
+	 * @param WidgetAdaptor|null $adaptor
+	 */
+	public function __construct( $data = [], $args = null, ?WidgetAdaptor $adaptor = null ) {
 		$this->adaptor = $adaptor ?: new WidgetAdaptor();
 		$this->adaptor->setTarget( $this );
 		parent::__construct( $data, $args );
-
 	}
 
 	/** @return string */

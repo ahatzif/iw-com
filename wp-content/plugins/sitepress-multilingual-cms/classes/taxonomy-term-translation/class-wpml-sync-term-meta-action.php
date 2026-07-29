@@ -99,13 +99,23 @@ class WPML_Sync_Term_Meta_Action {
 
 		$removed = array_diff( $values_to, $values_from );
 		foreach ( $removed as $v ) {
+			$prepare_arguments    = array( $term_id_to, $meta_key, $v );
+			$meta_value_condition = 'meta_value=%s';
+			if ( null === $v ) {
+				$prepare_arguments    = array( $term_id_to, $meta_key );
+				$meta_value_condition = '(meta_value="" OR meta_value IS NULL)';
+			}
+			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			// phpcs:disable WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 			$delete_prepared = $wpdb->prepare(
 				"DELETE FROM {$wpdb->termmeta}
 												WHERE term_id=%d
 												AND meta_key=%s
-												AND meta_value=%s",
-				array( $term_id_to, $meta_key, $v )
+												AND {$meta_value_condition}",
+				$prepare_arguments
 			);
+			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			// phpcs:enable WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 			$wpdb->query( $delete_prepared );
 		}
 
@@ -118,6 +128,18 @@ class WPML_Sync_Term_Meta_Action {
 			);
 			$wpdb->query( $insert_prepared );
 		}
+
+		wp_cache_delete( $term_id_to, 'term_meta' );
+
+		/**
+		 * @param int    $term_id_from The term_id of the source term.
+		 * @param int    $term_id_to   The term_id of the destination term.
+		 * @param string $meta_key     The key of the term meta being copied.
+		 *
+		 * @since 4.7.0
+		 */
+		do_action( 'wpml_after_copy_term_field', $term_id_from, $term_id_to, $meta_key );
+
 		wp_cache_init();
 	}
 

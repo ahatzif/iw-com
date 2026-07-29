@@ -75,14 +75,13 @@ class WPML_Meta_Boxes_Post_Edit_HTML {
 
 	private function post_edit_languages_duplicate_of() {
 		$duplicate_original_id = $this->is_a_duplicate();
-		if ( $duplicate_original_id ) {
+		if ( is_numeric( $duplicate_original_id ) ) {
 			?>
 			<div class="icl_cyan_box"><?php
 				printf( esc_html__( 'This document is a duplicate of %s and it is maintained by WPML.', 'sitepress' ), '<a href="' . esc_url( get_edit_post_link( $duplicate_original_id ) ) . '">' . esc_html( get_the_title( $duplicate_original_id ) ) . '</a>' );
 				?>
 				<p><input id="icl_translate_independent" class="button-secondary" type="button" value="<?php esc_html_e( 'Translate independently', 'sitepress' ) ?>"/></p>
 				<?php wp_nonce_field( 'reset_duplication_nonce', '_icl_nonce_rd' ) ?>
-				<i><?php printf( esc_html__( 'WPML will no longer synchronize this %s with the original content.', 'sitepress' ), $this->post->post_type ); ?></i>
 			</div>
 		<?php
 		}
@@ -93,11 +92,6 @@ class WPML_Meta_Boxes_Post_Edit_HTML {
 		<div id="icl_document_language_dropdown" class="icl_box_paragraph"
 		     data-metabox-refresh-nonce="<?php echo wp_create_nonce( WPML_Meta_Boxes_Post_Edit_Ajax::ACTION_GET_META_BOXES ) ?>"
 		     data-admin-ls-refresh-nonce="<?php echo wp_create_nonce( WPML_Meta_Boxes_Post_Edit_Ajax::ACTION_GET_ADMIN_LS ) ?>">
-			<p>
-				<label for="icl_post_language">
-                    <strong><?php printf( esc_html__( 'Language of this %s', 'sitepress' ), esc_html( $this->post_type_label ) ); ?></strong>
-                </label>
-			</p>
 
 			<?php
 			$disabled_language = disabled( false, $this->can_translate_post, false );
@@ -122,7 +116,7 @@ class WPML_Meta_Boxes_Post_Edit_HTML {
 				}
 				?>
 			</select>
-			<input type="hidden" name="icl_trid" value="<?php echo esc_attr( $this->get_trid() ); ?>"/>
+			<input type="hidden" name="icl_trid" value="<?php echo esc_attr( (string) $this->get_trid() ); ?>"/>
 		</div>
 		<?php
 	}
@@ -173,11 +167,17 @@ class WPML_Meta_Boxes_Post_Edit_HTML {
 		if ( 'auto-draft' !== $this->post->post_status ) {
 			$trid             = $this->get_trid();
 			$current_language = $this->sitepress->get_current_language();
-			if ( count( $this->get_translations() ) === 1 && count( $this->sitepress->get_orphan_translations( $trid, $this->post->post_type, $current_language ) ) > 0 ) {
+			if ( count( $this->get_translations() ) === 1 && $this->sitepress->has_orphan_translations( $this->post->post_type, $current_language ) ) {
 				$args                  = array();
 				$args['language_code'] = $this->selected_language;
 				$args['display_code']  = $this->sitepress->get_default_language();
 				$language_name         = apply_filters( 'wpml_display_single_language_name', null, $args );
+				$post_type			   = get_post_type( $this->post );
+				$post_type_object	   = $post_type ? get_post_type_object( $post_type ) : false;
+
+				if ( ! $post_type_object ) {
+					return;
+				}
 				?>
                 <div id="icl_document_connect_translations_dropdown" class="icl_box_paragraph">
                     <p>
@@ -186,21 +186,21 @@ class WPML_Meta_Boxes_Post_Edit_HTML {
                         </a>
                     </p>
                     <input type="hidden" id="icl_connect_translations_post_id" name="icl_connect_translations_post_id"
-                           value="<?php echo esc_attr( $this->post->ID ); ?>"/>
+                           value="<?php echo esc_attr( (string) $this->post->ID ); ?>"/>
                     <input type="hidden" id="icl_connect_translations_trid" name="icl_connect_translations_trid"
-                           value="<?php echo esc_attr( $trid ); ?>"/>
+                           value="<?php echo esc_attr( (string) $trid ); ?>"/>
                     <input type="hidden" id="icl_connect_translations_post_type"
-                           name="icl_connect_translations_post_type" value="<?php echo esc_attr( $this->post->post_type ); ?>"/>
+                           name="icl_connect_translations_post_type" value="<?php echo esc_attr( (string) $this->post->post_type ); ?>"/>
                     <input type="hidden"
                            id="icl_connect_translations_language"
                            name="icl_connect_translations_language"
-                           value="<?php echo esc_attr( $current_language ); ?>"/>
+                           value="<?php echo esc_attr( (string) $current_language ); ?>"/>
                     <?php wp_nonce_field( 'get_orphan_posts_nonce', '_icl_nonce_get_orphan_posts' ); ?>
                 </div>
 
                 <div class="hidden">
                     <div id="connect_translations_dialog"
-                         title="<?php esc_attr_e( sprintf( 'Choose a %s to assign', get_post_type_object( get_post_type( $this->post ) )->labels->singular_name ), 'sitepress' ); ?>"
+                         title="<?php esc_attr_e( sprintf( 'Choose a %s to assign', $post_type_object->labels->singular_name ), 'sitepress' ); ?>"
                          data-set_as_source-text="<?php echo esc_attr( sprintf( __( 'Make %s the original language for this %s', 'sitepress' ), $language_name, $this->post->post_type ) ); ?>"
                          data-alert-text="<?php esc_attr_e( "Please make sure to save your post, if you've made any change, before proceeding with this action!", 'sitepress' ); ?>"
                          data-cancel-label="<?php esc_attr_e( 'Cancel', 'sitepress' ); ?>"
@@ -254,10 +254,11 @@ class WPML_Meta_Boxes_Post_Edit_HTML {
 					</select>
 					<?php //Add hidden value when the dropdown is hidden ?>
 					<?php
-					$source_element_id = SitePress::get_original_element_id_by_trid( $this->get_trid() );
+					$trid = $this->get_trid();
+					$source_element_id = $trid ? SitePress::get_original_element_id_by_trid( $trid ) : false;
 					if ( $disabled && ! empty( $source_element_id ) ) {
 						?>
-						<input type="hidden" name="icl_translation_of" id="icl_translation_of_hidden" value="<?php echo esc_attr( $source_element_id ); ?>">
+						<input type="hidden" name="icl_translation_of" id="icl_translation_of_hidden" value="<?php echo esc_attr( (string) $source_element_id ); ?>">
 					<?php
 					}
 					?>
@@ -363,7 +364,7 @@ class WPML_Meta_Boxes_Post_Edit_HTML {
 		 *
 		 * @since 4.2.0
 		 *
-		 * @param WP_Post $this->post
+		 * @param WP_Post $post
 		 */
 		do_action( 'wpml_before_post_edit_translations_table', $this->post );
 		?>
@@ -397,7 +398,21 @@ class WPML_Meta_Boxes_Post_Edit_HTML {
 				</td>
 			</tr>
 		</table>
-	<?php
+		<?php
+		if (
+			'draft' === $this->post->post_status
+			&& ! \WPML\Setup\Option::getTranslateEverythingDrafts()
+			&& \WPML\Setup\Option::getTranslateEverything()
+			&& \WPML\Setup\Option::getHasTranslateEverythingBeenEverUsed()
+		) {
+			echo '<div class="wpml-info-small wpml-spacing-top">';
+			printf(
+				esc_html__( '%sEnable automatic translation for drafts%s', 'sitepress' ),
+				'<a href="' . admin_url( \WPML\UIPage::getSettings() . '#translate-everything-drafts' ) . '">',
+				'</a>'
+			);
+			echo '</div>';
+		}
 	}
 
 	/**
@@ -405,10 +420,10 @@ class WPML_Meta_Boxes_Post_Edit_HTML {
 	 */
 	private function translation_summary( $status_display ) {
 		$dupes          = $this->sitepress->get_duplicates( $this->post->ID );
-		$not_show_flags = ! apply_filters( 'wpml_setting', false, 'show_translations_flag' );
+		$not_show_flags = ! apply_filters( 'wpml_setting', true, 'show_translations_flag' );
 		?>
         <div class="icl_box_paragraph">
-            <p><b><?php esc_html_e( 'Translations', 'sitepress' ) ?></b>
+            <p id="icl_translated_title"><b><?php esc_html_e( 'Translations', 'sitepress' ) ?></b>
           (<a class="icl_toggle_show_translations" href="#" <?php if ( $not_show_flags ) : ?>style="display:none;"<?php endif; ?>><?php esc_html_e( 'hide', 'sitepress' ); ?></a><a class="icl_toggle_show_translations" href="#" <?php if ( ! $not_show_flags ) : ?>style="display:none;"<?php endif; ?>><?php esc_html_e( 'show', 'sitepress' ) ?></a>)
             </p>
 
@@ -418,7 +433,7 @@ class WPML_Meta_Boxes_Post_Edit_HTML {
 			 *
 			 * @since 4.2.0
 			 *
-			 * @param WP_Post $this->post
+			 * @param WP_Post $post
 			 */
 			 do_action( 'wpml_before_post_edit_translations_summary', $this->post );
 
@@ -524,7 +539,15 @@ class WPML_Meta_Boxes_Post_Edit_HTML {
 				    }
 
 				    ?>
-				    <input<?php disabled( true, $disabled_duplication ); ?> type="checkbox" name="icl_dupes[]" value="<?php echo esc_attr( $lang['code'] ); ?>" title="<?php echo $disabled_duplication_title ?>"/>
+				    <input
+						<?php disabled( true, $disabled_duplication ); ?>
+						type="checkbox"
+						name="icl_dupes[]"
+						value="<?php echo esc_attr( $lang['code'] ); ?>"
+						title="<?php echo $disabled_duplication_title ?>"
+						class="wpml-checkbox-native"
+						aria-label="<?php echo $disabled_duplication_title . __(' for ', 'sitepress') . esc_attr( $lang['display_name'] ); ?>"
+					/>
 				</td>
 
 			<?php
@@ -592,10 +615,15 @@ class WPML_Meta_Boxes_Post_Edit_HTML {
 		$source_lang = filter_var( isset( $_GET['source_lang'] ) ? $_GET['source_lang'] : '', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 		$source_lang = 'all' === $source_lang ? $this->sitepress->get_default_language() : $source_lang;
 		$lang        = filter_var( isset( $_GET['lang'] ) ? $_GET['lang'] : '', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+
+		if ( ! $lang ) {
+			$lang = $this->sitepress->get_language_for_element( $post->ID, 'post_' . $post->post_type );
+		}
+
 		$source_lang = ! $source_lang && isset( $_GET['post'] ) && $lang !== $this->sitepress->get_default_language()
 				? $this->post_translation->get_source_lang_code( $post->ID ) : $source_lang;
 
-		if ( $source_lang && $source_lang !== $lang ) {
+		if ( $trid && $source_lang && $source_lang !== $lang ) {
 			$_lang_details    = $this->sitepress->get_language_details( $source_lang );
 			$source_lang_name = $_lang_details['display_name'];
 			$this->display_copy_from_button( $source_lang, $source_lang_name, $post, $trid );
@@ -607,18 +635,20 @@ class WPML_Meta_Boxes_Post_Edit_HTML {
 	}
 
 	private function media_options( $post ) {
+		if ( \WPML\Media\Option::shouldHandleMediaAuto() ) {
+			return;
+		}
+
 		echo '<br /><br /><strong>' . esc_html__( 'Media attachments', 'sitepress' ) . '</strong>';
 
 		$original_post_id = (int) $this->post_translation->get_original_post_ID( $this->trid );
 
 		if( ! $original_post_id ){
-			$settings = get_option( '_wpml_media' );
-			$content_defaults = $settings['new_content_settings'];
-			$duplicate_media = $content_defaults['duplicate_media'];
-			$duplicate_featured  = $content_defaults['duplicate_featured'];
+			$duplicate_media = \WPML\FP\Obj::prop( 'duplicate_media', \WPML\Media\Option::getNewContentSettings() );
+			$duplicate_featured  = \WPML\FP\Obj::prop( 'duplicate_featured', \WPML\Media\Option::getNewContentSettings() );
 		} else{
-			$duplicate_media = get_post_meta( $original_post_id, WPML_Admin_Post_Actions::DUPLICATE_MEDIA_META_KEY, true );
-			$duplicate_featured  = get_post_meta( $original_post_id, WPML_Admin_Post_Actions::DUPLICATE_FEATURED_META_KEY, true );
+			$duplicate_media = \WPML\Media\Option::shouldDuplicateMedia( $original_post_id );
+			$duplicate_featured  = \WPML\Media\Option::shouldDuplicateFeatured( $original_post_id );
 		}
 
 		if( ! $original_post_id || (int) $post->ID === $original_post_id ){
@@ -652,7 +682,7 @@ class WPML_Meta_Boxes_Post_Edit_HTML {
 		        esc_html__( 'Copy content from %s', 'sitepress' ),
                 $source_lang_name
             ) . '"
-				onclick="icl_copy_from_original(\'' . esc_js( $source_lang ) . '\', \'' . esc_js( $trid ) . '\')"'
+				onclick="icl_copy_from_original(\'' . esc_js( $source_lang ) . '\', \'' . esc_js( (string) $trid ) . '\')"'
 		     . $disabled . ' />'; ?>
 		<i class="otgs-ico-help js-otgs-popover-tooltip"
 		   data-tippy-zindex="999999"

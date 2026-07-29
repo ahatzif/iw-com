@@ -935,6 +935,7 @@ if (\function_exists('mb_convert_encoding')) {
 if (\function_exists('mb_ord')) {
     function twig_ord($string)
     {
+		/* @phpcs:ignore */
         return \mb_ord($string, 'UTF-8');
     }
 } else {
@@ -987,7 +988,7 @@ function _twig_escape_css_callback($matches)
 function _twig_escape_html_attr_callback($matches)
 {
     $chr = $matches[0];
-    $ord = \ord($chr);
+    $ord = \ord($chr[0]);
     /*
      * The following replaces characters undefined in HTML with the
      * hex entity for the Unicode replacement character.

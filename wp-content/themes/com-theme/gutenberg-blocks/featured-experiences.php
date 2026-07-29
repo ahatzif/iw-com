@@ -22,7 +22,7 @@ $carousel_options = wp_json_encode( [
 		<?php if ( $eyebrow || $title ) : ?>
 			<header class="flex flex-col gap-5">
 				<?php if ( $eyebrow ) : ?>
-					<p class="text-[1rem] font-medium uppercase leading-none tracking-[.18em] opacity-60"><?php echo esc_html( $eyebrow ); ?></p>
+					<p class="text-[1rem] font-medium leading-none tracking-[.18em] opacity-60"><?php echo esc_html( com\theme::remove_accents( $eyebrow ) ); ?></p>
 				<?php endif; ?>
 				<?php if ( $title ) : ?>
 					<h2 id="<?php echo esc_attr( $section_title_id ); ?>" class="text-[2rem] font-normal leading-[1.2]"><?php echo wp_kses_post( $title ); ?></h2>
@@ -47,7 +47,12 @@ $carousel_options = wp_json_encode( [
 								<?php if ( ! empty( $link['url'] ) ) : ?><a href="<?php echo esc_url( $link['url'] ); ?>" class="block" <?php echo ( $link['target'] ?? '' ) === '_blank' ? 'target="_blank" rel="noopener noreferrer"' : ''; ?>><?php endif; ?>
 									<?php if ( $image_id ) : ?>
 										<span class="block aspect-[calc(380/250)] w-full overflow-hidden rounded-[.5rem]">
-											<?php echo wp_get_attachment_image( $image_id, 'large', false, [ 'class' => 'size-full object-cover transition-transform duration-500 hover:scale-105' ] ); ?>
+											<?php get_template_part( 'templates/parts/image', null, [
+												'id'       => $image_id,
+												'size'     => 'large',
+												'classes'  => 'size-full object-cover transition-transform duration-500 hover:scale-105',
+												'parallax' => false,
+											] ); ?>
 										</span>
 									<?php endif; ?>
 									<?php if ( ! empty( $item['title'] ) ) : ?>

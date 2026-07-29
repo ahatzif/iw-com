@@ -50,7 +50,7 @@ class WPML_Notice_Render {
 
 			$class = implode( ' ', $classes );
 
-			$result .= '<div class="' . $class . '" data-id="' . esc_attr( $notice->get_id() ) . '" data-group="' . esc_attr( $notice->get_group() ) . '"';
+			$result .= '<div class="' . $class . '" data-id="' . esc_attr( (string) $notice->get_id() ) . '" data-group="' . esc_attr( $notice->get_group() ) . '"';
 			$result .= $this->get_data_nonce_attribute();
 
 			if ( $this->hide_html_added || $notice->can_be_hidden() ) {
@@ -175,7 +175,7 @@ class WPML_Notice_Render {
 	 */
 	private function get_dismiss_html( $localized_text = null ) {
 		$dismiss_html  = '';
-		$dismiss_html .= '<span class="otgs-notice-dismiss notice-dismiss">';
+		$dismiss_html .= '<span class="otgs-notice-dismiss notice-dismiss" role="button" tabindex="0">';
 		$dismiss_html .= '<span class="screen-reader-text"><input class="otgs-notice-dismiss-check" type="checkbox" value="1" />';
 		if ( $localized_text ) {
 			$dismiss_html .= esc_html( $localized_text );
@@ -213,7 +213,7 @@ class WPML_Notice_Render {
 	private function get_collapsed_html( WPML_Notice $notice, $localized_text = null ) {
 		$content = '
 			<div class="otgs-notice-collapsed-text">
-				<p>%s 
+				<p>%s
 					<span class="otgs-notice-collapse-show notice-collapse"><span class="screen-reader-text">
 					%s
 					</span></span>

@@ -23,6 +23,16 @@ class WPML_TM_Email_Jobs_Summary_View extends WPML_TM_Email_View {
 	private $assigned_jobs;
 
 	/**
+	 * @var int
+	 */
+	private $job_elements_count;
+
+	/**
+	 * @var int
+	 */
+	private $job_elements_count_total;
+
+	/**
 	 * WPML_TM_Batch_Report_Email_Template constructor.
 	 *
 	 * @param WPML_Twig_Template $template_service
@@ -40,15 +50,26 @@ class WPML_TM_Email_Jobs_Summary_View extends WPML_TM_Email_View {
 	}
 
 	/**
+	 * @return int
+	 */
+	private function get_jobs_limit() {
+		$tm_settings = $this->sitepress->get_setting( 'translation-management', array() );
+		$limit = isset( $tm_settings['notification']['job_limits'] ) ? (int) $tm_settings['notification']['job_limits'] : 0;
+		return 0 === $limit ? null : $limit;
+	}
+
+	/**
 	 * @param array $language_pairs
 	 * @param int $translator_id
 	 * @param string $title_singular
 	 * @param string $title_plural
+	 * @param string $title_sliced
 	 *
 	 * @return null|string
 	 */
-	public function render_jobs_list( $language_pairs, $translator_id, $title_singular, $title_plural = '' ) {
-		$this->empty_assigned_jobs();
+	public function render_jobs_list( $language_pairs, $translator_id, $title_singular, $title_plural = '%s', $title_sliced = '%1$s %2$s' ) {
+		$this->clear_assigned_jobs();
+		$limit = $this->get_jobs_limit();
 
 		$model = array(
 			'strings' => array(
@@ -63,42 +84,52 @@ class WPML_TM_Email_Jobs_Summary_View extends WPML_TM_Email_View {
 		);
 
 		foreach ( $language_pairs as $lang_pair => $elements ) {
+			$languages   = explode( '|', $lang_pair );
+			$source_lang = $this->sitepress->get_language_details( $languages[0] );
+			$target_lang = $this->sitepress->get_language_details( $languages[1] );
+			if ( ! $source_lang || ! $target_lang ) {
+					continue;
+			}
 
-			$languages = explode( '|', $lang_pair );
-			$args      = array(
+			$args = array(
 				'lang_from' => $languages[0],
-				'lang_to' => $languages[1]
+				'lang_to'   => $languages[1]
 			);
+			if ( ! $this->blog_translators->is_translator( $translator_id, $args ) ) {
+				continue;
+			}
 
-			if ( $this->blog_translators->is_translator( $translator_id, $args ) &&
-			     WPML_User_Jobs_Notification_Settings::is_new_job_notification_enabled( $translator_id ) ) {
+			$model_elements = array();
+			$string_added   = false;
 
-				$model_elements = array();
-				$string_added   = false;
+			foreach ( $elements as $element ) {
+				if ( $limit && $limit <= $this->job_elements_count ) {
+					$this->job_elements_count_total += 1;
+					continue;
+				}
 
-				foreach ( $elements as $element ) {
+				if ( ! $string_added || 'string' !== $element['type'] ) {
+					$model_elements[] = array(
+						'original_link'          => get_permalink( $element['element_id'] ),
+						'original_text'          => sprintf( __( 'Link to original document %d', 'wpml-translation-management' ), $element['element_id'] ),
+						'start_translating_link' => admin_url(
+							'admin.php?page=' . WPML_TM_FOLDER . '%2Fmenu%2Ftranslations-queue.php&job_id=' . $element['job_id']
+						),
+						'type' => $element['type'],
+					);
+					$this->job_elements_count       += 1;
+					$this->job_elements_count_total += 1;
 
-					if ( ! $string_added || 'string' !== $element['type'] ) {
-						$model_elements[] = array(
-							'original_link'          => get_permalink( $element['element_id'] ),
-							'original_text'          => sprintf( __( 'Link to original document %d', 'wpml-translation-management' ), $element['element_id'] ),
-							'start_translating_link' => admin_url(
-								'admin.php?page=' . WPML_TM_FOLDER . '%2Fmenu%2Ftranslations-queue.php&job_id=' . $element['job_id']
-							),
-							'type' => $element['type'],
-						);
-
-						if ( 'string' === $element['type'] ) {
-							$string_added = true;
-						}
+					if ( 'string' === $element['type'] ) {
+						$string_added = true;
 					}
 
 					$this->add_assigned_job( $element['job_id'], $element['type'] );
 				}
+			}
 
-				$source_lang                     = $this->sitepress->get_language_details( $languages[0] );
-				$target_lang                     = $this->sitepress->get_language_details( $languages[1] );
-				$model['lang_pairs'][$lang_pair] = array(
+			if ( ! empty( $model_elements ) ) {
+				$model['lang_pairs'][ $lang_pair ] = array(
 					'title'    => sprintf( __( 'From %1$s to %2$s:', 'wpml-translation-management' ), $source_lang['english_name'], $target_lang['english_name'] ),
 					'elements' => $model_elements,
 				);
@@ -106,11 +137,25 @@ class WPML_TM_Email_Jobs_Summary_View extends WPML_TM_Email_View {
 		}
 
 		$model['strings']['title'] = $title_singular;
-		if ( 1 < count( $this->get_assigned_jobs() ) ) {
-			$model['strings']['title'] = sprintf( $title_plural, count( $this->get_assigned_jobs() ) );
+		if ( 1 < $this->job_elements_count_total ) {
+			$model['strings']['title'] = sprintf( $title_plural, $this->job_elements_count_total );
+			if ( $limit && $limit < $this->job_elements_count_total ) {
+				$model['strings']['title'] = sprintf( $title_sliced, $limit, $this->job_elements_count_total );
+			}
 		}
 
-		return count( $this->get_assigned_jobs() ) ? $this->template_service->show( $model, self::JOBS_TEMPLATE ) : null;
+		return $this->job_elements_count_total ? $this->template_service->show( $model, self::JOBS_TEMPLATE ) : null;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function render_link_to_jobs() {
+		return sprintf(
+			'<p><a href="%1$s">%2$s</a></p>',
+			admin_url( 'admin.php?page=' . WPML_TM_FOLDER . '%2Fmenu%2Ftranslations-queue.php' ),
+			__( 'View all assigned jobs', 'wpml-translation-management' )
+		);
 	}
 
 	/** @return string */
@@ -147,22 +192,29 @@ class WPML_TM_Email_Jobs_Summary_View extends WPML_TM_Email_View {
 	/**
 	 * @return array
 	 */
-	public function get_assigned_jobs() {
-		$string_counted = false;
-		foreach ( $this->assigned_jobs as $key => $assigned_job ) {
-			if ( 'string' === $assigned_job['type'] ) {
-				if ( $string_counted ) {
-					unset( $this->assigned_jobs[$key] );
-				}
-				$string_counted = true;
-			}
-		}
+	public function get_assigned_jobs( $sliced = false ) {
+		$assigned_jobs = $this->assigned_jobs;
 
-		return $this->assigned_jobs;
+		if ( $sliced ) {
+			$limit         = $this->get_jobs_limit();
+			$assigned_jobs = array_slice( $assigned_jobs, 0, $limit );
+		}
+		
+		return $assigned_jobs;
 	}
 
-	private function empty_assigned_jobs() {
-		$this->assigned_jobs = array();
+	private function clear_assigned_jobs() {
+		$this->assigned_jobs            = array();
+		$this->job_elements_count       = 0;
+		$this->job_elements_count_total = 0;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function has_sliced_assigned_jobs() {
+		$limit = $this->get_jobs_limit();
+		return $limit && $limit < $this->job_elements_count_total;
 	}
 
 	private function get_closing_sentence() {

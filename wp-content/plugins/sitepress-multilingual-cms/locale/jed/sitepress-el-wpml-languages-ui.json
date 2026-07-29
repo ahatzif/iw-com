@@ -3,10 +3,21 @@
    "locale_data": {
       "messages": {
          "": {
-            "domain": "messages"
+            "domain": "messages",
+            "plural_forms": "nplurals=2; plural=(n != 1);",
+            "lang": "el"
          },
+         "hide the translations instead.": [
+            "απόκρυψη των μεταφράσεων αντ' αυτού."
+         ],
+         "Error happened! Please try again.": [
+            "Παρουσιάστηκε σφάλμα! Παρακαλώ δοκιμάστε ξανά."
+         ],
+         "Cancel": [
+            "Ακύρωση"
+         ],
          "Choose Content to Automatically Translate into": [
-            "Επιλέξτε περιεχόμενο που θα μεταφράζεται αυτομάτως σε"
+            "Επιλέξτε περιεχόμενο για αυτόματη μετάφραση σε"
          ],
          "Save Changes and Enable Automatic Translation": [
             "Αποθήκευση αλλαγών και ενεργοποίηση αυτόματης μετάφρασης"
@@ -17,35 +28,35 @@
          "Save": [
             "Αποθήκευση"
          ],
-         "Choose Content to Automatically Translate into New Language": [
-            "Επιλέξτε περιεχόμενο που θα μεταφράζεται αυτομάτως στη νέα γλώσσα"
+         "Add new languages": [
+            "Προσθήκη νέων γλωσσών"
          ],
-         "Add languages and start translating": [
-            "Προσθήκη γλωσσών και έναρξη μετάφρασης"
+         "Add new language": [
+            "Προσθήκη νέας γλώσσας"
          ],
-         "Add language and start translating": [
-            "Προσθήκη γλώσσας και έναρξη μετάφρασης"
+         "Never mind - don't add new languages": [
+            "Δεν πειράζει - μην προσθέσετε νέες γλώσσες"
          ],
-         "Never mind. Don't add new languages": [
-            "Άλλαξα γνώμη. Να μην προστεθούν νέες γλώσσες."
+         "Never mind - don't add new language": [
+            "Δεν πειράζει - μην προσθέσετε νέα γλώσσα"
          ],
-         "Never mind. Don't add new language": [
-            "Άλλαξα γνώμη. Να μην προστεθεί νέα γλώσσα."
+         "Choose which content to translate into the new language": [
+            "Επιλέξτε ποιο περιεχόμενο θα μεταφραστεί στη νέα γλώσσα"
          ],
-         "Automatically translate all of my existing posts and pages right now, plus new content as I create it.": [
-            "Να μεταφραστούν τώρα αυτόματα όλες οι υπάρχουσες αναρτήσεις και σελίδες μου, καθώς και το νέο περιεχόμενο κατά τη δημιουργία του."
+         "Automatically translate all my posts and pages, plus new content as I create it.": [
+            "Αυτόματη μετάφραση όλων των αναρτήσεων και σελίδων μου, καθώς και νέου περιεχομένου καθώς το δημιουργώ."
          ],
          "Only automatically translate new content.": [
-            "Να μεταφράζεται αυτόματα μόνο το νέο περιεχόμενο."
+            "Αυτόματη μετάφραση μόνο νέου περιεχομένου."
          ],
-         "You are using <a>Translate Everything</a> mode, which translates your site content automatically.": [
-            "Χρησιμοποιείτε τη λειτουργία <a>Μετάφραση όλων</a> που μεταφράζει αυτόματα το περιεχόμενο του ιστότοπού σας."
+         "Which content do you want to translate into the new language?": [
+            "Ποιο περιεχόμενο θέλετε να μεταφράσετε στη νέα γλώσσα;"
          ],
-         "Which content do you want to automatically translate into your newly-added language?": [
-            "Ποιο περιεχόμενο θέλετε να μεταφράζεται αυτόματα στη νέα γλώσσα που προσθέσατε;"
+         "When you unpause automatic translation, this content will be <a>translated automatically</a>.": [
+            "Όταν καταργήσετε την παύση της αυτόματης μετάφρασης, αυτό το περιεχόμενο θα <a>μεταφραστεί αυτόματα</a>."
          ],
-         "You can translate existing content from the Translation Management Dashboard.": [
-            "Μπορείτε να μεταφράσετε το υπάρχον περιεχόμενο από τον πίνακα εργαλείων Διαχείρισης μετάφρασης."
+         "You can still translate existing content any time from the Translation Management Dashboard.": [
+            "Μπορείτε ακόμα να μεταφράσετε υπάρχον περιεχόμενο ανά πάσα στιγμή από τον Πίνακα Ελέγχου Διαχείρισης Μεταφράσεων."
          ]
       }
    }

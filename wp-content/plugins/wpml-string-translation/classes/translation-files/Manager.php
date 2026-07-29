@@ -46,14 +46,69 @@ abstract class Manager {
 	 * @param string $locale
 	 */
 	public function remove( $domain, $locale ) {
-		$this->filesystem->delete( $this->getFilepath( $domain, $locale ) );
+		$filepath = $this->getFilepath( $domain, $locale );
+		$this->filesystem->delete( $filepath );
+
+		// Delete the translation file .l10n.php along with the .mo file.
+		if ( 'mo' === $this->getFileExtension() ) {
+			$php_filepath = substr( $filepath, 0, -3 ) . '.l10n.php';
+			if ( $this->filesystem->is_file( $php_filepath ) && $this->filesystem->is_readable( $php_filepath ) ) {
+				$this->filesystem->delete( $php_filepath );
+			}
+		}
+
+		do_action(
+			'wpml_st_translation_file_removed',
+			$filepath,
+			$domain,
+			$locale
+		);
+	}
+
+	public function write( $domain, $locale, $content ) {
+		$filepath = $this->getFilepath( $domain, $locale );
+		$chmod    = defined( 'FS_CHMOD_FILE' ) ? FS_CHMOD_FILE : 0644;
+		if ( ! $this->filesystem->put_contents( $filepath, $content, $chmod ) ) {
+			return false;
+		}
+
+		do_action(
+			'wpml_st_translation_file_written',
+			$filepath,
+			$domain,
+			$locale
+		);
+
+		$this->write_php_file_from_mo( $filepath, $chmod );
+
+		return $filepath;
+	}
+
+	private function write_php_file_from_mo( $mo_filepath, $chmod ) {
+		if (
+			! class_exists( '\WP_Translation_File' )
+			|| ! method_exists( 'WP_Translation_File', 'transform' )
+		) {
+			return;
+		}
+
+		$content = \WP_Translation_File::transform( $mo_filepath, 'php' );
+		if ( ! $content ) {
+			return;
+		}
+
+		$filepath = str_replace( '.mo', '.l10n.php', $mo_filepath );
+		$this->filesystem->put_contents( $filepath, $content, $chmod );
 	}
 
 	/**
+	 * Builds and saves the .MO file.
+	 * Returns false if file doesn't exist, file path otherwise.
+	 *
 	 * @param string $domain
 	 * @param string $locale
 	 *
-	 * @return bool
+	 * @return false|string
 	 */
 	public function add( $domain, $locale ) {
 		if ( ! $this->maybeCreateSubdir() ) {
@@ -72,9 +127,7 @@ abstract class Manager {
 			->set_language( $locale )
 			->get_content( $strings );
 
-		$filepath = $this->getFilepath( $domain, $locale );
-
-		return $this->filesystem->put_contents( $filepath, $file_content, 0755 & ~ umask() );
+		return $this->write( $domain, $locale, $file_content );
 	}
 
 	/**
@@ -100,6 +153,9 @@ abstract class Manager {
 	 * @return string
 	 */
 	public function getFilepath( $domain, $locale ) {
+		// Some domains for JS translations can contain '/' - like 'woocommerce-wc-blocks-cart-blocks/order-summary-heading-frontend-chunk'.
+		// In such case file with custom JS translations will not be created in '/wp-content/languages/wpml' directory.
+		$domain = str_replace( '/', '-', $domain );
 		return $this->getSubdir() . '/' . strtolower( $domain ) . '-' . $locale . '.' . $this->getFileExtension();
 	}
 
@@ -116,9 +172,9 @@ abstract class Manager {
 	public static function getSubdir() {
 		$subdir = WP_LANG_DIR . '/' . self::SUB_DIRECTORY;
 
-		$siteId = get_current_blog_id();
-		if ( $siteId > 1 ) {
-			$subdir .= '/' . $siteId;
+		$site_id = get_current_blog_id();
+		if ( $site_id > 1 ) {
+			$subdir .= '/' . $site_id;
 		}
 
 		return $subdir;

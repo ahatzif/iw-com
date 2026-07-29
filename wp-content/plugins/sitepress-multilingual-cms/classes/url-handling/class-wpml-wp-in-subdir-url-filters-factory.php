@@ -15,10 +15,14 @@ class WPML_WP_In_Subdir_URL_Filters_Factory implements IWPML_Frontend_Action_Loa
 
 		if ( WPML_LANGUAGE_NEGOTIATION_TYPE_DIRECTORY === (int) $lang_negotiation_type ) {
 			$request_uri = Sanitize::stringProp( 'REQUEST_URI', $_SERVER );
+			if ( ! is_string( $request_uri ) ) {
+				return null;
+			}
+
 			$uri_without_subdir = wpml_strip_subdir_from_url( $request_uri );
 
 			if ( trim( $request_uri, '/' ) !== trim( $uri_without_subdir, '/' ) ) {
-				$backtrace = new WPML_Debug_BackTrace( null, 5 );
+				$backtrace = new WPML_Debug_BackTrace( null, 10 );
 				return new WPML_WP_In_Subdir_URL_Filters( $backtrace, $sitepress, $wpml_url_converter, $uri_without_subdir );
 			}
 		}

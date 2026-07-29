@@ -31,7 +31,7 @@ class WPML_TM_Word_Calculator_Post_Custom_Fields implements IWPML_TM_Word_Calcul
 	 *
 	 * @see inc/constants.php for the values of the constsnts
 	 */
-	public function __construct( WPML_TM_Word_Calculator $calculator, array $cf_settings = null ) {
+	public function __construct( WPML_TM_Word_Calculator $calculator, ?array $cf_settings = null ) {
 		$this->calculator  = $calculator;
 		$this->cf_settings = $cf_settings;
 	}

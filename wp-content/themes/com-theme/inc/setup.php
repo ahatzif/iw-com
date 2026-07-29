@@ -23,6 +23,24 @@ remove_action( 'wp_print_styles', 'print_emoji_styles' );
 remove_action( 'wp_enqueue_scripts', 'wp_enqueue_global_styles' );
 remove_action( 'wp_body_open', 'wp_global_styles_render_svg_filters' );
 
+add_action( 'wp_default_scripts', function( $scripts ) {
+    if ( is_admin() || ! isset( $scripts->registered['jquery'] ) ) {
+        return;
+    }
+
+    $scripts->registered['jquery']->deps = array_values(
+        array_diff( $scripts->registered['jquery']->deps, [ 'jquery-migrate' ] )
+    );
+} );
+
+add_action( 'wp_head', function() {
+    ?>
+    <link rel="icon" href="<?= esc_url( get_theme_file_uri( '/assets/images/favicon-32x32.png' ) ) ?>" sizes="32x32">
+    <link rel="icon" href="<?= esc_url( get_theme_file_uri( '/assets/images/favicon-192x192.png' ) ) ?>" sizes="192x192">
+    <link rel="apple-touch-icon" href="<?= esc_url( get_theme_file_uri( '/assets/images/apple-touch-icon.png' ) ) ?>">
+    <?php
+}, 2 );
+
 add_action( 'wp_print_styles', function() { wp_deregister_style( 'wp-pagenavi' );}, 100 );
 add_filter('protected_title_format', function ($title) { return '%s'; });
 add_filter( 'block_categories', function( $categories, $post ) { return array_merge( $categories, [[ 'slug' => 'com-theme', 'title' => __( 'Theme Blocks', 'com-theme' )]]); }, 10, 2 );
@@ -61,14 +79,23 @@ add_action( 'init', function() {
 
 // Register scripts and styles
 add_action( 'wp_enqueue_scripts', function() {
-    wp_add_inline_script( 'jquery-migrate', 'jQuery.migrateMute = true;' );
     wp_dequeue_style('wp-block-library');
     wp_enqueue_style( 'google-fonts-css', get_theme_file_uri( '/assets/css/google-fonts.css' ), [], com_theme_asset_version( 'assets/css/google-fonts.css' ) );
     wp_enqueue_style( 'theme-fonts-css', get_theme_file_uri( '/assets/css/theme-fonts.css' ), [], com_theme_asset_version( 'assets/css/theme-fonts.css' ) );
     wp_enqueue_style( 'tailwind-css', get_theme_file_uri( '/assets/css/tailwind.css' ), [], com_theme_asset_version( 'assets/css/tailwind.css' ) );
     wp_enqueue_style( 'swiper-css', get_theme_file_uri( '/assets/css/swiper.css' ), [], com_theme_asset_version( 'assets/css/swiper.css' ) );
     wp_enqueue_style( 'fancybox-css', get_theme_file_uri( '/assets/css/fancybox.css' ), [], com_theme_asset_version( 'assets/css/fancybox.css' ) );
-    wp_enqueue_script( 'index-js', get_theme_file_uri( '/assets/js/index.js' ), [], com_theme_asset_version( 'assets/js/index.js' ), true );
+    wp_enqueue_script( 'index-js', get_theme_file_uri( '/assets/js/index.js' ), [ 'jquery' ], com_theme_asset_version( 'assets/js/index.js' ), true );
+
+    // Account sections are replaced with AJAX, so address dependencies must be
+    // available before an edit-address form is injected into the page.
+    if ( function_exists( 'is_account_page' ) && is_account_page() ) {
+        wp_enqueue_script( 'selectWoo' );
+        wp_enqueue_style( 'select2' );
+        wp_enqueue_script( 'wc-country-select' );
+        wp_enqueue_script( 'wc-address-i18n' );
+    }
+
     wp_localize_script( 'index-js', 'THEME_OBJ', ['homeURL' => home_url(), 'ajaxURL' => admin_url( 'admin-ajax.php' )]);
     wp_localize_script( 'index-js', 'FORM_MESSAGES', [
         'fieldRequired' => __( 'Το πεδίο είναι υποχρεωτικό', 'com-theme' ),
@@ -84,6 +111,8 @@ add_action( 'wp_enqueue_scripts', function() {
         'lowercase' => __( 'Το πεδίο δεν περιέχει πεζό χαρακτήρα' ),
         'number'    => __( 'Το πεδίο δεν περιέχει αριθμό' ),
         'special'   => __( 'Το πεδίο δεν περιέχει ειδικό χαρακτήρο' ),
+        'match'     => __( 'Οι κωδικοί δεν ταιριάζουν.', 'com-theme' ),
+        'phone'     => __( 'Συμπληρώστε έναν έγκυρο αριθμό τηλεφώνου.', 'com-theme' ),
     ]);
 }, 100);
 

@@ -73,6 +73,15 @@ class IW_Zebra_Ticket_Printer {
     }
 
     public static function default_test_ticket(): array {
+        $qr_value = class_exists( 'IW_Ticketing' )
+            ? (string) IW_Ticketing::get_option( 'zebra_test_qr_value', home_url() )
+            : home_url();
+        $qr_host  = strtolower( (string) wp_parse_url( $qr_value, PHP_URL_HOST ) );
+
+        if ( in_array( $qr_host, [ 'benaki.org', 'www.benaki.org', 'benaki.com', 'www.benaki.com' ], true ) ) {
+            $qr_value = home_url( '/' );
+        }
+
         return [
             'ticket_type' => 'ΕΙΣΙΤΗΡΙΟ',
             'category'    => 'ΓΕΝΙΚΗ ΕΙΣΟΔΟΣ',
@@ -81,7 +90,7 @@ class IW_Zebra_Ticket_Printer {
             'price'       => '0,00 €',
             'visit'       => wp_date( 'd/m/Y · H:i', time(), wp_timezone() ),
             'code'        => 'TEST-ZEBRA-0001',
-            'qr_value'    => class_exists( 'IW_Ticketing' ) ? IW_Ticketing::get_option( 'zebra_test_qr_value', home_url() ) : home_url(),
+            'qr_value'    => $qr_value,
         ];
     }
 

@@ -47,6 +47,10 @@ export default class extends module {
         this.setDirty(false);
     }
 
+    message(key) {
+        return this.el.dataset[key] || '';
+    }
+
     addBrowseEvents() {
         if (!this.file) return;
 
@@ -94,11 +98,11 @@ export default class extends module {
 
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            return 'Ανεβάστε εικόνα σε μορφή JPG, PNG ή WebP.';
+            return this.message('fileTypeError');
         }
 
         if (file.size > 2 * 1024 * 1024) {
-            return 'Η εικόνα πρέπει να είναι έως 2MB.';
+            return this.message('fileSizeError');
         }
 
         return '';
@@ -276,7 +280,7 @@ export default class extends module {
             URL.revokeObjectURL(objectUrl);
             this.file.value = '';
             if (this.fileName) this.fileName.textContent = '';
-            this.setMessage(this.error, 'Η εικόνα δεν μπορεί να φορτωθεί. Δοκιμάστε άλλο αρχείο.');
+            this.setMessage(this.error, this.message('imageLoadError'));
             return;
         }
 
@@ -289,7 +293,7 @@ export default class extends module {
             URL.revokeObjectURL(objectUrl);
             this.file.value = '';
             if (this.fileName) this.fileName.textContent = '';
-            this.setMessage(this.error, 'Η φωτογραφία πρέπει να είναι τουλάχιστον 600x600px.');
+            this.setMessage(this.error, this.message('imageDimensionsError'));
             return;
         }
 
@@ -322,7 +326,7 @@ export default class extends module {
         this.setDirty(shouldRemoveSavedImage);
 
         if (shouldRemoveSavedImage) {
-            this.setMessage(this.notice, this.el.dataset.removeNotice || 'Πατήστε Αποθήκευση για να διαγραφεί οριστικά η εικόνα.');
+            this.setMessage(this.notice, this.message('removeNotice'));
             return;
         }
 
@@ -354,13 +358,13 @@ export default class extends module {
                 try {
                     response = JSON.parse(text);
                 } catch (error) {
-                    throw new Error('Δεν ήταν δυνατή η αποθήκευση της εικόνας.');
+                    throw new Error(this.message('saveError'));
                 }
 
                 return response;
             })
             .then((response) => {
-                if (!response.success) throw new Error(response.data?.message || 'Δεν ήταν δυνατή η ενημέρωση της εικόνας.');
+                if (!response.success) throw new Error(response.data?.message || this.message('updateError'));
 
                 const image = response.data?.image || {};
                 const imageUrl = image.preview_url || image.url || '';
@@ -374,7 +378,7 @@ export default class extends module {
                 this.setImageControls(Boolean(imageUrl));
                 this.savedUrl = imageUrl;
                 this.setDirty(false);
-                this.setMessage(this.success, response.data?.message || this.el.dataset.successMessage || 'Η εικόνα ενημερώθηκε.');
+                this.setMessage(this.success, response.data?.message || this.message('successMessage'));
             })
             .catch((err) => {
                 this.setMessage(this.error, err.message);

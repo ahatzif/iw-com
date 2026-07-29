@@ -52,6 +52,9 @@ class WPML_Download_Localization {
 				}
 			}
 		}
+
+		$this->download_active_plugins_language_packs();
+
 		return $results;
 	}
 
@@ -84,5 +87,89 @@ class WPML_Download_Localization {
 		}
 
 		return $result;
+	}
+
+	public function download_active_plugins_language_packs() {
+		$active_plugins = get_option( 'active_plugins' );
+		if ( empty( $active_plugins ) ) {
+			return;
+		}
+
+		foreach ( $active_plugins as $active_plugin ) {
+			$this->download_plugin_translations( $active_plugin );
+		}
+	}
+
+	/**
+	 * @param string $plugin
+	 * @return bool|WP_Error
+	 */
+	public function download_plugin_translations( string $plugin ) {
+		if ( ! function_exists( 'get_plugin_data' ) ) {
+			require_once ABSPATH . '/wp-admin/includes/plugin.php';
+		}
+
+		if ( ! function_exists( 'translations_api' ) ) {
+			require_once ABSPATH . '/wp-admin/includes/translation-install.php';
+		}
+
+		if ( ! class_exists( 'Automatic_Upgrader_Skin' ) ) {
+			require_once ABSPATH . '/wp-admin/includes/class-wp-upgrader.php';
+		}
+
+		$plugin_slug    = dirname( $plugin );
+		$plugin_data    = get_plugin_data( WP_PLUGIN_DIR . '/' . $plugin, false, false );
+		$plugin_version = $plugin_data['Version'];
+
+		$api = translations_api(
+			'plugins',
+			[
+				'slug'    => $plugin_slug,
+				'version' => $plugin_version,
+			]
+		);
+
+		if ( is_wp_error( $api ) ) {
+			return $api;
+		}
+
+		if ( empty( $api['translations'] ) ) {
+			// No translations.
+			return true;
+		}
+
+		$toUpgrade = array();
+
+		$locales = array_map(
+			function ( $language ) {
+				return $language['default_locale'];
+			},
+			$this->active_languages
+		);
+
+		foreach ( $api['translations'] as $translation ) {
+			if (
+				array_key_exists( 'language', $translation ) &&
+				array_key_exists( 'package', $translation ) &&
+				in_array( $translation['language'], $locales, true )
+			) {
+				$toUpgrade[] = (object) [
+					'language' => $translation['language'],
+					'type'     => 'plugin',
+					'slug'     => $plugin_slug,
+					'version'  => $plugin_version,
+					'package'  => $translation['package'],
+				];
+			}
+		}
+
+		if ( empty( $toUpgrade ) ) {
+			// No plugin translated languages correspond to $locales.
+			return true;
+		}
+
+		$skin     = new Automatic_Upgrader_Skin();
+		$upgrader = new Language_Pack_Upgrader( $skin );
+		return $upgrader->bulk_upgrade( $toUpgrade );
 	}
 }

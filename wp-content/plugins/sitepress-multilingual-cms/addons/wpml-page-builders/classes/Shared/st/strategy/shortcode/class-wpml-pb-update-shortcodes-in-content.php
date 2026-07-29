@@ -10,9 +10,11 @@ class WPML_PB_Update_Shortcodes_In_Content {
 	private $strategy;
 	/** @var WPML_PB_Shortcode_Encoding $encoding */
 	private $encoding;
-
+	/** @var string */
 	private $new_content;
+	/** @var array */
 	private $string_translations;
+	/** @var string */
 	private $lang;
 
 	public function __construct( WPML_PB_Shortcode_Strategy $strategy, WPML_PB_Shortcode_Encoding $encoding ) {
@@ -37,7 +39,7 @@ class WPML_PB_Update_Shortcodes_In_Content {
 		$translation_saved = apply_filters( 'wpml_pb_shortcodes_save_translation', false, $translated_post_id, $new_translation );
 
 		if ( ! $translation_saved ) {
-			if ( $new_translation != $original_content || '' === $current_translation ) {
+			if ( $new_translation !== $original_content || '' === $current_translation ) {
 				wpml_update_escaped_post(
 					[
 						'ID'           => $translated_post_id,
@@ -66,7 +68,7 @@ class WPML_PB_Update_Shortcodes_In_Content {
 	}
 
 	private function update_shortcodes( $shortcode_data ) {
-		$encoding = $this->strategy->get_shortcode_tag_encoding( $shortcode_data['tag'] );
+		$encoding    = $this->strategy->get_shortcode_tag_encoding( $shortcode_data['tag'] );
 		$translation = $this->get_translation( $shortcode_data['content'], $encoding );
 		$this->replace_string_with_translation( $shortcode_data['block'], $shortcode_data['content'], $translation );
 	}
@@ -90,24 +92,27 @@ class WPML_PB_Update_Shortcodes_In_Content {
 	}
 
 	private function replace_string_with_translation( $block, $original, $translation, $is_attribute = false, $attr = '' ) {
-		$translation = apply_filters( 'wpml_pb_before_replace_string_with_translation', $translation, $is_attribute );
+		$translation  = apply_filters( 'wpml_pb_before_replace_string_with_translation', $translation, $is_attribute );
 		$used_wrapper = false;
-		$new_block   = $block;
+		$new_block    = $block;
 
 		if ( $translation ) {
 
-			if ( $this->is_string_too_long_for_regex( $original ) ) {
+			if ( $this->is_string_too_long_for_regex( $original ) || $this->is_string_too_long_for_regex( $block ) ) {
 				$block             = WPML_PB_Shortcode_Content_Wrapper::unwrap( $block );
 				$new_block         = str_replace( $original, $translation, $block );
 				$this->new_content = str_replace( $block, $new_block, $this->new_content );
 			} else {
 				if ( $is_attribute && $attr ) {
+					// Quotes needs to be converted to entities, otherwise they can match with
+					// the shortcode attributes delimiters and break the attributes.
+					$translation = str_replace( [ "'", '"' ], [ '&apos;', '&quot;' ], $translation );
 					$pattern     = '/' . $attr . '=(["\'])' . preg_quote( $original, '/' ) . '(["\'])/';
 					$replacement = $attr . '=${1}' . $this->escape_backward_reference_on_replacement_string( $translation ) . '${2}';
 				} else {
 					$used_wrapper = false !== strpos( $new_block, '[' . WPML_PB_Shortcode_Content_Wrapper::WRAPPER_SHORTCODE_NAME . ']' );
-					$pattern     = '/(]\s*)' . preg_quote( trim( $original ), '/' ) . '(\s*\[)/';
-					$replacement = '${1}' . $this->escape_backward_reference_on_replacement_string( trim( $translation ) ) . '${2}';
+					$pattern      = '/(]\s*)' . preg_quote( trim( $original ), '/' ) . '(\s*\[)/';
+					$replacement  = '${1}' . $this->escape_backward_reference_on_replacement_string( trim( $translation ) ) . '${2}';
 				}
 
 				$new_block   = preg_replace( $pattern, $replacement, $block );
@@ -130,12 +135,12 @@ class WPML_PB_Update_Shortcodes_In_Content {
 	 * We need to escape backward references that could be included in the replacement text
 	 * e.g. '$1999.each' => '$19' is considered as a backward reference
 	 *
-	 * @param string $string
+	 * @param string $stringToEscape
 	 *
 	 * @return string
 	 */
-	private function escape_backward_reference_on_replacement_string( $string ) {
-		return preg_replace( '/\$([\d]{1,2})/', '\\\$' . '${1}', $string );
+	private function escape_backward_reference_on_replacement_string( $stringToEscape ) {
+		return preg_replace( '/\$([\d]{1,2})/', '\\\$${1}', $stringToEscape );
 	}
 
 	private function replace_content_without_delimiters( $block, $replacement ) {
@@ -143,12 +148,12 @@ class WPML_PB_Update_Shortcodes_In_Content {
 	}
 
 	/**
-	 * @param string $string
+	 * @param string $maybeLongString
 	 *
 	 * @return bool
 	 */
-	private function is_string_too_long_for_regex( $string ) {
-		return mb_strlen( $string ) > self::LONG_STRING_THRESHOLD;
+	private function is_string_too_long_for_regex( $maybeLongString ) {
+		return mb_strlen( $maybeLongString ) > self::LONG_STRING_THRESHOLD;
 	}
 
 	private function get_translation( $original, $encoding = false ) {
@@ -171,29 +176,32 @@ class WPML_PB_Update_Shortcodes_In_Content {
 					$translation[ $key ] = $data['value'];
 				}
 			}
-
 		} else {
 
 			$string_name = md5( $decoded_original );
-			if ( isset( $this->string_translations[ $string_name ][ $this->lang ] ) && $this->string_translations[ $string_name ][ $this->lang ]['status'] == ICL_TM_COMPLETE ) {
+			if ( isset( $this->string_translations[ $string_name ][ $this->lang ] ) && ICL_TM_COMPLETE === (int) $this->string_translations[ $string_name ][ $this->lang ]['status'] ) {
 				$translation = $this->string_translations[ $string_name ][ $this->lang ]['value'];
 			}
 		}
 
 		if ( $translation ) {
-			$translation = $this->encoding->encode( $translation, $encoding );
+			return $this->encoding->encode( $translation, $encoding );
+		} else {
+			return $original;
 		}
-
-		return $translation;
 	}
 
 	/**
-	 * @param string $translation
-	 * @param string $encoding
+	 * @param string|null $translation
+	 * @param string      $encoding
 	 *
 	 * @return string
 	 */
 	private function filter_attribute_translation( $translation, $encoding ) {
+		if ( is_null( $translation ) ) {
+			return '';
+		}
+
 		if ( 'allow_html_tags' !== $encoding ) {
 			$translation = htmlspecialchars( htmlspecialchars_decode( $translation ) );
 		}
@@ -203,4 +211,3 @@ class WPML_PB_Update_Shortcodes_In_Content {
 		return $translation;
 	}
 }
-

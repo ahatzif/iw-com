@@ -30,7 +30,7 @@ class Settings {
 
 	/** @return string */
 	public function getTrackStringColor() {
-		return (string) $this->getSTSetting( 'hl_color', '' );
+		return (string) $this->getSTSetting( 'hl_color', '#e83200' );
 	}
 
 	/** @return bool */
@@ -39,11 +39,14 @@ class Settings {
 	}
 
 	/**
-	 * @param string $domain
+	 * @param string|array $domain
 	 *
 	 * @return bool
 	 */
 	public function isDomainRegistrationExcluded( $domain ) {
+		if ( is_array( $domain ) && array_key_exists( 'domain', $domain ) ) {
+			$domain = $domain[ 'domain' ];
+		}
 		return (bool) $this->auto_register_settings->isExcludedDomain( $domain );
 	}
 

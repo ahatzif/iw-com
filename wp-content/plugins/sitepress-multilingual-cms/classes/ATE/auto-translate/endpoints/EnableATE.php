@@ -18,6 +18,7 @@ use function WPML\FP\pipe;
 
 class EnableATE implements IHandler {
 
+
 	public function run( Collection $data ) {
 		Settings::assoc( 'translation-management', 'doc_translation_method', ICL_TM_TMETHOD_ATE );
 
@@ -30,14 +31,18 @@ class EnableATE implements IHandler {
 		if ( Obj::propOr( false, 'activated', $status ) ) {
 			$result = Either::right( true );
 		} else {
+			/** @var \WPML_TM_AMS_Users $amsUsers */
 			$amsUsers = make( \WPML_TM_AMS_Users::class );
+
+			/** @var \WPML_TM_AMS_API $amsApi */
+			$amsApi = make( \WPML_TM_AMS_API::class );
 
 			$saveLanguageMapping = Fns::tap( pipe(
 				[ Option::class, 'getLanguageMappings' ],
 				Logic::ifElse( Logic::isEmpty(), Fns::always( true ), [ LanguageMappings::class, 'saveMapping'] )
 			) );
 
-			$result = make( \WPML_TM_AMS_API::class )->register_manager(
+			$result = $amsApi->register_manager(
 				User::getCurrent(),
 				$amsUsers->get_translators(),
 				$amsUsers->get_managers()
@@ -47,6 +52,33 @@ class EnableATE implements IHandler {
 		}
 
 		return $result->map( Fns::tap( [ make( \WPML_TM_AMS_Synchronize_Actions::class ), 'synchronize_translators' ] ) )
-		              ->bimap( pipe( Lst::make(), Lst::keyWith( 'error' ), Lst::nth(0) ), Fns::identity() );
+									->map( $this->confirmSiteKey() )
+		              ->bimap(
+		              	$this->formatError(),
+		              	Fns::identity()
+		              );
+	}
+
+	/**
+	 * Confirm site key with AMS immediately after enabling ATE.
+	 * If confirmation fails, the Sync class will schedule a background task as fallback.
+	 */
+	private function confirmSiteKey() {
+		return Fns::tap(function() {
+			$confirmationService = make( \WPML\TM\ATE\Sitekey\SitekeyConfirmationService::class );
+			$confirmationService->confirm();
+			// Don't care about return value - Sync will handle fallback if confirmation failed
+		});
+	}
+
+	/**
+	 * Format error data to include both user-friendly message and raw response
+	 *
+	 * @return callable Function that transforms error structure
+	 */
+	private function formatError() {
+		return function( $errorData ) {
+			return [ 'error' => $errorData ];
+		};
 	}
 }

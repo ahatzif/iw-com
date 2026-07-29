@@ -3,6 +3,7 @@
 use WPML\Element\API\Languages;
 use WPML\FP\Logic;
 use WPML\FP\Lst;
+use WPML\User\LanguagePairs\ILanguagePairs;
 
 /**
  * Class WPML_Language_Pair_Records
@@ -10,7 +11,7 @@ use WPML\FP\Lst;
  * Language pairs are stored as user meta as an array of the form
  * array( $from_lang => array( $to_lang_1 => '1', $to_lang_2 => '1' )
  */
-class WPML_Language_Pair_Records {
+class WPML_Language_Pair_Records implements ILanguagePairs {
 
 	private $meta_key;
 
@@ -86,7 +87,7 @@ class WPML_Language_Pair_Records {
 		return $this->convert_from_storage_format( $language_pairs );
 	}
 
-	private function convert_to_storage_format( $language_pairs ) {
+	public function convert_to_storage_format( $language_pairs ) {
 		if ( $this->is_in_storage_format( $language_pairs ) ) {
 			return $language_pairs;
 		}

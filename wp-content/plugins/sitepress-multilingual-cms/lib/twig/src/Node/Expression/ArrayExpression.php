@@ -43,7 +43,7 @@ class ArrayExpression extends \WPML\Core\Twig\Node\Expression\AbstractExpression
         }
         return \false;
     }
-    public function addElement(\WPML\Core\Twig\Node\Expression\AbstractExpression $value, \WPML\Core\Twig\Node\Expression\AbstractExpression $key = null)
+    public function addElement(\WPML\Core\Twig\Node\Expression\AbstractExpression $value, ?\WPML\Core\Twig\Node\Expression\AbstractExpression $key = null)
     {
         if (null === $key) {
             $key = new \WPML\Core\Twig\Node\Expression\ConstantExpression(++$this->index, $value->getTemplateLine());

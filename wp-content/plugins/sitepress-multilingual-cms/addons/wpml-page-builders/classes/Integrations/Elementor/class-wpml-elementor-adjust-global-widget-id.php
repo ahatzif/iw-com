@@ -1,6 +1,6 @@
 <?php
 
-class WPML_Elementor_Adjust_Global_Widget_ID {
+class WPML_Elementor_Adjust_Global_Widget_ID implements IWPML_Action {
 
 	/** @var IWPML_Page_Builders_Data_Settings */
 	private $elementor_settings;
@@ -27,7 +27,7 @@ class WPML_Elementor_Adjust_Global_Widget_ID {
 	public function add_hooks() {
 		add_action( 'elementor/editor/before_enqueue_scripts', array( $this, 'adjust_ids' ) );
 		add_action( 'elementor/editor/after_enqueue_scripts', array( $this, 'restore_current_language' ) );
-		add_action( 'elementor/frontend/the_content', array( $this, 'duplicate_css_class_with_original_id' ) );
+		add_filter( 'elementor/frontend/the_content', array( $this, 'duplicate_css_class_with_original_id' ) );
 
 		if ( is_admin() ) {
 			add_filter(
@@ -68,7 +68,7 @@ class WPML_Elementor_Adjust_Global_Widget_ID {
 				$this->elementor_settings->prepare_data_for_saving( $custom_field_data_adjusted )
 			);
 
-			// Update post date so Elementor doesn't use auto saved post
+			// Update post date so Elementor doesn't use auto saved post.
 			$post_data                  = get_post( $post_id, ARRAY_A );
 			$post_data['post_date']     = current_time( 'mysql' );
 			$post_data['post_date_gmt'] = '';
@@ -90,7 +90,7 @@ class WPML_Elementor_Adjust_Global_Widget_ID {
 						}
 					}
 				} catch ( Exception $e ) {
-					// Not much we can do if the elementor templateID is a non existing post
+					// Not much we can do if the elementor templateID is a non existing post.
 				}
 			}
 			$data['elements'] = $this->set_global_widget_id_for_language( $data['elements'], $language );
@@ -117,7 +117,7 @@ class WPML_Elementor_Adjust_Global_Widget_ID {
 	 */
 	public function should_use_display_as_translated_snippet( $display_as_translated, $post_types ) {
 		if ( isset( $_GET['action'] ) && 'elementor' === $_GET['action']
-		     && in_array( 'elementor_library', array_keys( $post_types ), true ) ) {
+			&& in_array( 'elementor_library', array_keys( $post_types ), true ) ) {
 			return true;
 		}
 
@@ -130,17 +130,20 @@ class WPML_Elementor_Adjust_Global_Widget_ID {
 	 * @return string
 	 */
 	public function duplicate_css_class_with_original_id( $content ) {
-		$classPrefixes = wpml_collect( [
-			'elementor-',
-			'elementor-global-',
-		] )->implode( '|' );
+		$classPrefixes = implode( '|', [ 'elementor-', 'elementor-global-' ] );
+		$pattern       = '/(class="[^"]*?((?:' . $classPrefixes . ')))(\d+)/';
+		$result        = preg_replace_callback( $pattern, [ $this, 'convert_id_to_original' ], $content );
 
-		return preg_replace_callback( '/(class=".*(' . $classPrefixes . '))(\d+)/', array( $this, 'convert_id_to_original' ), $content );
+		if ( null === $result ) {
+			return $content;
+		}
+
+		return $result;
 	}
 
 	private function convert_id_to_original( array $matches ) {
 		$class_prefix = $matches[2];
-		$id           = (int)$matches[3];
+		$id           = (int) $matches[3];
 		$element      = $this->translation_element_factory->create_post( $id );
 		$source       = $element->get_source_element();
 

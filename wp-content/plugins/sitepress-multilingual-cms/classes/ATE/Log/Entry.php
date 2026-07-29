@@ -37,11 +37,11 @@ class Entry {
 	public $extraData = [];
 
 	/**
-	 * @param array $item
+	 * @param array|null $item
 	 *
 	 * @return Entry
 	 */
-	public function __construct( array $item = null ) {
+	public function __construct( ?array $item = null ) {
 		if ( $item ) {
 			$this->timestamp   = (int) $item['timestamp'];
 			$this->eventType   = (int) ( isset( $item['eventType'] ) ? $item['eventType'] : $item['event'] );

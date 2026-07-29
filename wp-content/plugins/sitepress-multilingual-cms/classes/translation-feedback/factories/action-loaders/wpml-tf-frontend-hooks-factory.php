@@ -16,12 +16,12 @@ class WPML_TF_Frontend_Hooks_Factory implements IWPML_Frontend_Action_Loader, IW
 	/**
 	 * WPML_TF_Frontend_Hooks_Factory constructor.
 	 *
-	 * @param WPML_Queried_Object                   $queried_object
-	 * @param WPML_TF_Frontend_Display_Requirements $display_requirements
+	 * @param WPML_Queried_Object|null                   $queried_object
+	 * @param WPML_TF_Frontend_Display_Requirements|null $display_requirements
 	 */
 	public function __construct(
-		WPML_Queried_Object $queried_object = null,
-		WPML_TF_Frontend_Display_Requirements $display_requirements = null
+		?WPML_Queried_Object $queried_object = null,
+		?WPML_TF_Frontend_Display_Requirements $display_requirements = null
 	) {
 		$this->queried_object       = $queried_object;
 		$this->display_requirements = $display_requirements;

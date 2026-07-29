@@ -3,23 +3,29 @@
 namespace WPML\MediaTranslation;
 
 use WPML\LIB\WP\Attachment;
+use WPML\MediaTranslation\MediaCollector\Collector;
 
 class MediaImgParse {
+	private $media = [];
+	private $collector;
+
 	/**
 	 * @param string $text
 	 *
 	 * @return array
 	 */
 	public function get_imgs( $text ) {
-		$images = $this->get_from_img_tags( $text );
-
 		if ( $this->can_parse_blocks( $text ) ) {
+			/** @var WP_Block_Parser_Block[] $blocks */
 			$blocks = parse_blocks( $text );
-			$images = array_merge( $images, $this->get_from_css_background_images_in_blocks( $blocks ) );
+			$this->collect_media_in_blocks( $blocks, $this->media );
+			Attachment::addToCache( $this->media );
+			$images = $this->get_from_css_background_images_in_blocks( $blocks );
 		} else {
-			$images = array_merge( $images, $this->get_from_css_background_images( $text ) );
+			$images = $this->get_from_css_background_images( $text );
 		}
 
+		$images = array_merge( $this->get_from_img_tags( $text ), $images );
 		return $images;
 	}
 
@@ -28,7 +34,67 @@ class MediaImgParse {
 	 *
 	 * @return array
 	 */
-	private function get_from_img_tags( $text ) {
+	public function get_imgs_from_blocks( $text ) {
+		if ( ! $this->can_parse_blocks( $text ) ) {
+			return array();
+		}
+
+		$media             = array();
+		$media_srcs_to_ids = array();
+
+		/** @var WP_Block_Parser_Block[] $blocks */
+		$blocks = parse_blocks( $text );
+		$this->collect_media_in_blocks( $blocks, $media_srcs_to_ids );
+		Attachment::addToCache( $media_srcs_to_ids );
+
+		foreach ( $media_srcs_to_ids as $media_src => $media_id ) {
+			$media[] = array(
+				'attributes'    => array(
+					'src' => $media_src,
+					'alt' => '',
+				),
+				'attachment_id' => $media_id,
+			);
+		}
+
+		$media = array_merge(
+			$media,
+			$this->get_from_css_background_images_in_blocks( $blocks )
+		);
+
+		return $media;
+	}
+
+	/**
+	 * @param WP_Block_Parser_Block[] $blocks
+	 * @param array                   $mediaCollection
+	 */
+	public function collect_media_in_blocks( $blocks, &$mediaCollection = [] ) {
+		if ( $this->collector == null ) {
+			$file = __DIR__ . '/media-collector/block-definitions/all.php';
+
+			if ( ! file_exists( $file ) ) {
+				return $mediaCollection;
+			}
+
+			$this->collector = new Collector();
+			$this->collector->addCollectorBlocks(
+				require __DIR__ . '/media-collector/block-definitions/all.php'
+			);
+		}
+
+		$this->collector->collectMediaFromBlocks( $blocks, $mediaCollection );
+
+		return $mediaCollection;
+	}
+
+	/**
+	 * @param string $text
+	 * @param bool   $get_attachment_ids_from_urls
+	 *
+	 * @return array
+	 */
+	public function get_from_img_tags( $text, $get_attachment_ids_from_urls = true ) {
 		$media = wpml_collect( [] );
 
 		$media_elements = [
@@ -39,14 +105,19 @@ class MediaImgParse {
 
 		foreach ( $media_elements as $element_expression ) {
 			if ( preg_match_all( $element_expression, $text, $matches ) ) {
-				$media = $media->merge( $this->getAttachments( $matches ) );
+				$media = $media->merge( $this->getAttachments( $matches, $get_attachment_ids_from_urls  ) );
 			}
 		}
 
 		return $media->toArray();
 	}
 
-	private function getAttachments( $matches ) {
+	/**
+	 * @param bool $get_attachment_ids_from_urls
+	 *
+	 * @return array
+	 */
+	private function getAttachments( $matches, $get_attachment_ids_from_urls = true ) {
 		$attachments = [];
 
 		foreach ( $matches[1] as $i => $match ) {
@@ -57,7 +128,7 @@ class MediaImgParse {
 				}
 				if ( isset( $attributes['src'] ) ) {
 					$attachments[ $i ]['attributes']    = $attributes;
-					$attachments[ $i ]['attachment_id'] = Attachment::idFromUrl( $attributes['src'] );
+					$attachments[ $i ]['attachment_id'] = $get_attachment_ids_from_urls ? Attachment::idFromUrl( $attributes['src'] ) : null;
 				}
 			}
 		}
@@ -130,7 +201,7 @@ class MediaImgParse {
 	private function sanitize_block( $block ) {
 		$block = (object) $block;
 
-		if ( isset( $block->attrs ) ) {
+		if ( isset( $block->attrs ) && ! is_object( $block->attrs ) ) {
 			/** Sometimes `$block->attrs` is an object or an array, so we'll use an object */
 			$block->attrs = (object) $block->attrs;
 		}

@@ -15,7 +15,7 @@ class WPML_XML2Array implements WPML_XML_Transform {
 			xml_parser_set_option( $parser, XML_OPTION_CASE_FOLDING, 0 );
 			xml_parser_set_option( $parser, XML_OPTION_SKIP_WHITE, 1 );
 			xml_parse_into_struct( $parser, $this->contents, $xml_values );
-			xml_parser_free( $parser );
+			unset( $parser );
 		}
 
 		// Initializations

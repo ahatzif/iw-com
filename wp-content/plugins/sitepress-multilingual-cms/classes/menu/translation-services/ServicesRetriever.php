@@ -42,17 +42,14 @@ class ServicesRetriever {
 	// buildPartnerServicesSections :: \WPML_TP_Services[] -> string[]
 	private static function buildPartnerServicesSections( $buildSection, $userCountry ) {
 		$headers = [
-			'regular'        => __( 'Partner Translation Services', 'wpml-translation-management' ),
-			'inCountry'      => __(
-				sprintf(
-					'Partner Translation Services in %s',
-					isset( $userCountry['name'] ) ? $userCountry['name'] : ''
-				),
-				'wpml-translation-management'
+			'regular'        => __( 'Partner Translation Services', 'sitepress' ),
+			'inCountry'      => sprintf(
+				__( 'Partner Translation Services in %s', 'sitepress' ),
+				isset( $userCountry['name'] ) ? $userCountry['name'] : ''
 			),
 			'otherCountries' => __(
 				'Other Partner Translation Services from Around the World',
-				'wpml-translation-management'
+				'sitepress'
 			),
 		];
 

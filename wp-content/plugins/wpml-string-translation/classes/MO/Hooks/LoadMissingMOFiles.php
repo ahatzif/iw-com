@@ -2,7 +2,6 @@
 
 namespace WPML\ST\MO\Hooks;
 
-use WPML\Collect\Support\Collection;
 use WPML\ST\MO\Generate\MissingMOFile;
 use WPML\WP\OptionManager;
 use function WPML\Container\make;
@@ -13,7 +12,6 @@ class LoadMissingMOFiles implements \IWPML_Action {
 	const OPTION_GROUP                        = 'ST-MO';
 	const MISSING_MO_OPTION                   = 'missing-mo';
 	const TIMEOUT                             = 10;
-	const WPML_VERSION_INTRODUCING_ST_MO_FLOW = '4.3.0';
 
 	/**
 	 * @var MissingMOFile
@@ -38,7 +36,7 @@ class LoadMissingMOFiles implements \IWPML_Action {
 	}
 
 	public function add_hooks() {
-		if ( $this->wasWpmlInstalledPriorToMoFlowChanges() ) {
+		if ( defined( 'WPML_CHECK_MISSING_MO_FILES' ) && true === WPML_CHECK_MISSING_MO_FILES ) {
 			add_filter( 'load_textdomain_mofile', [ $this, 'recordMissing' ], 10, 2 );
 			add_action( 'shutdown', [ $this, 'generateMissing' ] );
 		}
@@ -68,12 +66,13 @@ class LoadMissingMOFiles implements \IWPML_Action {
 			return $mofile;
 		}
 
-		if ( ! $this->moFilesDictionary->find( $mofile ) ) {
-			return $mofile;
-		}
-
+		// Check if the file has already been generated.
 		$generatedFile = $this->getGeneratedFileName( $mofile, $domain );
-		if ( self::isReadable( $generatedFile ) ) {
+		if (
+			self::isReadable( $generatedFile )
+			&& $this->moFilesDictionary->is_path_handled( $mofile, $domain )
+		) {
+			// The file exists AND the path is handled by ST.
 			return $generatedFile;
 		}
 
@@ -113,7 +112,8 @@ class LoadMissingMOFiles implements \IWPML_Action {
 	 * @return \WPML\Collect\Support\Collection
 	 */
 	private function getMissing() {
-		return wpml_collect( $this->optionManager->get( self::OPTION_GROUP, self::MISSING_MO_OPTION, [] ) );
+		$missing = $this->optionManager->get( self::OPTION_GROUP, self::MISSING_MO_OPTION, [] );
+		return wpml_collect( is_array( $missing ) ? $missing : [] );
 	}
 
 	/**
@@ -125,15 +125,6 @@ class LoadMissingMOFiles implements \IWPML_Action {
 
 	public static function getTimeout() {
 		return self::TIMEOUT;
-	}
-
-	/**
-	 * @return bool
-	 */
-	private function wasWpmlInstalledPriorToMoFlowChanges() {
-		$wpml_start_version = \get_option( \WPML_Installation::WPML_START_VERSION_KEY, '0.0.0' );
-
-		return version_compare( $wpml_start_version, self::WPML_VERSION_INTRODUCING_ST_MO_FLOW, '<' );
 	}
 
 	/**

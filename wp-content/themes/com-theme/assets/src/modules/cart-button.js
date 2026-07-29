@@ -6,6 +6,9 @@ export default class extends module {
         this.events = { click: { button: 'toggle', close: 'close' } };
         this.count = this.$('count')?.[0] ?? null;
         this.button = this.$('button')?.[0] ?? null;
+        this.ticketSingular = this.el.dataset.ticketSingular || '';
+        this.ticketPlural = this.el.dataset.ticketPlural || '';
+        this.ariaLabelTemplate = this.el.dataset.ariaLabelTemplate || '%s';
         this.onEscapeKeyBind = this.onEscapeKey.bind(this);
     }
 
@@ -39,11 +42,11 @@ export default class extends module {
         const count = Number(typeof value === 'object' ? value.count : value) || 0;
         const label = typeof value === 'object' && value.label
             ? value.label
-            : `${count} ${count === 1 ? 'εισιτήριο' : 'εισιτήρια'}`;
+            : `${count} ${count === 1 ? this.ticketSingular : this.ticketPlural}`;
         this.count.textContent = count > 0 ? String(count) : '';
         this.count.classList.toggle('hidden', count === 0);
         this.count.classList.toggle('flex', count > 0);
-        this.button?.setAttribute('aria-label', `Καλάθι, ${label}`);
+        this.button?.setAttribute('aria-label', this.ariaLabelTemplate.replace('%s', label));
     }
 
     onEscapeKey(event) {

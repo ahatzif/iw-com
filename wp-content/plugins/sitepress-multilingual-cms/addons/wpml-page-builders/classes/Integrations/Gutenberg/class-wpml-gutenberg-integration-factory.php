@@ -18,12 +18,6 @@ class WPML_Gutenberg_Integration_Factory {
 			$integrations->add(
 				make( '\WPML\PB\Gutenberg\ReusableBlocks\Integration' )
 			);
-
-			if ( is_admin() ) {
-				$integrations->add(
-					make( '\WPML\PB\Gutenberg\ReusableBlocks\AdminIntegration' )
-				);
-			}
 		}
 
 		if ( ! is_admin() ) {
@@ -43,6 +37,18 @@ class WPML_Gutenberg_Integration_Factory {
 
 		$integrations->add(
 			make( \WPML\PB\Gutenberg\Widgets\Block\RegisterStrings::class )
+		);
+
+		$integrations->add(
+			make( \WPML\PB\Gutenberg\Hooks\TranslationJobImages::class )
+		);
+
+		$integrations->add(
+			make( \WPML\PB\Gutenberg\Hooks\TranslationGuiLabels::class )
+		);
+
+		$integrations->add(
+			new \WPML\PB\Gutenberg\MediaHooksIntegration( $mainIntegration->get_config_option() )
 		);
 
 		return $integrations;
@@ -74,7 +80,8 @@ class WPML_Gutenberg_Integration_Factory {
 		return new WPML_Gutenberg_Integration(
 			$strings_in_block,
 			$config_option,
-			$strings_registration
+			$strings_registration,
+			$sitepress
 		);
 	}
 
@@ -95,6 +102,5 @@ class WPML_Gutenberg_Integration_Factory {
 		return $sitepress->is_translated_post_type(
 			WPML\PB\Gutenberg\ReusableBlocks\Translation::POST_TYPE
 		);
-
 	}
 }

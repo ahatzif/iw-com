@@ -109,6 +109,7 @@ class acfe_module_form extends acfe_module{
             'success'       => array(
                 'hide_form' => false,
                 'scroll'    => false,
+                'shortcode' => false,
                 'message'   => __('Form updated', 'acfe'),
                 'wrapper'   => '<div id="message" class="updated">%s</div>',
             ),
@@ -378,57 +379,22 @@ class acfe_module_form extends acfe_module{
     
     
     /**
-     * validate_item
+     * validated_item
      *
      * @param $item
      *
      * @return array|mixed
      */
-    function validate_item($item = array()){
-        
-        // process parent
-        // $item = parent::validate_item($item);
-        
-        // already valid
-        if(is_array($item) && !empty($item['_valid'])){
-            return $item;
-        }
-        
-        // convert
-        $item['ID']     = (int) acf_maybe_get($item, 'ID', 0);
-        $item['active'] = (bool) acf_maybe_get($item, 'active', true);
-        $item['_valid'] = true;
-        
-        // default item
-        $defaults = wp_parse_args($this->item, array(
-            'ID'    => 0,
-            'name'  => '',
-            'label' => '',
-        ));
-        
-        // parse defaults
-        $item = acfe_parse_args_r($item, $defaults);
-        
-        // process alias
-        foreach($this->alias as $k => $alias){
-            if(!empty($item[ $alias ])){
-                
-                // set 'page_title' = 'label'
-                $item[ $k ] = $item[ $alias ];
-                
-            }
-        }
+    function validated_item($item = array()){
         
         // validate keys types
-        $item['field_groups'] = acf_get_array($item['field_groups']);
-        $item['actions'] = acf_get_array($item['actions']);
+        $item['field_groups'] = acfe_as_array($item['field_groups']);
+        $item['actions'] = acfe_as_array($item['actions']);
         
         // validate actions
         $item = $this->validate_actions($item);
-        
-        // filters
-        $item = $this->apply_module_filters('acfe/module/validate_item', $item);
-        
+
+        // return
         return $item;
         
     }
@@ -584,7 +550,7 @@ class acfe_module_form extends acfe_module{
         // extract actions
         $actions = $item['actions'];
         $item['actions'] = array();
-        
+
         // loop actions
         foreach($actions as $action){
             
@@ -601,7 +567,23 @@ class acfe_module_form extends acfe_module{
                 
                 // prefix all array keys
                 if($instance->prefix){
-                    $action = acfe_prefix_array_keys($action, "{$instance->prefix}_", array('acf_fc_layout'));
+
+                    // vars
+                    $prefix = "{$instance->prefix}_";
+
+                    // rewrite keys with prefix
+                    $action = acfe_array_rewrite($action, function($value, $key, $row) use($prefix){
+
+                        // ignore numeric and acf_fc_layout keys
+                        if(is_numeric($key) || $key === 'acf_fc_layout'){
+                            return array($key => $value);
+                        }
+
+                        // return
+                        return array("{$prefix}{$key}" => $value);
+
+                    }, true);
+
                 }
                 
                 // append
@@ -627,7 +609,7 @@ class acfe_module_form extends acfe_module{
      */
     function prepare_save_item($item){
         
-        $item['actions'] = acf_get_array($item['actions']);
+        $item['actions'] = acfe_as_array($item['actions']);
     
         // attributes: submit
         if($item['attributes']['submit']){
@@ -830,19 +812,41 @@ class acfe_module_form extends acfe_module{
     /**
      * edit_column_acfe_actions
      *
-     * @param $item
+     * @param $form
      */
-    function edit_column_acfe_actions($item){
+    function edit_column_acfe_actions($form){
         
         $text = '—';
-        $actions = array();
+        $render = array();
         
-        foreach($item['actions'] as $item){
-            $actions[] = ucfirst($item['action']);
+        // loop actions
+        foreach($form['actions'] as $action){
+            
+            // default label (action type not found)
+            $label = ucfirst($action['action']);
+            
+            // get action type
+            $action_type = acfe_get_form_action_type($action['action']);
+            
+            // use title alt if exists
+            if(!empty($action_type)){
+                $label = $action_type->title_alt;
+            }
+            
+            // filters
+            $label = apply_filters("acfe/form/admin_column/action_label",                            $label, $action, $action_type, $form);
+            $label = apply_filters("acfe/form/admin_column/action_label/form={$form['name']}",       $label, $action, $action_type, $form);
+            $label = apply_filters("acfe/form/admin_column/action_label/action={$action['action']}", $label, $action, $action_type, $form);
+            
+            // do not show if empty label
+            if(!empty($label)){
+                $render[] = $action_type->title_alt;
+            }
+            
         }
         
-        if($actions){
-            $text = implode(', ', $actions);
+        if($render){
+            $text = implode(', ', $render);
         }
         
         echo $text;

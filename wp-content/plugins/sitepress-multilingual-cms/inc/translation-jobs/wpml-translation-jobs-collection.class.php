@@ -107,8 +107,8 @@ class WPML_Translation_Jobs_Collection extends WPML_Abstract_Job_Collection {
 	}
 
 	/**
-	 * @param array $args
-	 * @param array $pagination_args
+	 * @param array      $args
+	 * @param array|null $pagination_args
 	 *
 	 * @return array
 	 */
@@ -136,12 +136,15 @@ class WPML_Translation_Jobs_Collection extends WPML_Abstract_Job_Collection {
 		return array( array(), $found_rows, 0, 0, 0, 0 );
 	}
 
-	private function get_jobs_in_db( array $args = array(), array $pagination_args = null ) {
+	private function get_jobs_in_db( array $args = array(), ?array $pagination_args = null ) {
 		$where_jobs       = $this->build_where_clause( $args );
 		$jobs_table_union = $this->get_jobs_union_table_sql( $where_jobs, $args );
 
-		$only_ids_query  = 'SELECT SQL_CALC_FOUND_ROWS ';
-		$only_ids_query .= 'jobs.job_id, jobs.translator_id, jobs.job_id, jobs.batch_id, jobs.element_type_prefix ';
+		$count_sql = 'SELECT COUNT(*) FROM ' . $jobs_table_union;
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$found_rows = (int) $this->wpdb->get_var( $count_sql );
+
+		$only_ids_query  = 'SELECT jobs.job_id, jobs.translator_id, jobs.job_id, jobs.batch_id, jobs.element_type_prefix ';
 		$only_ids_query .= 'FROM ' . $jobs_table_union . ' ';
 
 		if ( $pagination_args ) {
@@ -150,9 +153,8 @@ class WPML_Translation_Jobs_Collection extends WPML_Abstract_Job_Collection {
 			$prepare_args[]  = $pagination_args['per_page'];
 			$only_ids_query  = $this->wpdb->prepare( $only_ids_query, $prepare_args );
 		}
-
-		$data       = $this->wpdb->get_results( $only_ids_query );
-		$found_rows = (int) $this->wpdb->get_var( 'SELECT FOUND_ROWS()' );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$data = $this->wpdb->get_results( $only_ids_query );
 
 		return array( $data, $found_rows );
 	}
@@ -164,9 +166,9 @@ class WPML_Translation_Jobs_Collection extends WPML_Abstract_Job_Collection {
 	}
 
 	/**
-	 * @param array $data
-	 * @param int   $count
-	 * @param array $pagination_args
+	 * @param array      $data
+	 * @param int        $count
+	 * @param array|null $pagination_args
 	 *
 	 * @return array
 	 */

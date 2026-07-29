@@ -18,18 +18,38 @@ class WPML_Page_Builders_Media_Hooks implements IWPML_Action {
 		$this->media_update_factory = $media_update_factory;
 		$this->page_builder_slug    = $page_builder_slug;
 	}
-	public function add_hooks() {
+
+	public function add_hooks( $should_add_hooks_for_media_translation = true ) {
+		add_filter( 'wpml_pb_get_media_finders', array( $this, 'add_media_finder' ) );
 		add_filter( 'wpml_pb_get_media_updaters', array( $this, 'add_media_updater' ) );
+
+		if ( ! $should_add_hooks_for_media_translation ) {
+			return;
+		}
+
 		add_filter( 'wpml_media_content_for_media_usage', array( $this, 'add_package_strings_content' ), 10, 2 );
 	}
+
 	/**
 	 * @param IWPML_PB_Media_Update[] $updaters
+	 * @param \WP_Post                $post
 	 *
 	 * @return IWPML_PB_Media_Update[]
 	 */
-	public function add_media_updater( $updaters ) {
+	public function add_media_finder( $updaters, $post = null ) {
+		return $this->add_media_updater( $updaters, $post, true );
+	}
+
+	/**
+	 * @param IWPML_PB_Media_Update[] $updaters
+	 * @param \WP_Post                $post
+	 * @param boolean                 $find_usage_instead_of_translate
+	 *
+	 * @return IWPML_PB_Media_Update[]
+	 */
+	public function add_media_updater( $updaters, $post = null, $find_usage_instead_of_translate = false ) {
 		if ( ! array_key_exists( $this->page_builder_slug, $updaters ) ) {
-			$updaters[ $this->page_builder_slug ] = $this->media_update_factory->create();
+			$updaters[ $this->page_builder_slug ] = $this->media_update_factory->create( $find_usage_instead_of_translate );
 		}
 		return $updaters;
 	}

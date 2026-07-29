@@ -17,6 +17,7 @@ class acfe_module_form_action_user extends acfe_module_form_action{
         
         $this->name = 'user';
         $this->title = __('User action', 'acfe');
+        $this->title_alt = __('User', 'acfe');
         
         $this->item = array(
             'action' => 'user',
@@ -90,7 +91,7 @@ class acfe_module_form_action_user extends acfe_module_form_action{
         $user_id = acf_extract_var($load, 'source');
         $user_role = acf_extract_var($load, 'role');
         $acf_fields = acf_extract_var($load, 'acf_fields');
-        $acf_fields = acf_get_array($acf_fields);
+        $acf_fields = acfe_as_array($acf_fields);
         $acf_fields_exclude = array();
         
         // filters
@@ -125,7 +126,7 @@ class acfe_module_form_action_user extends acfe_module_form_action{
         foreach($load as $user_field => $field_key){
             
             // check field is not hidden and has no value set in 'acfe/form/load_form'
-            if(acf_maybe_get($form['map'], $field_key) !== false && !isset($form['map'][ $field_key ]['value'])){
+            if(acfe_get($form['map'], $field_key) !== false && !isset($form['map'][ $field_key ]['value'])){
                 
                 // check key exists in WP_User and is field key
                 if(in_array($user_field, $this->fields) && !empty($field_key) && is_string($field_key) && acf_is_field_key($field_key)){
@@ -154,7 +155,7 @@ class acfe_module_form_action_user extends acfe_module_form_action{
             $field_key = $user_role;
             
             // check field is not hidden and has no value set in 'acfe/form/load_form'
-            if(acf_maybe_get($form['map'], $field_key) !== false && !isset($form['map'][ $field_key ]['value'])){
+            if(acfe_get($form['map'], $field_key) !== false && !isset($form['map'][ $field_key ]['value'])){
             
                 // add field to excluded list
                 $acf_fields_exclude[] = $field_key;
@@ -329,14 +330,10 @@ class acfe_module_form_action_user extends acfe_module_form_action{
      */
     function validate_action($form, $action){
         
-        // check built-in validation
-        if(empty($action['validation'])){
-            return false;
-        }
-        
         // errors
         $errors = array(
-            'empty_user_pass'           => __('An error has occured. Please try again', 'acfe'),
+            'generic'                   => __('An error has occured. Please try again', 'acfe'),
+            'empty_user_pass'           => __('Invalid username or password', 'acfe'),
             'invalid_email'             => __('Invalid e-mail', 'acfe'),
             'invalid_email_password'    => __('Invalid e-mail or password', 'acfe'),
             'invalid_username'          => __('Invalid username', 'acfe'),
@@ -353,6 +350,36 @@ class acfe_module_form_action_user extends acfe_module_form_action{
         
         // apply tags
         $action = $this->setup_action($action, $form);
+        
+        // security measure
+        // check 'promote_users' capability for insert/update administrator role
+        if($action['type'] === 'insert_user' || $action['type'] === 'update_user'){
+            
+            // get role as array
+            $role = acfe_as_array($action['save']['role']);
+            
+            // check capability
+            if((in_array('administrator', $role, true) || in_array('super_admin', $role, true)) && !current_user_can('promote_users')){
+                
+                // filters
+                $validate = true;
+                $validate = apply_filters("acfe/form/validate_user_admin_role",                          $validate, $form, $action);
+                $validate = apply_filters("acfe/form/validate_user_admin_role/form={$form['name']}",     $validate, $form, $action);
+                $validate = apply_filters("acfe/form/validate_user_admin_role/action={$action['name']}", $validate, $form, $action);
+                
+                // should validate
+                if($validate){
+                    return acfe_add_validation_error('', $errors['generic']);
+                }
+                
+            }
+            
+        }
+        
+        // check built-in validation
+        if(empty($action['validation'])){
+            return false;
+        }
     
         // switch type
         switch($action['type']){
@@ -867,7 +894,7 @@ class acfe_module_form_action_user extends acfe_module_form_action{
         $user = $this->get_user_array($user_id);
     
         // replace hashed password with real password
-        if(acf_maybe_get($args, 'user_pass')){
+        if(acfe_get($args, 'user_pass')){
             $user['user_pass'] = $args['user_pass'];
         }
     
@@ -1049,7 +1076,7 @@ class acfe_module_form_action_user extends acfe_module_form_action{
         foreach(array_keys($save['login']) as $k){
             
             // taxonomy => save_taxonomy
-            if(acf_maybe_get($action, "login_{$k}")){
+            if(acfe_get($action, "login_{$k}")){
                 $save['login'][ $k ] = $action["login_{$k}"];
             }
             
@@ -1059,7 +1086,7 @@ class acfe_module_form_action_user extends acfe_module_form_action{
         foreach(array_keys($save['save']) as $k){
             
             // taxonomy => save_taxonomy
-            if(acf_maybe_get($action, "save_{$k}")){
+            if(acfe_get($action, "save_{$k}")){
                 $save['save'][ $k ] = $action["save_{$k}"];
             }
             
@@ -1091,7 +1118,7 @@ class acfe_module_form_action_user extends acfe_module_form_action{
             foreach(array_keys($save['load']) as $k){
                 
                 // taxonomy => load_taxonomy
-                if(acf_maybe_get($action, "load_{$k}")){
+                if(acfe_get($action, "load_{$k}")){
                     
                     $value = $action["load_{$k}"];
                     $save['load'][ $k ] = $value;
@@ -1233,7 +1260,7 @@ class acfe_module_form_action_user extends acfe_module_form_action{
                 'label' => __('Validation', 'acfe'),
                 'name' => 'validation',
                 'type' => 'true_false',
-                'instructions' => __('(Optional) Automatically validate fields', 'acfe'),
+                'instructions' => __('(Optional) Validate username and email fields.', 'acfe'),
                 'required' => 0,
                 'wrapper' => array(
                     'width' => '',
@@ -1242,7 +1269,7 @@ class acfe_module_form_action_user extends acfe_module_form_action{
                     'data-instruction-placement' => 'field'
                 ),
                 'message' => __('Built-in validation', 'acfe'),
-                'default_value' => 0,
+                'default_value' => 1,
                 'ui' => false,
                 'ui_on_text' => '',
                 'ui_off_text' => '',

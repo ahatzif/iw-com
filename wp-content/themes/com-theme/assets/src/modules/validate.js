@@ -75,7 +75,7 @@ export default class extends module {
 
             if ( Validations[ rule ] ) {
                 this.isValid = Validations[ rule ]( this.target, params );
-                this.message.innerHTML = this.isValid ? '&nbsp;' : ValidationMessages[ rule ]( this.target, params );
+                this.message.textContent = this.isValid ? '\u00a0' : ValidationMessages[ rule ]( this.target, params );
                 this.el.classList.toggle( 'valid-' + rule, this.isValid );
                 this.el.classList.toggle( 'invalid-' + rule, ! this.isValid );
                 if ( ! this.isValid ) break;
@@ -92,7 +92,7 @@ export default class extends module {
         let params = rule.length > 1 ? parts[ 1 ] : false;
         if ( Validations[ rule ] ) {
             this.isValid = Validations[ rule ]( this.target, params );
-            this.message.innerHTML = this.isValid ? '&nbsp;' : ValidationMessages[ rule ]( this.target, params );
+            this.message.textContent = this.isValid ? '\u00a0' : ValidationMessages[ rule ]( this.target, params );
             this.el.classList.toggle( 'valid-' + rule, this.isValid );
             this.el.classList.toggle( 'invalid-' + rule, ! this.isValid );
         }
@@ -124,7 +124,7 @@ export default class extends module {
 
         }
         let rule = 'required';
-        this.message.innerHTML = this.isValid ? '&nbsp;' : ValidationMessages[ rule ]( this.target );
+        this.message.textContent = this.isValid ? '\u00a0' : ValidationMessages[ rule ]( this.target );
 
         this.el.classList.toggle( 'error', ! this.isValid );
 
@@ -134,13 +134,13 @@ export default class extends module {
 
     showError( message ) {
         this.isValid = false;
-        this.message.innerHTML = message;
+        this.message.textContent = message;
         this.el.classList.add( 'error' );
     }
 
     clear( message ) {
         this.isValid = true;
-        this.message.innerHTML = '&nbsp;';
+        this.message.textContent = '\u00a0';
         this.el.classList.remove( 'error' );
     }
 }

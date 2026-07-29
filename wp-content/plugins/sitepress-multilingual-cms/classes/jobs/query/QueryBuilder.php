@@ -325,18 +325,20 @@ class QueryBuilder {
 		$this->add_AND_where_condition(
 			$this->wpdb->prepare(
 				'translation_status.status != %s',
-				\WPML_TM_ATE_API::SHOULD_HIDE_STATUS
+				ICL_TM_ATE_CANCELLED
 			)
 		);
 	}
 
 	/**
-	 * @param string $where
+	 * @param string|void $where
 	 *
 	 * @return self
 	 */
 	public function add_AND_where_condition( $where ) {
-		$this->where[] = $where;
+		if ( $where ) {
+			$this->where[] = $where;
+		}
 
 		return $this;
 	}

@@ -13,22 +13,22 @@ if (is_singular())
     <section class="<?php echo esc_attr( com_theme_block_style_classes( 'text-blue', [ 'desktop' => [ 'mt' => '100', 'mb' => '100' ] ] ) ); ?>">
     <div class="<?php echo esc_attr( com_theme_block_wrapper_classes() ); ?>">
         <div class="px-1/12">
-            <div class="flex gap-[70px] justify-between md:justify-center text-current leading-[1.42857143] font-semibold uppercase text-14">
+            <div class="flex gap-[70px] justify-between md:justify-center text-current leading-[1.42857143] font-semibold text-14">
                 <?php if ($prevPost)
                 { ?>
-                    <a class="hover:underline" href="<?php echo $prevPost ?>"><?php _e('Previous ' . $labels->singular_name, 'com-theme'); ?></a>
+                    <a class="hover:underline" href="<?php echo esc_url( $prevPost ); ?>"><?php echo esc_html( com\theme::remove_accents( sprintf( __( 'Previous %s', 'com-theme' ), $labels->singular_name ) ) ); ?></a>
                 <?php }
                 else
                 { ?>
-                    <div class="opacity-30"><?php _e('Previous ' . $labels->singular_name, 'com-theme'); ?></div>
+                    <div class="opacity-30"><?php echo esc_html( com\theme::remove_accents( sprintf( __( 'Previous %s', 'com-theme' ), $labels->singular_name ) ) ); ?></div>
                 <?php } ?>
                 <?php if ($nextPost)
                 { ?>
-                    <a class="hover:underline" href="<?php echo $nextPost; ?>"><?php _e('Next ' . $labels->singular_name, 'com-theme'); ?></a>
+                    <a class="hover:underline" href="<?php echo esc_url( $nextPost ); ?>"><?php echo esc_html( com\theme::remove_accents( sprintf( __( 'Next %s', 'com-theme' ), $labels->singular_name ) ) ); ?></a>
                 <?php }
                 else
                 { ?>
-                    <div class="opacity-30"><?php _e('Next ' . $labels->singular_name, 'com-theme'); ?></div>
+                    <div class="opacity-30"><?php echo esc_html( com\theme::remove_accents( sprintf( __( 'Next %s', 'com-theme' ), $labels->singular_name ) ) ); ?></div>
                 <?php } ?>
             </div>
         </div>

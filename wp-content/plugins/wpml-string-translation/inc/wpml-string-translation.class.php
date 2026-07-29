@@ -8,6 +8,11 @@
 use WPML\ST\Gettext\AutoRegisterSettings;
 use WPML\ST\StringsFilter\Translator;
 use function WPML\Container\make;
+use WPML\ST\Gettext\Filters\StringHighlighting;
+use WPML\StringTranslation\Application\Setting\Repository\SettingsRepositoryInterface;
+use WPML\StringTranslation\Infrastructure\WordPress\HookHandler\HasKeyInSettingsFilter;
+use WPML\ST\AutoRegisterStringsNotice;
+use WPML\ST\AdminTexts\SendStringsForTranslationNotice;
 
 /**
  * Class WPML_String_Translation
@@ -48,12 +53,31 @@ class WPML_String_Translation {
 	private $cache;
 
 	/**
-	 * @param SitePress              $sitepress
-	 * @param WPML_ST_String_Factory $string_factory
+	 * @var \WPML\ST\TranslationFile\FilesToScanRepository
 	 */
-	public function __construct( SitePress $sitepress, WPML_ST_String_Factory $string_factory ) {
-		$this->sitepress      = $sitepress;
-		$this->string_factory = $string_factory;
+	private $filesToScanRepository;
+
+	/**
+	 * @var \WPML\ST\Gettext\Settings
+	 */
+	private $settings;
+
+	/**
+	 * @param SitePress                                      $sitepress
+	 * @param WPML_ST_String_Factory                         $string_factory
+	 * @param \WPML\ST\TranslationFile\FilesToScanRepository $filesToScanRepository
+	 * @param \WPML\ST\Gettext\Settings                      $settings
+	 */
+	public function __construct(
+		SitePress $sitepress,
+		WPML_ST_String_Factory $string_factory,
+		\WPML\ST\TranslationFile\FilesToScanRepository $filesToScanRepository,
+		\WPML\ST\Gettext\Settings $settings
+	) {
+		$this->sitepress             = $sitepress;
+		$this->string_factory        = $string_factory;
+		$this->filesToScanRepository = $filesToScanRepository;
+		$this->settings              = $settings;
 	}
 
 	/**
@@ -79,6 +103,7 @@ class WPML_String_Translation {
 			array( $this, 'wpml_language_has_switched' )
 		);
 
+		add_filter( 'screen_settings', [ $this, 'show_screen_options' ], 10, 2 );
 	}
 
 	/**
@@ -100,7 +125,7 @@ class WPML_String_Translation {
 			return;
 		}
 
-		$this->plugin_localization();
+		add_action( 'init', [ $this, 'init' ] );
 
 		$factory = new WPML_ST_Upgrade_Command_Factory( $wpdb, $sitepress );
 		$upgrade = new WPML_ST_Upgrade( $sitepress, $factory );
@@ -112,8 +137,6 @@ class WPML_String_Translation {
 		$wpml_string_shortcode->init_hooks();
 
 		wpml_st_load_admin_texts();
-
-		add_action( 'init', array( $this, 'init' ) );
 
 		$action_filter_loader = new WPML_Action_Filter_Loader();
 		$action_filter_loader->load(
@@ -144,9 +167,125 @@ class WPML_String_Translation {
 		do_action( 'wpml_st_loaded' );
 	}
 
+	public function admin_script_change_string_lang() {
+
+		$handle = 'wpml-st-change-lang';
+
+		wp_register_script(
+			$handle,
+			WPML_ST_URL . '/res/js/change_string_lang.js',
+			array( 'jquery', 'jquery-ui-dialog', 'wpml-st-scripts' ),
+			WPML_ST_VERSION
+		);
+
+		wp_enqueue_script( $handle );
+
+		wp_localize_script(
+			$handle,
+			'wpml_st_change_lang_data',
+			[
+				'nonce' => wp_create_nonce( 'wpml_change_string_language_nonce' ),
+			]
+		);
+	}
+
+	public function admin_script_change_string_domain() {
+
+		$handle = 'wpml-st-change-domain';
+
+		wp_register_script(
+			$handle,
+			WPML_ST_URL . '/res/js/change_string_domain_lang.js',
+			array( 'jquery', 'jquery-ui-dialog' ),
+			WPML_ST_VERSION
+		);
+
+		wp_enqueue_script( $handle );
+
+		wp_localize_script(
+			$handle,
+			'wpml_st_change_domain_data',
+			[
+				'nonce' => wp_create_nonce( 'wpml_change_string_domain_language_nonce' ),
+			]
+		);
+
+	}
+
+	public function admin_scripts() {
+
+		$handle = 'wpml-st-scripts';
+
+		wp_register_script(
+			$handle,
+			WPML_ST_URL . '/res/js/scripts.js',
+			array( 'jquery', 'jquery-ui-dialog' ),
+			WPML_ST_VERSION
+		);
+
+		wp_enqueue_script( $handle );
+
+		wp_localize_script(
+			$handle,
+			'wpml_scripts_data',
+			[
+				'nonce_icl_st_pop_download_nonce' => wp_create_nonce( 'icl_st_pop_download_nonce' ),
+			]
+		);
+
+	}
+
+	private function maybe_add_script_for_string_tracking_modal_iframe() {
+		$trackingValueKey                                = 'icl_string_track_value';
+		$trackingContextKey                              = 'icl_string_track_context';
+		$isRenderingStringTrackingModalContentIntoIframe = (
+			isset( $_GET[ $trackingValueKey ], $_GET[ $trackingContextKey ] ) &&
+			strlen( $_GET[ $trackingValueKey ] ) > 0 && strlen( $_GET[ $trackingContextKey ] ) > 0
+		);
+
+		if ( ! $isRenderingStringTrackingModalContentIntoIframe ) {
+			return;
+		}
+
+		$cssHandle = 'wpml-st-loaded-page-with-tracked-string';
+		wp_register_style( $cssHandle, false );
+		wp_enqueue_style( $cssHandle );
+		wp_add_inline_style(
+			$cssHandle,
+			"
+            .wpml-st-loaded-page-with-tracked-string-highlight, .wpml-st-loaded-page-with-tracked-string-highlight * {
+                color: {$this->settings->getTrackStringColor()} !important;
+            }
+        "
+		);
+
+		$handle = 'wpml-st-loaded-page-with-tracked-string';
+		wp_enqueue_script(
+			$handle,
+			WPML_ST_URL . '/res/js/loadedPageWithTrackedString.js',
+			[],
+			WPML_ST_VERSION
+		);
+		wp_localize_script(
+			$handle,
+			'wpml_st_loaded_page_with_tracked_string_data',
+			[
+				'tokenStart' => StringHighlighting::HIGHLIGHT_ID_TO_REPLACE_IN_HTML_START,
+				'tokenEnd'   => StringHighlighting::HIGHLIGHT_ID_TO_REPLACE_IN_HTML_END,
+				'hgColor'    => $this->settings->getTrackStringColor(),
+			]
+		);
+	}
+
 	function init() {
 
 		global $wpdb, $sitepress;
+
+		load_plugin_textdomain( 'wpml-string-translation', false, WPML_ST_FOLDER . '/locale' );
+		AutoRegisterStringsNotice::init();
+		SendStringsForTranslationNotice::init();
+
+		$this->maybe_add_script_for_string_tracking_modal_iframe();
 
 		if ( is_admin() ) {
 			wp_enqueue_style( 'thickbox' );
@@ -166,33 +305,36 @@ class WPML_String_Translation {
 
 			$allowed_pages_for_resources = array( WPML_ST_FOLDER . '/menu/string-translation.php' );
 			if ( in_array( $current_page, $allowed_pages_for_resources, true ) && current_user_can( 'manage_options' ) && empty( $_POST ) ) {
-				wp_enqueue_script( 'wpml-st-change-lang', WPML_ST_URL . '/res/js/change_string_lang.js', array( 'jquery', 'jquery-ui-dialog', 'wpml-st-scripts' ), WPML_ST_VERSION );
+				add_action( 'admin_enqueue_scripts', array( $this, 'admin_script_change_string_lang' ) );
 			}
 
 			$allowed_pages_for_resources[] = ICL_PLUGIN_FOLDER . '/menu/theme-localization.php';
 			if ( in_array( $current_page, $allowed_pages_for_resources, true ) ) {
+				add_action( 'admin_enqueue_scripts', array( $this, 'admin_script_change_string_domain' ) );
+				add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) );
+
 				wp_enqueue_script( 'wp-color-picker' );
 				wp_enqueue_style( 'wp-color-picker' );
 				wp_enqueue_script( 'wpml-st-settings', WPML_ST_URL . '/res/js/settings.js', array( 'jquery' ), WPML_ST_VERSION );
-				wp_enqueue_script( 'wpml-st-scripts', WPML_ST_URL . '/res/js/scripts.js', array( 'jquery', 'jquery-ui-dialog' ), WPML_ST_VERSION );
 				wp_enqueue_script( OTGS_Assets_Handles::POPOVER_TOOLTIP );
 				wp_enqueue_style( OTGS_Assets_Handles::POPOVER_TOOLTIP );
-				wp_enqueue_script( 'wpml-auto-register-strings', WPML_ST_URL . '/res/js/auto-register-strings.js', array( 'jquery', 'jquery-ui-dialog', 'wpml-st-scripts' ), WPML_ST_VERSION );
-				wp_enqueue_script( 'wpml-st-change-domian-lang', WPML_ST_URL . '/res/js/change_string_domain_lang.js', array( 'jquery', 'jquery-ui-dialog' ), WPML_ST_VERSION );
+				wp_enqueue_script( 'wpml-st-modal-form', WPML_ST_URL . '/res/js/st_modal_form.js', array( 'jquery', 'jquery-ui-dialog' ), WPML_ST_VERSION );
+				wp_enqueue_script( 'wpml-translate-user-fields', WPML_ST_URL . '/res/js/translate-user-fields.js', array( 'jquery' ), WPML_ST_VERSION );
+				wp_enqueue_script( 'wpml-auto-register-strings', WPML_ST_URL . '/res/js/auto-register-strings.js', array( 'jquery', 'wpml-st-scripts' ), WPML_ST_VERSION );
 				wp_enqueue_script( 'wpml-st-translation_basket', WPML_ST_URL . '/res/js/wpml_string_translation_basket.js', array( 'jquery' ), WPML_ST_VERSION );
 				wp_enqueue_script( 'wpml-plugin-list-table-filter', WPML_ST_URL . '/res/js/wpml-plugin-list-table-filter.js', array( 'jquery' ), WPML_ST_VERSION );
 				wp_enqueue_style( 'wpml-st-styles', WPML_ST_URL . '/res/css/style.css', array(), WPML_ST_VERSION );
 				wp_enqueue_style( 'wpml-dialog', ICL_PLUGIN_URL . '/res/css/dialog.css', array( 'otgs-dialogs' ), ICL_SITEPRESS_VERSION );
 				wp_enqueue_style( 'wp-jquery-ui-dialog' );
+				add_action( 'admin_enqueue_scripts', array( $this, 'admin_script_exec_batch_action' ) );
 			}
 		}
 
 		add_action( 'wpml_custom_localization_type', array( $this, 'localization_type_ui' ) );
-		add_action( 'wp_ajax_st_theme_localization_rescan', array( $this, 'scan_theme_for_strings' ) );
-		add_action( 'wp_ajax_st_plugin_localization_rescan', array( $this, 'scan_plugins_for_strings' ) );
 		add_action( 'wp_ajax_icl_st_pop_download', array( $this, 'plugin_po_file_download' ) );
 		add_action( 'wp_ajax_wpml_change_string_lang', array( $this, 'change_string_lang_ajax_callback' ) );
 		add_action( 'wp_ajax_wpml_change_string_lang_of_domain', array( $this, 'change_string_lang_of_domain_ajax_callback' ) );
+		add_action( 'wp_ajax_load_localization_type_ui_html', array( $this, 'localization_type_ui_html_ajax' ) );
 
 		// auto-registration settings: saving excluded contexts
 		/** @var AutoRegisterSettings $auto_register_settings */
@@ -202,8 +344,48 @@ class WPML_String_Translation {
 		return true;
 	}
 
-	function plugin_localization() {
-		load_plugin_textdomain( 'wpml-string-translation', false, WPML_ST_FOLDER . '/locale' );
+	public function admin_script_exec_batch_action() {
+		$handle = 'wpml_st_exec_batch_action';
+
+		wp_register_script(
+			$handle,
+			WPML_ST_URL . '/res/js/exec-batch-action.js',
+			array( 'jquery' ),
+			WPML_ST_VERSION
+		);
+
+		wp_enqueue_script( $handle );
+
+		wp_localize_script(
+			$handle,
+			'wpml_st_exec_batch_action_data',
+			[
+				'countStringsInDomain'            => [
+					'endpoint' => \WPML\ST\BatchAction\CountStringsInDomain::class,
+					'nonce'    => \WPML\LIB\WP\Nonce::create( \WPML\ST\BatchAction\CountStringsInDomain::class ),
+				],
+				'deleteStringsInDomain'           => [
+					'endpoint' => \WPML\ST\BatchAction\DeleteStringsInDomain::class,
+					'nonce'    => \WPML\LIB\WP\Nonce::create( \WPML\ST\BatchAction\DeleteStringsInDomain::class ),
+				],
+				'initChangeStringLangOfDomain'    => [
+					'endpoint' => \WPML\ST\BatchAction\InitChangeStringLangOfDomain::class,
+					'nonce'    => \WPML\LIB\WP\Nonce::create( \WPML\ST\BatchAction\InitChangeStringLangOfDomain::class ),
+				],
+				'changeLanguageOfStringsInDomain' => [
+					'endpoint' => \WPML\ST\BatchAction\ChangeLanguageOfStringsInDomain::class,
+					'nonce'    => \WPML\LIB\WP\Nonce::create( \WPML\ST\BatchAction\ChangeLanguageOfStringsInDomain::class ),
+				],
+				'countStringsInDomainWithDifferentPriority' => [
+					'endpoint' => \WPML\ST\BatchAction\CountStringsInDomainWithDifferentPriority::class,
+					'nonce'    => \WPML\LIB\WP\Nonce::create( \WPML\ST\BatchAction\CountStringsInDomainWithDifferentPriority::class ),
+				],
+				'changeTranslationPriorityBatchOfStringsInDomain' => [
+					'endpoint' => \WPML\ST\BatchAction\ChangeTranslationPriorityOfStringsInDomain::class,
+					'nonce'    => \WPML\LIB\WP\Nonce::create( \WPML\ST\BatchAction\ChangeTranslationPriorityOfStringsInDomain::class ),
+				],
+			]
+		);
 	}
 
 	/**
@@ -215,7 +397,6 @@ class WPML_String_Translation {
 	 *
 	 * @return string|bool
 	 * @since 2.2.3
-	 *
 	 */
 	function translate_string( $context, $name, $original_value = false, &$has_translation = null, $target_lang = null ) {
 
@@ -290,6 +471,58 @@ class WPML_String_Translation {
 		}
 	}
 
+	public function show_screen_options( $status, $args ) {
+		if ( 'wpml-string-translation/menu/string-translation' !== $args->base ) {
+			return $status;
+		}
+
+		$page_builders = (array) apply_filters( 'wpml_get_page_builder_text_domains', [] );
+
+		if ( empty( $page_builders ) ) {
+			return $status;
+		}
+
+		if ( isset( $_POST['screen-options-apply'] ) ) {
+			check_admin_referer( 'screen-options-nonce', 'screenoptionnonce' );
+			$user_meta = isset( $_POST['context_page_builder_hide_options'] ) ? $_POST['context_page_builder_hide_options'] : [];
+			update_user_meta( get_current_user_id(), 'context_page_builder_hide_options', $user_meta );
+		} else {
+			$user_meta = get_user_meta( get_current_user_id(), 'context_page_builder_hide_options', true );
+		}
+
+		$user_meta = is_array( $user_meta ) ? $user_meta : [];
+
+		$screen_options = [];
+		foreach ( $page_builders as $option_name ) {
+			$screen_options[] = [
+				'option'  => $option_name,
+				'title'   => ucwords( (string) $option_name ),
+				'checked' => array_key_exists( $option_name, $user_meta ),
+			];
+		}
+
+		ob_start();
+		?>
+
+		<fieldset class="metabox-prefs">
+			<legend><?php esc_html_e( 'Show page builder packages', 'wpml-string-translation' ); ?></legend>
+
+			<?php foreach ( $screen_options as $screen_option ) : ?>
+				<label>
+					<input class="hide-column-tog"
+						   name="context_page_builder_hide_options[<?php echo esc_textarea( $screen_option['option'] ); ?>]"
+						   type="checkbox"
+						   id="<?php echo esc_textarea( $screen_option['option'] ); ?>" <?php checked( $screen_option['checked'] ); ?>/> <?php echo esc_html( $screen_option['title'] ); ?>
+				</label>
+			<?php endforeach; ?>
+
+		</fieldset>
+		<?php submit_button( __( 'Apply', 'wpml-string-translation' ), 'primary', 'screen-options-apply', true ); ?>
+
+		<?php
+		return ob_get_clean();
+	}
+
 	function plugin_action_links( $links, $file ) {
 		 $this_plugin = basename( WPML_ST_PATH ) . '/plugin.php';
 		if ( $file == $this_plugin ) {
@@ -300,6 +533,15 @@ class WPML_String_Translation {
 		return $links;
 	}
 
+	function localization_type_ui_html_ajax() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			exit( 0 );
+		}
+
+		echo $this->localization_type_ui();
+		exit( 0 );
+	}
+
 	public function localization_type_ui() {
 		$plugin_localization_factory = new WPML_ST_Plugin_Localization_UI_Factory();
 		$plugin_localization         = $plugin_localization_factory->create();
@@ -307,33 +549,202 @@ class WPML_String_Translation {
 		$theme_localization_factory = new WPML_ST_Theme_Localization_UI_Factory();
 		$theme_localization         = $theme_localization_factory->create();
 
+		$other_localization_factory = new \WPML\ST\ThemePluginLocalization\OtherLocalizationUIFactory();
+		$other_localization         = $other_localization_factory->create();
+
 		$localization = new WPML_Theme_Plugin_Localization_UI();
 
+		echo '<div class="wpml-section wpml-st-localization" id="wpml-st-localization">
+				<div class="wpml-section-header">
+					<h3>' . __( 'Scan strings in themes, plugins and WordPress', 'wpml-string-translation' ) . '</h3>
+				</div>
+				<div id="wpml-st-localization-section" class="wpml-section-content wpml-section-content-wide">';
+		$this->renderChangedMoFilesBlock( $plugin_localization );
+
+		do_action( 'wpml_st_before_localization_ui_table' );
+
+		echo '		<table id="wpml-st-localization-table" class="widefat striped">';
+		/** @phpstan-ignore-next-line */
+		echo $localization->renderTemplate(
+			'theme-plugin-localization-ui-table-header.twig',
+			[
+				'name'               => __( 'Name', 'wpml-string-translation' ),
+				'status'             => __( 'Status', 'wpml-string-translation' ),
+				'textdomain'         => __( 'Textdomain', 'wpml-string-translation' ),
+				'action'             => __( 'Action', 'wpml-string-translation' ),
+				'completed_title'    => __( 'Completely translated strings', 'wpml-string-translation' ),
+				'needs_update_title' => __( 'Strings that need translation', 'wpml-string-translation' ),
+				'nonces'             => [
+					'scan_folder' => [
+						'action' => WPML_ST_Theme_Plugin_Scan_Dir_Ajax_Factory::AJAX_ACTION,
+						'nonce'  => wp_create_nonce( WPML_ST_Theme_Plugin_Scan_Dir_Ajax_Factory::AJAX_ACTION ),
+					],
+					'scan_files'  => [
+						'action' => WPML_ST_Theme_Plugin_Scan_Files_Ajax_Factory::AJAX_ACTION,
+						'nonce'  => wp_create_nonce( WPML_ST_Theme_Plugin_Scan_Files_Ajax_Factory::AJAX_ACTION ),
+					],
+				],
+				'endpoints'          => [
+					'update_stats' => [
+						'endpoint' => \WPML\ST\StringsScanning\UpdateStats::class,
+						'nonce'    => \WPML\LIB\WP\Nonce::create( \WPML\ST\StringsScanning\UpdateStats::class ),
+					],
+				],
+			]
+		);
 		echo $localization->render( $theme_localization );
 		echo $localization->render( $plugin_localization );
+		echo $localization->render( $other_localization );
+		echo '		</table>
+					<button id="wpml_theme_plugin_localization_scan" type="button" class="button-primary wpml-button base-btn btn-scan section-submit-button" disabled="disabled">' . __( 'Scan selected components for strings', 'wpml-string-translation' ) . '</button>
+				</div>
+			</div>';
+	}
+
+	private function renderPluginsWithMissingTranslationsBlock( $pluginLocalization ) {
+		$pluginNames = $pluginLocalization->getActivePluginNamesWithoutRegisteredTranslationFiles();
+
+		if ( empty( $pluginNames ) || $this->shouldSkipMissingTranslationsBlockRendering() ) {
+			return '';
+		}
+
+		return $this->buildMissingTranslationsMessage( $pluginNames );
+	}
+
+	private function shouldSkipMissingTranslationsBlockRendering(): bool {
+		return apply_filters(
+			HasKeyInSettingsFilter::FILTER_NAME,
+			SettingsRepositoryInterface::WAS_FRONTEND_VISITED_KEY
+		);
+	}
+
+	private function buildMissingTranslationsMessage( array $pluginNames ): string {
+		$wrap = function( $name ) {
+			return '<b>' . $name . '</b>';
+		};
+
+		$parts             = $this->splitLastElement( $pluginNames );
+		$formattedNames    = implode( ', ', array_map( $wrap, $parts['rest'] ) );
+		$formattedLastName = $parts['last'] ? $wrap( $parts['last'] ) : null;
+
+		$message = $this->getTranslatedMissingTranslationsMessage( count( $pluginNames ), $formattedNames, $formattedLastName );
+
+		return $this->wrapMissingTranslationsMessageInHtml( $message );
+	}
+
+	/**
+	 * Returns a translated message based on the number of plugins
+	 * that WPML could not detect the translation files (.mo) for.
+	 *
+	 * @param int         $count The number of plugins that WPML could not detect the translation files for.
+	 * @param string      $namesList A list of plugin names.
+	 * @param null|string $lastItem The last plugin name in the list.
+	 *
+	 * @return string A translated message based on the number of plugins.
+	 */
+	private function getTranslatedMissingTranslationsMessage( int $count, string $namesList, ?string $lastItem = null ): string {
+		$msgTemplate = _n(
+			'WPML could not detect the translation files (.mo) for %s. To fix this, visit your site\'s frontend in a secondary language.',
+			'WPML could not detect the translation files (.mo) for %s and %s. To fix this, visit your site\'s frontend in a secondary language.',
+			$count,
+			'wpml-string-translation'
+		);
+
+		return $count === 1
+			? sprintf( $msgTemplate, $lastItem )
+			: sprintf( $msgTemplate, $namesList, $lastItem );
+	}
+
+	/**
+	 * Splits array into two parts: all elements except last one, and the last element
+	 *
+	 * @param array $items Array to split.
+	 *
+	 * @return array{rest: array, last: mixed|null} Array with 'rest' and 'last' keys
+	 */
+	private function splitLastElement( array $items ): array {
+		if ( empty( $items ) ) {
+			return [
+				'rest' => [],
+				'last' => null,
+			];
+		}
+
+		if ( count( $items ) === 1 ) {
+			return [
+				'rest' => [],
+				'last' => $items[0],
+			];
+		}
+
+		$last = array_pop( $items );
+
+		return [
+			'rest' => $items,
+			'last' => $last,
+		];
+	}
+
+	private function wrapMissingTranslationsMessageInHtml( string $message ): string {
+		$title = __( 'This will load the translation files and WPML will be able to scan them.', 'wpml-string-translation' );
+
+		return sprintf(
+			'<div class="info-wrap">
+				<div class="info-content-wrap info-content-wrap--light">
+					<div class="info-content">
+						<p>%s<span class="help-icon js-otgs-popover-tooltip" title="%s" /></p>
+					</div>
+				</div>
+			</div>',
+			$message,
+			$title
+		);
+	}
+
+	private function renderChangedMoFilesBlock( $pluginLocalization ) {
+		if ( ! $this->filesToScanRepository->hasFilesToScan() ) {
+			return;
+		}
+
+		echo '<div class="info-wrap" id="wpml-st-changed-mo-files-form">
+				<p>' . __( 'Scan the selected components to make new texts available for translation.', 'wpml-string-translation' ) . '</p>
+				' . $this->renderPluginsWithMissingTranslationsBlock( $pluginLocalization ) . '
+				<div class="info-content-wrap">
+					<div class="info-content">
+						<p class="heading">' . __( 'Updated or new translation files detected', 'wpml-string-translation' ) . '</p>
+						<p>' . __( 'WPML has found new or updated translation (.mo) files and needs to scan them to find translatable strings.', 'wpml-string-translation' ) . '</p>
+						<form><button id="select-all-changed-mo-checkboxes-to-rescan" type="button" class="button-primary wpml-button base-btn btn-select-all">' . __( 'Select affected components', 'wpml-string-translation' ) . '</button></form>
+					</div>
+				</div>
+			</div>';
 	}
 
 	function scan_theme_for_strings() {
 		require_once WPML_ST_PATH . '/inc/gettext/wpml-theme-string-scanner.class.php';
 
-		$file_hashing     = new WPML_ST_File_Hashing();
-		$scan_for_strings = new WPML_Theme_String_Scanner( wpml_get_filesystem_direct(), $file_hashing );
+		$scan_for_strings = new WPML_Theme_String_Scanner( wpml_get_filesystem_direct() );
 		$scan_for_strings->scan();
 	}
 
 	function scan_plugins_for_strings() {
 		require_once WPML_ST_PATH . '/inc/gettext/wpml-plugin-string-scanner.class.php';
-		$file_hashing     = new WPML_ST_File_Hashing();
-		$scan_for_strings = new WPML_Plugin_String_Scanner( wpml_get_filesystem_direct(), $file_hashing );
+		$scan_for_strings = new WPML_Plugin_String_Scanner( wpml_get_filesystem_direct() );
 		$scan_for_strings->scan();
 	}
 
 	function plugin_po_file_download( $file = false, $recursion = 0 ) {
-		 global $__wpml_st_po_file_content;
+
+		if ( ! isset( $_GET['wpnonce'] ) || ! wp_verify_nonce( $_GET['wpnonce'], 'icl_st_pop_download_nonce' ) ) {
+			die( 'verification failed' );
+		}
+
+		global $__wpml_st_po_file_content;
 
 		if ( empty( $file ) && ! empty( $_GET['file'] ) ) {
-			$file = WPML_PLUGINS_DIR . '/' . filter_var( $_GET['file'], FILTER_SANITIZE_STRING );
+			$file = WPML_PLUGINS_DIR . '/' . \WPML\API\Sanitize::string( $_GET['file'] );
 		}
+
+		/** @phpstan-ignore-next-line */
 		if ( empty( $file ) && ! wpml_st_file_path_is_valid( $file ) ) {
 			return;
 		}
@@ -372,7 +783,7 @@ class WPML_String_Translation {
 			$po .= $__wpml_st_po_file_content;
 
 			$filename = isset( $_GET['domain'] ) ?
-				filter_var( $_GET['domain'], FILTER_SANITIZE_STRING ) :
+				(string) \WPML\API\Sanitize::string( $_GET['domain'] ) :
 				basename( $file );
 
 			header( 'Content-Type: application/force-download' );
@@ -387,8 +798,8 @@ class WPML_String_Translation {
 	}
 
 	/**
-	 * @param string $string value of a string
-	 * @param string $lang_code language code of the string
+	 * @param string $string value of a string.
+	 * @param string $lang_code language code of the string.
 	 *
 	 * @return int number of words in the string
 	 */
@@ -411,59 +822,6 @@ class WPML_String_Translation {
 			)
 		) ? strlen( $string ) / 6
 			: count( explode( ' ', $string ) );
-	}
-
-	function cancel_remote_translation( $rid ) {
-		/** @var wpdb $wpdb */
-		global $wpdb;
-
-		$translation_ids = $wpdb->get_col(
-			$wpdb->prepare(
-				"	SELECT string_translation_id
-															FROM {$wpdb->prefix}icl_string_status
-															WHERE rid = %d",
-				$rid
-			)
-		);
-		$cancel_count    = 0;
-		foreach ( $translation_ids as $translation_id ) {
-			$res          = (bool) $this->cancel_local_translation( $translation_id );
-			$cancel_count = $res ? $cancel_count + 1 : $cancel_count;
-		}
-
-		return $cancel_count;
-	}
-
-	function cancel_local_translation( $id, $return_original_id = false ) {
-		global $wpdb;
-		$string_id = $wpdb->get_var(
-			$wpdb->prepare(
-				"	SELECT string_id
-														FROM {$wpdb->prefix}icl_string_translations
-														WHERE id=%d AND status IN (%d, %d)",
-				$id,
-				ICL_TM_IN_PROGRESS,
-				ICL_TM_WAITING_FOR_TRANSLATOR
-			)
-		);
-		if ( $string_id ) {
-			$wpdb->update(
-				$wpdb->prefix . 'icl_string_translations',
-				array(
-					'status'              => ICL_TM_NOT_TRANSLATED,
-					'translation_service' => null,
-					'translator_id'       => null,
-					'batch_id'            => null,
-				),
-				array( 'id' => $id )
-			);
-			icl_update_string_status( $string_id );
-			$res = $return_original_id ? $string_id : $id;
-		} else {
-			$res = false;
-		}
-
-		return $res;
 	}
 
 	/**
@@ -495,9 +853,9 @@ class WPML_String_Translation {
 	}
 
 	/**
-	 * @param string       $option name of the option
-	 * @param string|array $value new value of the option
-	 * @param string|array $old_value currently saved value for the option
+	 * @param string       $option name of the option.
+	 * @param string|array $value new value of the option.
+	 * @param string|array $old_value currently saved value for the option.
 	 *
 	 * @return string|array the value actually to be written into the wp_options table
 	 */
@@ -577,7 +935,7 @@ class WPML_String_Translation {
 
 		if ( isset( $sitepress_settings['st']['db_ok_for_gettext_context'] ) ) {
 			if ( ! ( isset( $this->string_filters[ $lang ] )
-			         && 'WPML_Register_String_Filter' == get_class( $this->string_filters[ $lang ] ) )
+					 && 'WPML_Register_String_Filter' == get_class( $this->string_filters[ $lang ] ) )
 			) {
 				$this->string_filters[ $lang ] = isset( $this->string_filters[ $lang ] ) ? $this->string_filters[ $lang ] : false;
 
@@ -617,20 +975,19 @@ class WPML_String_Translation {
 		global $wpdb;
 
 		$icl_string_positions_query    = "DELETE FROM {$wpdb->prefix}icl_string_positions WHERE string_id=%d";
-		$icl_string_status_query       = "DELETE FROM {$wpdb->prefix}icl_string_status WHERE string_translation_id IN (SELECT id FROM {$wpdb->prefix}icl_string_translations WHERE string_id=%d)";
 		$icl_string_translations_query = "DELETE FROM {$wpdb->prefix}icl_string_translations WHERE string_id=%d";
 		$icl_strings_query             = "DELETE FROM {$wpdb->prefix}icl_strings WHERE id=%d";
 
 		$icl_string_positions_prepare    = $wpdb->prepare( $icl_string_positions_query, $string_id );
-		$icl_string_status_prepare       = $wpdb->prepare( $icl_string_status_query, $string_id );
 		$icl_string_translations_prepare = $wpdb->prepare( $icl_string_translations_query, $string_id );
 		$icl_strings_prepare             = $wpdb->prepare( $icl_strings_query, $string_id );
 
 		$wpdb->query( $icl_string_positions_prepare );
-		$wpdb->query( $icl_string_status_prepare );
 		$wpdb->query( $icl_string_translations_prepare );
 		$wpdb->query( $icl_strings_prepare );
 
+		// Action called after all string data is deleted
+		do_action( 'wpml_st_string_unregistered' );
 	}
 
 	public function get_strings_settings() {
@@ -654,7 +1011,7 @@ class WPML_String_Translation {
 	}
 
 	/**
-	 * @param null $empty   Not used, but needed for the hooked filter
+	 * @param null $empty   Not used, but needed for the hooked filter.
 	 * @param int  $string_id
 	 *
 	 * @return null|string
@@ -664,8 +1021,8 @@ class WPML_String_Translation {
 	}
 
 	/**
-	 * @param int|null $default     Set the default value to return in case no string or more than one string is found
-	 * @param array    $string_data {
+	 * @param int|null $default     Set the default value to return in case no string or more than one string is found.
+	 * @param array    $string_data {.
 	 *
 	 * @type string    $context
 	 * @type string    $name        Optional
@@ -698,7 +1055,7 @@ class WPML_String_Translation {
 	}
 
 	/**
-	 * @param array $string_data {
+	 * @param array $string_data {.
 	 *
 	 * @type string $context
 	 * @type string $name        Optional
@@ -728,7 +1085,7 @@ class WPML_String_Translation {
 	}
 
 	/**
-	 * @param null   $empty   Not used, but needed for the hooked filter
+	 * @param null   $empty   Not used, but needed for the hooked filter.
 	 * @param string $domain
 	 * @param string $name
 	 *
@@ -825,7 +1182,7 @@ class WPML_String_Translation {
 	/**
 	 * Returns the language the current string is to be translated into.
 	 *
-	 * @param string $name
+	 * @param string|bool|null $name
 	 *
 	 * @return string
 	 */
@@ -847,7 +1204,7 @@ class WPML_String_Translation {
 		}
 
 		if ( $this->should_use_admin_language()
-			 && ! WPML_ST_Blog_Name_And_Description_Hooks::is_string( $name ) ) {
+			 && ! WPML_ST_Blog_Name_And_Description_Hooks::is_string( (string) $name ) ) {
 			$admin_display_lang = $this->get_admin_language();
 			$current_language   = $admin_display_lang ? $admin_display_lang : $current_language;
 		}
@@ -917,7 +1274,7 @@ class WPML_String_Translation {
 
 		$string_ids = array_map( 'intval', $_POST['strings'] );
 		$lang       = filter_var( isset( $_POST['language'] ) ? $_POST['language'] : '', FILTER_SANITIZE_SPECIAL_CHARS );
-		$response   = $change_string_language_dialog->change_language_of_strings( $string_ids, $lang );
+		$response   = $change_string_language_dialog->change_language_of_strings( $string_ids, (string) $lang );
 
 		wp_send_json( $response );
 	}
@@ -929,7 +1286,7 @@ class WPML_String_Translation {
 
 		global $wpdb, $sitepress;
 
-		$change_string_language_domain_dialog = new WPML_Change_String_Domain_Language_Dialog( $wpdb, $sitepress, $this->string_factory );
+		$change_string_language_domain_dialog = make( \WPML_Change_String_Domain_Language_Dialog::class );
 		$response                             = $change_string_language_domain_dialog->change_language_of_strings(
 			$_POST['domain'],
 			isset( $_POST['langs'] ) ? $_POST['langs'] : array(),

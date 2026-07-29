@@ -112,6 +112,33 @@ class WPML_ST_Translations_File_Dictionary_Storage_Table implements WPML_ST_Tran
 		return $result;
 	}
 
+	/**
+	 * Checks if the given $path is on the wp_icl_mo_files_domains table.
+	 * It's only there when ST has handled the file.
+	 *
+	 * @param string $path
+	 * @param string $domain
+	 *
+	 * @return bool
+	 */
+	public function is_path_handled( $path, $domain ) {
+		$file = new WPML_ST_Translations_File_Entry( $path, $domain );
+
+		// phpcs:disable WordPress.WP.PreparedSQL.NotPrepared
+		$id = $this->wpdb->get_var(
+			$this->wpdb->prepare(
+				"SELECT id
+				FROM {$this->wpdb->prefix}icl_mo_files_domains
+				WHERE file_path_md5 = %s
+				LIMIT 1",
+				$file->get_path_hash()
+			)
+		);
+		// phpcs:enable WordPress.WP.PreparedSQL.NotPrepared
+
+		return null !== $id;
+	}
+
 	private function load_data() {
 		if ( null === $this->data ) {
 			$this->data = array();
@@ -132,5 +159,29 @@ class WPML_ST_Translations_File_Dictionary_Storage_Table implements WPML_ST_Tran
 
 	public function reset() {
 		$this->data = null;
+	}
+
+	public function findAllUniqueComponentIds( ?string $componentType = null, array $fileExtensions = [] ): array {
+		$sql = "SELECT DISTINCT(component_id) FROM {$this->wpdb->prefix}icl_mo_files_domains";
+
+		$conditions = [];
+
+		if ( $componentType !== null ) {
+			$conditions[] = $this->wpdb->prepare( 'component_type = %s', $componentType );
+		}
+
+		if ( count( $fileExtensions ) > 0 ) {
+			$likeConditions = [];
+			foreach ( $fileExtensions as $fileExtension ) {
+				$likeConditions[] = $this->wpdb->prepare( 'file_path LIKE %s', '%' . $this->wpdb->esc_like( '.' . $fileExtension ) );
+			}
+			$conditions[] = '(' . implode( ' OR ', $likeConditions ) . ')';
+		}
+
+		if ( ! empty( $conditions ) ) {
+			$sql .= ' WHERE ' . implode( ' AND ', $conditions );
+		}
+
+		return $this->wpdb->get_col( $sql );
 	}
 }

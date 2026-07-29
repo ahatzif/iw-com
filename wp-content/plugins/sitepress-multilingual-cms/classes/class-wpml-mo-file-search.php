@@ -24,7 +24,7 @@ class WPML_MO_File_Search {
 	/**
 	 * @param SitePress $sitepress
 	 */
-	public function __construct( SitePress $sitepress, WP_Filesystem_Direct $filesystem = null ) {
+	public function __construct( SitePress $sitepress, ?WP_Filesystem_Direct $filesystem = null ) {
 		$this->sitepress = $sitepress;
 
 		if ( ! $filesystem ) {

@@ -10,7 +10,7 @@ class WPML_Config_Update_Integrator {
 	 * @param WPML_Log                $log
 	 * @param WPML_Config_Update|null $worker
 	 */
-	public function __construct( WPML_Log $log, WPML_Config_Update $worker = null ) {
+	public function __construct( WPML_Log $log, ?WPML_Config_Update $worker = null ) {
 		$this->log    = $log;
 		$this->worker = $worker;
 	}
@@ -29,7 +29,7 @@ class WPML_Config_Update_Integrator {
 	}
 
 	/**
-	 * @param WPML_Config_Update $worker
+	 * @param WPML_Config_Update|null $worker
 	 */
 	public function set_worker( WPML_Config_Update $worker ) {
 		$this->worker = $worker;
@@ -73,9 +73,16 @@ class WPML_Config_Update_Integrator {
 	}
 
 	public function update_event_ajax() {
+		$nonce = isset( $_POST['_icl_nonce'] ) ? sanitize_text_field( $_POST['_icl_nonce'] ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'icl_theme_plugins_compatibility_nonce' ) ) {
+			wp_send_json_error( esc_html__( 'Invalid request!', 'sitepress' ), 400 );
+			return;
+		}
+
 		if ( $this->get_worker()
 				  ->run() ) {
-			echo date( 'F j, Y H:i a', time() );
+			echo esc_html( date_i18n( __( 'F j, Y', 'sitepress' ), get_option( 'wpml_config_index_updated' ) ) . ' ' . date_i18n( __( 'g:i a T', 'sitepress' ), get_option( 'wpml_config_index_updated' ) ) );
 		}
 
 		die;

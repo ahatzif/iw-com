@@ -23,6 +23,10 @@ class WPML_Media_Screen_Options implements IWPML_Action {
 
 	public function add_options() {
 		foreach ( $this->options as $option ) {
+			// The labels will be translated here.
+			if ( isset( $option['args']['label'] ) ) {
+				$option['args']['label'] = __( $option['args']['label'], 'wpml-media' );
+			}
 			add_screen_option( $option['key'], $option['args'] );
 		}
 	}

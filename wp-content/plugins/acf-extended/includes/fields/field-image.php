@@ -59,7 +59,7 @@ class acfe_field_image extends acfe_field_extend{
     function prepare_library($field){
         
         // check if field group ui setting
-        if(acf_maybe_get($field['wrapper'], 'data-setting') === 'image'){
+        if(acfe_get($field['wrapper'], 'data-setting') === 'image'){
             
             // add conditional logic
             $field['conditional_logic'] = array(
@@ -248,6 +248,42 @@ class acfe_field_image extends acfe_field_extend{
         
         // return thumbnail
         return get_post_meta($post_id, '_thumbnail_id', true);
+        
+    }
+    
+    
+    /**
+     * format_front_value
+     *
+     * @param $formatted
+     * @param $unformatted
+     * @param $post_id
+     * @param $field
+     * @param $form
+     *
+     * @return string
+     */
+    function format_front_value($formatted, $unformatted, $post_id, $field, $form){
+        
+        // vars
+        $value = acfe_as_array($unformatted);
+        $array = array();
+        
+        // loop values
+        foreach($value as $p_id){
+            
+            // get post
+            $post = get_post($p_id);
+            
+            // validate
+            if($post && !is_wp_error($post)){
+                $array[] = get_the_title($post->ID);
+            }
+            
+        }
+        
+        // merge
+        return implode(', ', $array);
         
     }
     

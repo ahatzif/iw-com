@@ -593,216 +593,6 @@ document.addEventListener('DOMContentLoaded', function () {
         add_action( 'admin_head', function () { ?>
             <style>.column-order_shipping_method, .column-order_payment_method{ overflow: hidden;text-overflow: ellipsis;white-space: nowrap;}</style>
         <?php } );
-
-
-        // AJAX: Set default payment method
-
-
-        add_action( 'wp_ajax_iw_create_setup_intent', function () {
-            check_ajax_referer( 'iw-add-payment-method', 'nonce' );
-            if ( ! is_user_logged_in() ) {
-                wp_send_json_error( [ 'message' => 'Not logged in' ], 401 );
-            }
-            $customer = new WC_Stripe_Customer( get_current_user_id() );
-            try {
-                $customer_id = $customer->get_id() ?: $customer->update_or_create_customer();
-            } catch ( Exception $e ) {
-                $raw_message = $e->getMessage();
-                $user_message = __( 'Λείπουν απαραίτητα στοιχεία τιμολόγησης για την αποθήκευση της κάρτας.', 'iw-theme' );
-                $account_page_link =  esc_url( wc_get_account_endpoint_url( 'dashboard' ) );
-                if ( strpos( $raw_message, 'missing_required_customer_field' ) !== false ) {
-                    if ( strpos( $raw_message, 'address->line1' ) !== false ) {
-                        $user_message = sprintf( __( 'Παρακαλύμε συμπληρώστε τη διεύθυνση χρέωσης στη σελίδα του <a href="%s" class="underline font-bold">λογαριασμού</a> σας.', 'iw-theme' ), $account_page_link  );
-                    } elseif ( strpos( $raw_message, 'address->city' ) !== false ) {
-                        $user_message = sprintf( __( 'Παρακαλύμε συμπληρώστε την πόλη χρέωσης στη σελίδα του <a href="%s" class="underline font-bold">λογαριασμού</a> σας.', 'iw-theme' ), $account_page_link  );
-                    } elseif ( strpos( $raw_message, 'address->postal_code' ) !== false ) {
-                        $user_message = sprintf( __( 'Παρακαλύμε συμπληρώστε τον ταχυδρομικό κώδικα στη σελίδα του <a href="%s" class="underline font-bold">λογαριασμού</a> σας.', 'iw-theme' ), $account_page_link  );
-                    } elseif ( strpos( $raw_message, 'address->country' ) !== false ) {
-                        $user_message = sprintf( __( 'Παρακαλούμε επιλέξτε χώρα χρέωση στη σελίδα του <a href="%s" class="underline font-bold">λογαριασμού</a> σας.', 'iw-theme' ), $account_page_link  );
-                    }
-                }
-
-
-
-
-
-                wp_send_json_error( [ 'message' => $user_message ] );
-                exit();
-            }
-
-            $intent = WC_Stripe_API::request( [ 'customer' => $customer_id, 'usage'    => 'off_session' ], 'setup_intents');
-
-            if ( is_wp_error( $intent ) ) {
-                wp_send_json_error( [ 'message' => 'SetupIntent failed' ], 500 );
-            }
-
-            wp_send_json_success( [ 'client_secret' => $intent->client_secret, 'intent_id' => $intent->id,] );
-        });
-
-
-        add_action( 'wp_ajax_iw_add_payment_method', function () {
-
-            check_ajax_referer( 'iw-add-payment-method', 'nonce' );
-
-            $gateways = WC()->payment_gateways()->get_available_payment_gateways();
-            if ( empty( $gateways['stripe'] ) ) {
-                wp_send_json_error( [ 'messages' => __( 'Το Stripe δεν είναι διαθέσιμο αυτή τη στιγμή, παρακαλούμε προσπαθήστε ξανά αργότερα.', 'iw-theme' ) ], 500);
-            }
-            if ( empty( $_POST['stripe_source'] ) ) {
-                wp_send_json_error([ 'messages' => __( 'Λείπει το payment method.', 'iw-theme' )], 400);
-            }
-
-            $payment_method_id = wc_clean( wp_unslash( $_POST['stripe_source'] ) );
-            $gateway = $gateways['stripe'];
-            $_POST['payment_method'] = 'stripe';
-            $_POST['wc-stripe-new-payment-method'] = 'true';
-
-            try {
-                wp_cache_flush();
-                $user_id  = get_current_user_id();
-                $tokens_before = WC_Payment_Tokens::get_tokens( [ 'user_id' => $user_id, 'limit' => 10000, 'gateway_id' => 'stripe' ] );
-                $result = $gateway->add_payment_method();
-                if ( empty( $result ) || ! is_array( $result ) || $result['result'] !== 'success' ) {
-                    throw new Exception( __( 'Αποτυχία αποθήκευσης κάρτας 0001.', 'iw-theme' ) );
-                }
-
-                $payment_method = WC_Stripe_API::request( [], 'payment_methods/' . $payment_method_id, 'GET');
-                if ( is_wp_error( $payment_method ) || empty( $payment_method->card->fingerprint ) ) throw new Exception( __( 'Αδυναμία επαλήθευσης κάρτας.', 'iw-theme' ) );
-                $new_fingerprint = $payment_method->card->fingerprint;
-
-                foreach ( $tokens_before as $existing_token ) {
-                    $existing_fingerprint = $existing_token->get_meta( 'fingerprint' );
-                    if ( $existing_fingerprint && $existing_fingerprint === $new_fingerprint ) {
-                        WC_Stripe_API::request( [], 'payment_methods/' . $payment_method_id . '/detach', 'POST' );
-                        throw new Exception( __( 'Αυτή η κάρτα υπάρχει ήδη στον λογαριασμό σας.', 'iw-theme' ) );
-                    }
-                }
-
-
-
-                $tokens_after = WC_Payment_Tokens::get_tokens( [ 'user_id' => $user_id, 'limit' => 10000, 'gateway_id' => 'stripe' ] );
-                $token_id = 0;
-                foreach ( $tokens_after as $t ) {
-                    if ( ! $t || ! method_exists( $t, 'get_token' ) ) { continue; }
-                    if ( (string) $t->get_token() === (string) $payment_method_id ) {
-                        $token_id = (int) $t->get_id();
-                        break;
-                    }
-                }
-
-                
-                $token = $token_id ? WC_Payment_Tokens::get( $token_id ) : false;
-                if ( ! $token ) throw new Exception( __( 'Αποτυχία αποθήκευσης κάρτας 0022.', 'iw-theme' ) );
-                $token->add_meta_data( 'fingerprint', $new_fingerprint, true );
-                $token->save();
-
-
-                wp_send_json_success([ 'result'   => 'success', 'html' => self::render_template_part( 'woocommerce/myaccount/payment-method', [ 'payment_token' => $token ] ) ] );
-
-            } catch ( Exception $e ) {
-                wp_send_json_error([ 'messages' => $e->getMessage() ], 500);
-            }
-
-        });
-
-        add_action( 'woocommerce_new_payment_token', function ( $token_id, $token = null ) {
-            
-
-
-            global $wpdb;
-            $fingerprint = $token->get_meta( 'fingerprint' );
-            $user_id  = get_current_user_id();
-            global $wpdb;
-
-            $sql = $wpdb->prepare(
-                    "SELECT t.token_id
-     FROM {$wpdb->prefix}woocommerce_payment_tokens t
-     INNER JOIN {$wpdb->prefix}woocommerce_payment_tokenmeta tm
-        ON tm.payment_token_id = t.token_id
-        AND tm.meta_key = %s
-     WHERE t.user_id = %d
-       AND t.gateway_id = %s
-       AND tm.meta_value = %s
-       AND t.token_id <> %d
-     LIMIT 1",
-                    'fingerprint',
-                    (int) $user_id,
-                    'stripe',
-                    (string) $fingerprint,
-                    (int) $token_id
-            );
-
-            if( (int) $wpdb->get_var( $sql ) ){
-                //$token->delete();
-            }
-
-
-
-
-
-        }, 10, 2 );
-
-        add_action( 'wp_ajax_iw_set_as_default_payment_method', function () {
-
-            $user_id = get_current_user_id();
-            if ( empty( $token_id = isset( $_POST['id'] ) ? absint( $_POST['id'] ) : 0 ) ) {
-                wp_send_json_error( [ 'message' => 'Missing token id' ], 400 );
-            }
-            check_ajax_referer( 'iw-payment-methods-' . $token_id, 'nonce' );
-            if ( ! $token = WC_Payment_Tokens::get( $token_id ) ) {
-                wp_send_json_error( [ 'message' => 'Invalid payment token' ], 404 );
-            }
-            if ( (int) $token->get_user_id() !== $user_id ) {
-                wp_send_json_error( [ 'message' => 'Token does not belong to user' ], 403 );
-            }
-
-            WC_Payment_Tokens::set_users_default( $user_id, $token_id );
-
-            // Apply the same default token to all subscriptions (so renewals use the new default card)
-            if ( function_exists( 'wcs_get_users_subscriptions' ) ) {
-                if ( ! empty( $subs = wcs_get_users_subscriptions( $user_id ) ) ) {
-                    foreach ( $subs as $sub ) {
-                        if ( ! $sub || ! is_a( $sub, 'WC_Subscription' ) ) { continue; }
-                        if ( method_exists( $sub, 'has_status' ) && ! $sub->has_status( [ 'active', 'on-hold', 'pending', 'pending-cancel' ] ) ) {
-                            continue;
-                        }
-                        $gateway_id    = method_exists( $token, 'get_gateway_id' ) ? $token->get_gateway_id() : 'stripe';
-                        $stripe_source = method_exists( $token, 'get_token' ) ? (string) $token->get_token() : '';
-                        if ( method_exists( $sub, 'set_payment_method' ) ) {
-                            $sub->set_payment_method( $gateway_id ?: 'stripe' );
-                        }
-                        $sub->update_meta_data( '_payment_method_token', $token_id );
-                        if ( $stripe_source ) {
-                            $sub->update_meta_data( '_stripe_payment_method', $stripe_source );
-                            $sub->update_meta_data( '_stripe_source_id', $stripe_source );
-                        }
-
-                        $sub->save();
-                    }
-                }
-            }
-
-            wp_send_json_success( [ 'token_id' => $token_id ] );
-        } );
-
-        add_action( 'wp_ajax_iw_delete_payment_method', function () {
-
-            if ( empty( $token_id = isset( $_POST['id'] ) ? absint( $_POST['id'] ) : 0 ) ) {
-                wp_send_json_error( [ 'message' => 'Missing token id' ], 400 );
-            }
-            check_ajax_referer( 'iw-payment-methods-' . $token_id, 'nonce' );
-            $user_id = get_current_user_id();
-            if ( ! $token   = WC_Payment_Tokens::get( $token_id ) ) {
-                wp_send_json_error( [ 'message' => 'Invalid payment token' ], 404 );
-            }
-            if ( (int) $token->get_user_id() !== $user_id ) {
-                wp_send_json_error( [ 'message' => 'Token does not belong to user' ], 403 );
-            }
-            WC_Payment_Tokens::delete( $token_id );
-            wp_send_json_success([ 'token_id' => $token_id,]);
-        });
-
-
         // Auto-complete orders that contain no physical/shop products after payment.
         add_action( 'woocommerce_payment_complete', [ $this, 'auto_complete_subscription_only_orders' ] , 20 );
 
@@ -866,14 +656,15 @@ document.addEventListener('DOMContentLoaded', function () {
         $iw_wcsg_apply_recipient_names = function ( $order_id ) {
             $recipient_map = [];
 
-            if( empty( $order = wc_get_order( $order_id )) ) {
-                return;
-            }
-            if( empty( $subscriptions = wcs_get_subscriptions_for_order( $order_id ) ) ){
+            if ( ! function_exists( 'wcs_get_subscriptions_for_order' ) || ! class_exists( 'WCS_Gifting' ) ) {
                 return;
             }
 
-            if ( ! function_exists( 'wcs_get_subscriptions_for_order' )   || ! class_exists( 'WCS_Gifting' ) ) {
+            if ( empty( $order = wc_get_order( $order_id ) ) ) {
+                return;
+            }
+
+            if ( empty( $subscriptions = wcs_get_subscriptions_for_order( $order_id ) ) ) {
                 return;
             }
 
@@ -920,14 +711,6 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         add_action( 'woocommerce_order_status_processing', $iw_wcsg_apply_recipient_names, 1000, 1 );
-
-
-        // not necessary
-        add_action('init', function () {
-            add_rewrite_rule('^my-account/payment-methods/page/([0-9]+)/?$', 'index.php?pagename=my-account&payment-methods=1&paged=$matches[1]', 'top');
-            add_rewrite_rule('^en/my-account/payment-methods/page/([0-9]+)/?$', 'index.php?pagename=my-account&payment-methods=1&paged=$matches[1]', 'top');
-        });
-
         add_action('init', function () {
             remove_post_type_support('product', 'comments');
             add_post_type_support('product', 'revisions');
@@ -978,6 +761,15 @@ document.addEventListener('DOMContentLoaded', function () {
             );
         }, 10, 2 );
         add_action( 'subscriptions_activated_for_order', function ( $order) {
+            if (
+                ! function_exists( 'wcs_get_subscriptions' )
+                || ! function_exists( 'wcs_get_subscription' )
+                || ! class_exists( 'WCS_Gifting' )
+                || ! class_exists( 'WCSG_Recipient_Management' )
+            ) {
+                return;
+            }
+
             $order_id             = $order instanceof WC_Order ? $order->get_id() : $order;
             $subscriptions        = wcs_get_subscriptions( array( 'order_id' => $order_id ) );
             $processed_recipients = array();
@@ -1002,6 +794,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 $reset_key = get_password_reset_key( get_user_by( 'id', $recipient_user_id ) );
 
                 $recipient_subscriptions = WCSG_Recipient_Management::get_recipient_subscriptions( $recipient_user_id, $order_id );
+                if ( empty( $recipient_subscriptions ) ) {
+                    continue;
+                }
+
                 $subscription             = wcs_get_subscription( $recipient_subscriptions[0] );
                 $subscription_purchaser = WCS_Gifting::get_user_display_name( $subscription->get_user_id() );
 

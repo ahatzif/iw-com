@@ -4,6 +4,7 @@ namespace WPML\ST\MO\Hooks;
 
 use WPML\ST\MO\JustInTime\MOFactory;
 use WPML\ST\MO\WPLocaleProxy;
+use WPML\ST\MO\WPML_Locale;
 use WPML\ST\Utils\LanguageResolution;
 
 class LanguageSwitch implements \IWPML_Action {
@@ -104,11 +105,12 @@ class LanguageSwitch implements \IWPML_Action {
 			$GLOBALS['wp_locale'] = self::$globals_cache[ $new_locale ]['wp_locale'];
 		} else {
 			/**
-			 * WPLocaleProxy is a wrapper of \WP_Locale with a kind of lazy initialization
-			 * to avoid loading the default domain for strings that
-			 * we don't use in this transitory language.
+			 * WPML_Locale changes the behavior of WP_Locale so that it generates the necessary translation
+			 * only when it is needed (instead of when the object is created)
+			 * - to avoid loading the default domain for strings that
+			 *   we don't use in this transitory language.
 			 */
-			$GLOBALS['wp_locale'] = new WPLocaleProxy();
+			$GLOBALS['wp_locale'] = new WPML_Locale();
 		}
 	}
 
@@ -130,12 +132,25 @@ class LanguageSwitch implements \IWPML_Action {
 		 * "wp-content/languages" folder.
 		 */
 		$GLOBALS['l10n'] = $this->jit_mo_factory->get( $new_locale, $this->getUnloadedDomains(), $cachedMoObjects );
+
+		$this->setLocaleInWP65TranslationController( $new_locale );
+	}
+
+	/**
+	 * @param string $new_locale
+	 *
+	 * @return void
+	 */
+	private function setLocaleInWP65TranslationController( $new_locale ) {
+		if ( class_exists( \WP_Translation_Controller::class ) ) {
+			\WP_Translation_Controller::get_instance()->set_locale( $new_locale );
+		}
 	}
 
 	private function resetTranslationAvailabilityInformation() {
 		global $wp_textdomain_registry;
 		if ( ! isset( $wp_textdomain_registry ) && function_exists( '_get_path_to_translation' ) ) {
-			_get_path_to_translation( null, true );
+			_get_path_to_translation( '', true );
 		}
 	}
 
@@ -158,6 +173,21 @@ class LanguageSwitch implements \IWPML_Action {
 	 * @return array
 	 */
 	private function getUnloadedDomains() {
-		return isset( $GLOBALS['l10n_unloaded'] ) ? array_keys( (array) $GLOBALS['l10n_unloaded'] ) : [];
+		$unloadedDomains = isset( $GLOBALS['l10n_unloaded'] ) ? array_keys( (array) $GLOBALS['l10n_unloaded'] ) : [];
+
+		// WP 6.5
+		// When a text domain is unloaded, and later loaded again, WP will keep it in l10n_unloaded.
+		// Prior to WP 6.5, there was a call ``unset( $l10n_unloaded[ $domain ] );`` just after
+		// $l10n[ $domain ] was set.
+		// This is a problem because the domain will be always excluded in our JITMO objects,
+		// and will generate empty domains that should be loaded.
+		if ( class_exists('\WP_Translation_Controller') ) {
+			foreach ( $unloadedDomains as $key => $domain ) {
+				if ( isset( $GLOBALS['l10n'][ $domain ] ) && ! $GLOBALS['l10n'][ $domain ] instanceof \NOOP_Translations ) {
+					unset( $unloadedDomains[ $key ] );
+				}
+			}
+		}
+		return $unloadedDomains;
 	}
 }

@@ -17,7 +17,7 @@ class acfe_upgrades{
         $db_version = acfe_get_settings('version');
     
         // bail early if superior
-        if(acf_version_compare($db_version, '>=', ACFE_VERSION)){
+        if($db_version && acf_version_compare($db_version, '>=', ACFE_VERSION)){
             return;
         }
     
@@ -40,7 +40,7 @@ class acfe_upgrades{
         }
     
         // get db settings
-        $settings = acf_get_array(acfe_get_settings());
+        $settings = acfe_as_array(acfe_get_settings());
     
         // model
         $model = acfe_parse_args_r($settings, array(

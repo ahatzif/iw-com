@@ -5,83 +5,104 @@
          "": {
             "domain": "messages"
          },
-         "Your pending automatic translations will be canceled.": [
-            "Автоматические переводы в ожидании будут отменены."
+         "What should happen with your automatically translated content?": [
+            "Что должно произойти с вашим автоматически переведенным контентом?"
          ],
-         "Save": [
-            "Сохранить"
+         "Wait for review": [
+            "Ожидание проверки"
          ],
-         "Go to the <a>Translation Management Dashboard</a> to translate your content.": [
-            "Для перевода контента перейдите в <a>Консоль управления переводами</a>."
+         "You check and approve translations before publishing.": [
+            "Вы проверяете и одобряете переводы перед публикацией."
          ],
-         "When automatic translation completes:": [
-            "По окончанию автоматического перевода:"
+         "Your translators check and approve translations before publishing.": [
+            "Ваши переводчики проверяют и одобряют переводы перед публикацией."
          ],
-         "Publish and add to the review list": [
-            "Опубликовать и добавить в список проверки"
+         "Publish and mark for review": [
+            "Опубликовать и отметить для проверки"
+         ],
+         "WPML publishes translations immediately but flags them for you to check at your convenience.": [
+            "WPML публикует переводы немедленно, но отмечает их для вашей проверки в удобное для вас время."
+         ],
+         "WPML publishes translations immediately but flags them for your translators to check at their convenience.": [
+            "WPML публикует переводы немедленно, но отмечает их для проверки вашими переводчиками в удобное для них время."
          ],
          "Publish without review": [
             "Опубликовать без проверки"
          ],
-         "Hold for review before publishing": [
-            "Оставить на проверку перед публикацией"
+         "The system publishes translations straight away, skipping the review process.": [
+            "Система публикует переводы сразу, пропуская процесс проверки."
          ],
-         "Publish translations without a review": [
-            "Опубликовать переводы без проверки"
+         "Automatic translation": [
+            "Автоматический перевод"
          ],
-         "Publish translations and review them later": [
-            "Опубликовать переводы и проверить позже"
+         "What should happen with your automatically translated content": [
+            "Что должно произойти с вашим автоматически переведенным контентом"
          ],
-         "Let me review the translations before publishing": [
-            "Я хочу проверить переводы перед публикацией"
+         "Save settings": [
+            "Сохранить настройки"
          ],
-         "Automatically translate my entire site’s content": [
-            "Автоматически переводить весь контент моего сайта"
+         "Translate drafts as I save them (consumes a bit more translation credits).": [
+            "Переводить черновики по мере их сохранения (расходует немного больше кредитов на перевод)."
          ],
-         "How do you want to translate this site?": [
-            "Как перевести этот сайт?"
+         "Do you want to translate drafts automatically?": [
+            "Хотите ли вы переводить черновики автоматически?"
          ],
-         "I want to choose which content to translate": [
-            "Я хочу выбрать контент на перевод"
+         "This feature is only available when you enable \"Translate Everything Automatically\" from the %sTranslation Dashboard%s.": [
+            "Эта функция доступна только при включении “Переводить все автоматически” в %sПанели управления переводами%s."
          ],
-         "Yes, automatically translate all of my <s>existing posts and pages</s> right now, plus <s>new content</s> as I create it.": [
-            "Да, автоматически перевести <s>все существующие записи и страницы</s> прямо сейчас, а также <s>новый контент>/s> по мере его создания."
+         "Don't translate drafts. Only translate when I publish content.": [
+            "Не переводить черновики. Переводить только при публикации контента."
          ],
-         "Automatically translate all of my <s>existing content</s> right now, plus <s>new content</s> as I create it.": [
-            "Автоматически перевести <s>весь существующий контент</s> прямо сейчас, а также <s>новый контент</s> по мере его создания."
+         "%d credits/word": [
+            "%d кредитов/слово"
          ],
-         "No, only automatically translate <s>new content</s>.": [
-            "Нет, переводить автоматически только <s>новый контент</s>."
+         "Informal": [
+            "Неформальный"
          ],
-         "Only automatically translate <s>new content</s>.": [
-            "Автоматически переводить только <s>новый контент</s>."
+         "Automatic": [
+            "Автоматический"
          ],
-         "Should WPML automatically translate your existing content?": [
-            "Следует ли WPML автоматически переводить существующий контент?"
+         "Formal": [
+            "Формальный"
          ],
-         "Which content do you want to translate automatically?": [
-            "Какой контент необходимо перевести автоматически?"
+         "Which translation engines do you want to use?": [
+            "Какие механизмы перевода вы хотите использовать?"
          ],
-         "Start translating automatically": [
-            "Начать переводить автоматически"
+         "Automatic translation engines differ in translation style and supported language pairs.\nIf your preferred translation engine does not support a language pair that you want to use, we fall back to your next preferred engine that does support it.\n": [
+            "Системы автоматического перевода различаются по стилю перевода и поддерживаемым языковым парам.\nЕсли предпочитаемая Вами система перевода не поддерживает языковую пару, которую Вы хотите использовать, мы переходим к следующей предпочитаемой системе, которая ее поддерживает.\n"
          ],
-         "Create an account to start translating": [
-            "Создайте учетную запись, чтобы начать переводить"
+         "Drag & drop to sort from the most to the least preferred engine.": [
+            "Перетащите, чтобы отсортировать от наиболее предпочтительного к наименее предпочтительному механизму."
          ],
-         "WPML will use credits from your automatic translation account to translate your site immediately as you publish new content or update existing content.": [
-            "WPML использует кредиты из вашей учетной записи автоматического перевода для немедленного перевода вашего сайта при публикации нового контента или обновления существующего."
+         "Choose the tone of your automatic translations.": [
+            "Выберите тон ваших автоматических переводов."
          ],
-         "You can translate existing content from the Translation Management Dashboard.": [
-            "Существующий контент можно переводить в Консоли управления переводами."
+         "Read more": [
+            "Подробнее"
          ],
-         "Cancel": [
-            "Отменить"
+         "Learn more": [
+            "Узнать больше"
          ],
-         "You must use the <s>Advanced Translation Editor</s> if you want to translate your content automatically.": [
-            "Если вы хотите переводить свой контент автоматически, следует использовать <s>Расширенный редактор перевода</s>."
+         "On": [
+            "Вкл"
          ],
-         "You currently use a translation service to translate your content. To translate your site automatically, first disconnect your translation service in your <a><s>Translation Management settings</s></a>.": [
-            "В настоящее время вы пользуетесь услугами службы переводов для перевода своего контента. Чтобы перевести свой сайт автоматически, сначала отключите службу переводов в <a><s>настройках управления переводами</s></a>."
+         "Off": [
+            "Выкл"
+         ],
+         "Could not load translation engines": [
+            "Не удалось загрузить механизмы перевода"
+         ],
+         "Could not update engine": [
+            "Не удалось обновить механизм"
+         ],
+         "Could not save review mode": [
+            "Не удалось сохранить режим проверки"
+         ],
+         "Could not save translate everything drafts": [
+            "Не удалось сохранить черновики для перевода всего"
+         ],
+         "Settings saved successfully": [
+            "Настройки успешно сохранены"
          ]
       }
    }

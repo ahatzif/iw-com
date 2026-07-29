@@ -5,7 +5,7 @@ class WPML_Post_Status_Display_Factory {
 	/** @var SitePress $sitepress */
 	private $sitepress;
 
-	public function __construct( SitePress $sitepress = null ) {
+	public function __construct( ?SitePress $sitepress = null ) {
 		$this->sitepress = $sitepress ?: $GLOBALS['sitepress'];
 	}
 

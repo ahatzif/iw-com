@@ -45,6 +45,7 @@ class WPML_TM_Translation_Priorities {
 	 * @return int|bool
 	 */
 	public static function insert_missing_translation( $term_taxonomy_id, $original_name, $target_language ) {
+		/** @var SitePress */
 		global $sitepress;
 
 		$trid              = (int) $sitepress->get_element_trid( $term_taxonomy_id, 'tax_' . self::TAXONOMY );
@@ -55,7 +56,15 @@ class WPML_TM_Translation_Priorities {
 			$sitepress->switch_locale( $target_language );
 
 			$name            = __( $original_name, 'sitepress' );
-			$slug            = WPML_Terms_Translations::term_unique_slug( sanitize_title( $name ), self::TAXONOMY, $target_language );
+			$suffix          = '';
+			if ( $name === $original_name ) {
+				// Add language suffix if priority term translation is missing to avoid duplicate term error.
+				// Since 4.8 either we need to switch the language or provide unique slug as `term_unique_slug`
+				// will return same slug if does not exist in current language.
+				$suffix = ' ' . $target_language;
+			}
+
+			$slug            = WPML_Terms_Translations::term_unique_slug( sanitize_title( $name . $suffix ), self::TAXONOMY, $target_language );
 			$translated_term = wp_insert_term( $name, self::TAXONOMY, array( 'slug' => $slug ) );
 
 			if ( $translated_term && ! is_wp_error( $translated_term ) ) {
@@ -108,4 +117,50 @@ class WPML_TM_Translation_Priorities {
 		$sitepress->switch_locale( $current_language );
 	}
 
+	public static function insert_missing_term_relationship() {
+		global $wpdb;
+		$term = get_term_by( 'slug', self::DEFAULT_TRANSLATION_PRIORITY_VALUE_SLUG, self::TAXONOMY );
+		if ( ! $term ) {
+			return;
+		}
+
+		$postIds = $wpdb->get_col(
+			"
+               SELECT ID
+               FROM {$wpdb->posts}
+               WHERE post_type IN ('post', 'page') 
+               AND post_status NOT IN ('inherit', 'auto-draft', 'trash')
+            "
+		);
+		if ( count( $postIds ) === 0 ) {
+			return;
+		}
+
+		foreach ( $postIds as $postId ) {
+			$existingTermRel = $wpdb->get_var(
+				$wpdb->prepare(
+					"
+                        SELECT object_id
+                        FROM {$wpdb->term_relationships}
+                        WHERE object_id = %d AND term_taxonomy_id = %d
+                        LIMIT 1
+                    ",
+					$postId,
+					$term->term_taxonomy_id
+				)
+			);
+			if ( $existingTermRel ) {
+				continue;
+			}
+			$wpdb->insert(
+				$wpdb->term_relationships,
+				[
+					'object_id'        => $postId,
+					'term_taxonomy_id' => $term->term_taxonomy_id,
+					'term_order'       => 0,
+				],
+				[ '%d', '%d', '%d' ]
+			);
+		}
+	}
 }

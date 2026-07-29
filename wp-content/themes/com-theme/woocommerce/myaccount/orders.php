@@ -28,15 +28,25 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
             $first_item = $items ? reset( $items ) : null;
             $content_id = $first_item ? absint( $first_item->get_meta( 'tickets_for_id', true ) ) : 0;
             $product = $first_item && is_callable( [ $first_item, 'get_product' ] ) ? $first_item->get_product() : null;
+            $is_all_museums_ticket = $content_id ? com_theme_is_all_museums_ticket( $content_id ) : false;
             $image_id = $content_id ? com_theme_museum_image_id( $content_id ) : ( $product ? absint( $product->get_image_id() ) : 0 );
             $item_count = $order->get_item_count() - $order->get_item_count_refunded();
             $actions = wc_get_account_orders_actions( $order );
         ?>
             <article class="overflow-hidden rounded-[1.2rem] border border-blue/15">
                 <div class="grid gap-20 p-20 sm:grid-cols-[12rem_1fr] md:p-25">
-                    <div class="aspect-[4/3] overflow-hidden rounded-[.8rem] bg-ochre-light">
-                        <?php if ( $image_id ) : ?>
-                            <?= wp_get_attachment_image( $image_id, 'medium', false, [ 'class' => 'size-full object-cover' ] ) ?>
+                    <div class="relative aspect-[4/3] overflow-hidden rounded-[.8rem] bg-ochre-light">
+                        <?php if ( $is_all_museums_ticket ) : ?>
+                            <?php get_template_part( 'templates/parts/all-museums-art', null, [
+                                'label_classes' => 'absolute left-[1.4rem] top-[1.5rem] text-[2.6rem] font-light leading-[.895] text-ochre-light',
+                            ] ); ?>
+                        <?php elseif ( $image_id ) : ?>
+                            <?php get_template_part( 'templates/parts/image', null, [
+                                'id'       => $image_id,
+                                'size'     => 'medium',
+                                'classes'  => 'size-full object-cover',
+                                'parallax' => false,
+                            ] ); ?>
                         <?php else : ?>
                             <div class="flex size-full items-center justify-center text-blue/25">
                                 <svg class="size-40 fill-current" aria-hidden="true"><use xlink:href="#icon-com-ticket"></use></svg>
@@ -47,7 +57,7 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
                     <div class="min-w-0">
                         <div class="flex flex-col gap-15 border-b border-dashed border-blue/25 pb-20 sm:flex-row sm:items-start sm:justify-between">
                             <div>
-                                <p class="mb-8 text-[1rem] uppercase tracking-[.12em] text-blue/50"><?= esc_html__( 'Αριθμός αγοράς', 'com-theme' ) ?></p>
+                                <p class="mb-8 text-[1rem] tracking-[.12em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Αριθμός αγοράς', 'com-theme' ) ) ) ?></p>
                                 <a href="<?= esc_url( $order->get_view_order_url() ) ?>" data-barba-prevent data-account-pages="link" class="text-[2rem] font-bold underline decoration-blue/30 underline-offset-4">
                                     #<?= esc_html( $order->get_order_number() ) ?>
                                 </a>
@@ -57,19 +67,19 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
 
                         <dl class="mt-20 grid grid-cols-2 gap-x-20 gap-y-15 text-[1.3rem] lg:grid-cols-4">
                             <div>
-                                <dt class="text-[1rem] uppercase tracking-[.1em] text-blue/50"><?= esc_html__( 'Ημερομηνία', 'com-theme' ) ?></dt>
+                                <dt class="text-[1rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Ημερομηνία', 'com-theme' ) ) ) ?></dt>
                                 <dd class="m-0 mt-5 font-bold"><?= esc_html( wc_format_datetime( $order->get_date_created(), 'd/m/Y' ) ) ?></dd>
                             </div>
                             <div>
-                                <dt class="text-[1rem] uppercase tracking-[.1em] text-blue/50"><?= esc_html__( 'Είδη', 'com-theme' ) ?></dt>
+                                <dt class="text-[1rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Είδη', 'com-theme' ) ) ) ?></dt>
                                 <dd class="m-0 mt-5 font-bold"><?= esc_html( (string) $item_count ) ?></dd>
                             </div>
                             <div>
-                                <dt class="text-[1rem] uppercase tracking-[.1em] text-blue/50"><?= esc_html__( 'Σύνολο', 'com-theme' ) ?></dt>
+                                <dt class="text-[1rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Σύνολο', 'com-theme' ) ) ) ?></dt>
                                 <dd class="m-0 mt-5 font-bold"><?= wp_kses_post( $order->get_formatted_order_total() ) ?></dd>
                             </div>
                             <div>
-                                <dt class="text-[1rem] uppercase tracking-[.1em] text-blue/50"><?= esc_html__( 'Πληρωμή', 'com-theme' ) ?></dt>
+                                <dt class="text-[1rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Πληρωμή', 'com-theme' ) ) ) ?></dt>
                                 <dd class="m-0 mt-5 font-bold"><?= esc_html( $order->get_payment_method_title() ?: '—' ) ?></dd>
                             </div>
                         </dl>

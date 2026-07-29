@@ -3,13 +3,24 @@
    "locale_data": {
       "messages": {
          "": {
-            "domain": "messages"
+            "domain": "messages",
+            "plural_forms": "nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);",
+            "lang": "ar"
          },
+         "hide the translations instead.": [
+            "إخفاء الترجمات بدلاً من ذلك."
+         ],
+         "Error happened! Please try again.": [
+            "حدث خطأ! الرجاء المحاولة مرة أخرى."
+         ],
+         "Cancel": [
+            "إلغاء"
+         ],
          "Choose Content to Automatically Translate into": [
-            "اختر المحتوى المراد ترجمته آليًا إلى"
+            "اختر المحتوى للترجمة التلقائية إلى"
          ],
          "Save Changes and Enable Automatic Translation": [
-            "حفظ التغييرات وتمكين الترجمة الآلية"
+            "حفظ التغييرات وتمكين الترجمة التلقائية"
          ],
          "Cancel Language Changes": [
             "إلغاء تغييرات اللغة"
@@ -17,35 +28,35 @@
          "Save": [
             "حفظ"
          ],
-         "Choose Content to Automatically Translate into New Language": [
-            "اختر المحتوى لترجمته آليًا إلى لغة جديدة"
+         "Add new languages": [
+            "إضافة لغات جديدة"
          ],
-         "Add languages and start translating": [
-            "إضافة لغات وبدء الترجمة"
+         "Add new language": [
+            "إضافة لغة جديدة"
          ],
-         "Add language and start translating": [
-            "إضافة لغة وبدء الترجمة"
+         "Never mind - don't add new languages": [
+            "لا يهم - لا تضف لغات جديدة"
          ],
-         "Never mind. Don't add new languages": [
-            "لا عليك. لا تقم بإضافة لغات جديدة"
+         "Never mind - don't add new language": [
+            "لا يهم - لا تضف لغة جديدة"
          ],
-         "Never mind. Don't add new language": [
-            "لا عليك. لا تقم بإضافة لغة جديدة"
+         "Choose which content to translate into the new language": [
+            "اختر المحتوى الذي تريد ترجمته إلى اللغة الجديدة"
          ],
-         "Automatically translate all of my existing posts and pages right now, plus new content as I create it.": [
-            "ترجمة جميع مقالاتي وصفحاتي الحالية آليًا الآن، بالإضافة إلى المحتوى الجديد بمجرد إنشائي له."
+         "Automatically translate all my posts and pages, plus new content as I create it.": [
+            "ترجمة جميع منشوراتي وصفحاتي تلقائيًا، بالإضافة إلى المحتوى الجديد عند إنشائه."
          ],
          "Only automatically translate new content.": [
-            "ترجمة المحتوى الجديد فقط آليًا."
+            "ترجمة المحتوى الجديد تلقائيًا فقط."
          ],
-         "You are using <a>Translate Everything</a> mode, which translates your site content automatically.": [
-            "أنت تستخدم وضع <a>ترجمة كل شيء</a>، والذي يقوم بترجمة محتوى موقعك آليًا."
+         "Which content do you want to translate into the new language?": [
+            "ما المحتوى الذي تريد ترجمته إلى اللغة الجديدة؟"
          ],
-         "Which content do you want to automatically translate into your newly-added language?": [
-            "ما هو المحتوى الذي ترغب في ترجمته آليًا إلى اللغة المضافة حديثًا إلى موقعك؟"
+         "When you unpause automatic translation, this content will be <a>translated automatically</a>.": [
+            "عند إلغاء إيقاف الترجمة التلقائية مؤقتًا، سيتم <a>ترجمة هذا المحتوى تلقائيًا</a>."
          ],
-         "You can translate existing content from the Translation Management Dashboard.": [
-            "يمكنك ترجمة المحتوى الحالي من خلال لوحة أدوات إدارة الترجمة."
+         "You can still translate existing content any time from the Translation Management Dashboard.": [
+            "لا يزال بإمكانك ترجمة المحتوى الحالي في أي وقت من لوحة تحكم إدارة الترجمة."
          ]
       }
    }

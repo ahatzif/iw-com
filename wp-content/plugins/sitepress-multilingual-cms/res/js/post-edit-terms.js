@@ -27,7 +27,8 @@
 										url:      ajaxurl,
 										dataType: 'json',
 										data:     {
-											action: 'wpml_get_default_lang'
+											action:     'wpml_get_default_lang',
+											_icl_nonce: icl_post_edit_messages._get_default_lang_nonce,
 										},
 										success:  function (response) {
 											var hidden_language_field = jQuery('<input id="icl_post_language" type="hidden"/>');
@@ -63,6 +64,9 @@
         jQuery(lang_switch_confirm_html).dialog({
             modal: true,
             width: 'auto',
+            classes: {
+              "ui-dialog": "wpml-confirm-lang-switch"
+            },
             buttons: [
 				{
 					text : icl_post_edit_messages.ok_button_label,

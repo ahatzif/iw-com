@@ -244,7 +244,7 @@ class WPML_TM_Job_Entity {
 	/**
 	 * @param DateTime|null $deadline
 	 */
-	public function set_deadline( DateTime $deadline = null ) {
+	public function set_deadline( ?DateTime $deadline = null ) {
 		$this->deadline = $deadline;
 	}
 

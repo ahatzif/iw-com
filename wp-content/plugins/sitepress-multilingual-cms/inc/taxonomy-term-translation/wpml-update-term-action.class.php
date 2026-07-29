@@ -150,6 +150,7 @@ class WPML_Update_Term_Action extends WPML_WPDB_And_SP_User {
 		remove_action( 'create_term', array( $sitepress, 'create_term' ), 1 );
 		remove_action( 'edit_term', array( $sitepress, 'create_term' ), 1 );
 		add_action( 'create_term', array( $this, 'add_term_language_action' ), 1, 3 );
+		add_filter( 'get_terms', array( 'WPML_Terms_Translations', 'get_terms_filter' ), 10, 2 );
 		$new_term = false;
 
 		if ( $this->is_valid ) {
@@ -162,6 +163,7 @@ class WPML_Update_Term_Action extends WPML_WPDB_And_SP_User {
 		add_action( 'create_term', array( $sitepress, 'create_term' ), 1, 3 );
 		add_action( 'edit_term', array( $sitepress, 'create_term' ), 1, 3 );
 		remove_action( 'create_term', array( $this, 'add_term_language_action' ), 1 );
+		remove_filter( 'get_terms', array( 'WPML_Terms_Translations', 'get_terms_filter' ), 10 );
 
 		if ( ! is_array( $new_term ) ) {
 			$new_term = false;

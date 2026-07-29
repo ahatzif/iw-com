@@ -2,11 +2,13 @@
 
 class WPML_Cornerstone_Media_Node_Provider {
 
+	/** @var IWPML_PB_Media_Find_And_Translate $media_translate */
 	private $media_translate;
 
+	/** @var array $nodes */
 	private $nodes = array();
 
-	public function __construct( WPML_Page_Builders_Media_Translate $media_translate ) {
+	public function __construct( IWPML_PB_Media_Find_And_Translate $media_translate ) {
 		$this->media_translate = $media_translate;
 	}
 
@@ -57,5 +59,12 @@ class WPML_Cornerstone_Media_Node_Provider {
 		}
 
 		$this->nodes[ $type ] = $node;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function get_media() {
+		return $this->media_translate->get_used_media_in_post();
 	}
 }

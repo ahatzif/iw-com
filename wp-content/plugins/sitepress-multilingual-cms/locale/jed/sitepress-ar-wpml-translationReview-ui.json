@@ -4,16 +4,17 @@
       "messages": {
          "": {
             "domain": "messages",
-            "lang": "en"
+            "plural_forms": "nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);",
+            "lang": "ar"
          },
          "Accepted": [
             "مقبول"
          ],
          "Approved!": [
-            "موافق عليه!"
+            "تمت الموافقة!"
          ],
          "Loading the next translation for review...": [
-            "جارٍ تحميل الترجمة التالية لمراجعتها..."
+            "جارٍ تحميل الترجمة التالية للمراجعة..."
          ],
          "Back": [
             "رجوع"
@@ -21,23 +22,17 @@
          "Turn off to not automatically load the next translation after finishing this review.": [
             "أوقف التشغيل لعدم تحميل الترجمة التالية تلقائيًا بعد الانتهاء من هذه المراجعة."
          ],
-         "Turn on to automatically load the next translation after finishing this review.": [
-            "قم بتشغيل لتحميل الترجمة التالية تلقائيًا بعد الانتهاء من هذه المراجعة."
+         "Turn on to automatically load the next translation after finishing this  .": [
+            "قم بالتشغيل لتحميل الترجمة التالية تلقائيًا بعد الانتهاء من هذا."
          ],
          "Edit": [
-            "تحرير"
+            "تعديل"
          ],
          "Edit translation": [
-            "تحرير الترجمة"
-         ],
-         "There was an error in applying translation.": [
-            "حدث خطأ أثناء تطبيق الترجمة."
-         ],
-         "Please wait, applying translation..": [
-            "يُرجى الانتظار، جارٍ تطبيق الترجمة..."
+            "تعديل الترجمة"
          ],
          "Next review": [
-            "المراجعة القادمة"
+            "المراجعة التالية"
          ],
          "Publish this translation": [
             "نشر هذه الترجمة"
@@ -48,8 +43,14 @@
          "Published!": [
             "تم النشر!"
          ],
-         "Reviewing the next translation...": [
-            "جارٍ مراجعة الترجمة التالية..."
+         "Please wait, applying translation..": [
+            "الرجاء الانتظار، جارٍ تطبيق الترجمة.."
+         ],
+         "There was an error in applying translation.": [
+            "حدث خطأ في تطبيق الترجمة."
+         ],
+         "Someone is already reviewing this translation. Please try again later.": [
+            "شخص آخر يراجع هذه الترجمة بالفعل. الرجاء المحاولة مرة أخرى لاحقًا."
          ]
       }
    }

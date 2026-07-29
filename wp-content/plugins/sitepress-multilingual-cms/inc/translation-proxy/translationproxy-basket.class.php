@@ -8,6 +8,8 @@ use WPML\TM\API\Jobs;
 
 if ( ! class_exists( 'TranslationProxy_Basket' ) ) {
 	/**
+	 * Important! Do not remove this class. It is still used inside wpml/wpml package.
+	 *
 	 * TranslationProxy_basket collects all static methods to operate on
 	 * translations basket (cart)
 	 */
@@ -54,13 +56,33 @@ if ( ! class_exists( 'TranslationProxy_Basket' ) ) {
 					self::$basket = self::merge_baskets( self::$basket, $basket_portion );
 				}
 			}
-			if ( self::get_basket_items_count( true ) == 0 ) {
+
+			if (
+				self::get_basket_items_count( true ) == 0
+				&& ! isset( self::$basket[ 'name' ] )
+				&& ! isset( self::$basket[ 'batch' ] )
+				&& ! isset( self::$basket[ 'remote_target_languages' ] )
+			) {
 				self::$basket = [];
 			}
+
 			self::sync_target_languages();
 			self::update_basket_option( self::$basket );
 			self::update_basket_notifications();
 		}
+
+
+		public static function cleanBasket() {
+			self::get_basket();
+
+
+			unset( self::$basket['name'] );
+			unset( self::$basket['batch'] );
+			unset( self::$basket['remote_target_languages'] );
+
+			self::update_basket();
+		}
+
 
 		/**
 		 * @param array $basket
@@ -295,13 +317,9 @@ if ( ! class_exists( 'TranslationProxy_Basket' ) ) {
 		 */
 		public static function add_posts_to_basket( $data ) {
 			self::get_basket();
-			global $sitepress, $iclTranslationManagement;
-
-			$wpml_translation_job_factory = wpml_tm_load_job_factory();
+			global $sitepress;
 
 			extract( $data, EXTR_OVERWRITE );
-
-			ICL_AdminNotifier::remove_message( 'the_basket_items_notification' );
 
 			self::$translation_action = null;
 			if ( isset( $data['tr_action'] ) ) { // adapt new format
@@ -339,10 +357,6 @@ if ( ! class_exists( 'TranslationProxy_Basket' ) ) {
 					foreach ( self::$posts_ids as $id ) {
 						if ( isset( self::$basket[ $basket_item_type ][ $id ]['to_langs'][ $language_code ] ) ) {
 							unset( self::$basket[ $basket_item_type ][ $id ]['to_langs'][ $language_code ] );
-						}
-						// if user want to duplicate this post, lets do this
-						if ( $status == 2 ) {
-							$iclTranslationManagement->make_duplicate( $id, $language_code );
 						}
 					}
 				} elseif ( $status == 1 ) {
@@ -412,7 +426,6 @@ if ( ! class_exists( 'TranslationProxy_Basket' ) ) {
 			global $wpdb, $sitepress;
 
 			self::get_basket();
-			ICL_AdminNotifier::remove_message( 'the_basket_items_notification' );
 
 			/*
 			 structure of cart in get_option:
@@ -755,6 +768,8 @@ if ( ! class_exists( 'TranslationProxy_Basket' ) ) {
 
 
 		/**
+		 * Important! Do not remove this method. It is used inside wpml/wpml project.
+		 *
 		 * Sets target languages for remote service
 		 *
 		 * @param $remote_target_languages
@@ -767,6 +782,8 @@ if ( ! class_exists( 'TranslationProxy_Basket' ) ) {
 
 
 		/**
+		 * Important! Do not remove this method. It is used inside wpml/wpml project.
+		 *
 		 * Get target languages for remote service
 		 *
 		 * @return array | false

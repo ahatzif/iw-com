@@ -5,83 +5,104 @@
          "": {
             "domain": "messages"
          },
-         "Your pending automatic translations will be canceled.": [
-            "התרגום האוטומטי הממתין יבוטל."
+         "What should happen with your automatically translated content?": [
+            "מה צריך לקרות עם התוכן שתורגם אוטומטית?"
          ],
-         "Save": [
-            "שמור"
+         "Wait for review": [
+            "המתן לסקירה"
          ],
-         "Go to the <a>Translation Management Dashboard</a> to translate your content.": [
-            "עבור אל <a>לוח המחוונים של ניהול התרגום</a> כדי לתרגם את התוכן שלך."
+         "You check and approve translations before publishing.": [
+            "אתה בודק ומאשר תרגומים לפני פרסום."
          ],
-         "When automatic translation completes:": [
-            "כאשר תרגום אוטומטי מסתיים:"
+         "Your translators check and approve translations before publishing.": [
+            "המתרגמים שלך בודקים ומאשרים תרגומים לפני פרסום."
          ],
-         "Publish and add to the review list": [
-            "פרסם והוסף לרשימה לבדיקה"
+         "Publish and mark for review": [
+            "פרסם וסמן לסקירה"
+         ],
+         "WPML publishes translations immediately but flags them for you to check at your convenience.": [
+            "WPML מפרסם תרגומים מיד אך מסמן אותם לבדיקתך בזמנך הפנוי."
+         ],
+         "WPML publishes translations immediately but flags them for your translators to check at their convenience.": [
+            "WPML מפרסם תרגומים מיד אך מסמן אותם לבדיקת המתרגמים שלך בזמנם הפנוי."
          ],
          "Publish without review": [
-            "פרסם ללא בדיקה"
+            "פרסם ללא סקירה"
          ],
-         "Hold for review before publishing": [
-            "המתן לבדיקה לפני הפרסום"
+         "The system publishes translations straight away, skipping the review process.": [
+            "המערכת מפרסמת תרגומים מיד, מדלגת על תהליך הסקירה."
          ],
-         "Publish translations without a review": [
-            "פרסם תרגומים ללא בדיקה"
+         "Automatic translation": [
+            "תרגום אוטומטי"
          ],
-         "Publish translations and review them later": [
-            "פרסם את התרגומים ובדוק אותם מאוחר יותר"
+         "What should happen with your automatically translated content": [
+            "מה צריך לקרות עם התוכן שתורגם אוטומטית"
          ],
-         "Let me review the translations before publishing": [
-            "תן לי לבדוק את התרגומים לפני הפרסום"
+         "Save settings": [
+            "שמור הגדרות"
          ],
-         "Automatically translate my entire site’s content": [
-            "תרגם באופן אוטומטי את כל תוכן האתר"
+         "Translate drafts as I save them (consumes a bit more translation credits).": [
+            "תרגם טיוטות כשאני שומר אותן (צורך מעט יותר נקודות זכות לתרגום)."
          ],
-         "How do you want to translate this site?": [
-            "כיצד תרצה לתרגם אתר זה?"
+         "Do you want to translate drafts automatically?": [
+            "האם ברצונך לתרגם טיוטות באופן אוטומטי?"
          ],
-         "I want to choose which content to translate": [
-            "אני רוצה לבחור איזה תוכן לתרגם"
+         "This feature is only available when you enable \"Translate Everything Automatically\" from the %sTranslation Dashboard%s.": [
+            "תכונה זו זמינה רק כאשר אתה מפעיל \"תרגם הכל אוטומטית\" מתוך %sלוח הבקרה של התרגום%s."
          ],
-         "Yes, automatically translate all of my <s>existing posts and pages</s> right now, plus <s>new content</s> as I create it.": [
-            "כן, תרגם באופן אוטומטי את כל <s>הפוסטים והדפים הקיימים</s> מיד עכשיו, וגם <s>תוכן חדש</s> כשאני יוצר אותו."
+         "Don't translate drafts. Only translate when I publish content.": [
+            "אל תתרגם טיוטות. תרגם רק כשאני מפרסם תוכן."
          ],
-         "Automatically translate all of my <s>existing content</s> right now, plus <s>new content</s> as I create it.": [
-            "תרגם באופן אוטומטי את כל <s>התוכן הקיים</s> מיד עכשיו, וגם <s>תוכן חדש</s> כשאני יוצר אותו."
+         "%d credits/word": [
+            "%d נקודות זכות/מילה"
          ],
-         "No, only automatically translate <s>new content</s>.": [
-            "לא, תרגם באופן אוטומטי רק <s>תוכן חדש</s>."
+         "Informal": [
+            "לא פורמלי"
          ],
-         "Only automatically translate <s>new content</s>.": [
-            "תרגם באופן אוטומטי רק <s>תוכן חדש</s>."
+         "Automatic": [
+            "אוטומטי"
          ],
-         "Should WPML automatically translate your existing content?": [
-            "האם על WPML לתרגם באופן אוטומטי את התוכן הקיים שלך?"
+         "Formal": [
+            "פורמלי"
          ],
-         "Which content do you want to translate automatically?": [
-            "איזה תוכן אתה רוצה תרגם באופן אוטומטי?"
+         "Which translation engines do you want to use?": [
+            "באילו מנועי תרגום תרצה להשתמש?"
          ],
-         "Start translating automatically": [
-            "התחל לתרגם באופן אוטומטי"
+         "Automatic translation engines differ in translation style and supported language pairs.\nIf your preferred translation engine does not support a language pair that you want to use, we fall back to your next preferred engine that does support it.\n": [
+            "מנועי תרגום אוטומטיים נבדלים בסגנון התרגום ובזוגות השפות הנתמכים.\nאם מנוע התרגום המועדף עליך אינו תומך בזוג שפות שברצונך להשתמש בו, אנו נעבור למנוע המועדף הבא שלך שכן תומך בזוג זה.\n"
          ],
-         "Create an account to start translating": [
-            "צור חשבון כדי להתחיל בתרגום"
+         "Drag & drop to sort from the most to the least preferred engine.": [
+            "גרור ושחרר כדי למיין מהמועדף ביותר למועדף פחות."
          ],
-         "WPML will use credits from your automatic translation account to translate your site immediately as you publish new content or update existing content.": [
-            "WPML ישתמש בנקודות זכות מחשבון התרגום האוטומטי שלך כי לתרגם את האתר שלך מיד כשאתה מפרסם תוכן חדש או מעדכן תוכן קיים."
+         "Choose the tone of your automatic translations.": [
+            "בחר את הטון של התרגומים האוטומטיים שלך."
          ],
-         "You can translate existing content from the Translation Management Dashboard.": [
-            "ניתן לתרגם תוכן קיים מ'לוח הבקרה של ניהול התרגום'."
+         "Read more": [
+            "קרא עוד"
          ],
-         "Cancel": [
-            "בטל"
+         "Learn more": [
+            "למד עוד"
          ],
-         "You must use the <s>Advanced Translation Editor</s> if you want to translate your content automatically.": [
-            "עליך להשתמש ב<s>עורך התרגום המתקדם</s> אם אתה רוצה לתרגם את התוכן שלך באופן אוטומטי."
+         "On": [
+            "פעיל"
          ],
-         "You currently use a translation service to translate your content. To translate your site automatically, first disconnect your translation service in your <a><s>Translation Management settings</s></a>.": [
-            "אתה כרגע משתמש בשירות תרגום לתרגום התוכן שלך. כדי לתרגם אתה אתר שלך באופן אוטומטי, ראשית נתק את שירות התרגום שלך ב<a><s>הגדרות של 'ניהול התרגום'</s></a>."
+         "Off": [
+            "כבוי"
+         ],
+         "Could not load translation engines": [
+            "לא ניתן לטעון מנועי תרגום"
+         ],
+         "Could not update engine": [
+            "לא ניתן לעדכן מנוע"
+         ],
+         "Could not save review mode": [
+            "לא ניתן לשמור מצב סקירה"
+         ],
+         "Could not save translate everything drafts": [
+            "לא ניתן לשמור טיוטות של תרגום הכל"
+         ],
+         "Settings saved successfully": [
+            "ההגדרות נשמרו בהצלחה"
          ]
       }
    }

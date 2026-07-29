@@ -13,26 +13,28 @@ class WPML_Taxonomy_Translation_UI {
 	/**
 	 * WPML_Taxonomy_Translation constructor.
 	 *
-	 * @param SitePress                      $sitepress
-	 * @param string                         $taxonomy if given renders a specific taxonomy,
+	 * @param SitePress                           $sitepress
+	 * @param string                              $taxonomy if given renders a specific taxonomy,
 	 *                                                 otherwise renders a placeholder
-	 * @param bool[]                         $args array with possible indices:
+	 * @param bool[]                              $args array with possible indices:
 	 *                                             'taxonomy_selector' => bool .. whether or not to show the taxonomy selector
-	 * @param WPML_UI_Screen_Options_Factory $screen_options_factory
+	 * @param WPML_UI_Screen_Options_Factory|null $screen_options_factory
 	 */
 	public function __construct(
 		SitePress $sitepress,
 		$taxonomy = '',
 		array $args = array(),
-		WPML_UI_Screen_Options_Factory $screen_options_factory = null
+		?WPML_UI_Screen_Options_Factory $screen_options_factory = null
 	) {
 		$this->sitepress    = $sitepress;
 		$this->tax_selector = isset( $args['taxonomy_selector'] ) ? $args['taxonomy_selector'] : true;
 		$this->taxonomy     = $taxonomy ? $taxonomy : false;
 
 		if ( $screen_options_factory ) {
-			$help_title = esc_html__( 'Taxonomy Translation', 'sitepress' );
-			$help_text  = $this->get_help_text();
+			$help_title = function() {
+				return esc_html__( 'Taxonomy Translation', 'sitepress' );
+			};
+			$help_text  = [ $this, 'get_help_text' ];
 
 			$this->screen_options = $screen_options_factory->create_pagination(
 				'taxonomy_translation_per_page',
@@ -87,7 +89,7 @@ class WPML_Taxonomy_Translation_UI {
 	/**
 	 * @return string
 	 */
-	private function get_help_text() {
+	public function get_help_text() {
 		/* translators: this is the title of a documentation page used to terminate the sentence "is not possible to ..."  */
 		$translate_base_taxonomy_slug_link_title = esc_html__(
 			'translate the base taxonomy slugs with WPML',

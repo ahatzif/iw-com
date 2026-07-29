@@ -8,6 +8,7 @@ $button = wp_parse_args( $args ?? [], [
 	'target'     => '',
 	'tag'        => 'a',
 	'type'       => 'button',
+	'loading'    => false,
 	'classes'    => '',
 	'attributes' => [],
 ] );
@@ -15,6 +16,7 @@ $button = wp_parse_args( $args ?? [], [
 $tag = in_array( $button['tag'], [ 'a', 'button' ], true ) ? $button['tag'] : 'a';
 $variant_classes = [
 	'light'         => 'border-blue bg-ochre text-blue hover:border-ochre hover:bg-transparent hover:text-ochre',
+	'blue'          => 'border-blue bg-blue text-white hover:bg-transparent hover:text-blue',
 	'blue-outline'  => 'border-blue bg-transparent text-blue hover:bg-blue hover:text-white',
 	'light-outline' => 'border-ochre-light bg-transparent text-ochre-light hover:bg-ochre-light hover:text-blue',
 ];
@@ -49,7 +51,7 @@ foreach ( $attributes as $attribute => $value ) {
 	<?php else : ?>
 		type="<?php echo esc_attr( in_array( $button['type'], [ 'button', 'submit', 'reset' ], true ) ? $button['type'] : 'button' ); ?>"
 	<?php endif; ?>
-	class="group/button inline-flex items-center justify-center border text-[1.6rem] font-normal leading-none transition-colors <?php echo esc_attr( $size_classes . ' ' . ( $variant_classes[ $button['variant'] ] ?? $variant_classes['light'] ) . ' ' . $button['classes'] ); ?>"
+	class="group/button relative inline-flex items-center justify-center border text-[1.6rem] font-normal leading-none transition-colors disabled:cursor-wait disabled:opacity-80 group-[.loading]:pointer-events-none group-[.loading]:opacity-80 group-[.loading]:[&_[data-button-label]]:opacity-0 group-[.loading]:[&_[data-button-loader]]:opacity-100 [&.loading_[data-button-label]]:opacity-0 [&.loading_[data-button-loader]]:opacity-100 <?php echo esc_attr( $size_classes . ' ' . ( $variant_classes[ $button['variant'] ] ?? $variant_classes['light'] ) . ' ' . $button['classes'] ); ?>"
 	<?php echo $attribute_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 >
 	<?php if ( $button['icon'] ) : ?>
@@ -57,5 +59,8 @@ foreach ( $attributes as $attribute => $value ) {
 			<use xlink:href="#icon-<?php echo esc_attr( $button['icon'] ); ?>"></use>
 		</svg>
 	<?php endif; ?>
-	<span><?php echo esc_html( $button['label'] ); ?></span>
+	<span data-button-label class="transition-opacity"><?php echo esc_html( $button['label'] ); ?></span>
+	<?php if ( $button['loading'] ) : ?>
+		<?php get_template_part( 'templates/parts/button/dots' ); ?>
+	<?php endif; ?>
 </<?php echo esc_html( $tag ); ?>>

@@ -8,21 +8,6 @@ var WPML_TM = WPML_TM || {};
 
     jQuery(function () {
 
-
-        jQuery(document).on('change', '.icl_tj_select_translator select', icl_tm_assign_translator);
-
-
-        jQuery('#icl_side_by_site').find('a[href="#cancel"]').click(function () {
-            var anchor = jQuery(this);
-            jQuery.ajax({
-                type   : "POST", url: ajaxurl, data: 'action=dismiss_icl_side_by_site',
-                success: function () {
-                    anchor.parent().parent().fadeOut();
-                }
-            });
-            return false;
-        });
-
         // Translator notes - translation dashboard - start
         jQuery('.icl_tn_link').click(function () {
             jQuery('.icl_post_note:visible').slideUp();
@@ -81,34 +66,13 @@ var WPML_TM = WPML_TM || {};
         jQuery('form[name="icl_custom_posts_sync_options"]').submit(iclSaveForm);
         jQuery('form[name="icl_cf_translation"]').submit(iclSaveForm);
         jQuery('form[name="icl_tcf_translation"]').submit(iclSaveForm);
-        jQuery('form[name="wpml-old-jobs-editor"]').submit(iclSaveForm);
 
         var icl_translation_jobs_basket = jQuery('#icl-translation-jobs-basket');
         icl_translation_jobs_basket.find('th :checkbox').change(iclTmSelectAllJobsBasket);
         icl_translation_jobs_basket.find('td :checkbox').change(iclTmUpdateJobsSelectionBasket);
-        var icl_translation_jobs = jQuery('#icl-translation-jobs');
-        icl_translation_jobs.find('td.js-check-all :checkbox').change(iclTmSelectAllJobsSelection);
-        icl_translation_jobs.find('td :checkbox').change(update_translation_job_checkboxes);
 
         jQuery('#icl_tm_jobs_dup_submit').click(function () {
             return confirm(jQuery(this).next().html());
-        });
-
-        jQuery('#icl_hide_promo').click(function () {
-            jQuery.ajax({type: "POST", url: ajaxurl, data: 'action=icl_tm_toggle_promo&value=1', success: function () {
-                    jQuery('.icl-translation-services').slideUp(function () {
-                        jQuery('#icl_show_promo').fadeIn();
-                    });
-                }});
-            return false;
-        });
-
-        jQuery('#icl_show_promo').click(function () {
-            jQuery.ajax({type: "POST", url: ajaxurl, data: 'action=icl_tm_toggle_promo&value=0', success: function () {
-                    jQuery('#icl_show_promo').hide();
-                    jQuery('.icl-translation-services').slideDown();
-                }});
-            return false;
         });
 
         // --- Start: XLIFF form handler ---
@@ -195,87 +159,6 @@ var WPML_TM = WPML_TM || {};
         return false;
     }
 
-    function icl_tm_assign_translator() {
-        var this_translator = jQuery(this);
-        var translator_id = this_translator.val();
-        var icl_tj_select_translator = this_translator.closest('.icl_tj_select_translator');
-        var translation_controls = icl_tj_select_translator.find('.icl_tj_select_translator_controls');
-        var job_id = translation_controls.attr('id').replace(/^icl_tj_tc_/, '');
-        translation_controls.show();
-        translation_controls.find('.icl_tj_cancel').click(function () {
-            this_translator.val(jQuery('#icl_tj_ov_' + job_id).val());
-            translation_controls.hide();
-        });
-        var jobType = jQuery('#icl_tj_ty_' + job_id).val();
-        translation_controls.find('.icl_tj_ok').off().click(function () {
-            icl_tm_assign_translator_request(job_id, translator_id, this_translator, jobType);
-        });
-
-    }
-
-    function icl_tm_assign_translator_request(job_id, translator_id, select, jobType) {
-        var translation_controls = select.closest('.icl_tj_select_translator').find('.icl_tj_select_translator_controls');
-        select.prop('disabled', true);
-        translation_controls.find('.icl_tj_cancel, .icl_tj_ok').prop('disabled', true);
-        var td_wrapper = select.parent().parent();
-
-        var ajaxLoader = jQuery( icl_ajxloaderimg ).insertBefore( translation_controls.find( '.icl_tj_ok' ) );
-
-        jQuery.ajax({
-            type: "POST",
-            url: icl_ajx_url,
-            dataType: 'json',
-            data: 'icl_ajx_action=assign_translator&job_id=' + job_id + '&translator_id=' + translator_id + '&job_type=' + jobType + '&_icl_nonce=' + jQuery('#_icl_nonce_at').val(),
-            success: function (msg) {
-                if (!msg.error) {
-                    translation_controls.hide();
-                    /** @namespace msg.service */
-                    if (msg.service !== 'local') {
-                        td_wrapper.html(msg.message);
-                    }
-                }
-                select.prop('disabled', false);
-                translation_controls.find('.icl_tj_cancel, .icl_tj_ok').prop('disabled', false);
-                ajaxLoader.remove();
-                translation_controls.hide();
-
-
-            }
-        });
-
-        return false;
-    }
-
-    function icl_tm_set_pickup_method(e) {
-        e.preventDefault();
-
-        var form = jQuery(this);
-        var submitButton = form.find(':submit');
-
-        submitButton.prop('disabled', true);
-        var ajaxLoader = jQuery(icl_ajxloaderimg).insertBefore(submitButton);
-
-        jQuery.ajax({
-            type: "POST",
-            url: icl_ajx_url,
-            dataType: 'json',
-            data: 'icl_ajx_action=set_pickup_mode&' + form.serialize(),
-            success: function (msg) {
-                if ( msg.success ) {
-                    icl_translations_pickup_box_populate();
-                } else {
-                    fadeInAjxResp( '#icl_ajx_response_tpm', msg.data.message, true );
-                }
-            },
-            complete: function () {
-                ajaxLoader.remove();
-                submitButton.prop('disabled', false);
-            }
-        });
-
-        return false;
-    }
-
     function iclTmSelectAllJobsBasket(caller) {
         jQuery('#icl-translation-jobs-basket').find(':checkbox').prop('checked', jQuery(caller).prop('checked'));
         jQuery('#icl-tm-jobs-cancel-but').prop('disabled', !jQuery(caller).prop('checked'));
@@ -286,11 +169,6 @@ var WPML_TM = WPML_TM || {};
             'checked',
             !jQuery(tableSelector).find('.js-wpml-job-row :checkbox:not(:checked)').length
         );
-    }
-
-    function update_translation_job_checkboxes() {
-        updateJobCheckboxes('#icl-translation-jobs');
-        updateTMSelectAllCheckbox('#icl-translation-jobs');
     }
     function updateJobCheckboxes(table_selector) {
         var job_parent = jQuery(table_selector);
@@ -311,13 +189,6 @@ var WPML_TM = WPML_TM || {};
         updateJobCheckboxes('#icl-translation-jobs-basket');
     }
 
-    function iclTmSelectAllJobsSelection() {
-        jQuery('#icl-translation-jobs').find(':checkbox').prop(
-            'checked',
-            jQuery('#icl-translation-jobs td.js-check-all :checkbox').prop('checked')
-        );
-    }
-
     if (typeof String.prototype.startsWith !== 'function') {
         // see below for better implementation!
         String.prototype.startsWith = function (str){
@@ -335,11 +206,16 @@ var WPML_TM = WPML_TM || {};
     $(function () {
         $('#translation-notifications').on('change', 'input', function (e) {
             var input = $(e.target);
-            var child = $('[name="' + input.data('child') + '"]');
-
-            if (child.length) {
-                child.prop('disabled', !input.is(":checked"));
-            }
+						var children = [];
+						if ( input.data('child') ) {
+							children = input.data('child').split('||');
+						}
+						for (var i = 0; i < children.length; i++) {
+							var child = $('[name="' + children[i] + '"]');
+							if ( child.length ) {
+									child.prop('disabled', !input.is(":checked"));
+							}
+						}
 
         });
     });

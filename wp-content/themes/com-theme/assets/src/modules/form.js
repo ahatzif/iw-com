@@ -1,6 +1,7 @@
 import { module } from 'modujs';
 import axios from 'axios';
 import Emitter from "tiny-emitter/instance";
+import 'dom-slider';
 const { slideUp } = window.domSlider;
 export default class extends module {
     constructor(m) {
@@ -71,15 +72,29 @@ export default class extends module {
             this.el.classList.remove('success', 'error')
             this.el.classList.add('loading');
             axios.post(this.el.getAttribute('action'), new FormData(this.el), { withCredentials: true } ).then(response => {
-                this.el.classList.remove('loading');
+                const responseData = response.data && response.data.data ? response.data.data : {};
+                const willNavigate = response.data.success === true && ( responseData.reload || responseData.redirect );
+
+                if ( ! willNavigate ) {
+                    this.el.classList.remove('loading');
+                }
+
                 response.data.success === true ? this.onSuccess(response) : this.onError(response);
             } ).catch(error => {
                 Emitter.emit('form-validation-error', this.el);
                 this.el.classList.remove('loading');
-                if(  error.response && error.response.data && error.response.data.data && error.response.data.data.errors ) {
-                    this.elements.forEach( element => element.dispatchEvent( new CustomEvent( 'formError', { detail : error.response.data.data } ) ) );
+                const errorResponse = error.response && error.response.data
+                    ? { data: error.response.data }
+                    : { data: { data: { message: this.el.dataset.requestError || 'Something went wrong.' } } };
+                const errorData = errorResponse.data && errorResponse.data.data
+                    ? errorResponse.data.data
+                    : {};
+
+                if ( errorData.errors ) {
+                    this.elements.forEach( element => element.dispatchEvent( new CustomEvent( 'formError', { detail : errorData } ) ) );
                     this.scrollToFirstError();
                 }
+                this.onError( errorResponse );
             });
         }
     }
@@ -114,7 +129,7 @@ export default class extends module {
             return;
         }
         if (this.successMessage.length && response.data.data.message) {
-            this.successMessage[0].innerHTML = response.data.data.message;
+            this.successMessage[0].textContent = response.data.data.message;
         }
 
 
@@ -154,8 +169,13 @@ export default class extends module {
 
         Emitter.emit('form-error', { el: this.el, response : response.data });
 
-        this.$('error-message')[0].innerHTML = response.data.data.message;
-        this.el.classList.add('error');
+        const errorMessage = this.$('error-message')[0];
+        const message = response.data && response.data.data && response.data.data.message
+            ? response.data.data.message
+            : this.el.dataset.requestError || 'Something went wrong.';
+        if ( errorMessage ) {
+            errorMessage.textContent = message;
+        }
         this.el.classList.add('error');
 
 
@@ -178,6 +198,7 @@ export default class extends module {
 
     scrollToFirstError() {
         let firstError = this.el.querySelector('[data-module-validate].error');
+        if ( ! firstError ) return;
 
         if( this.parentModal ){
             this.parentModal.scrollTop = firstError.offsetTop;
@@ -241,5 +262,3 @@ export default class extends module {
     }
 
 }
-
-

@@ -72,6 +72,10 @@ export default class extends module {
         this.updatePagination();
     }
 
+    label(key) {
+        return this.el.dataset[key] || this.config.labels?.[key] || '';
+    }
+
     addImportTypeEvents() {
         this.importTypeInputs.forEach((input) => {
             input.addEventListener('change', () => this.updateImportTypeTabs());
@@ -205,7 +209,7 @@ export default class extends module {
         this.tbody.innerHTML = hasRows ? rowsHtml : '';
         this.tableWrap?.classList.toggle('hidden', !hasRows);
         if (this.emptyMessage) {
-            this.emptyMessage.textContent = this.config.labels?.empty || 'Δεν βρέθηκαν εργαζόμενοι.';
+            this.emptyMessage.textContent = this.label('empty');
             this.emptyMessage.classList.toggle('hidden', Boolean(hasRows));
         }
     }
@@ -220,7 +224,10 @@ export default class extends module {
         const available = Math.max(0, this.seatsLimit - used);
 
         if (this.seatsLabel) this.seatsLabel.textContent = `${used} / ${this.seatsLimit}`;
-        if (this.availableLabel) this.availableLabel.textContent = available === 1 ? '1 διαθέσιμη θέση' : `${available} διαθέσιμες θέσεις`;
+        if (this.availableLabel) {
+            const template = this.label(available === 1 ? 'availableOne' : 'availableMany');
+            this.availableLabel.textContent = template.replace('%s', String(available));
+        }
         this.updateUsageBar(used);
     }
 
@@ -307,7 +314,7 @@ export default class extends module {
         this.pagination.classList.toggle('hidden', isHidden);
 
         if (this.pageInfo) {
-            this.pageInfo.textContent = (this.config.labels?.page || 'Σελίδα %1$d από %2$d')
+            this.pageInfo.textContent = this.label('page')
                 .replace('%1$d', this.page)
                 .replace('%2$d', this.totalPages);
         }
@@ -340,7 +347,7 @@ export default class extends module {
         return fetch(`${this.config.ajaxUrl}?${params.toString()}`, { credentials: 'same-origin' })
             .then((response) => response.json())
             .then((response) => {
-                if (!response.success) throw new Error(response.data?.message || this.config.labels?.unableLoad || 'Δεν ήταν δυνατή η φόρτωση των εργαζομένων.');
+                if (!response.success) throw new Error(response.data?.message || this.label('unableLoad'));
 
                 this.page = response.data.page || 1;
                 this.total = response.data.total || 0;
@@ -397,7 +404,7 @@ export default class extends module {
     fileChange() {
         if (!this.fileInput || !this.fileName) return;
 
-        this.fileName.textContent = this.fileInput.files?.[0]?.name || this.config.labels?.noFile || 'Δεν έχει επιλεγεί αρχείο';
+        this.fileName.textContent = this.fileInput.files?.[0]?.name || this.label('noFile');
     }
 
     validateLogoFile(file) {
@@ -405,11 +412,11 @@ export default class extends module {
 
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            return this.config.labels?.logoTypes || 'Ανεβάστε λογότυπο σε μορφή JPG, PNG ή WebP.';
+            return this.label('logoTypes');
         }
 
         if (file.size > 2 * 1024 * 1024) {
-            return this.config.labels?.logoSize || 'Το λογότυπο πρέπει να είναι έως 2MB.';
+            return this.label('logoSize');
         }
 
         return '';
@@ -453,14 +460,14 @@ export default class extends module {
 
         if (error) {
             this.logoFile.value = '';
-            if (this.logoFileName) this.logoFileName.textContent = this.config.labels?.noFile || 'Δεν έχει επιλεγεί αρχείο';
+            if (this.logoFileName) this.logoFileName.textContent = this.label('noFile');
             this.setInlineMessage(this.logoSuccess, this.logoError, this.logoError, error);
             this.setLogoDirty(Boolean(this.logoSavedUrl && this.logoRemoveInput?.value === '1'));
             return;
         }
 
         if (!file) {
-            if (this.logoFileName) this.logoFileName.textContent = this.config.labels?.noFile || 'Δεν έχει επιλεγεί αρχείο';
+            if (this.logoFileName) this.logoFileName.textContent = this.label('noFile');
             this.setLogoDirty(Boolean(this.logoSavedUrl && this.logoRemoveInput?.value === '1'));
             return;
         }
@@ -480,7 +487,7 @@ export default class extends module {
         const shouldRemoveSavedLogo = Boolean(this.logoSavedUrl);
 
         if (this.logoFile) this.logoFile.value = '';
-        if (this.logoFileName) this.logoFileName.textContent = this.config.labels?.noFile || 'Δεν έχει επιλεγεί αρχείο';
+        if (this.logoFileName) this.logoFileName.textContent = this.label('noFile');
         if (this.logoRemoveInput) this.logoRemoveInput.value = shouldRemoveSavedLogo ? '1' : '0';
         if (this.logoObjectUrl) {
             URL.revokeObjectURL(this.logoObjectUrl);
@@ -491,7 +498,7 @@ export default class extends module {
         this.setLogoDirty(shouldRemoveSavedLogo);
 
         if (shouldRemoveSavedLogo) {
-            this.setInlineMessage(this.logoSuccess, this.logoError, this.logoNotice, 'Πατήστε Αποθήκευση για να διαγραφεί οριστικά το λογότυπο.');
+            this.setInlineMessage(this.logoSuccess, this.logoError, this.logoNotice, this.label('logoRemoveNotice'));
             return;
         }
 
@@ -520,13 +527,13 @@ export default class extends module {
         fetch(this.config.ajaxUrl, { method: 'POST', body: data, credentials: 'same-origin' })
             .then((response) => response.json())
             .then((response) => {
-                if (!response.success) throw new Error(response.data?.message || this.config.labels?.unableLogo || 'Δεν ήταν δυνατή η ενημέρωση του λογοτύπου.');
+                if (!response.success) throw new Error(response.data?.message || this.label('unableLogo'));
 
                 const logo = response.data?.logo || {};
                 const logoUrl = logo.url || '';
                 const logoName = logo.name || '';
                 if (this.logoFile) this.logoFile.value = '';
-                if (this.logoFileName) this.logoFileName.textContent = logoName || this.config.labels?.noFile || 'Δεν έχει επιλεγεί αρχείο';
+                if (this.logoFileName) this.logoFileName.textContent = logoName || this.label('noFile');
                 if (this.logoRemoveInput) this.logoRemoveInput.value = '0';
                 this.setLogoPreview(logoUrl);
                 this.updateCompanyLogoDisplay(logoUrl);
@@ -534,7 +541,7 @@ export default class extends module {
                 this.logoSavedUrl = logoUrl;
                 this.logoSavedName = logoName;
                 this.setLogoDirty(false);
-                this.setInlineMessage(this.logoSuccess, this.logoError, this.logoSuccess, response.data?.message || 'Το λογότυπο ενημερώθηκε.');
+                this.setInlineMessage(this.logoSuccess, this.logoError, this.logoSuccess, response.data?.message || this.label('logoUpdated'));
             })
             .catch((err) => {
                 this.setInlineMessage(this.logoSuccess, this.logoError, this.logoError, err.message);
@@ -563,11 +570,11 @@ export default class extends module {
         fetch(this.config.ajaxUrl, { method: 'POST', body: data, credentials: 'same-origin' })
             .then((response) => response.json())
             .then((response) => {
-                if (!response.success) throw new Error(response.data?.message || this.config.labels?.unableInvite || 'Δεν ήταν δυνατή η πρόσκληση εργαζομένου.');
+                if (!response.success) throw new Error(response.data?.message || this.label('unableInvite'));
 
                 this.inviteForm.reset();
-                if (this.fileName) this.fileName.textContent = this.config.labels?.noFile || 'Δεν έχει επιλεγεί αρχείο';
-                this.setMessage(this.success, response.data?.message || 'Ο εργαζόμενος προσκλήθηκε.');
+                if (this.fileName) this.fileName.textContent = this.label('noFile');
+                this.setMessage(this.success, response.data?.message || this.label('employeeInvited'));
                 return this.loadEmployees(1);
             })
             .catch((err) => {
@@ -609,9 +616,9 @@ export default class extends module {
         fetch(this.config.ajaxUrl, { method: 'POST', body: data, credentials: 'same-origin' })
             .then((response) => response.json())
             .then((response) => {
-                if (!response.success) throw new Error(response.data?.message || this.config.labels?.unableUpdate || 'Δεν ήταν δυνατή η ενημέρωση εργαζομένου.');
+                if (!response.success) throw new Error(response.data?.message || this.label('unableUpdate'));
 
-                this.setSeatMessage(button, response.data?.message || 'Ο εργαζόμενος ενημερώθηκε.');
+                this.setSeatMessage(button, response.data?.message || this.label('employeeUpdated'));
                 return this.wait(1200).then(() => this.loadEmployees(this.page));
             })
             .catch((err) => {

@@ -1,9 +1,11 @@
 <?php
 
-class WPML_Elementor_WooCommerce_Hooks {
+class WPML_Elementor_WooCommerce_Hooks implements IWPML_Action {
 
 	public function add_hooks() {
-		add_filter( 'pre_get_posts', array( $this, 'do_not_suppress_filters_on_product_widget' ) );
+		add_filter( 'pre_get_posts', [ $this, 'do_not_suppress_filters_on_product_widget' ] );
+		add_filter( 'wcml_multi_currency_ajax_actions', [ $this, 'adjustCurrencyOnElementorCartFragments' ] );
+		add_filter( 'option_woocommerce_checkout_order_received_endpoint', [ $this, 'translate_order_received_endpoint' ] );
 	}
 
 	/**
@@ -20,5 +22,19 @@ class WPML_Elementor_WooCommerce_Hooks {
 		}
 
 		return $query;
+	}
+
+	/**
+	 * @param  array $actions
+	 *
+	 * @return array
+	 */
+	public function adjustCurrencyOnElementorCartFragments( $actions ) {
+		$actions[] = 'elementor_menu_cart_fragments';
+		return $actions;
+	}
+
+	public function translate_order_received_endpoint( $value ) {
+		return apply_filters( 'wpml_translate_single_string', $value, 'WP Endpoints', $value );
 	}
 }

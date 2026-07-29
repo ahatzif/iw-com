@@ -8,11 +8,11 @@ class WPML_Menu_Element extends WPML_Term_Element {
 	/**
 	 * WPML_Menu_Element constructor.
 	 *
-	 * @param int           $id
-	 * @param SitePress     $sitepress
-	 * @param WPML_WP_Cache $wpml_cache
+	 * @param int                $id
+	 * @param SitePress          $sitepress
+	 * @param WPML_WP_Cache|null $wpml_cache
 	 */
-	public function __construct( $id, SitePress $sitepress, WPML_WP_Cache $wpml_cache = null ) {
+	public function __construct( $id, SitePress $sitepress, ?WPML_WP_Cache $wpml_cache = null ) {
 		$this->taxonomy = 'nav_menu';
 		parent::__construct( $id, $sitepress, $this->taxonomy, $wpml_cache );
 	}

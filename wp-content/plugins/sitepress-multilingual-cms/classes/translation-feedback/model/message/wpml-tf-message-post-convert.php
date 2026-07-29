@@ -10,6 +10,13 @@ class WPML_TF_Message_Post_Convert extends WPML_TF_Data_Object_Post_Convert {
 	const POST_TYPE = 'wpml_tf_message';
 
 	/**
+	 * @return string
+	 */
+	public function get_post_type() {
+		return self::POST_TYPE;
+	}
+
+	/**
 	 * @return array
 	 */
 	public function get_post_fields() {

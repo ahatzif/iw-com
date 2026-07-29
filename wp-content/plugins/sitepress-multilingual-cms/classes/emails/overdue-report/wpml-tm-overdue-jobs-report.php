@@ -22,11 +22,11 @@ class WPML_TM_Overdue_Jobs_Report {
 
 	/**
 	 * @param WPML_Translation_Jobs_Collection $jobs_collection
-	 * @param WPML_TM_Email_Notification_View $email_view
-	 * @param bool $has_active_remote_service
-	 * @param array $notification_settings
-	 * @param SitePress $sitepress
-	 * @param WPML_TP_Jobs_Collection|null $tp_jobs
+	 * @param WPML_TM_Email_Notification_View  $email_view
+	 * @param bool                             $has_active_remote_service
+	 * @param array                            $notification_settings
+	 * @param SitePress                        $sitepress
+	 * @param WPML_TP_Jobs_Collection|null     $tp_jobs
 	 */
 	public function __construct(
 		WPML_Translation_Jobs_Collection $jobs_collection,
@@ -34,7 +34,7 @@ class WPML_TM_Overdue_Jobs_Report {
 		$has_active_remote_service,
 		array $notification_settings,
 		SitePress $sitepress,
-		WPML_TP_Jobs_Collection $tp_jobs = null
+		?WPML_TP_Jobs_Collection $tp_jobs = null
 	) {
 		$this->jobs_collection           = $jobs_collection;
 		$this->email_view                = $email_view;
@@ -126,6 +126,6 @@ class WPML_TM_Overdue_Jobs_Report {
 			'Content-type: text/html; charset=UTF-8',
 		);
 
-		wp_mail( $to, $subject, $message, $headers );
+		WPML_Mail_Sender::send( $to, $subject, $message, $headers, array(), 'overdue-jobs-report' );
 	}
 }

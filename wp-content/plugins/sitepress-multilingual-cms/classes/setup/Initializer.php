@@ -2,7 +2,11 @@
 
 namespace WPML\Setup;
 
+use OTGS_Installer_Subscription;
+use OTGS_Installer_WP_Share_Local_Components_Setting;
 use WPML\Ajax\Endpoint\Upload;
+use WPML\Core\Component\MinimumRequirements\Application\Service\RequirementsService;
+use WPML\Core\Component\PostHog\Application\Service\Event\EventInstanceService;
 use WPML\Core\LanguageNegotiation;
 use WPML\Core\WP\App\Resources;
 use WPML\Element\API\Languages;
@@ -10,30 +14,51 @@ use WPML\FP\Fns;
 use WPML\FP\Lst;
 use WPML\FP\Maybe;
 use WPML\FP\Obj;
-use WPML\FP\Wrapper;
+use WPML\Infrastructure\Dic;
 use WPML\LIB\WP\Option as WPOption;
 use WPML\LIB\WP\User;
+use WPML\PostHog\Event\CaptureWizardStartedEvent;
+use WPML\PostHog\State\PostHogState;
 use WPML\Setup\Endpoint\CheckTMAllowed;
-use WPML\Setup\Endpoint\TranslationServices;
-use WPML\TM\Menu\TranslationServices\Endpoints\Activate;
-use WPML\TM\Menu\TranslationServices\Endpoints\Deactivate;
+use WPML\Setup\Endpoint\CurrentStep;
+use WPML\Setup\Endpoint\ShouldShowWCMLMessages;
+use WPML\TM\ATE\ATEDashboardLoader;
+use WPML\TM\ATE\AutoTranslate\Endpoint\EnableATE;
+use WPML\TM\ATE\TranslateEverything\TranslatableData\DataPreSetup;
+use WPML\TM\ATE\TranslateEverything\TranslatableData\View as TranslatableData;
+use WPML\TM\Menu\TranslationMethod\TranslationMethodSettings;
+use WPML\TM\ATE\ClonedSites\SetupMigration\Service as SetupMigrationService;
 use WPML\TranslationMode\Endpoint\SetTranslateEverything;
 use WPML\TranslationRoles\UI\Initializer as TranslationRolesInitializer;
 use WPML\UIPage;
+use WPML_Flags;
+use WPML_TM_ATE_AMS_Endpoints;
+use WPML_TM_ATE_Status;
+
 use function WPML\Container\make;
 
 class Initializer {
 	public static function loadJS() {
-		Wrapper::of( self::getData() )->map( Resources::enqueueApp( 'setup' ) );
+		// Enqueue the setup app with the ATE dashboard script as a dependency
+		$setupApp = Resources::enqueueApp( 'setup' );
+		$handleATEDashboardScript = self::registerAteDashboardScript() ;
+		$setupApp( self::getData(), [ $handleATEDashboardScript ] );
 	}
 
 	public static function getData() {
+		/** @var Dic $wpml_dic */
+		global $wpml_dic;
 		$currentStep = Option::getCurrentStep();
+		$currentStep = make( SetupMigrationService::class )->maybeMigrateCredentials( $currentStep );
+
+		if ( CurrentStep::STEP_HIGH_COSTS_WARNING === $currentStep ) {
+			// The user stopped the wizard on the high costs warning step.
+			// In this case we need to start the wizard one step before.
+			$currentStep = CurrentStep::STEP_TRANSLATION_SETTINGS;
+		}
 
 		$siteUrl = self::getSiteUrl();
 
-		$defaultServiceName = self::getDefaultTranslationServiceName();
-		Option::setDefaultTranslationMode( ! empty( $defaultServiceName ) );
 
 		$defaultLang  = self::getDefaultLang();
 		$originalLang = Option::getOriginalLang();
@@ -44,48 +69,53 @@ class Initializer {
 
 		$userLang = Languages::getUserLanguageCode()->getOrElse( $defaultLang );
 
+		$requirementsService = $wpml_dic->make( RequirementsService::class );
+
 		if ( defined( 'OTGS_INSTALLER_SITE_KEY_WPML' ) ) {
 			self::savePredefinedSiteKey( OTGS_INSTALLER_SITE_KEY_WPML );
 		}
 
-		$translationMethod = Option::shouldTranslateEverything( Option::getTranslateEverythingDefaultInSetup( ! empty( $defaultServiceName ) ) )
-			? 'automatic'
-			: 'manual';
+		self::maybeCaptureWizardStartedEvent( $currentStep );
 
 		return [
 			'name' => 'wpml_wizard',
 			'data' => [
-				'currentStep'          => $currentStep,
-				'endpoints'            => Lst::concat( [
-					'setOriginalLanguage'    => Endpoint\SetOriginalLanguage::class,
-					'setSupport'             => Endpoint\SetSupport::class,
-					'setSecondaryLanguages'  => Endpoint\SetSecondaryLanguages::class,
-					'currentStep'            => Endpoint\CurrentStep::class,
-					'addressStep'            => Endpoint\AddressStep::class,
-					'licenseStep'            => Endpoint\LicenseStep::class,
-					'translationStep'        => Endpoint\TranslationStep::class,
-					'setTranslateEverything' => SetTranslateEverything::class,
-					'recommendedPlugins'     => Endpoint\RecommendedPlugins::class,
-					'finishStep'             => Endpoint\FinishStep::class,
-					'addLanguages'           => Endpoint\AddLanguages::class,
-					'upload'                 => Upload::class,
-					'getTranslationServices' => TranslationServices::class,
-					'activateService'        => Activate::class,
-					'deactivateService'      => Deactivate::class,
-					'checkTMAllowed'         => CheckTMAllowed::class,
+				'currentStep'              => $currentStep,
+				'minimumRequirements'      => $requirementsService->getInvalidRequirements(),
+				'endpoints'                => Lst::concat( [
+					'setOriginalLanguage'          => Endpoint\SetOriginalLanguage::class,
+					'setSupport'                   => Endpoint\SetSupport::class,
+					'setSecondaryLanguages'        => Endpoint\SetSecondaryLanguages::class,
+					'currentStep'                  => Endpoint\CurrentStep::class,
+					'addressStep'                  => Endpoint\AddressStep::class,
+					'licenseStep'                  => Endpoint\LicenseStep::class,
+					'aiTranslation'                => Endpoint\AITranslationStep::class,
+					'translationStep'              => Endpoint\TranslationStep::class,
+					'setTranslateEverything'       => SetTranslateEverything::class,
+					'recommendedPlugins'           => Endpoint\RecommendedPlugins::class,
+					'finishStep'                   => Endpoint\FinishStep::class,
+					'addLanguages'                 => Endpoint\AddLanguages::class,
+					'upload'                       => Upload::class,
+					'checkTMAllowed'               => CheckTMAllowed::class,
+					'translatableData'             => TranslatableData::class,
+					'shouldShowWCMLMessages'       => ShouldShowWCMLMessages::class,
+					'ateDashboardScript'           => Endpoint\ATEDashboardScript::class,
+					'getParametersForAteDashboard' => Endpoint\GetParametersForAteDashboard::class,
+					'enableATE'                    => Endpoint\EnableAte::class,
 				], TranslationRolesInitializer::getEndPoints() ),
-				'languages'            => [
-					'list'               => Obj::values( Languages::withFlags( Languages::getAll( $userLang ) ) ),
-					'secondaries'        => Fns::map( Languages::getLanguageDetails(), Option::getTranslationLangs() ),
-					'original'           => Languages::getLanguageDetails( $originalLang ),
-					'customFlagsDir'     => self::getCustomFlagsDir(),
-					'predefinedFlagsDir' => \WPML_Flags::get_wpml_flags_url(),
+				'languages'                => [
+					'list'                  => Obj::values( Languages::withFlags( Languages::getAll( $userLang ) ) ),
+					'secondaries'           => Fns::map( Languages::getLanguageDetails(), Option::getTranslationLangs() ),
+					'original'              => Languages::getLanguageDetails( $originalLang ),
+					'customFlagsDir'        => self::getCustomFlagsDir(),
+					'predefinedFlagsDir'    => WPML_Flags::get_wpml_flags_url(),
+					'flagsByLocalesFileUrl' => WPML_Flags::get_wpml_flags_by_locales_url(),
 				],
-				'siteAddUrl'           => 'https://wpml.org/account/sites/?add=' . urlencode( $siteUrl ) . '&wpml_version=' . self::getWPMLVersion(),
-				'siteKey'              => self::getSiteKey(),
-				'usePredefinedSiteKey' => self::isPredefinedSiteKeySaved(),
-				'supportValue'         => \OTGS_Installer_WP_Share_Local_Components_Setting::get_setting( 'wpml' ),
-				'address'              => [
+				'siteAddUrl'               => 'https://wpml.org/account/sites/?add=' . urlencode( $siteUrl ) . '&wpml_version=' . self::getWPMLVersion(),
+				'siteKey'                  => self::getSiteKey(),
+				'usePredefinedSiteKey'     => self::isPredefinedSiteKeySaved(),
+				'supportValue'             => OTGS_Installer_WP_Share_Local_Components_Setting::get_setting( 'wpml' ),
+				'address'                  => [
 					'siteUrl'       => $siteUrl,
 					'mode'          => self::getLanguageNegotiationMode(),
 					'domains'       => LanguageNegotiation::getDomains() ?: [],
@@ -93,36 +123,74 @@ class Initializer {
 				],
 				'isTMAllowed'              => Option::isTMAllowed() === true,
 				'isTMDisabled'             => Option::isTMAllowed() === false,
+				'isAteEnabled'             => WPML_TM_ATE_Status::is_enabled_and_activated(),
+				'isWCMLWizardWaiting'      => ShouldShowWCMLMessages::getOption(),
 				'ateBaseUrl'               => self::getATEBaseUrl(),
+				'ateDashboardScript'       => make( ATEDashboardLoader::class )->getRegisteredScriptUrl(),
 				'whenFinishedUrlLanguages' => admin_url( UIPage::getLanguages() ),
 				'whenFinishedUrlTM'        => admin_url( UIPage::getTM() ),
 				'ateSignUpUrl'             => admin_url( UIPage::getTMATE() ),
 				'languagesMenuUrl'         => admin_url( UIPage::getLanguages() ),
+				'postsListingUrl'          => admin_url( 'edit.php' ),
+				'pagesListingUrl'          => admin_url( 'edit.php?post_type=page' ),
+				'WCMLWizardUrl'            => admin_url( 'index.php?page=wcml-setup' ),
 				'adminUserName'            => User::getCurrent()->display_name,
+				'wpmlSupportPage'          => admin_url( 'admin.php?page=sitepress-multilingual-cms/menu/support.php' ),
+				'resetSetup' => [
+					'ajaxUrl' => \admin_url( 'admin-ajax.php' ),
+					'nonce'   => \wp_create_nonce( 'reset_wpml_wizard' ),
+				],
 				'translation'              => Lst::concat(
-					[
-						'whoModes'           => Option::getTranslationMode(),
-						'defaultServiceName' => $defaultServiceName,
-						'method'             => $translationMethod,
-						'reviewMode'         => Option::getReviewMode(),
-					],
-					TranslationRolesInitializer::getTranslationData()
+					TranslationMethodSettings::getModeSettingsData(),
+					TranslationRolesInitializer::getTranslationData( null, false )
 				),
+
+				'license' => [
+					'actions'  => [
+						'registerSiteKey' => Endpoint\LicenseStep::ACTION_REGISTER_SITE_KEY,
+						'getSiteType'     => Endpoint\LicenseStep::ACTION_GET_SITE_TYPE,
+					],
+					'siteType' => [
+						'production'  => OTGS_Installer_Subscription::SITE_KEY_TYPE_PRODUCTION,
+						'development' => OTGS_Installer_Subscription::SITE_KEY_TYPE_DEVELOPMENT,
+					],
+				],
+
+				'translatableData' => [
+					'actions' => [
+						'listTranslatables' => TranslatableData::ACTION_LIST_TRANSLATABLES,
+						'fetchData'         => TranslatableData::ACTION_FETCH_DATA,
+					],
+					'types'   => [
+						'postTypes'  => DataPreSetup::KEY_POST_TYPES,
+						'taxonomies' => DataPreSetup::KEY_TAXONOMIES,
+					],
+				],
 			],
 		];
 	}
 
-	/**
-	 * Get the actual service name, or empty string if there's no default service.
-	 *
-	 * @return string
-	 */
-	private static function getDefaultTranslationServiceName() {
-		return Maybe::fromNullable( \TranslationProxy::get_tp_default_suid() )
-			->map( [ \TranslationProxy_Service::class, 'get_service_by_suid'] )
-			->map( Obj::prop('name') )
-			->getOrElse('');
+
+	private static function maybeCaptureWizardStartedEvent( $currentStep ) {
+		if ( ! PostHogState::isEnabled() ) {
+			return;
+		}
+
+		$wizardUUID = get_option( 'wpml_ph_wizard_uuid', false );
+
+		if ( $currentStep === 'languages' && ! $wizardUUID ) {
+			$event = ( new EventInstanceService() )->getWizardStartedEvent( [] );
+			CaptureWizardStartedEvent::capture( $event );
+		}
 	}
+
+
+	private static function registerAteDashboardScript() {
+		$ateDashboardLoader = make( ATEDashboardLoader::class );
+
+		return $ateDashboardLoader->registerScript();
+	}
+
 
 	/**
 	 * @return bool
@@ -141,13 +209,18 @@ class Initializer {
 		if ( function_exists( 'OTGS_Installer' ) ) {
 			$args   = [
 				'repository_id' => 'wpml',
-				'nonce'         => wp_create_nonce( 'save_site_key_wpml' ),
+				'nonce'         => \wp_create_nonce( 'save_site_key_wpml' ),
 				'site_key'      => $siteKey,
 				'return'        => 1,
 			];
 			$result = OTGS_Installer()->save_site_key( $args );
 			if ( empty( $result['error'] ) ) {
 				icl_set_setting( 'site_key', $siteKey, true );
+
+				if ( Option::isTMAllowed() && ! WPML_TM_ATE_Status::is_enabled_and_activated() ) {
+					Option::setTranslateEverythingDefault();
+					make( EnableATE::class )->run( wpml_collect( [] ) );
+				}
 			}
 		}
 	}
@@ -183,7 +256,6 @@ class Initializer {
 		return Maybe::fromNullable( WPOption::getOr( 'WPLANG', null ) )
 		            ->map( Languages::localeToCode() )
 		            ->getOrElse( $getLangFromConstant );
-
 	}
 
 	private static function getCustomFlagsDir() {
@@ -191,7 +263,7 @@ class Initializer {
 	}
 
 	private static function getATEBaseUrl() {
-		return make( \WPML_TM_ATE_AMS_Endpoints::class )->get_base_url( \WPML_TM_ATE_AMS_Endpoints::SERVICE_ATE );
+		return make( WPML_TM_ATE_AMS_Endpoints::class )->get_base_url( WPML_TM_ATE_AMS_Endpoints::SERVICE_ATE );
 	}
 
 	/**
@@ -206,11 +278,11 @@ class Initializer {
 	 */
 	private static function getSiteKey() {
 		$siteKey = wpml_get_setting( 'site_key', (string) OTGS_Installer()->get_site_key( 'wpml' ) );
+
 		return is_string( $siteKey ) && strlen( $siteKey ) === 10 ? $siteKey : '';
 	}
 
 	private static function getSiteUrl() {
-		return OTGS_Installer()->get_installer_site_url('wpml');
+		return OTGS_Installer()->get_installer_site_url( 'wpml' );
 	}
 }
-

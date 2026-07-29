@@ -28,7 +28,7 @@ $tickets_data = (
     <main class="min-h-[calc(100vh+3rem)] bg-blue text-ochre">
         <section class="page-wrapper flex min-h-[70rem] items-center pb-100 pt-[16rem]" aria-labelledby="tickets-unavailable-title">
             <div class="max-w-[72rem]">
-                <p class="text-[1rem] font-medium uppercase leading-none tracking-[.18em] text-white"><?php esc_html_e( 'Αγορά εισιτηρίου', 'com-theme' ); ?></p>
+                <p class="text-[1rem] font-medium leading-none tracking-[.18em] text-white"><?php echo esc_html( com\theme::remove_accents( __( 'Αγορά εισιτηρίου', 'com-theme' ) ) ); ?></p>
                 <h1 id="tickets-unavailable-title" class="mt-20 text-[4.6rem] font-medium leading-[1.05] sm:text-[5.2rem] lg:text-[6rem] lg:leading-[7rem]"><?php esc_html_e( 'Δεν υπάρχουν διαθέσιμα εισιτήρια', 'com-theme' ); ?></h1>
                 <p class="mt-30 max-w-[60rem] text-[1.6rem] leading-[1.5] text-ochre/80"><?php esc_html_e( 'Η ηλεκτρονική διάθεση εισιτηρίων δεν έχει ενεργοποιηθεί ακόμη για το συγκεκριμένο μουσείο.', 'com-theme' ); ?></p>
                 <a href="<?php echo esc_url( home_url( '/#museums' ) ); ?>" class="mt-40 inline-flex min-h-50 items-center rounded-[.8rem] border border-ochre px-25 text-[1.4rem] transition-colors hover:bg-ochre hover:text-blue"><?php esc_html_e( 'Δείτε τα μουσεία', 'com-theme' ); ?> →</a>
@@ -44,8 +44,11 @@ $tickets_data = (
 endif;
 
 $ticket_post_id = (int) $tickets_data->post_id;
+$ticket_is_all_museums = com_theme_is_all_museums_ticket( $ticket_post_id );
 $ticket_title = get_the_title( $ticket_post_id );
-$ticket_permalink = get_permalink( $ticket_post_id );
+$ticket_permalink = $ticket_is_all_museums
+    ? com_theme_option_page_url( 'tickets_page', 'tickets' )
+    : get_permalink( $ticket_post_id );
 $ticket_image_id = com_theme_museum_image_id( $ticket_post_id, 'hero_image' );
 $ticket_location = com_theme_museum_location_label( $ticket_post_id );
 $ticket_language = (string) apply_filters( 'wpml_current_language', '' );
@@ -55,7 +58,28 @@ if ( $ticket_location === '' ) {
     $ticket_location = (string) get_field( 'place_label', $ticket_post_id );
 }
 
+if ( $ticket_is_all_museums && $ticket_location === '' ) {
+    $ticket_location = com_theme_all_museums_default_location_label();
+}
+
 $categories_config = [];
+$ticket_months = array_map(
+    [ com\theme::class, 'remove_accents' ],
+    [
+        __( 'Ιανουάριος', 'com-theme' ),
+        __( 'Φεβρουάριος', 'com-theme' ),
+        __( 'Μάρτιος', 'com-theme' ),
+        __( 'Απρίλιος', 'com-theme' ),
+        __( 'Μάιος', 'com-theme' ),
+        __( 'Ιούνιος', 'com-theme' ),
+        __( 'Ιούλιος', 'com-theme' ),
+        __( 'Αύγουστος', 'com-theme' ),
+        __( 'Σεπτέμβριος', 'com-theme' ),
+        __( 'Οκτώβριος', 'com-theme' ),
+        __( 'Νοέμβριος', 'com-theme' ),
+        __( 'Δεκέμβριος', 'com-theme' ),
+    ]
+);
 
 foreach ( (array) $tickets_data->ticket_categories as $category ) {
     if ( ! is_object( $category ) ) {
@@ -107,6 +131,7 @@ $ticket_config = [
     'cartUrl'      => function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : '',
     'locale'       => $ticket_locale,
     'currency'     => function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : 'EUR',
+    'months'       => $ticket_months,
     'strings'      => [
         'monthPrevious'    => __( 'Προηγούμενος μήνας', 'com-theme' ),
         'monthNext'        => __( 'Επόμενος μήνας', 'com-theme' ),
@@ -134,15 +159,16 @@ $ticket_config = [
 <main class="min-h-[calc(100vh+3rem)] bg-blue text-ochre" data-module-tickets>
     <script type="application/json" data-ticket-config><?php echo wp_json_encode( $ticket_config, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ); ?></script>
 
-    <form class="page-wrapper pb-100 pt-[16rem] lg:pb-[14rem]" data-ticket-form aria-labelledby="tickets-title">
+    <form class="page-wrapper pb-100 pt-[16rem] lg:pb-60" data-ticket-form aria-labelledby="tickets-title">
         <div class="grid items-start gap-60 lg:grid-cols-[60rem_48rem] lg:justify-between lg:gap-0">
             <div class="min-w-0">
                 <div class="flex flex-col gap-20">
-                    <p class="text-[1rem] font-medium uppercase leading-none tracking-[.18em] text-white"><?php esc_html_e( 'Αγορά εισιτηρίου', 'com-theme' ); ?></p>
+                    <p class="text-[1rem] font-medium leading-none tracking-[.18em] text-white"><?php echo esc_html( com\theme::remove_accents( __( 'Αγορά εισιτηρίου', 'com-theme' ) ) ); ?></p>
                     <h1 id="tickets-title" class="max-w-[60rem] text-[4.6rem] font-medium leading-[1.05] sm:text-[5.2rem] lg:text-[6rem] lg:leading-[7rem]"><?php esc_html_e( 'Βρείτε το εισιτήριό σας', 'com-theme' ); ?></h1>
                 </div>
 
-                <ol class="mt-40 flex items-center lg:mt-[18rem]" aria-label="<?php esc_attr_e( 'Βήματα αγοράς', 'com-theme' ); ?>" data-ticket-steps>
+                <div data-ticket-steps-anchor aria-hidden="true"></div>
+                <ol class="flex items-center bg-blue pt-40 lg:sticky lg:top-[12rem] lg:z-10" aria-label="<?php esc_attr_e( 'Βήματα αγοράς', 'com-theme' ); ?>" data-ticket-steps>
                     <?php
                     $steps = [
                         1 => [ __( 'ΕΠΙΛΟΓΗ', 'com-theme' ), __( 'ΗΜΕΡΟΜΗΝΙΑΣ', 'com-theme' ) ],
@@ -153,8 +179,11 @@ $ticket_config = [
                         ?>
                         <li class="contents">
                             <button type="button" data-ticket-step="<?php echo esc_attr( $number ); ?>" class="group/step flex shrink-0 items-center gap-10 text-left text-blue-soft opacity-60 transition-opacity disabled:cursor-not-allowed [&.is-complete]:opacity-100 [&.is-current]:text-white [&.is-current]:opacity-100">
-                                <span class="flex size-40 shrink-0 items-center justify-center rounded-full border border-blue-soft text-[1.4rem] transition-all group-[.is-current]/step:size-60 group-[.is-current]/step:border-white group-[.is-current]/step:bg-white group-[.is-current]/step:text-blue group-[.is-complete]/step:border-white group-[.is-complete]/step:text-white">0<?php echo esc_html( $number ); ?></span>
-                                <span class="hidden text-[1.2rem] leading-[1.15] sm:block lg:text-[1.4rem]"><?php echo esc_html( $labels[0] ); ?><br><?php echo esc_html( $labels[1] ); ?></span>
+                                <span class="relative flex size-40 shrink-0 items-center justify-center text-[1.4rem] transition-colors group-[.is-current]/step:text-blue group-[.is-complete]/step:text-white">
+                                    <span class="absolute inset-0 rounded-full border border-blue-soft transition-all group-[.is-current]/step:scale-[1.3] group-[.is-current]/step:border-white group-[.is-current]/step:bg-white group-[.is-complete]/step:border-white" aria-hidden="true"></span>
+                                    <span class="relative">0<?php echo esc_html( $number ); ?></span>
+                                </span>
+                                <span class="hidden pl-5 text-[1.2rem] leading-[1.15] sm:block lg:text-[1.4rem]"><?php echo esc_html( $labels[0] ); ?><br><?php echo esc_html( $labels[1] ); ?></span>
                             </button>
                             <?php if ( $number < count( $steps ) ) : ?>
                                 <span class="mx-10 h-px min-w-10 flex-1 border-t border-dashed border-blue-soft" aria-hidden="true"></span>
@@ -166,7 +195,7 @@ $ticket_config = [
                 <div class="mt-60">
                     <section data-ticket-panel="1" class="rounded-[1.5rem] border border-white p-20 sm:p-40 lg:p-60" aria-labelledby="date-title">
                         <div class="flex items-center justify-between">
-                            <h2 id="date-title" class="text-[2rem] font-bold uppercase leading-[1.2]" data-ticket-month-label></h2>
+                            <h2 id="date-title" class="text-[2rem] font-bold leading-[1.2]" data-ticket-month-label></h2>
                             <div class="flex items-center gap-15">
                                 <button type="button" data-ticket-month-previous class="flex size-30 items-center justify-center disabled:pointer-events-none disabled:opacity-30" aria-label="<?php esc_attr_e( 'Προηγούμενος μήνας', 'com-theme' ); ?>">
                                     <span class="block size-[1.6rem] rotate-45 border-b border-l border-white" aria-hidden="true"></span>
@@ -207,6 +236,24 @@ $ticket_config = [
                                 <?php
                                 $category_key = sanitize_key( $category['key'] );
                                 $has_price_range = $category['maxPrice'] > $category['minPrice'];
+                                $has_single_subcategory = count( $category['subcategories'] ) === 1;
+                                $single_subcategory = $has_single_subcategory ? $category['subcategories'][0] : null;
+                                $select_values = [
+                                    (object) [
+                                        'value'    => '',
+                                        'label'    => __( 'Επιλέξτε', 'com-theme' ),
+                                        'selected' => false,
+                                    ],
+                                ];
+
+                                foreach ( $category['subcategories'] as $subcategory ) {
+                                    $select_values[] = (object) [
+                                        'value'    => $subcategory['value'],
+                                        'label'    => $subcategory['label'],
+                                        'selected' => false,
+                                        'attrs'    => 'data-price="' . esc_attr( (string) $subcategory['price'] ) . '"',
+                                    ];
+                                }
                                 ?>
                                 <div
                                     data-ticket-category
@@ -215,7 +262,7 @@ $ticket_config = [
                                 >
                                     <div class="grid grid-cols-[1fr_auto_auto] gap-x-15 gap-y-25 sm:grid-cols-[minmax(0,1fr)_7rem_12rem_8rem] sm:items-center sm:gap-15">
                                         <div class="col-span-3 min-w-0 sm:col-span-1">
-                                            <h3 class="text-[2rem] font-bold uppercase leading-[1.2]"><?php echo esc_html( $category['label'] ); ?></h3>
+                                            <h3 class="text-[2rem] font-bold leading-[1.2]"><?php echo esc_html( com\theme::remove_accents( $category['label'] ) ); ?></h3>
                                             <?php if ( $category['description'] ) : ?>
                                                 <p class="mt-20 max-w-[32rem] text-[1.4rem] leading-[1.4] text-ochre/80"><?php echo esc_html( $category['description'] ); ?></p>
                                             <?php endif; ?>
@@ -235,31 +282,40 @@ $ticket_config = [
                                     <div data-ticket-visitors="<?php echo esc_attr( $category_key ); ?>" class="space-y-30"></div>
 
                                     <template data-ticket-visitor-template="<?php echo esc_attr( $category_key ); ?>">
-                                        <fieldset data-ticket-visitor data-category-key="<?php echo esc_attr( $category_key ); ?>" class="mt-30 border-t border-dashed border-blue-soft pt-30 text-ochre">
+                                        <fieldset data-ticket-visitor data-category-key="<?php echo esc_attr( $category_key ); ?>" class="mt-30 border-t border-dashed border-blue-soft pt-40 text-ochre">
                                             <div class="flex items-center justify-between gap-20 text-[1.2rem] text-blue-soft">
                                                 <legend><?php esc_html_e( 'ΕΙΣΙΤΗΡΙΟ', 'com-theme' ); ?> <span data-ticket-visitor-index></span></legend>
                                                 <span data-ticket-visitor-price></span>
                                             </div>
-                                            <div class="mt-30 grid gap-25 sm:grid-cols-2">
-                                                <label class="flex flex-col gap-10 text-[1.1rem] uppercase tracking-[.04em] sm:col-span-2">
-                                                    <?php esc_html_e( 'Κατηγορία', 'com-theme' ); ?>*
-                                                    <span class="relative block">
-                                                        <select data-ticket-visitor-field="category-id" required class="h-[6.4rem] w-full rounded-[.8rem] border border-white bg-blue px-20 pr-50 text-[1.6rem] font-normal normal-case tracking-normal text-ochre">
-                                                            <option value=""><?php esc_html_e( 'Επιλέξτε', 'com-theme' ); ?></option>
-                                                            <?php foreach ( $category['subcategories'] as $subcategory ) : ?>
-                                                                <option value="<?php echo esc_attr( $subcategory['value'] ); ?>" data-price="<?php echo esc_attr( $subcategory['price'] ); ?>"><?php echo esc_html( $subcategory['label'] ); ?></option>
-                                                            <?php endforeach; ?>
-                                                        </select>
-                                                        <span class="pointer-events-none absolute right-20 top-1/2 size-[1.2rem] -translate-y-1/2 rotate-45 border-b border-r border-white" aria-hidden="true"></span>
-                                                    </span>
+                                            <div class="mt-40 grid gap-x-40 gap-y-0 sm:grid-cols-2">
+                                                <?php if ( $has_single_subcategory ) : ?>
+                                                    <input
+                                                        type="hidden"
+                                                        value="<?php echo esc_attr( $single_subcategory['value'] ); ?>"
+                                                        data-ticket-visitor-field="category-id"
+                                                    >
+                                                <?php else : ?>
+                                                    <?php
+                                                    get_template_part( 'templates/parts/form/select', null, [
+                                                        'required'     => true,
+                                                        'label'        => __( 'Κατηγορία', 'com-theme' ),
+                                                        'placeholder'  => __( 'Επιλέξτε', 'com-theme' ),
+                                                        'name'         => 'category-id',
+                                                        'values'       => $select_values,
+                                                        'searchField'  => false,
+                                                        'wrapperClass' => 'sm:col-span-2',
+                                                        'selectAttrs'  => 'data-ticket-visitor-field="category-id"',
+                                                        'variant'      => 'dark-outline',
+                                                    ] );
+                                                    ?>
+                                                <?php endif; ?>
+                                                <label class="flex flex-col gap-15 text-[1.2rem] leading-none tracking-[.04em]<?php echo $has_single_subcategory ? '' : ' mt-45'; ?>">
+                                                    <?php echo esc_html( com\theme::remove_accents( __( 'Όνομα', 'com-theme' ) ) ); ?><?php echo $category['requireFullName'] ? '*' : ''; ?>
+                                                    <input type="text" maxlength="80" data-ticket-visitor-field="first" <?php echo $category['requireFullName'] ? 'required' : ''; ?> class="h-[5.6rem] rounded-[.8rem] border border-white bg-transparent px-20 text-[2rem] font-normal normal-case tracking-normal text-ochre">
                                                 </label>
-                                                <label class="flex flex-col gap-10 text-[1.1rem] uppercase tracking-[.04em]">
-                                                    <?php esc_html_e( 'Όνομα', 'com-theme' ); ?><?php echo $category['requireFullName'] ? '*' : ''; ?>
-                                                    <input type="text" maxlength="80" data-ticket-visitor-field="first" <?php echo $category['requireFullName'] ? 'required' : ''; ?> class="h-[5.6rem] rounded-[.8rem] border border-white bg-transparent px-20 text-[1.6rem] font-normal normal-case tracking-normal text-ochre">
-                                                </label>
-                                                <label class="flex flex-col gap-10 text-[1.1rem] uppercase tracking-[.04em]">
-                                                    <?php esc_html_e( 'Επώνυμο', 'com-theme' ); ?><?php echo $category['requireFullName'] ? '*' : ''; ?>
-                                                    <input type="text" maxlength="80" data-ticket-visitor-field="last" <?php echo $category['requireFullName'] ? 'required' : ''; ?> class="h-[5.6rem] rounded-[.8rem] border border-white bg-transparent px-20 text-[1.6rem] font-normal normal-case tracking-normal text-ochre">
+                                                <label class="flex flex-col gap-15 text-[1.2rem] leading-none tracking-[.04em]<?php echo $has_single_subcategory ? '' : ' mt-45'; ?>">
+                                                    <?php echo esc_html( com\theme::remove_accents( __( 'Επώνυμο', 'com-theme' ) ) ); ?><?php echo $category['requireFullName'] ? '*' : ''; ?>
+                                                    <input type="text" maxlength="80" data-ticket-visitor-field="last" <?php echo $category['requireFullName'] ? 'required' : ''; ?> class="h-[5.6rem] rounded-[.8rem] border border-white bg-transparent px-20 text-[2rem] font-normal normal-case tracking-normal text-ochre">
                                                 </label>
                                             </div>
                                         </fieldset>
@@ -271,14 +327,26 @@ $ticket_config = [
                 </div>
             </div>
 
-            <aside class="relative overflow-hidden rounded-[1.5rem] bg-white text-blue lg:sticky lg:top-[16rem]" aria-label="<?php esc_attr_e( 'Σύνοψη εισιτηρίου', 'com-theme' ); ?>">
+            <aside class="relative overflow-hidden rounded-[1.5rem] bg-white text-blue lg:sticky lg:top-[16rem]" data-ticket-summary aria-label="<?php esc_attr_e( 'Σύνοψη εισιτηρίου', 'com-theme' ); ?>">
                 <div class="p-30 sm:p-60">
                     <p class="text-[1.4rem] font-bold text-blue-soft"><?php esc_html_e( 'ΕΙΣΙΤΗΡΙΟ', 'com-theme' ); ?></p>
                     <h2 class="mt-20 text-[2.4rem] font-bold leading-[1.2]"><a href="<?php echo esc_url( $ticket_permalink ); ?>"><?php echo esc_html( $ticket_title ); ?></a></h2>
                     <?php if ( $ticket_location ) : ?><p class="mt-10 text-[1.4rem] text-blue-soft"><?php echo esc_html( $ticket_location ); ?></p><?php endif; ?>
-                    <?php if ( $ticket_image_id ) : ?>
+                    <?php if ( $ticket_is_all_museums ) : ?>
+                        <div class="relative mt-20 aspect-[calc(360/201)] overflow-hidden rounded-[1rem]">
+                            <?php get_template_part( 'templates/parts/all-museums-art', null, [
+                                'label_classes' => 'absolute left-[2.8rem] top-[3.4rem] text-[4.4rem] font-light leading-[.895] text-ochre-light sm:text-[5.6rem]',
+                            ] ); ?>
+                        </div>
+                    <?php elseif ( $ticket_image_id ) : ?>
                         <div class="mt-20 aspect-[calc(360/201)] overflow-hidden rounded-[1rem]">
-                            <?php echo wp_get_attachment_image( $ticket_image_id, 'large', false, [ 'class' => 'size-full object-cover', 'alt' => $ticket_title ] ); ?>
+                            <?php get_template_part( 'templates/parts/image', null, [
+                                'id'       => $ticket_image_id,
+                                'size'     => 'large',
+                                'classes'  => 'size-full object-cover',
+                                'alt'      => $ticket_title,
+                                'parallax' => false,
+                            ] ); ?>
                         </div>
                     <?php endif; ?>
                     <dl class="mt-20 space-y-5 text-[1.4rem]">
@@ -299,7 +367,14 @@ $ticket_config = [
 
                     <div data-ticket-error class="mt-20 hidden rounded-[.8rem] bg-[#ff8686]/20 p-15 text-[1.2rem] leading-[1.4] text-[#a61919]" role="alert" aria-live="assertive"></div>
 
-                    <button type="submit" data-ticket-next class="mt-20 w-full rounded-[1rem] border border-blue px-30 py-20 text-[1.6rem] transition-colors hover:bg-blue hover:text-white disabled:cursor-not-allowed disabled:border-blue-soft disabled:text-blue-soft disabled:opacity-50 [&.is-purchase]:bg-blue [&.is-purchase]:text-white"><?php esc_html_e( 'Επόμενο', 'com-theme' ); ?></button>
+                    <button
+                        type="submit"
+                        data-ticket-next
+                        class="group/button relative mt-20 inline-flex w-full items-center justify-center rounded-[1rem] border border-blue px-30 py-20 text-[1.6rem] transition-colors hover:bg-blue hover:text-white disabled:cursor-not-allowed disabled:border-blue-soft disabled:text-blue-soft disabled:opacity-50 [&.is-purchase]:bg-blue [&.is-purchase]:text-white [&.loading]:cursor-wait [&.loading]:opacity-80 [&.loading_[data-button-label]]:opacity-0 [&.loading_[data-button-loader]]:opacity-100"
+                    >
+                        <span data-button-label class="transition-opacity"><?php esc_html_e( 'Επόμενο', 'com-theme' ); ?></span>
+                        <?php get_template_part( 'templates/parts/button/dots' ); ?>
+                    </button>
                 </div>
             </aside>
         </div>

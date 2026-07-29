@@ -7,7 +7,7 @@ foreach ( $modals as $post ){
 ?>
 <div data-module-modal="<?php echo $post->post_name; ?>" data-module-tabs class="fixed z-20 top-0 left-0 w-full h-full items-center overflow-y-scroll transition duration-500 opacity-0 pointer-events-none group modal [&.active]:opacity-100 [&.active]:pointer-events-auto">
     <div class="min-h-[100vh]" data-modal="close">
-        <div class="py-90 relative bg-brown bg-opacity-60 min-h-[100vh] flex items-center pointer-events-none">
+        <div class="py-90 relative bg-blue/30 min-h-[100vh] flex items-center pointer-events-none">
             <div class="w-full">
                 <div class="mx-1/12">
                     <div class="relative py-90 px-1/12 md:px-[11.3rem] bg-white max-w-[57.6rem] mx-auto items-center group-[.modal.active]:pointer-events-auto" data-modal="content">

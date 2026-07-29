@@ -52,12 +52,12 @@ class WPML_TF_Feedback implements IWPML_TF_Data_Object {
 	/**
 	 * WPML_Translation_Feedback constructor.
 	 *
-	 * @param array                                $data
-	 * @param WPML_TF_Backend_Document_Information $document_information
+	 * @param array                                     $data
+	 * @param WPML_TF_Backend_Document_Information|null $document_information
 	 */
 	public function __construct(
 		$data = array(),
-		WPML_TF_Backend_Document_Information $document_information = null
+		?WPML_TF_Backend_Document_Information $document_information = null
 	) {
 		$this->id            = array_key_exists( 'id', $data ) ? (int) $data['id'] : null;
 		$this->date_created  = array_key_exists( 'date_created', $data )
@@ -283,7 +283,7 @@ class WPML_TF_Feedback implements IWPML_TF_Data_Object {
 	}
 
 	/**
-	 * @param WPML_TF_Backend_Document_Information $document_information
+	 * @param WPML_TF_Backend_Document_Information|null $document_information
 	 */
 	public function set_document_information( WPML_TF_Backend_Document_Information $document_information ) {
 		$this->document_information = $document_information;

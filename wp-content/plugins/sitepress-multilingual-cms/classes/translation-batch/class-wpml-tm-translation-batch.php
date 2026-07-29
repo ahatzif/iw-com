@@ -1,6 +1,12 @@
 <?php
 
+use WPML\FP\Lst;
+
 class WPML_TM_Translation_Batch {
+
+	const HANDLE_EXISTING_LEAVE = 'leave';
+	const HANDLE_EXISTING_OVERRIDE = 'override';
+
 	/** @var WPML_TM_Translation_Batch_Element[] */
 	private $elements;
 
@@ -13,15 +19,25 @@ class WPML_TM_Translation_Batch {
 	/** @var DateTime */
 	private $deadline;
 
+	/** @var "auto"|"manual"|null */
+	private $translationMode = null;
+
+	/** @var array<string,string>|null */
+	private $tpBatchInfo;
+
+	/** @var string */
+	private $howToHandleExisting = self::HANDLE_EXISTING_LEAVE;
+
 	/**
 	 * @param WPML_TM_Translation_Batch_Element[] $elements
 	 * @param string                              $basket_name
 	 * @param array                               $translators
-	 * @param DateTime                            $deadline
+	 * @param DateTime|null                       $deadline
+	 * @param array<string,string>|null           $tpBatchInfo
 	 *
 	 * @throws InvalidArgumentException
 	 */
-	public function __construct( array $elements, $basket_name, array $translators, DateTime $deadline = null ) {
+	public function __construct( array $elements, $basket_name, array $translators, ?DateTime $deadline = null, $tpBatchInfo = null ) {
 		if ( empty( $elements ) ) {
 			throw new InvalidArgumentException( 'Batch elements cannot be empty' );
 		}
@@ -38,6 +54,7 @@ class WPML_TM_Translation_Batch {
 		$this->basket_name = (string) $basket_name;
 		$this->translators = $translators;
 		$this->deadline    = $deadline;
+		$this->tpBatchInfo = $tpBatchInfo;
 	}
 
 	/**
@@ -92,6 +109,11 @@ class WPML_TM_Translation_Batch {
 		return $this->deadline;
 	}
 
+	/** @return array<string,string>|null */
+	public function getTpBatchInfo() {
+		return $this->tpBatchInfo;
+	}
+
 	/**
 	 * @return array
 	 */
@@ -130,6 +152,60 @@ class WPML_TM_Translation_Batch {
 		return array(
 			'basket_name'   => $this->get_basket_name(),
 			'deadline_date' => $this->get_deadline() ? $this->get_deadline()->format( 'Y-m-d' ) : '',
+		);
+	}
+
+	/**
+	 * @return "auto"|"manual"|null
+	 */
+	public function getTranslationMode() {
+		return $this->translationMode;
+	}
+
+	/**
+	 * @param "auto"|"manual"|null $translationMode
+	 */
+	public function setTranslationMode( $translationMode ) {
+		$this->translationMode = Lst::includes( $translationMode, [ 'auto', 'manual' ] ) ? $translationMode : null;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getHowToHandleExisting() {
+		return $this->howToHandleExisting;
+	}
+
+	/**
+	 * @param string $howToHandleExisting
+	 */
+	public function setHowToHandleExisting( $howToHandleExisting ) {
+		$this->howToHandleExisting = $howToHandleExisting;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function toArray() {
+		$elements = [];
+		foreach ( $this->elements as $element ) {
+			$elements[] = [
+				'element_id'            => $element->get_element_id(),
+				'element_type'          => $element->get_element_type(),
+				'source_lang'           => $element->get_source_lang(),
+				'target_langs'          => $element->get_target_langs(),
+				'media_to_translations' => $element->get_media_to_translations(),
+			];
+		}
+
+		return array(
+			'elements'               => $elements,
+			'basket_name'            => $this->basket_name,
+			'translators'            => $this->translators,
+			'deadline'               => $this->deadline ? $this->deadline->format( 'Y-m-d H:i:s' ) : null,
+			'translation_mode'       => $this->translationMode,
+			'tp_batch_info'          => $this->tpBatchInfo,
+			'how_to_handle_existing' => $this->howToHandleExisting,
 		);
 	}
 }

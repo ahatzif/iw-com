@@ -1,16 +1,22 @@
 <?php
 
+use WPML\Element\API\Languages;
+use WPML\FP\Obj;
+use WPML\TM\API\ATE\CachedLanguageMappings;
+use WPML\TM\TranslationDashboard\FiltersStorage;
+use WPML\TM\TranslationDashboard\SentContentMessages;
+use WPML\Core\WP\App\Resources;
 use WPML\UIPage;
+use WPML\Media\Option;
+use function WPML\Container\make;
 
 /**
  * @author OnTheGo Systems
  */
 class WPML_TM_Scripts_Factory {
 	private $ate;
-	private $ams_api;
 	private $auth;
 	private $endpoints;
-	private $http;
 	private $strings;
 
 	public function init_hooks() {
@@ -25,23 +31,13 @@ class WPML_TM_Scripts_Factory {
 		$this->register_otgs_notices();
 
 		wp_register_script(
-			'wpml-tm-settings',
-			WPML_TM_URL . '/dist/js/settings/app.js',
-			array(),
-			WPML_TM_VERSION
-		);
-		wp_register_script(
 			'ate-translation-editor-classic',
 			WPML_TM_URL . '/dist/js/ate-translation-editor-classic/app.js',
-			array(),
-			false,
+			array( Resources::vendorAsDependency() ),
+			ICL_SITEPRESS_SCRIPT_VERSION,
 			true
 		);
 
-		if ( WPML_TM_Page::is_tm_dashboard() ) {
-			$this->localize_script( 'wpml-tm-dashboard' );
-			wp_enqueue_script( 'wpml-tm-dashboard' );
-		}
 		if (
 			WPML_TM_Page::is_tm_translators()
 			|| UIPage::isTroubleshooting( $_GET )
@@ -54,8 +50,12 @@ class WPML_TM_Scripts_Factory {
 		}
 		if ( WPML_TM_Page::is_settings() ) {
 			wp_enqueue_style( 'otgs-notices' );
-			$this->localize_script( 'wpml-settings-ui' );
+			$this->localize_script( 'wpml-settings-ui', [
+				'shouldHandleMediaAuto' => Option::shouldHandleMediaAuto() ? "1" : "0",
+			] );
 			$this->create_ate()->init_hooks();
+			wp_enqueue_script( 'wpml-tooltip' );
+			wp_enqueue_style( 'wpml-tooltip' );
 		}
 
 		if ( WPML_TM_Page::is_translation_queue() && WPML_TM_ATE_Status::is_enabled() ) {
@@ -66,7 +66,7 @@ class WPML_TM_Scripts_Factory {
 		}
 
 		if ( WPML_TM_Page::is_dashboard() ) {
-			$this->load_pick_up_box_scripts();
+			$this->load_notices_scripts_on_tm_dashboard();
 		}
 
 		if ( WPML_TM_Page::is_settings() ) {
@@ -74,7 +74,7 @@ class WPML_TM_Scripts_Factory {
 				'wpml-tm-multilingual-content-setup',
 				WPML_TM_URL . '/res/css/multilingual-content-setup.css',
 				array(),
-				WPML_TM_VERSION
+				ICL_SITEPRESS_SCRIPT_VERSION
 			);
 		}
 
@@ -83,75 +83,21 @@ class WPML_TM_Scripts_Factory {
 				'wpml-tm-translation-notifications',
 				WPML_TM_URL . '/res/css/translation-notifications.css',
 				array(),
-				WPML_TM_VERSION
+				ICL_SITEPRESS_SCRIPT_VERSION
 			);
 		}
 	}
 
-	private function load_pick_up_box_scripts() {
+	private function load_notices_scripts_on_tm_dashboard() {
+		// Since WPML 4.7, the old TM scripts are no longer needed.
+		// However, we still need Ant Design framework and otgs-notices CSS for styling.
+
+		// TODO:
+		// - Refactor the dashboard CSS to remove these dependencies.
+		// - Remove translationDashboard scripts once the WPML > TM > Jobs page migration is complete.
 		wp_enqueue_style( 'otgs-notices' );
-
-		wp_register_script(
-			'wpml-tm-dashboard',
-			WPML_TM_URL . '/dist/js/translationDashboard/app.js',
-			array(),
-			false,
-			true
-		);
-
-		global $iclTranslationManagement;
-
-		$this->localize_script(
-			'wpml-tm-dashboard',
-			array(
-				'strings'     => array(
-					'numberOfTranslationStringsSingle' => __( '%d translation job', 'wpml-translation-management' ),
-					'numberOfTranslationStringsMulti'  => __( '%d translation jobs', 'wpml-translation-management' ),
-					'stringsSentToTranslationSingle'   => __(
-						'%s has been sent to remote translators',
-						'wpml-translation-management'
-					),
-					'stringsSentToTranslationMulti'    => __(
-						'%s have been sent to remote translators',
-						'wpml-translation-management'
-					),
-
-					'buttonText'                       => __( 'Check status and get translations', 'wpml-translation-management' ),
-					'progressText'                     => __(
-						"Checking translation jobs status. Please don't close this page!",
-						'wpml-translation-management'
-					),
-					'progressJobsCount'                => __( 'You are downloading %d jobs', 'wpml-translation-management' ),
-
-					'statusChecked'                    => __( 'Status checked:', 'wpml-translation-management' ),
-					'dismissNotice'                    => __( 'Dismiss this notice.', 'wpml-translation-management' ),
-					'noTranslationsDownloaded'         => __(
-						'none of your translation jobs have been completed',
-						'wpml-translation-management'
-					),
-					'translationsDownloaded'           => __(
-						'%d translation jobs have been finished and applied.',
-						'wpml-translation-management'
-					),
-
-					'errorMessage'                     => __(
-						'A communication error has appeared. Please wait a few minutes and try again.',
-						'wpml-translation-management'
-					),
-
-					'lastCheck'                        => __( 'Last check: %s', 'wpml-translation-management' ),
-					'never'                            => __( 'never', 'wpml-translation-management' ),
-				),
-				'debug'       => defined( 'WPML_POLLING_BOX_DEBUG_MODE' ) && WPML_POLLING_BOX_DEBUG_MODE,
-				'statusIcons' => array(
-					'completed'   => $iclTranslationManagement->status2icon_class( ICL_TM_COMPLETE, false ),
-					'canceled'    => $iclTranslationManagement->status2icon_class( ICL_TM_NOT_TRANSLATED, false ),
-					'progress'    => $iclTranslationManagement->status2icon_class( ICL_TM_IN_PROGRESS, false ),
-					'needsUpdate' => $iclTranslationManagement->status2icon_class( ICL_TM_NEEDS_UPDATE, false ),
-				),
-			)
-		);
-		wp_enqueue_script( 'wpml-tm-dashboard' );
+		$enqueueApp = Resources::enqueueApp( 'translationDashboard' );
+		$enqueueApp();
 	}
 
 	public function register_otgs_notices() {
@@ -175,10 +121,11 @@ class WPML_TM_Scripts_Factory {
 
 	public function build_localize_script_data($additional_data = array()  ) {
 		$data = array(
-			'hasATEEnabled' => WPML_TM_ATE_Status::is_enabled(),
-			'restUrl'       => untrailingslashit( rest_url() ),
-			'restNonce'     => wp_create_nonce( 'wp_rest' ),
-			'ate'           => $this->create_ate()
+			'hasATEEnabled'      => WPML_TM_ATE_Status::is_enabled(),
+			'restUrl'            => untrailingslashit( $this->getRestUrl() ),
+			'restNonce'          => wp_create_nonce( 'wp_rest' ),
+			'syncJobStatesNonce' => wp_create_nonce( 'sync-job-states' ),
+			'ate'                => $this->create_ate()
 			                        ->get_script_data(),
 			'currentUser'   => null,
 		);
@@ -187,7 +134,20 @@ class WPML_TM_Scripts_Factory {
 
 		$current_user = wp_get_current_user();
 		if ( $current_user && $current_user->ID > 0 ) {
-			$data['currentUser'] = $current_user;
+			$filtered_current_user      = clone $current_user;
+			$filtered_current_user_data = new \stdClass();
+			$blacklistedProps           = [ 'user_pass' ];
+
+			foreach ( $current_user->data as $prop => $value ) {
+				if ( in_array( $prop, $blacklistedProps ) ) {
+					continue;
+				}
+
+				$filtered_current_user_data->$prop = $value;
+			}
+			$filtered_current_user->data = $filtered_current_user_data;
+
+			$data['currentUser'] = $filtered_current_user;
 		}
 
 		return $data;
@@ -273,5 +233,16 @@ class WPML_TM_Scripts_Factory {
 
 		return $this->create_ate_strings()
 					->get_status();
+	}
+
+	/**
+	 * @return string
+	 */
+	private function getRestUrl(): string {
+		$restUrl = get_rest_url();
+		if ( get_option( 'permalink_structure' ) === '' ) {
+			$restUrl = add_query_arg( 'rest_route', '/', home_url( '/' ) );
+		}
+		return $restUrl;
 	}
 }

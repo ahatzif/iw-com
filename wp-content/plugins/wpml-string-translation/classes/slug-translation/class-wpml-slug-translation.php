@@ -3,6 +3,7 @@
 class WPML_Slug_Translation implements IWPML_Action {
 
 	const STRING_DOMAIN = 'WordPress';
+	const CACHE_GROUP   = 'wpml-string-slug';
 
 	/** @var array $post_link_cache */
 	private $post_link_cache = array();
@@ -49,12 +50,12 @@ class WPML_Slug_Translation implements IWPML_Action {
 			add_filter( 'post_type_link', array( $this, 'post_type_link_filter' ), apply_filters( 'wpml_post_type_link_priority', 1 ), 4 );
 			add_filter( 'pre_term_link', array( $this->term_link_filter, 'replace_slug_in_termlink' ), 1, 2 ); // high priority
 			add_filter( 'edit_post', array( $this, 'clear_post_link_cache' ), 1, 2 );
-			add_filter( 'query_vars', array( $this, 'add_cpt_names' ), 1, 2 );
-			add_filter( 'pre_get_posts', array( $this, 'filter_pre_get_posts' ), - 1000, 2 );
+			add_filter( 'query_vars', array( $this, 'add_cpt_names' ), 1, 1 );
+			add_filter( 'pre_get_posts', array( $this, 'filter_pre_get_posts' ), - 1000, 1 );
 		}
 
 		if ( is_admin() ) {
-			add_action( 'icl_ajx_custom_call', array( $this, 'gui_save_options' ), 10, 2 );
+			add_action( 'icl_ajx_custom_call', array( $this, 'gui_save_options' ), 10, 1 );
 			add_action( 'wp_loaded', array( $this, 'maybe_migrate_string_name' ), 10, 0 );
 		}
 	}
@@ -78,9 +79,9 @@ class WPML_Slug_Translation implements IWPML_Action {
 	 *
 	 * @deprecated use `WPML_ST_Slug::filter_value` directly of the filter hook `wpml_get_translated_slug`
 	 *
-	 * @param string      $slug_value
-	 * @param string      $post_type
-	 * @param string|bool $language
+	 * @param string|false $slug_value
+	 * @param string       $post_type
+	 * @param string|bool  $language
 	 *
 	 * @return string
 	 */
@@ -122,9 +123,19 @@ class WPML_Slug_Translation implements IWPML_Action {
 		}
 
 		if ( ! $this->sitepress->is_translated_post_type( $post->post_type )
-			 || ! ( $ld = $this->sitepress->get_element_language_details( $post->ID, 'post_' . $post->post_type ) )
+			|| ! ( $ld = $this->sitepress->get_element_language_details( $post->ID, 'post_' . $post->post_type ) )
 		) {
 			return $post_link;
+		}
+
+		$current_language = $this->sitepress->get_current_language();
+		$default_language = $this->sitepress->get_default_language();
+		if (
+			$current_language !== $default_language &&
+			$this->sitepress->is_display_as_translated_post_type( $post->post_type ) &&
+			null === $ld->source_language_code // Apply to original post only.
+		) {
+			$ld->language_code = $current_language;
 		}
 
 		$ld = apply_filters( 'wpml_st_post_type_link_filter_language_details', $ld );
@@ -206,9 +217,9 @@ class WPML_Slug_Translation implements IWPML_Action {
 
 		if ( isset( $post_slug_translation_settings['types'] ) ) {
 			$types     = $post_slug_translation_settings['types'];
-			$cache_key = 'WPML_Slug_Translation::get_all_slug_translations' . md5( json_encode( $types ) );
+			$cache_key = 'WPML_Slug_Translation::get_all_slug_translations' . md5( (string) json_encode( $types ) );
 
-			$slug_translations = wp_cache_get( $cache_key );
+			$slug_translations = wp_cache_get( $cache_key, self::CACHE_GROUP );
 
 			if ( ! is_array( $slug_translations ) ) {
 				$slug_translations = array();
@@ -234,7 +245,7 @@ class WPML_Slug_Translation implements IWPML_Action {
 					}
 				}
 
-				wp_cache_set( $cache_key, $slug_translations );
+				wp_cache_set( $cache_key, $slug_translations, self::CACHE_GROUP );
 			}
 		}
 
@@ -295,7 +306,7 @@ class WPML_Slug_Translation implements IWPML_Action {
 				global $sitepress;
 				$is_enabled = intval( ! empty( $_POST['icl_slug_translation_on'] ) );
 				$settings   = new WPML_ST_Post_Slug_Translation_Settings( $sitepress );
-				$settings->set_enabled( $is_enabled );
+				$settings->set_enabled( (bool) $is_enabled );
 				echo '1|' . $is_enabled;
 				break;
 		}
@@ -336,6 +347,7 @@ class WPML_Slug_Translation implements IWPML_Action {
 
 		if ( ! isset( $slug_settings['string_name_migrated'] ) ) {
 
+			/** @var string[] $queryable_post_types */
 			$queryable_post_types = get_post_types( array( 'publicly_queryable' => true ) );
 
 			foreach ( $queryable_post_types as $type ) {

@@ -1,5 +1,7 @@
 <?php
 
+use WPML\FP\Str;
+
 class WPML_String_Scanner {
 
 	const DEFAULT_DOMAIN = 'default';
@@ -45,16 +47,12 @@ class WPML_String_Scanner {
 	 */
 	private $strings_mapper;
 
-	/** @var WPML_ST_File_Hashing */
-	protected $file_hashing;
-
 	/**
 	 * WPML_String_Scanner constructor.
 	 *
 	 * @param WP_Filesystem_Base   $wp_filesystem
-	 * @param WPML_ST_File_Hashing $file_hashing
 	 */
-	public function __construct( WP_Filesystem_Base $wp_filesystem, WPML_ST_File_Hashing $file_hashing ) {
+	public function __construct( WP_Filesystem_Base $wp_filesystem ) {
 		global $wpdb;
 
 		$this->domains            = array();
@@ -66,7 +64,6 @@ class WPML_String_Scanner {
 
 		$this->default_domain = 'default';
 		$this->wp_filesystem  = $wp_filesystem;
-		$this->file_hashing   = $file_hashing;
 	}
 
 	protected function scan_starting( $scanning ) {
@@ -75,18 +72,19 @@ class WPML_String_Scanner {
 		$this->default_domain                             = 'default';
 	}
 
-	protected function scan_response() {
+	protected function scan_response( $stats ) {
 		global $__icl_registered_strings, $sitepress;
 
 		$result = array(
-			'scan_successful_message' => esc_html__( 'Scan successful! WPML found %s strings.', 'wpml-string-translation' ),
+			'scan_successful_message' => esc_html__( 'Scan successful: WPML found %s strings.', 'wpml-string-translation' ),
 			'files_processed_message' => esc_html__( 'The following files were processed:', 'wpml-string-translation' ),
 			'files_processed'         => $this->get_scanned_files(),
 			'strings_found'           => is_array( $__icl_registered_strings ) ? count( $__icl_registered_strings ) : 0,
+			'stats'                   => $stats,
 		);
 
 		if ( $result['strings_found'] ) {
-			$result['scan_successful_message'] .= __( ' They were added to the string translation table.', 'wpml-string-translation' );
+			$result['scan_successful_message'] .= __( ' They were added to the translations table.', 'wpml-string-translation' );
 		}
 
 		$sitepress->get_wp_api()->wp_send_json_success( $result );
@@ -121,8 +119,9 @@ class WPML_String_Scanner {
 	/**
 	 * Get list of files under directory.
 	 *
-	 * @param  string $path       Directory to parse.
-	 * @param  object $filesystem WP_Filesystem object
+	 * @param  string             $path       Directory to parse.
+	 * @param  WP_Filesystem_Base $filesystem WP_Filesystem object
+	 *
 	 * @return array
 	 */
 	private function extract_files( $path, $filesystem ) {
@@ -226,20 +225,22 @@ class WPML_String_Scanner {
 			'%d'
 		);
 
+		// Action called after string context is fixed/updated
+		do_action( 'wpml_st_string_updated' );
 	}
 
 	protected function set_stats( $key, $item ) {
-		$string_settings = apply_filters( 'wpml_get_setting', false, 'st' );
+		$stats = [];
 
 		foreach ( $this->get_domains_found() as $name => $count ) {
-			$old_count = isset( $string_settings[ $key ][ $item ][ $name ] ) ?
-				$string_settings[ $key ][ $item ][ $name ] :
-				0;
-
-			$string_settings[ $key ][ $item ][ $name ] = $old_count + $count;
+			$stats[ $name ] = [
+				'count'           => $count,
+				'pluginOrThemeId' => $item,
+				'settingsKey'     => $key,
+			];
 		}
 
-		do_action( 'wpml_set_setting', 'st', $string_settings, true );
+		return $stats;
 	}
 
 	public function store_results( $string, $domain, $_gettext_context, $file, $line ) {
@@ -257,12 +258,14 @@ class WPML_String_Scanner {
 		if ( ! in_array( $domain, $this->domains ) ) {
 			$this->domains[] = $domain;
 
-			// clear existing entries (both source and page type)
+			// Remove existing entries but not overwrite autoregistered ones.
 			$wpdb->query(
 				$wpdb->prepare(
 					"DELETE FROM {$wpdb->prefix}icl_string_positions WHERE string_id IN
-                (SELECT id FROM {$wpdb->prefix}icl_strings WHERE context = %s)",
-					$domain
+                (SELECT id FROM {$wpdb->prefix}icl_strings WHERE context = %s)
+                AND kind = %s",
+					$domain,
+					ICL_STRING_TRANSLATION_STRING_TRACKING_TYPE_SOURCE
 				)
 			);
 		}
@@ -270,8 +273,8 @@ class WPML_String_Scanner {
 		$string = str_replace( '\n', "\n", $string );
 		$string = str_replace( array( '\"', "\\'" ), array( '"', "'" ), $string );
 		// replace extra backslashes added by _potx_process_file
+		/** @var string $string */
 		$string = str_replace( array( '\\\\' ), array( '\\' ), $string );
-		$string = stripcslashes( $string );
 
 		global $__icl_registered_strings;
 
@@ -350,6 +353,8 @@ class WPML_String_Scanner {
 					// get page url
 					$https    = isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] == 'on' ? 's' : '';
 					$position = 'http' . $https . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+					// This is handled now in /StringTranslation autoregister.
+					return;
 				} else {
 					$file     = $this->get_file_name_converter()->transform_realpath_to_reference( $file );
 					$position = $file . '::' . $line;
@@ -412,6 +417,9 @@ class WPML_String_Scanner {
 				// We don't have any translations so we can delete the string.
 
 				$wpdb->delete( $wpdb->prefix . 'icl_strings', array( 'id' => $string->id ), array( '%d' ) );
+
+				// Action called after string is deleted form ic_strings table
+				do_action( 'wpml_st_string_unregistered' );
 			} else {
 				// check if we have a new string in the right context
 
@@ -448,8 +456,8 @@ class WPML_String_Scanner {
 						foreach ( $new_translations as $new_translation ) {
 							foreach ( $old_translations as $index => $old_translation ) {
 								if ( $new_translation->language == $old_translation->language &&
-										$new_translation->status == $old_translation->status &&
-										$new_translation->value == $old_translation->value ) {
+									$new_translation->status == $old_translation->status &&
+									$new_translation->value == $old_translation->value ) {
 									unset( $old_translations[ $index ] );
 								}
 							}
@@ -458,6 +466,9 @@ class WPML_String_Scanner {
 							// We don't have any old translations that are not in the new strings so we can delete the string.
 
 							$wpdb->delete( $wpdb->prefix . 'icl_strings', array( 'id' => $string->id ), array( '%d' ) );
+
+							// Action called after string is deleted from icl_strings table
+							do_action( 'wpml_st_string_unregistered' );
 							break;
 						}
 					}
@@ -469,6 +480,7 @@ class WPML_String_Scanner {
 		// This way the update message will no longer show.
 
 		$obsolete_context = str_replace( 'plugin ', '', $old_context );
+		/** @var string $obsolete_context */
 		$obsolete_context = str_replace( 'theme ', '', $obsolete_context );
 		$obsolete_context = $obsolete_context . ' (obsolete)';
 
@@ -494,6 +506,9 @@ class WPML_String_Scanner {
 					$obsolete_context
 				)
 			);
+
+			// Action called after string is updated.
+			do_action( 'wpml_st_string_updated' );
 		}
 
 	}
@@ -515,7 +530,7 @@ class WPML_String_Scanner {
 				$found = false;
 				foreach ( $new_translations as $new_translation ) {
 					if ( $new_translation->string_id == $old_translation->string_id &&
-							$new_translation->language == $old_translation->language ) {
+						$new_translation->language == $old_translation->language ) {
 						$found = true;
 						break;
 					}
@@ -700,5 +715,13 @@ class WPML_String_Scanner {
 		$path = $this->get_wpml_file()->fix_dir_separator( $path );
 		return $path;
 	}
-}
 
+	/**
+	 * @param string $filepath
+	 *
+	 * @return bool
+	 */
+	protected function is_js_file( $filepath ) {
+		return Str::endsWith( '.js', $filepath );
+	}
+}

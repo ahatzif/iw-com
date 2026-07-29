@@ -34,10 +34,8 @@ class Hooks implements \IWPML_Frontend_Action, \IWPML_Backend_Action, \IWPML_DIC
 	 * This applies only on post translations.
 	 */
 	public function translateMedias() {
-		if ( defined( 'WPML_MEDIA_VERSION' ) ) {
-			foreach( $this->pbIntegration->get_save_post_queue() as $post ) {
-				$this->pbIntegration->translate_media( $post );
-			}
+		foreach( $this->pbIntegration->get_save_post_queue() as $post ) {
+			$this->pbIntegration->translate_media( $post );
 		}
 	}
 }

@@ -43,7 +43,7 @@ export default class extends module {
         this.baseTotalMinTickets = this.toNumber(this.el.dataset.totalMinTickets);
         this.totalMinTickets = this.baseTotalMinTickets;
         // Translatable error message template (use "{min}" placeholder)
-        this.minTicketsErrorTemplate = this.el.dataset.minTicketsError || 'Πρέπει να επιλέξετε τουλάχιστον {min} εισιτήρια.';
+        this.minTicketsErrorTemplate = this.el.dataset.minTicketsError || '';
         this.inited = false;
     }
 

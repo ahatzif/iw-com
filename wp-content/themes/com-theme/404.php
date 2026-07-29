@@ -1,40 +1,64 @@
 <?php
-function hide_breadcrumb_404()
-{
-    return false;
+/**
+ * The 404 page has two art-directed versions for review:
+ * - ?404-version=history (default)
+ * - ?404-version=playful
+ */
+
+function com_theme_404_hide_breadcrumb(): bool {
+	return false;
 }
-add_filter('show_breadcrumb', 'hide_breadcrumb_404');
-add_filter('header_margin', function () {
-    return false;
-});
-get_header();
-remove_filter('show_breadcrumb', 'hide_breadcrumb_404');
-$background = get_field('404_background', 'options');
 
+function com_theme_404_remove_header_margin(): bool {
+	return false;
+}
 
-?>
+$requested_version = isset( $_GET['404-version'] )
+	? sanitize_key( wp_unslash( $_GET['404-version'] ) )
+	: 'history';
+$version = in_array( $requested_version, [ 'history', 'playful' ], true )
+	? $requested_version
+	: 'history';
+$is_history = $version === 'history';
 
+add_filter( 'show_breadcrumb', 'com_theme_404_hide_breadcrumb' );
+add_filter( 'header_margin', 'com_theme_404_remove_header_margin' );
+get_header( null, [
+	'header_theme'    => $is_history ? 'light' : 'blue',
+	'page_background' => $is_history ? 'blue' : 'ochre',
+	'barba_namespace' => 'page-404',
+	'active_nav'      => '',
+] );
+remove_filter( 'show_breadcrumb', 'com_theme_404_hide_breadcrumb' );
+remove_filter( 'header_margin', 'com_theme_404_remove_header_margin' );
 
-<div class="h-screen relative flex items-center" data-module-vh>
-    <?php get_template_part('templates/parts/image', false, ['id' => $background['ID'], 'size' => 'full', 'classes' => 'object-cover absolute top-0 left-0 w-full h-full hidden md:block']); ?>
-    <?php get_template_part('templates/parts/image', false, ['id' => $background['original_image']['ID'], 'size' => 'com-theme-full-mobile', 'classes' => 'object-cover absolute top-0 left-0 w-full h-full md:hidden']); ?>
-    <div class="absolute inset-0 bg-black" style="opacity: <?php echo get_field('404_overlay', 'options') / 100; ?>;"></div>
-    <div class="absolute inset-0">
-        <div class="h-[calc(var(--header-height))] mb-[4.2rem]"></div>
-        <?php get_template_part('templates/parts/breadcrumbs', false, []); ?>
-    </div>
-    <div class="w-full relative">
-        <div class="page-wrapper text-center space-y-40">
-            <h1 class="text-white text-titles-extra-bold text-center"><?php the_field('404_title', 'options'); ?></h1>
-            <?php get_template_part('templates/parts/button', null, [
-                'tag' => 'a',
-                'link' => home_url('/'),
-                'outline' => true,
-                'color' => 'white',
-                'text' => get_field('404_button_text', 'options'),
-            ]); ?>
-        </div>
-    </div>
-</div>
+$background = (array) com_theme_option( '404_background', [] );
+$background_id = absint( $background['ID'] ?? 0 );
+$overlay_value = com_theme_option( '404_overlay', 0 );
+$overlay = min( 100, max( 0, is_numeric( $overlay_value ) ? (float) $overlay_value : 0 ) );
+$custom_title = trim( (string) com_theme_option( '404_title', '' ) );
+$custom_button_text = trim( (string) com_theme_option( '404_button_text', '' ) );
 
-<?php get_footer();
+$defaults = [
+	'history' => [
+		'title'       => __( 'Κάποιες διαδρομές χάνονται. Η μνήμη, ποτέ.', 'com-theme' ),
+		'description' => __( 'Η σελίδα που αναζητάτε δεν υπάρχει — η ιστορία του Μεσολογγίου όμως είναι παντού γύρω μας.', 'com-theme' ),
+		'button'      => __( 'Επιστροφή στην αρχική', 'com-theme' ),
+	],
+	'playful' => [
+		'title'       => __( 'Χμ… μάλλον πήρατε λάθος δρόμο.', 'com-theme' ),
+		'description' => __( 'Η σελίδα έφυγε βόλτα προς τη λιμνοθάλασσα. Εσείς μπορείτε να γυρίσετε στην αρχική και να συνεχίσετε την εξερεύνηση.', 'com-theme' ),
+		'button'      => __( 'Πίσω στον σωστό δρόμο', 'com-theme' ),
+	],
+];
+
+$view_args = [
+	'title'          => $custom_title !== '' ? $custom_title : $defaults[ $version ]['title'],
+	'description'    => $defaults[ $version ]['description'],
+	'button_text'    => $custom_button_text !== '' ? $custom_button_text : $defaults[ $version ]['button'],
+	'background_id'  => $background_id,
+	'overlay_opacity' => $overlay / 100,
+];
+
+get_template_part( 'templates/com/404/' . $version, null, $view_args );
+get_footer();

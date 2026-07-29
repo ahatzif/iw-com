@@ -82,7 +82,14 @@ $carousel_options = wp_json_encode( [
 <section class="<?php echo esc_attr( $block_classes ); ?> relative overflow-hidden lg:h-[82rem]" aria-labelledby="<?php echo esc_attr( $section_title_id ); ?>">
 	<div class="absolute inset-0 mix-blend-overlay opacity-[.12]" aria-hidden="true">
 		<?php if ( $background_id ) : ?>
-			<?php echo wp_get_attachment_image( $background_id, 'full', false, [ 'class' => 'absolute -left-[10.59%] -top-[10.6%] h-[134.05%] w-[110.59%] max-w-none object-cover' ] ); ?>
+			<?php get_template_part( 'templates/parts/image', null, [
+				'id'       => $background_id,
+				'size'     => 'full',
+				'classes'  => 'absolute -left-[10.59%] -top-[10.6%] h-[134.05%] w-[110.59%] max-w-none object-cover',
+				'alt'      => '',
+				'lazy'     => false,
+				'parallax' => false,
+			] ); ?>
 		<?php else : ?>
 			<img src="<?php echo esc_url( get_theme_file_uri( '/assets/images/com/museums-hero-background.png' ) ); ?>" alt="" class="absolute -left-[10.59%] -top-[10.6%] h-[134.05%] w-[110.59%] max-w-none object-cover">
 		<?php endif; ?>
@@ -93,7 +100,7 @@ $carousel_options = wp_json_encode( [
 			<div class="flex w-full flex-col gap-60 lg:absolute lg:left-0 lg:top-[16rem] lg:w-[54.2rem]">
 				<div class="flex flex-col gap-20">
 					<?php if ( $eyebrow ) : ?>
-						<p class="text-[1rem] font-medium uppercase leading-none tracking-[.18em] text-current"><?php echo esc_html( $eyebrow ); ?></p>
+						<p class="text-[1rem] font-medium leading-none tracking-[.18em] text-current"><?php echo esc_html( com\theme::remove_accents( $eyebrow ) ); ?></p>
 					<?php endif; ?>
 					<h1 id="<?php echo esc_attr( $section_title_id ); ?>" class="text-[4.6rem] font-medium leading-[1.05] sm:text-[5.2rem] lg:text-[6rem] lg:leading-[7rem]"><?php echo nl2br( esc_html( $title ) ); ?></h1>
 					<?php if ( $text ) : ?>
@@ -123,7 +130,14 @@ $carousel_options = wp_json_encode( [
 							<?php foreach ( $slides as $index => $slide ) : ?>
 								<figure class="h-full min-w-0 flex-[0_0_100%]" role="group" aria-roledescription="slide" aria-label="<?php echo esc_attr( sprintf( __( '%1$d από %2$d', 'com-theme' ), $index + 1, count( $slides ) ) ); ?>">
 									<a href="<?php echo esc_url( $slide['url'] ); ?>" class="block size-full">
-										<?php echo wp_get_attachment_image( $slide['id'], 'large', false, [ 'class' => 'pointer-events-none size-full object-cover', 'alt' => $slide['title'] ] ); ?>
+										<?php get_template_part( 'templates/parts/image', null, [
+											'id'       => $slide['id'],
+											'size'     => 'large',
+											'classes'  => 'pointer-events-none size-full object-cover',
+											'alt'      => $slide['title'],
+											'lazy'     => 0 !== $index,
+											'parallax' => false,
+										] ); ?>
 									</a>
 								</figure>
 							<?php endforeach; ?>

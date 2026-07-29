@@ -27,20 +27,31 @@ class WPML_TF_Data_Object_Storage {
 	 * @return IWPML_TF_Data_Object|null
 	 */
 	public function get( $id ) {
-		$result    = null;
 		$post_data = array();
 
 		$post_data['post'] = get_post( $id );
 
-		if ( $post_data['post'] ) {
-			foreach ( $this->post_convert->get_meta_fields() as $meta_field ) {
-				$post_data['metadata'][ $meta_field ] = get_post_meta( $id, self::META_PREFIX . $meta_field, true );
-			}
+		if(!$post_data['post'])
+			return null;
 
-			$result =  $this->post_convert->to_object( $post_data );
+		if(!$this->is_expected_post_type($post_data['post']))
+			return null;
+
+		foreach ( $this->post_convert->get_meta_fields() as $meta_field ) {
+			$post_data['metadata'][ $meta_field ] = get_post_meta( $id, self::META_PREFIX . $meta_field, true );
 		}
 
-		return $result;
+		return  $this->post_convert->to_object( $post_data );
+
+	}
+
+	/**
+	 * @param WP_Post $post_type
+	 *
+	 * @return bool
+	 */
+	private function is_expected_post_type ($post){
+		return $post->post_type  === $this->post_convert->get_post_type();
 	}
 
 	/**
@@ -51,6 +62,7 @@ class WPML_TF_Data_Object_Storage {
 	public function persist( IWPML_TF_Data_Object $data_object ) {
 		$post_data = $this->post_convert->to_post_data( $data_object );
 
+		/** @var int|WP_Error $updated_id */
 		$updated_id = wp_insert_post( $post_data['post'] );
 
 		if ( $updated_id && ! is_wp_error( $updated_id ) ) {

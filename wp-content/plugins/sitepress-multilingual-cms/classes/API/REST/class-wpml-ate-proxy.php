@@ -2,6 +2,8 @@
 
 namespace WPML\TM\ATE;
 
+use WPML\LIB\WP\User;
+
 class Proxy extends \WPML_REST_Base {
 	/**
 	 * @var \WPML_TM_ATE_AMS_Endpoints
@@ -123,7 +125,7 @@ class Proxy extends \WPML_REST_Base {
 		if ( 200 === $status_code ) {
 			header( "{$protocol} {$status_code} {$status_message}" );
 		} else {
-			header( "Status: ${status_code} ${status_message}" );
+			header( "Status: {$status_code} {$status_message}" );
 		}
 		header( "Content-Type: {$content_type}" );
 
@@ -140,7 +142,7 @@ class Proxy extends \WPML_REST_Base {
 	 * @return string[]|string
 	 */
 	public function get_allowed_capabilities( \WP_REST_Request $request ) {
-		return [ \WPML_Manage_Translations_Role::CAPABILITY, 'manage_options' ];
+		return [ User::CAP_MANAGE_TRANSLATIONS, User::CAP_ADMINISTRATOR ];
 	}
 
 	/**

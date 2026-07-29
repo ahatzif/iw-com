@@ -42,6 +42,9 @@ class WPML_TM_Admin_Sections {
 				'callback'         => $section->get_callback(),
 				'order'            => $section->get_order(),
 			];
+			if ( method_exists( $section, 'get_description' ) ) {
+				$this->tab_items[ $section->get_slug() ]['description'] = $section->get_description();
+			}
 			add_action( 'admin_enqueue_scripts', [ $section, 'admin_enqueue_scripts' ] );
 		}
 	}

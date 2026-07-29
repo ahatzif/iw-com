@@ -1,6 +1,7 @@
 <?php
 
 use WPML\API\Sanitize;
+use WPML\Core\Component\PostHog\Application\Service\Event\EventInstanceService;
 
 class WPML_Post_Edit_Ajax {
 	const AJAX_ACTION_SWITCH_POST_LANGUAGE = 'wpml_switch_post_language';
@@ -36,18 +37,17 @@ class WPML_Post_Edit_Ajax {
 
 		$new_term_object = self::save_term_ajax( $sitepress, $lang, $taxonomy, $slug, $name, $trid, $description, $meta_data );
 		$sitepress->get_wp_api()->wp_send_json_success( $new_term_object );
-
 	}
 
 	/**
-	 * @param \SitePress          $sitepress
-	 * @param string              $lang
-	 * @param string              $taxonomy
-	 * @param string              $slug
-	 * @param string              $name
-	 * @param int                 $trid
-	 * @param string              $description
-	 * @param array<string,mixed> $meta_data
+	 * @param \SitePress           $sitepress
+	 * @param ?string|false        $lang
+	 * @param ?string|false        $taxonomy
+	 * @param ?string|false        $slug
+	 * @param ?string|false        $name
+	 * @param ?int|false           $trid
+	 * @param ?string              $description
+	 * @param ?array<string,mixed> $meta_data
 	 *
 	 * @return \WP_Term|false
 	 */
@@ -94,6 +94,15 @@ class WPML_Post_Edit_Ajax {
 				}
 
 				WPML_Terms_Translations::icl_save_term_translation_action( $taxonomy, $res );
+
+				// Capture PostHog event for taxonomy term translation
+				self::capture_taxonomy_term_translation_event( $sitepress, $taxonomy, $lang, $trid, $res, $name, $slug, $description );
+
+				// Automatic sync term hierarchy on save.
+				$term_hierarchy_sync = wpml_get_hierarchy_sync_helper( 'term' );
+				if ( is_taxonomy_hierarchical( $taxonomy ) && $term_hierarchy_sync->is_need_sync( $taxonomy, false, $res['term_id'] ) ) {
+					$term_hierarchy_sync->sync_element_hierarchy( $taxonomy, false, $res['term_id'] );
+				}
 			}
 		}
 
@@ -263,6 +272,8 @@ class WPML_Post_Edit_Ajax {
 
 				$result = $to;
 			}
+
+			\WPML\LIB\WP\Cache::clearMemoizedFunction( 'get_source_language_by_trid', (int) $trid );
 		}
 
 		wp_send_json_success( $result );
@@ -270,6 +281,12 @@ class WPML_Post_Edit_Ajax {
 
 	public static function wpml_get_default_lang() {
 		global $sitepress;
+		$nonce = isset( $_POST['_icl_nonce'] ) ? sanitize_text_field( $_POST['_icl_nonce'] ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'wpml_get_default_lang' ) ) {
+			wp_send_json_error( esc_html__( 'Invalid request!', 'sitepress' ), 400 );
+		}
+
 		wp_send_json_success( $sitepress->get_default_language() );
 	}
 
@@ -309,6 +326,54 @@ class WPML_Post_Edit_Ajax {
 		}
 
 		return $data;
+	}
+
+	/**
+	 * Captures PostHog event for taxonomy term translation (add or edit).
+	 *
+	 * @param \SitePress $sitepress SitePress instance
+	 * @param string $taxonomy Taxonomy name
+	 * @param string $lang Target language code
+	 * @param int $trid Translation group ID
+	 * @param array $res Result array containing term_id and term_taxonomy_id
+	 * @param string $name Translated term name
+	 * @param string $slug Translated term slug
+	 * @param string $description Translated term description
+	 * @param array $meta_data Term metadata
+	 */
+	private static function capture_taxonomy_term_translation_event( $sitepress, $taxonomy, $lang, $trid, $res, $name, $slug, $description ) {
+
+		if ( ! \WPML\PostHog\State\PostHogState::isEnabled() ) {
+			return;
+		}
+
+		$source_language = $sitepress->get_source_language_by_trid( $trid );
+
+		$original_term_tax_id = (int) $sitepress->get_original_element_id_by_trid( $trid );
+		$original_term = $original_term_tax_id ?
+			get_term_by( 'term_taxonomy_id', $original_term_tax_id, $taxonomy, OBJECT, 'no' ) :
+			false;
+
+		$event_props = array(
+			'taxonomy'             => $taxonomy,
+			'target_language'      => $lang,
+			'source_language'      => $source_language,
+			'term_id'              => $res['term_id'],
+			'term_taxonomy_id'     => $res['term_taxonomy_id'],
+			'is_hierarchical'      => is_taxonomy_hierarchical( $taxonomy ),
+			// Original term content
+			'original_term_name'   => $original_term ? $original_term->name : '',
+			'original_term_slug'   => $original_term ? $original_term->slug : '',
+			'original_term_desc'   => $original_term ? $original_term->description : '',
+			// Translated term content
+			'translated_term_name' => $name,
+			'translated_term_slug' => $slug,
+			'translated_term_desc' => $description,
+		);
+
+		\WPML\PostHog\Event\CaptureEvent::capture(
+			( new EventInstanceService() )->getTaxonomyTermTranslationSavedEvent( $event_props )
+		);
 	}
 
 }

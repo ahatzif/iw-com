@@ -40,7 +40,6 @@ class acfe_field_post_object extends acfe_field_extend{
             'name'          => 'save_custom',
             'type'          => 'true_false',
             'ui'            => 1,
-            'message'       => __("Save 'custom' values as new post", 'acf'),
         ));
     
         // save post_type
@@ -123,12 +122,12 @@ class acfe_field_post_object extends acfe_field_extend{
         }
     
         // new post args
-        $post_type = acf_maybe_get($field, 'save_post_type', 'post');
-        $post_status = acf_maybe_get($field, 'save_post_status', 'publish');
+        $post_type = acfe_get($field, 'save_post_type', 'post');
+        $post_status = acfe_get($field, 'save_post_status', 'publish');
         
         // vars
         $is_array = is_array($value);
-        $value = acf_get_array($value);
+        $value = acfe_as_array($value);
         
         // loop
         foreach($value as $k => $v){
@@ -190,6 +189,104 @@ class acfe_field_post_object extends acfe_field_extend{
         
         // return
         return $value;
+        
+    }
+    
+    
+    /**
+     * format_front_value
+     *
+     * @param $formatted
+     * @param $unformatted
+     * @param $post_id
+     * @param $field
+     * @param $form
+     *
+     * @return string
+     */
+    function format_front_value($formatted, $unformatted, $post_id, $field, $form){
+        
+        // vars
+        $value = acfe_as_array($unformatted);
+        $array = array();
+        
+        // loop values
+        foreach($value as $p_id){
+            
+            // get post
+            $post = get_post($p_id);
+            
+            // validate
+            if($post && !is_wp_error($post)){
+                $array[] = get_the_title($post->ID);
+            }
+            
+        }
+        
+        // merge
+        return implode(', ', $array);
+        
+    }
+    
+    
+    /**
+     * validate_front_value
+     *
+     * @param $valid
+     * @param $value
+     * @param $field
+     * @param $input
+     * @param $form
+     *
+     * @return false
+     */
+    function validate_front_value($valid, $value, $field, $input, $form){
+        
+        // bail early
+        if(!$this->pre_validate_front_value($valid, $value, $field, $form)){
+            return $valid;
+        }
+        
+        // custom value allowed
+        if(!empty($field['save_custom'])){
+            return $valid;
+        }
+        
+        // vars
+        $value = acfe_as_array($value);
+        
+        // loop values
+        foreach($value as $v){
+            
+            // get post
+            $post = get_post($v);
+            
+            // check post exists
+            if(!$post || is_wp_error($post)){
+                return false;
+            }
+            
+            // check query method exists
+            if(method_exists($this->instance, 'get_ajax_query')){
+                
+                // query post object ajax query
+                $query = $this->instance->get_ajax_query(array(
+                    'field_key' => $field['key'],
+                    'post_id'   => $form['post_id'],
+                    'include'   => $v,
+                ));
+                
+                // return false if no results
+                if(empty($query)){
+                    return false;
+                }
+                
+            }
+            
+        }
+        
+        // return
+        return $valid;
         
     }
     

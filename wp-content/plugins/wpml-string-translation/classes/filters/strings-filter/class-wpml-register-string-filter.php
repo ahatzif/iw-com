@@ -51,6 +51,15 @@ class WPML_Register_String_Filter extends WPML_Displayed_String_Filter {
 	private $block_save_strings = false;
 
 	/**
+	 * Domains with more than PRELOAD_LIMIT strings — skipped for bulk preload.
+	 *
+	 * @var array
+	 */
+	private $large_domains = [];
+
+	const PRELOAD_LIMIT = 1000;
+
+	/**
 	 * @param wpdb                                $wpdb
 	 * @param SitePress                           $sitepress
 	 * @param WPML_ST_String_Factory              $string_factory
@@ -64,7 +73,7 @@ class WPML_Register_String_Filter extends WPML_Displayed_String_Filter {
 		&$string_factory,
 		Translator $translator,
 		array $excluded_contexts = array(),
-		WPML_Autoregister_Save_Strings $save_strings = null
+		?WPML_Autoregister_Save_Strings $save_strings = null
 	) {
 		parent::__construct( $translator );
 
@@ -89,21 +98,7 @@ class WPML_Register_String_Filter extends WPML_Displayed_String_Filter {
 		$translation     = $this->get_translation( $untranslated_text, $name, $context );
 		$has_translation = $translation->hasTranslation();
 
-		if ( ! $translation->isStringRegistered() && $this->can_register_string( $untranslated_text, $name, $context ) ) {
-			list ( $name, $domain, $gettext_content ) = $this->transform_parameters( $name, $context );
-			list( $name, $domain )                    = array_map( array( $this, 'truncate_long_string' ), array( $name, $domain ) );
-
-			if ( ! in_array( $domain, $this->excluded_contexts ) ) {
-				$save_strings = $this->get_save_strings();
-				$save_strings->save( $untranslated_text, $name, $domain, $gettext_content );
-			}
-		}
-
 		return $translation->getValue();
-	}
-
-	private function can_register_string( $original_value, $name, $context ) {
-		return $original_value || ( $name && md5( '' ) !== $name && $context );
 	}
 
 	public function force_saving_of_autoregistered_strings() {
@@ -198,10 +193,87 @@ class WPML_Register_String_Filter extends WPML_Displayed_String_Filter {
 		$key   = md5( $domain . $name . $context );
 		$found = false;
 
-		return $this->get_domain_cache( $domain )->get( $key, $found );
+		$domain_cache = $this->registered_string_cache->get( $domain, $found );
+
+		if ( ! $found && ! isset( $this->large_domains[ $domain ] ) ) {
+			$this->maybe_preload_domain( $domain );
+			$domain_cache = $this->registered_string_cache->get( $domain, $found );
+		}
+
+		if ( $found ) {
+			$result = $domain_cache->get( $key, $found );
+			if ( $found ) {
+				return $result;
+			}
+
+			// Domain was fully preloaded — a cache miss means the string is not in the DB.
+			if ( ! isset( $this->large_domains[ $domain ] ) ) {
+				return false;
+			}
+		}
+
+		// Large domain: fall back to a single per-string query.
+		$row = $this->wpdb->get_row(
+			$this->wpdb->prepare(
+				"SELECT id, value FROM {$this->wpdb->prefix}icl_strings WHERE domain_name_context_md5 = %s",
+				$key
+			),
+			ARRAY_A
+		);
+
+		if ( $row ) {
+			$cached_value = [
+				'id'    => $row['id'],
+				'value' => $row['value'],
+			];
+			$this->get_domain_cache( $domain )->set( $key, $cached_value );
+			return $cached_value;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Attempts to preload all strings for a domain in one query.
+	 * If the domain exceeds PRELOAD_LIMIT strings it is flagged as large and
+	 * per-string queries are used instead.
+	 *
+	 * @param string $domain
+	 */
+	private function maybe_preload_domain( $domain ) {
+		$rows = $this->wpdb->get_results(
+			$this->wpdb->prepare(
+				"SELECT id, value, gettext_context, name FROM {$this->wpdb->prefix}icl_strings WHERE context = %s LIMIT %d",
+				$domain,
+				self::PRELOAD_LIMIT + 1
+			),
+			ARRAY_A
+		);
+
+		if ( count( (array) $rows ) > self::PRELOAD_LIMIT ) {
+			$this->large_domains[ $domain ] = true;
+			return;
+		}
+
+		$domain_cache = new WPML_WP_Cache( 'WPML_Register_String_Filter::' . $domain );
+
+		foreach ( (array) $rows as $row ) {
+			$key = md5( $domain . $row['name'] . $row['gettext_context'] );
+			$domain_cache->set(
+				$key,
+				[
+					'id'    => $row['id'],
+					'value' => $row['value'],
+				]
+			);
+		}
+
+		$this->registered_string_cache->set( $domain, $domain_cache );
 	}
 
 	private function save_string( $value, $allow_empty_value, $language, $domain, $context, $name ) {
+		$value = is_null( $value ) ? '' : $value;
+
 		if ( ! $this->block_save_strings && ( $allow_empty_value || 0 !== strlen( $value ) ) ) {
 
 			$args = array(
@@ -370,32 +442,14 @@ class WPML_Register_String_Filter extends WPML_Displayed_String_Filter {
 	 * @return WPML_WP_Cache
 	 */
 	private function get_domain_cache( $domain ) {
-		$found = false;
-		$this->registered_string_cache->get( $domain, $found );
+		$found        = false;
+		$domain_cache = $this->registered_string_cache->get( $domain, $found );
 
 		if ( ! $found ) {
-			// preload all the strings for this domain.
-			$query = $this->wpdb->prepare(
-				"SELECT id, value, gettext_context, name FROM {$this->wpdb->prefix}icl_strings WHERE context=%s",
-				$domain
-			);
-			$res   = $this->wpdb->get_results( $query );
-
 			$domain_cache = new WPML_WP_Cache( 'WPML_Register_String_Filter::' . $domain );
-
-			foreach ( $res as $string ) {
-				$key          = md5( $domain . $string->name . $string->gettext_context );
-				$cached_value = array(
-					'id'    => $string->id,
-					'value' => $string->value,
-				);
-
-				$domain_cache->set( $key, $cached_value );
-			}
-
 			$this->registered_string_cache->set( $domain, $domain_cache );
 		}
 
-		return $this->registered_string_cache->get( $domain, $found );
+		return $domain_cache;
 	}
 }

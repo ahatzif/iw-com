@@ -95,6 +95,28 @@ function com_theme_is_purchase_flow(): bool {
     return is_cart() || is_checkout();
 }
 
+function com_theme_redirect_legacy_cart_url(): void {
+    if ( ! is_404() || ! function_exists( 'wc_get_cart_url' ) ) {
+        return;
+    }
+
+    $request_path = trim( (string) wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_PATH ), '/' );
+    $home_path = trim( (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH ), '/' );
+
+    if ( $home_path !== '' && str_starts_with( $request_path, $home_path . '/' ) ) {
+        $request_path = substr( $request_path, strlen( $home_path ) + 1 );
+    }
+
+    if ( $request_path !== 'cart' ) {
+        return;
+    }
+
+    if ( wp_safe_redirect( wc_get_cart_url(), 301, 'com-theme' ) ) {
+        exit;
+    }
+}
+add_action( 'template_redirect', 'com_theme_redirect_legacy_cart_url' );
+
 function com_theme_hide_breadcrumb( $context = null ): bool {
     return (bool) com_theme_field_value( 'hide_breadcrumb', $context, false );
 }
@@ -289,6 +311,168 @@ if ( ! function_exists( 'get_tickets_permalink' ) ) {
     }
 }
 
+function com_theme_museum_ticket_url( int $museum_id, $manual_link = null ): string {
+    $ticket_url = function_exists( 'get_tickets_permalink' )
+        ? (string) get_tickets_permalink( $museum_id )
+        : '';
+
+    if ( $ticket_url !== '' ) {
+        return $ticket_url;
+    }
+
+    $manual_url = com_theme_link_url( $manual_link );
+    $generic_url = com_theme_option_page_url( 'buy_tickets_page', 'buy-tickets' );
+
+    if (
+        $manual_url !== ''
+        && $generic_url !== ''
+        && untrailingslashit( $manual_url ) === untrailingslashit( $generic_url )
+    ) {
+        return '';
+    }
+
+    return $manual_url;
+}
+
+function com_theme_truthy_value( $value ): bool {
+    if ( is_bool( $value ) ) {
+        return $value;
+    }
+
+    if ( is_numeric( $value ) ) {
+        return (int) $value === 1;
+    }
+
+    return in_array( strtolower( trim( (string) $value ) ), [ '1', 'yes', 'true', 'on', 'all_locations', 'all_museums' ], true );
+}
+
+function com_theme_all_museums_ticket_slugs(): array {
+    return [
+        'episkepsi-se-ola-ta-mouseia',
+        'all-museums-ticket',
+        'all-museums-pass',
+        'ola-ta-mouseia',
+    ];
+}
+
+function com_theme_is_all_museums_ticket( int $museum_id ): bool {
+    if ( ! $museum_id || get_post_type( $museum_id ) !== 'museum' ) {
+        return false;
+    }
+
+    if ( com_theme_truthy_value( get_post_meta( $museum_id, '_com_all_museums_ticket', true ) ) ) {
+        return true;
+    }
+
+    if ( com_theme_truthy_value( get_post_meta( $museum_id, 'iw_ticket_scope', true ) ) ) {
+        return true;
+    }
+
+    $slug = (string) get_post_field( 'post_name', $museum_id );
+
+    return $slug !== '' && in_array( $slug, com_theme_all_museums_ticket_slugs(), true );
+}
+
+function com_theme_translate_museum_id( int $museum_id ): int {
+    if ( $museum_id && has_filter( 'wpml_object_id' ) ) {
+        $translated_id = (int) apply_filters( 'wpml_object_id', $museum_id, 'museum', true );
+
+        if ( $translated_id ) {
+            return $translated_id;
+        }
+    }
+
+    return $museum_id;
+}
+
+function com_theme_all_museums_ticket_post_id( $candidate = null ): int {
+    $candidate_id = com_theme_attachment_id( $candidate );
+    $candidate_id = $candidate_id ? com_theme_translate_museum_id( $candidate_id ) : 0;
+
+    if (
+        $candidate_id
+        && get_post_type( $candidate_id ) === 'museum'
+        && get_post_status( $candidate_id ) === 'publish'
+        && com_theme_is_all_museums_ticket( $candidate_id )
+    ) {
+        return $candidate_id;
+    }
+
+    $flagged = get_posts( [
+        'post_type'              => 'museum',
+        'post_status'            => 'publish',
+        'posts_per_page'         => 1,
+        'fields'                 => 'ids',
+        'orderby'                => [ 'menu_order' => 'ASC', 'title' => 'ASC' ],
+        'meta_query'             => [
+            'relation' => 'OR',
+            [
+                'key'     => '_com_all_museums_ticket',
+                'value'   => '1',
+                'compare' => '=',
+            ],
+            [
+                'key'     => 'iw_ticket_scope',
+                'value'   => [ 'all_locations', 'all_museums' ],
+                'compare' => 'IN',
+            ],
+        ],
+        'no_found_rows'          => true,
+        'update_post_meta_cache' => false,
+        'update_post_term_cache' => false,
+    ] );
+
+    if ( ! empty( $flagged ) ) {
+        return com_theme_translate_museum_id( (int) $flagged[0] );
+    }
+
+    foreach ( com_theme_all_museums_ticket_slugs() as $slug ) {
+        $post = get_page_by_path( $slug, OBJECT, 'museum' );
+
+        if ( $post instanceof WP_Post && $post->post_status === 'publish' ) {
+            return com_theme_translate_museum_id( (int) $post->ID );
+        }
+    }
+
+    return 0;
+}
+
+function com_theme_all_museums_ticket_url( $manual_link = null, $ticket_post = null ): string {
+    $ticket_id = com_theme_all_museums_ticket_post_id( $ticket_post );
+    $ticket_url = ( $ticket_id && function_exists( 'get_tickets_permalink' ) )
+        ? (string) get_tickets_permalink( $ticket_id )
+        : '';
+
+    if ( $ticket_url !== '' ) {
+        return $ticket_url;
+    }
+
+    $manual_url = com_theme_link_url( $manual_link );
+    $generic_url = com_theme_option_page_url( 'buy_tickets_page', 'buy-tickets' );
+
+    if (
+        $manual_url !== ''
+        && $generic_url !== ''
+        && untrailingslashit( $manual_url ) === untrailingslashit( $generic_url )
+    ) {
+        return '';
+    }
+
+    return $manual_url;
+}
+
+function com_theme_all_museums_ticket_price_text( int $ticket_id, string $fallback = '' ): string {
+    if ( $ticket_id ) {
+        $price = (string) com_theme_field_value( 'ticket_price_text', $ticket_id, '' );
+
+        if ( $price !== '' ) {
+            return $price;
+        }
+    }
+
+    return $fallback;
+}
+
 function com_theme_default_ticket_post_id(): int {
     if ( ! class_exists( 'IW_Ticketing' ) ) {
         return 0;
@@ -371,6 +555,48 @@ function com_theme_museum_location_label( int $museum_id ): string {
 	return implode( ', ', wp_list_pluck( $terms, 'name' ) );
 }
 
+function com_theme_all_museums_default_location_label(): string {
+    return __( 'ΜΕΣΟΛΟΓΓΙ, ΑΙΤΩΛΙΚΟ', 'com-theme' );
+}
+
+function com_theme_all_museums_slider_items( int $exclude_id = 0 ): array {
+    $museum_ids = get_posts( [
+        'post_type'              => 'museum',
+        'post_status'            => 'publish',
+        'posts_per_page'         => -1,
+        'orderby'                => [ 'menu_order' => 'ASC', 'title' => 'ASC' ],
+        'fields'                 => 'ids',
+        'no_found_rows'          => true,
+        'update_post_meta_cache' => false,
+        'update_post_term_cache' => false,
+    ] );
+
+    $items = [];
+
+    foreach ( $museum_ids as $museum_id ) {
+        $museum_id = (int) $museum_id;
+
+        if ( ! $museum_id || $museum_id === $exclude_id || com_theme_is_all_museums_ticket( $museum_id ) ) {
+            continue;
+        }
+
+        $image_id = com_theme_museum_image_id( $museum_id );
+
+        if ( ! $image_id ) {
+            continue;
+        }
+
+        $items[] = [
+            'id'       => $museum_id,
+            'title'    => get_the_title( $museum_id ),
+            'url'      => get_permalink( $museum_id ),
+            'image_id' => $image_id,
+        ];
+    }
+
+    return $items;
+}
+
 function com_theme_logo_markup( string $option_name, string $fallback_symbol, string $classes, string $label = '' ): string {
     $attachment_id = com_theme_attachment_id( com_theme_option( $option_name ) );
 
@@ -391,9 +617,13 @@ function com_theme_logo_markup( string $option_name, string $fallback_symbol, st
             }
         }
 
-        $image = wp_get_attachment_image( $attachment_id, 'full', false, [
-            'class' => $classes,
-            'alt'   => $label,
+        $image = com\theme::load_template_part( 'templates/parts/image', [
+            'id'       => $attachment_id,
+            'size'     => 'full',
+            'classes'  => $classes,
+            'alt'      => $label,
+            'lazy'     => false,
+            'parallax' => false,
         ] );
 
         if ( $image ) {
@@ -620,6 +850,7 @@ function com_theme_cart_item_details( array $cart_item ): array {
         $content_id = absint( CPT_As_Product::get_cpt_id_from_cart_item( $cart_item ) );
     }
 
+    $is_all_museums_ticket = $content_id ? com_theme_is_all_museums_ticket( $content_id ) : false;
     $title = $content_id ? get_the_title( $content_id ) : '';
     if ( $title === '' && $product && is_callable( [ $product, 'get_name' ] ) ) {
         $title = $product->get_name();
@@ -631,8 +862,17 @@ function com_theme_cart_item_details( array $cart_item ): array {
     }
 
     $location = $content_id ? com_theme_museum_location_label( $content_id ) : '';
+    if ( $is_all_museums_ticket && $location === '' ) {
+        $location = com_theme_all_museums_default_location_label();
+    }
+    $description = $content_id ? trim( (string) get_the_excerpt( $content_id ) ) : '';
+    if ( $description === '' && $product && is_callable( [ $product, 'get_short_description' ] ) ) {
+        $description = trim( (string) $product->get_short_description() );
+    }
+
     $visitors = json_decode( (string) ( $cart_item['tickets_visitors'] ?? '[]' ), true );
     $groups = [];
+    $ticket_lines = [];
 
     if ( is_array( $visitors ) ) {
         foreach ( $visitors as $visitor ) {
@@ -643,6 +883,15 @@ function com_theme_cart_item_details( array $cart_item ): array {
             $label = trim( (string) ( $visitor['category-name'] ?? $visitor['category_name'] ?? __( 'Εισιτήριο', 'com-theme' ) ) );
             $label = $label !== '' ? $label : __( 'Εισιτήριο', 'com-theme' );
             $price = is_numeric( $visitor['price'] ?? null ) ? (float) $visitor['price'] : 0.0;
+            $first_name = trim( (string) ( $visitor['first'] ?? '' ) );
+            $last_name = trim( (string) ( $visitor['last'] ?? '' ) );
+            $visitor_name = trim( $first_name . ' ' . $last_name );
+
+            $ticket_lines[] = [
+                'label' => $label,
+                'name'  => $visitor_name,
+                'price' => $price,
+            ];
 
             if ( ! isset( $groups[ $label ] ) ) {
                 $groups[ $label ] = [
@@ -669,6 +918,15 @@ function com_theme_cart_item_details( array $cart_item ): array {
             'count' => $ticket_count,
             'total' => $line_total,
         ];
+
+        $ticket_price = $ticket_count > 0 ? $line_total / $ticket_count : $line_total;
+        for ( $ticket_index = 0; $ticket_index < $ticket_count; $ticket_index++ ) {
+            $ticket_lines[] = [
+                'label' => __( 'Εισιτήριο', 'com-theme' ),
+                'name'  => '',
+                'price' => $ticket_price,
+            ];
+        }
     } else {
         $groups = array_values( $groups );
     }
@@ -683,20 +941,47 @@ function com_theme_cart_item_details( array $cart_item ): array {
 
     return [
         'content_id'    => $content_id,
+        'is_all_museums_ticket' => $is_all_museums_ticket,
         'title'         => $title,
-        'permalink'     => $content_id ? get_permalink( $content_id ) : '',
+        'permalink'     => $content_id ? ( $is_all_museums_ticket ? com_theme_option_page_url( 'tickets_page', 'tickets' ) : get_permalink( $content_id ) ) : '',
         'image_id'      => $image_id,
         'location'      => $location,
+        'description'   => $description,
         'date'          => $date,
         'time'          => $time,
         'ticket_count'  => $ticket_count,
         'groups'        => $groups,
+        'ticket_lines'  => $ticket_lines,
     ];
 }
 
 add_filter( 'woocommerce_order_button_text', static function (): string {
     return __( 'Ολοκλήρωση αγοράς', 'com-theme' );
 } );
+
+add_filter( 'woocommerce_gateway_icon', static function ( string $icon, string $gateway_id ): string {
+    if ( $gateway_id === 'cardlink_payment_gateway_woocommerce' ) {
+        return '';
+    }
+
+    return $icon;
+}, 10, 2 );
+
+add_filter( 'cardlink_payment_redirect_delay', static function ( int $delay_ms, bool $use_iframe ): int {
+    if ( $use_iframe ) {
+        return $delay_ms;
+    }
+
+    return 3800;
+}, 10, 2 );
+
+add_filter( 'cardlink_payment_redirect_block_ui', static function ( bool $show_block_ui, bool $use_iframe ): bool {
+    if ( $use_iframe ) {
+        return $show_block_ui;
+    }
+
+    return false;
+}, 10, 2 );
 
 add_filter( 'woocommerce_countries', static function ( array $countries ): array {
     if ( isset( $countries['GR'] ) ) {
@@ -738,7 +1023,6 @@ function com_theme_account_menu_items( array $items ): array {
         'orders'          => __( 'Οι αγορές μου', 'com-theme' ),
         'edit-address'    => __( 'Διευθύνσεις', 'com-theme' ),
         'edit-account'    => __( 'Στοιχεία σύνδεσης', 'com-theme' ),
-        'payment-methods' => __( 'Μέθοδοι πληρωμής', 'com-theme' ),
         'customer-logout' => __( 'Αποσύνδεση', 'com-theme' ),
     ];
 
@@ -746,13 +1030,31 @@ function com_theme_account_menu_items( array $items ): array {
 }
 add_filter( 'woocommerce_account_menu_items', 'com_theme_account_menu_items', 40 );
 
+/**
+ * Saved cards are not part of the Nexi checkout flow. Keep legacy account
+ * URLs from exposing WooCommerce's saved-payment screens.
+ */
+function com_theme_redirect_saved_payment_endpoints(): void {
+    if (
+        is_admin()
+        || wp_doing_ajax()
+        || ! function_exists( 'is_wc_endpoint_url' )
+        || (
+            ! is_wc_endpoint_url( 'payment-methods' )
+            && ! is_wc_endpoint_url( 'add-payment-method' )
+        )
+    ) {
+        return;
+    }
+
+    wp_safe_redirect( wc_get_account_endpoint_url( 'dashboard' ) );
+    exit;
+}
+add_action( 'template_redirect', 'com_theme_redirect_saved_payment_endpoints', 20 );
+
 function com_theme_account_current_endpoint(): string {
     if ( function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( 'view-order' ) ) {
         return 'orders';
-    }
-
-    if ( function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( 'add-payment-method' ) ) {
-        return 'payment-methods';
     }
 
     foreach ( wc_get_account_menu_items() as $endpoint => $label ) {
@@ -789,6 +1091,23 @@ function com_theme_account_endpoint_count( string $endpoint ): int {
 add_filter( 'body_class', function ( array $classes ): array {
     if ( function_exists( 'is_account_page' ) && is_account_page() ) {
         $classes[] = 'is-account-page';
+    }
+
+    if (
+        function_exists( 'is_checkout_pay_page' )
+        && is_checkout_pay_page()
+        && ! isset( $_GET['pay_for_order'] )
+        && function_exists( 'wc_get_order' )
+    ) {
+        $order = wc_get_order( absint( get_query_var( 'order-pay' ) ) );
+        $cardlink_methods = [
+            'cardlink_payment_gateway_woocommerce',
+            'cardlink_payment_gateway_woocommerce_iris',
+        ];
+
+        if ( $order && in_array( $order->get_payment_method(), $cardlink_methods, true ) ) {
+            $classes[] = 'com-cardlink-receipt-pending';
+        }
     }
 
     return $classes;

@@ -12,6 +12,7 @@ abstract class WPML_TF_Data_Object_Post_Convert {
 	 */
 	abstract public function get_post_fields();
 
+
 	/**
 	 * @return array
 	 */
@@ -23,6 +24,11 @@ abstract class WPML_TF_Data_Object_Post_Convert {
 	 * @return array
 	 */
 	abstract public function to_post_data( IWPML_TF_Data_Object $data_object );
+
+	/**
+	 * @return string
+	 */
+	abstract public function get_post_type();
 
 	/**
 	 * @param array $post_data

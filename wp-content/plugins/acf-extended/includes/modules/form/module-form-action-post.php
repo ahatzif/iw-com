@@ -15,6 +15,7 @@ class acfe_module_form_action_post extends acfe_module_form_action{
         
         $this->name = 'post';
         $this->title = __('Post action', 'acfe');
+        $this->title_alt = __('Post', 'acfe');
         
         $this->item = array(
             'action' => 'post',
@@ -84,7 +85,7 @@ class acfe_module_form_action_post extends acfe_module_form_action{
         $post_thumbnail = acf_extract_var($load, 'post_thumbnail');
         $post_terms = acf_extract_var($load, 'post_terms');
         $acf_fields = acf_extract_var($load, 'acf_fields');
-        $acf_fields = acf_get_array($acf_fields);
+        $acf_fields = acfe_as_array($acf_fields);
         $acf_fields_exclude = array();
         
         // filters
@@ -122,7 +123,7 @@ class acfe_module_form_action_post extends acfe_module_form_action{
         foreach($load as $post_field => $field_key){
             
             // check field is not hidden and has no value set in 'acfe/form/load_form'
-            if(acf_maybe_get($form['map'], $field_key) !== false && !isset($form['map'][ $field_key ]['value'])){
+            if(acfe_get($form['map'], $field_key) !== false && !isset($form['map'][ $field_key ]['value'])){
                 
                 // check key exists in WP_Post and is field key
                 if(in_array($post_field, $this->fields) && !empty($field_key) && is_string($field_key) && acf_is_field_key($field_key)){
@@ -146,7 +147,7 @@ class acfe_module_form_action_post extends acfe_module_form_action{
             $field_key = $post_thumbnail;
             
             // check field is not hidden and has no value set in 'acfe/form/load_form'
-            if(acf_maybe_get($form['map'], $field_key) !== false && !isset($form['map'][ $field_key ]['value'])){
+            if(acfe_get($form['map'], $field_key) !== false && !isset($form['map'][ $field_key ]['value'])){
         
                 // add field to excluded list
                 $acf_fields_exclude[] = $field_key;
@@ -170,7 +171,7 @@ class acfe_module_form_action_post extends acfe_module_form_action{
             $field_key = $post_terms;
             
             // check field is not hidden and has no value set in 'acfe/form/load_form'
-            if(acf_maybe_get($form['map'], $field_key) !== false && !isset($form['map'][ $field_key ]['value'])){
+            if(acfe_get($form['map'], $field_key) !== false && !isset($form['map'][ $field_key ]['value'])){
                 
                 // vars
                 $terms = array();
@@ -214,35 +215,57 @@ class acfe_module_form_action_post extends acfe_module_form_action{
             // vars
             $field_keys = array();
             $all_fields = array_merge(array_values($load), array_values($acf_fields));
+            $all_fields = array_filter($all_fields);
+            $all_fields = array_unique($all_fields);
             
-            // loop post fields
-            foreach($all_fields as $field_key){
+            if(!empty($all_fields)){
                 
-                // get field
-                $field = acf_get_field($field_key);
+                // query fields
+                $query_fields = acfe_query_fields(array(
+                    'context' => $all_fields,
+                    'query'   => array(
+                        array('type' => 'file'),
+                        array('type' => 'image'),
+                        array('type' => 'gallery'),
+                        array('type' => 'wysiwyg'),
+                    )
+                ));
                 
-                // check field type
-                if($field && in_array($field['type'], array('file', 'image', 'gallery'))){
-                    $field_keys[] = $field_key;
+                // retrieve field keys
+                if(!empty($query_fields)){
+                    foreach($query_fields as $query_field){
+                        $key = isset($query_field['__key']) ? $query_field['__key'] : $query_field['key'];
+                        $field_keys[] = $key;
+                    }
                 }
                 
-            }
-            
-            // localize data
-            if(!empty($field_keys)){
-                
-                add_filter('acfe/form/set_form_data', function($data, $displayed_form) use($post_id, $field_keys, $form){
+                // localize data
+                if(!empty($field_keys)){
                     
-                    if($displayed_form['cid'] === $form['cid']){
-                        $data['media'] = array(
-                            'post_id' => $post_id,
-                            'fields'  => $field_keys
-                        );
-                    }
+                    add_filter('acfe/form/set_form_data', function($data, $displayed_form) use($post_id, $field_keys, $form){
+                        
+                        if($displayed_form['cid'] === $form['cid']){
+                            
+                            // retrieve media
+                            $media = acfe_get($data, 'media');
+                            $media = acfe_as_array($media);
+                            
+                            // append
+                            $media[] = array(
+                                'post_id' => $post_id,
+                                'fields'  => $field_keys
+                            );
+                            
+                            // assign
+                            $data['media'] = $media;
+                            
+                        }
+                        
+                        return $data;
+                        
+                    }, 10, 2);
                     
-                    return $data;
-                    
-                }, 10, 2);
+                }
                 
             }
             
@@ -395,7 +418,7 @@ class acfe_module_form_action_post extends acfe_module_form_action{
         }
         
         // post terms
-        $post_terms = acf_get_array($action['save']['post_terms']);
+        $post_terms = acfe_as_array($action['save']['post_terms']);
         $action['save']['post_terms'] = array();
         
         foreach($post_terms as $term_id){
@@ -553,7 +576,7 @@ class acfe_module_form_action_post extends acfe_module_form_action{
                 if(!$taxonomy){
                 
                     // try to retrieve taxonomy from the created post
-                    $post_type = acf_maybe_get($args, 'post_type', 'post');
+                    $post_type = acfe_get($args, 'post_type', 'post');
                     $taxonomies = get_object_taxonomies($post_type);
                     $taxonomy = array_shift($taxonomies);
                 
@@ -746,7 +769,7 @@ class acfe_module_form_action_post extends acfe_module_form_action{
         foreach(array_keys($save['save']) as $k){
             
             // post_type => save_post_type
-            if(acf_maybe_get($action, "save_{$k}")){
+            if(acfe_get($action, "save_{$k}")){
                 $save['save'][ $k ] = $action["save_{$k}"];
             }
             
@@ -778,7 +801,7 @@ class acfe_module_form_action_post extends acfe_module_form_action{
             foreach(array_keys($save['load']) as $k){
         
                 // post_type => load_post_type
-                if(acf_maybe_get($action, "load_{$k}")){
+                if(acfe_get($action, "load_{$k}")){
                     
                     $value = $action["load_{$k}"];
                     $save['load'][ $k ] = $value;

@@ -52,7 +52,7 @@ class WPML_TM_Post_Actions extends WPML_Translation_Job_Helper {
 			$this->save_translation_priority( $post_id );
 		}
 
-		if ( ! empty( $trid ) && ! $is_original ) {
+		if ( ! empty( $trid ) && ! $is_original && ! $this->is_quick_edit() ) {
 			$lang = $lang ? $lang : $this->get_save_post_lang( $lang, $post_id );
 			$res  = $wpdb->get_row( $wpdb->prepare( "
 			 SELECT element_id, language_code FROM {$wpdb->prefix}icl_translations WHERE trid=%d AND source_language_code IS NULL
@@ -77,7 +77,6 @@ class WPML_TM_Post_Actions extends WPML_Translation_Job_Helper {
 						                                                                                            'needs_update'        => $needs_second_update,
 						                                                                                            'md5'                 => $md5,
 						                                                                                            'translation_service' => 'local',
-						                                                                                            'translation_package' => serialize( $translation_package )
 					                                                                                            ) );
 					if ( ! $update ) {
 						$job_id = $this->action_helper->add_translation_job( $rid, $user_id, $translation_package );
@@ -116,9 +115,9 @@ class WPML_TM_Post_Actions extends WPML_Translation_Job_Helper {
 				/**
 				 * The filter allows to delegate the status update for translations.
 				 *
-				 * @param bool false (default) if we should update immediately or true if done at a different stage.
+				 * @param bool $update_directly false (default) if we should update immediately or true if done at a different stage.
 				 * @param int $post_id The original post ID.
-				 * @param callable The updater function to execute.
+				 * @param callable $callback The updater function to execute.
 				 *
 				 * @since 2.11.0
 				 *
@@ -128,6 +127,13 @@ class WPML_TM_Post_Actions extends WPML_Translation_Job_Helper {
 				}
 			}
 		}
+	}
+
+	private function is_quick_edit() {
+		if( ! array_key_exists( 'action', $_POST ) )
+			return false;
+
+		return $_POST['action'] === 'inline-save';
 	}
 
 	/**
@@ -151,7 +157,6 @@ class WPML_TM_Post_Actions extends WPML_Translation_Job_Helper {
 							'translation_id'      => $translation->translation_id,
 							'needs_update'        => 1,
 							'md5'                 => $md5,
-							'translation_package' => serialize( $translation_package ),
 							'status'              => $status === ICL_TM_ATE_CANCELLED ? ICL_TM_NOT_TRANSLATED : $status,
 						];
 						$this->action_helper->get_tm_instance()->update_translation_status( $data );
@@ -184,7 +189,7 @@ class WPML_TM_Post_Actions extends WPML_Translation_Job_Helper {
 		) {
 			global $wpdb;
 
-			$user->add_cap( WPML_Translator_Role::CAPABILITY );
+			$user->add_cap( \WPML\LIB\WP\User::CAP_TRANSLATE );
 
 			$language_pair_records = new WPML_Language_Pair_Records( $wpdb, new WPML_Language_Records( $wpdb ) );
 			$language_pair_records->store( $user_id, array( $source_lang => array( $target_lang ) ) );

@@ -33,16 +33,16 @@ class WPML_Integrations_Requirements {
 	/**
 	 * WPML_Integrations_Requirements constructor.
 	 *
-	 * @param SitePress                      $sitepress
-	 * @param WPML_Third_Party_Dependencies  $third_party_dependencies
-	 * @param WPML_Requirements_Notification $requirements_notification
-	 * @param array                          $integrations
+	 * @param SitePress                           $sitepress
+	 * @param WPML_Third_Party_Dependencies|null  $third_party_dependencies
+	 * @param WPML_Requirements_Notification|null $requirements_notification
+	 * @param array                               $integrations
 	 */
 	public function __construct(
 		SitePress $sitepress,
-		WPML_Third_Party_Dependencies $third_party_dependencies = null,
-		WPML_Requirements_Notification $requirements_notification = null,
-		$integrations = null
+		?WPML_Third_Party_Dependencies $third_party_dependencies = null,
+		?WPML_Requirements_Notification $requirements_notification = null,
+		?array $integrations = null
 	) {
 		$this->sitepress                 = $sitepress;
 		$this->third_party_dependencies  = $third_party_dependencies;

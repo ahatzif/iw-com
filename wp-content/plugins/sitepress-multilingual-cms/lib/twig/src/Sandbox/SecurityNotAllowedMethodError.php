@@ -19,7 +19,7 @@ class SecurityNotAllowedMethodError extends \WPML\Core\Twig\Sandbox\SecurityErro
 {
     private $className;
     private $methodName;
-    public function __construct($message, $className, $methodName, $lineno = -1, $filename = null, \Exception $previous = null)
+    public function __construct($message, $className, $methodName, $lineno = -1, $filename = null, ?\Exception $previous = null)
     {
         parent::__construct($message, $lineno, $filename, $previous);
         $this->className = $className;

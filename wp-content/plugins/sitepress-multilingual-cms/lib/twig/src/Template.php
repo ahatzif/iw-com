@@ -98,7 +98,7 @@ abstract class Template implements \WPML\Core\Twig_TemplateInterface
      * This method is for internal use only and should never be called
      * directly.
      *
-     * @param array $context
+     * @param array|null $context
      *
      * @return \Twig_TemplateInterface|TemplateWrapper|false The parent template or false if there is no parent
      *
@@ -141,9 +141,9 @@ abstract class Template implements \WPML\Core\Twig_TemplateInterface
      * This method is for internal use only and should never be called
      * directly.
      *
-     * @param string $name    The block name to display from the parent
-     * @param array  $context The context
-     * @param array  $blocks  The current set of blocks
+     * @param string     $name    The block name to display from the parent
+     * @param array|null $context The context
+     * @param array      $blocks  The current set of blocks
      */
     public function displayParentBlock($name, array $context, array $blocks = [])
     {
@@ -162,10 +162,10 @@ abstract class Template implements \WPML\Core\Twig_TemplateInterface
      * This method is for internal use only and should never be called
      * directly.
      *
-     * @param string $name      The block name to display
-     * @param array  $context   The context
-     * @param array  $blocks    The current set of blocks
-     * @param bool   $useBlocks Whether to use the current set of blocks
+     * @param string     $name      The block name to display
+     * @param array|null $context   The context
+     * @param array      $blocks    The current set of blocks
+     * @param bool       $useBlocks Whether to use the current set of blocks
      */
     public function displayBlock($name, array $context, array $blocks = [], $useBlocks = \true)
     {
@@ -214,9 +214,9 @@ abstract class Template implements \WPML\Core\Twig_TemplateInterface
      * This method is for internal use only and should never be called
      * directly.
      *
-     * @param string $name    The block name to render from the parent
-     * @param array  $context The context
-     * @param array  $blocks  The current set of blocks
+     * @param string     $name    The block name to render from the parent
+     * @param array|null $context The context
+     * @param array      $blocks  The current set of blocks
      *
      * @return string The rendered block
      */
@@ -238,10 +238,10 @@ abstract class Template implements \WPML\Core\Twig_TemplateInterface
      * This method is for internal use only and should never be called
      * directly.
      *
-     * @param string $name      The block name to render
-     * @param array  $context   The context
-     * @param array  $blocks    The current set of blocks
-     * @param bool   $useBlocks Whether to use the current set of blocks
+     * @param string     $name      The block name to render
+     * @param array|null $context   The context
+     * @param array      $blocks    The current set of blocks
+     * @param bool       $useBlocks Whether to use the current set of blocks
      *
      * @return string The rendered block
      */
@@ -263,13 +263,13 @@ abstract class Template implements \WPML\Core\Twig_TemplateInterface
      * This method checks blocks defined in the current template
      * or defined in "used" traits or defined in parent templates.
      *
-     * @param string $name    The block name
-     * @param array  $context The context
-     * @param array  $blocks  The current set of blocks
+     * @param string     $name    The block name
+     * @param array|null $context The context
+     * @param array      $blocks  The current set of blocks
      *
      * @return bool true if the block exists, false otherwise
      */
-    public function hasBlock($name, array $context = null, array $blocks = [])
+    public function hasBlock($name, ?array $context = null, array $blocks = [])
     {
         if (null === $context) {
             @\trigger_error('The ' . __METHOD__ . ' method is internal and should never be called; calling it directly is deprecated since version 1.28 and won\'t be possible anymore in 2.0.', \E_USER_DEPRECATED);
@@ -292,12 +292,12 @@ abstract class Template implements \WPML\Core\Twig_TemplateInterface
      * This method checks blocks defined in the current template
      * or defined in "used" traits or defined in parent templates.
      *
-     * @param array $context The context
-     * @param array $blocks  The current set of blocks
+     * @param array|null $context The context
+     * @param array      $blocks  The current set of blocks
      *
      * @return array An array of block names
      */
-    public function getBlockNames(array $context = null, array $blocks = [])
+    public function getBlockNames(?array $context = null, array $blocks = [])
     {
         if (null === $context) {
             @\trigger_error('The ' . __METHOD__ . ' method is internal and should never be called; calling it directly is deprecated since version 1.28 and won\'t be possible anymore in 2.0.', \E_USER_DEPRECATED);
@@ -417,8 +417,8 @@ abstract class Template implements \WPML\Core\Twig_TemplateInterface
     /**
      * Auto-generated method to display the template with the given context.
      *
-     * @param array $context An array of parameters to pass to the template
-     * @param array $blocks  An array of blocks to pass to the template
+     * @param array|null $context An array of parameters to pass to the template
+     * @param array      $blocks  An array of blocks to pass to the template
      */
     protected abstract function doDisplay(array $context, array $blocks = []);
     /**
@@ -432,9 +432,9 @@ abstract class Template implements \WPML\Core\Twig_TemplateInterface
      * access for versions of PHP before 5.4. This is not a way to override
      * the way to get a variable value.
      *
-     * @param array  $context           The context
-     * @param string $item              The variable to return from the context
-     * @param bool   $ignoreStrictCheck Whether to ignore the strict variable check or not
+     * @param array|null $context           The context
+     * @param string     $item              The variable to return from the context
+     * @param bool       $ignoreStrictCheck Whether to ignore the strict variable check or not
      *
      * @return mixed The content of the context variable
      *
@@ -473,7 +473,14 @@ abstract class Template implements \WPML\Core\Twig_TemplateInterface
         // array
         if (self::METHOD_CALL !== $type) {
             $arrayItem = \is_bool($item) || \is_float($item) ? (int) $item : $item;
-            if ((\is_array($object) || $object instanceof \ArrayObject) && (isset($object[$arrayItem]) || \array_key_exists($arrayItem, (array) $object)) || $object instanceof \ArrayAccess && isset($object[$arrayItem])) {
+            $hasArrayItem = null !== $arrayItem && (
+                (
+                    (\is_array($object) || $object instanceof \ArrayObject)
+                    && (isset($object[$arrayItem]) || \array_key_exists($arrayItem, (array) $object))
+                )
+                || ($object instanceof \ArrayAccess && isset($object[$arrayItem]))
+            );
+            if ($hasArrayItem) {
                 if ($isDefinedTest) {
                     return \true;
                 }

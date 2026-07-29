@@ -223,6 +223,7 @@ class IW_Ticket_Scanner {
             'status'         => array_key_exists( 'status', $ticket ) ? (string) $ticket['status'] : null,
             'issued_at'      => ! empty( $ticket['issued_at'] ) ? (string) $ticket['issued_at'] : null,
             'used_at'        => ! empty( $ticket['used_at'] ) ? (string) $ticket['used_at'] : null,
+            'all_locations'  => self::is_all_locations_ticket( $ticket ),
         ];
 
         $out = [
@@ -281,6 +282,30 @@ class IW_Ticket_Scanner {
         }
 
         return null;
+    }
+
+    private static function is_all_locations_ticket( array $ticket ): bool {
+        $post_id = (int) ( $ticket['post_id'] ?? 0 );
+
+        if ( $post_id <= 0 ) {
+            return false;
+        }
+
+        $scope = (string) get_post_meta( $post_id, 'iw_ticket_scope', true );
+        $is_all_locations = in_array( $scope, [ 'all_locations', 'all_museums' ], true );
+
+        if ( ! $is_all_locations ) {
+            $flag = get_post_meta( $post_id, '_com_all_museums_ticket', true );
+            $is_all_locations = $flag === true || $flag === 1 || $flag === '1' || $flag === 'yes' || $flag === 'true';
+        }
+
+        /**
+         * Allows a project to mark a ticket as valid for every scanner location.
+         *
+         * Returning true disables the building_id mismatch rejection while the
+         * normal ticket status/date/slot checks still apply.
+         */
+        return (bool) apply_filters( 'iw_tickets_scanner_is_all_locations_ticket', $is_all_locations, $ticket, $post_id );
     }
 
     private static function get_ticket_scan_window_error( array $ticket ): ?array {
@@ -367,6 +392,10 @@ class IW_Ticket_Scanner {
     }
 
     private static function get_ticket_building_id( array $ticket ): int {
+        if ( self::is_all_locations_ticket( $ticket ) ) {
+            return 0;
+        }
+
         $post_id = (int) ( $ticket['post_id'] ?? 0 );
         return $post_id ? self::get_event_building_id( $post_id ) : 0;
     }

@@ -125,7 +125,7 @@ export default class extends module {
             btn.classList.add(status);
             if (status === 'sold-out') {
                 btn.disabled = true;
-                btn.title = 'Μη διαθέσιμο';
+                btn.title = this.el.dataset.unavailableLabel || '';
             } else {
                 btn.disabled = false;
                 btn.removeAttribute('title');

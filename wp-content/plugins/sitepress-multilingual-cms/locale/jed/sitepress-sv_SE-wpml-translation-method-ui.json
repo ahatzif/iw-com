@@ -5,83 +5,104 @@
          "": {
             "domain": "messages"
          },
-         "Your pending automatic translations will be canceled.": [
-            "Dina väntande automatiska översättningar avbryts."
+         "What should happen with your automatically translated content?": [
+            "Vad ska hända med ditt automatiskt översatta innehåll?"
          ],
-         "Save": [
-            "Spara"
+         "Wait for review": [
+            "Vänta på granskning"
          ],
-         "Go to the <a>Translation Management Dashboard</a> to translate your content.": [
-            "Gå till <a>Instrumentpanel för översättningshantering</a> för att översätta ditt innehåll."
+         "You check and approve translations before publishing.": [
+            "Du kontrollerar och godkänner översättningar innan publicering."
          ],
-         "When automatic translation completes:": [
-            "När automatisk översättning är klar:"
+         "Your translators check and approve translations before publishing.": [
+            "Dina översättare kontrollerar och godkänner översättningar innan publicering."
          ],
-         "Publish and add to the review list": [
-            "Publicera och lägg till i granskningslistan"
+         "Publish and mark for review": [
+            "Publicera och markera för granskning"
+         ],
+         "WPML publishes translations immediately but flags them for you to check at your convenience.": [
+            "WPML publicerar översättningar omedelbart men flaggar dem för dig att kontrollera när det passar dig."
+         ],
+         "WPML publishes translations immediately but flags them for your translators to check at their convenience.": [
+            "WPML publicerar översättningar omedelbart men flaggar dem för dina översättare att kontrollera när det passar dem."
          ],
          "Publish without review": [
             "Publicera utan granskning"
          ],
-         "Hold for review before publishing": [
-            "Håll ned för granskning innan publicering"
+         "The system publishes translations straight away, skipping the review process.": [
+            "Systemet publicerar översättningar direkt, utan granskningsprocess."
          ],
-         "Publish translations without a review": [
-            "Publicera översättningar utan att granska"
+         "Automatic translation": [
+            "Automatisk översättning"
          ],
-         "Publish translations and review them later": [
-            "Publicera översättningar och granska dem senare"
+         "What should happen with your automatically translated content": [
+            "Vad ska hända med ditt automatiskt översatta innehåll"
          ],
-         "Let me review the translations before publishing": [
-            "Låt mig granska översättningarna innan de publiceras"
+         "Save settings": [
+            "Spara inställningar"
          ],
-         "Automatically translate my entire site’s content": [
-            "Översätt automatiskt hela min webbplats"
+         "Translate drafts as I save them (consumes a bit more translation credits).": [
+            "Översätt utkast när jag sparar dem (förbrukar lite fler översättningskrediter)."
          ],
-         "How do you want to translate this site?": [
-            "Hur vill du översätta den här webbplatsen?"
+         "Do you want to translate drafts automatically?": [
+            "Vill du översätta utkast automatiskt?"
          ],
-         "I want to choose which content to translate": [
-            "Jag vill välja vilket innehåll som ska översättas"
+         "This feature is only available when you enable \"Translate Everything Automatically\" from the %sTranslation Dashboard%s.": [
+            "Denna funktion är endast tillgänglig när du aktiverar “Översätt allt automatiskt” från %sÖversättningspanelen%s."
          ],
-         "Yes, automatically translate all of my <s>existing posts and pages</s> right now, plus <s>new content</s> as I create it.": [
-            "Ja, översätt automatiskt alla mina <s>befintliga inlägg och sidor</s> just nu samt <s> nytt innehåll </s> medan jag skapar det."
+         "Don't translate drafts. Only translate when I publish content.": [
+            "Översätt inte utkast. Översätt endast när jag publicerar innehåll."
          ],
-         "Automatically translate all of my <s>existing content</s> right now, plus <s>new content</s> as I create it.": [
-            "Översätt automatiskt allt mitt <s>befintligt innehåll</s> just nu, samt <s>nytt innehåll</s> när jag skapar det."
+         "%d credits/word": [
+            "%d krediter/ord"
          ],
-         "No, only automatically translate <s>new content</s>.": [
-            "Nej, översätt <s>nytt innehåll</s> automatiskt."
+         "Informal": [
+            "Informell"
          ],
-         "Only automatically translate <s>new content</s>.": [
-            "Översätt automatiskt endast <s>nytt innehåll</s>."
+         "Automatic": [
+            "Automatisk"
          ],
-         "Should WPML automatically translate your existing content?": [
-            "Ska WPML automatiskt översätta ditt befintliga innehåll?"
+         "Formal": [
+            "Formell"
          ],
-         "Which content do you want to translate automatically?": [
-            "Vilket innehåll vill du översätta automatiskt?"
+         "Which translation engines do you want to use?": [
+            "Vilka översättningsmotorer vill du använda?"
          ],
-         "Start translating automatically": [
-            "Börja översätta automatiskt"
+         "Automatic translation engines differ in translation style and supported language pairs.\nIf your preferred translation engine does not support a language pair that you want to use, we fall back to your next preferred engine that does support it.\n": [
+            "Automatiska översättningsmotorer skiljer sig åt i översättningsstil och stödda språkpar.\nOm din föredragna översättningsmotor inte stöder ett språkpar du vill använda, faller vi tillbaka på din nästa föredragna motor som stöder det.\n"
          ],
-         "Create an account to start translating": [
-            "Skapa ett konto för att börja översätta"
+         "Drag & drop to sort from the most to the least preferred engine.": [
+            "Dra och släpp för att sortera från den mest till den minst föredragna motorn."
          ],
-         "WPML will use credits from your automatic translation account to translate your site immediately as you publish new content or update existing content.": [
-            "WPML kommer att använda krediter från ditt automatiska översättningskonto för att översätta din webbplats omedelbart när du publicerar nytt innehåll eller uppdaterar befintligt innehåll."
+         "Choose the tone of your automatic translations.": [
+            "Välj tonen för dina automatiska översättningar."
          ],
-         "You can translate existing content from the Translation Management Dashboard.": [
-            "Du kan översätta befintligt innehåll från instrumentpanelen Översättningshantering."
+         "Read more": [
+            "Läs mer"
          ],
-         "Cancel": [
-            "Avbryt"
+         "Learn more": [
+            "Lär dig mer"
          ],
-         "You must use the <s>Advanced Translation Editor</s> if you want to translate your content automatically.": [
-            "Du måste använda <s>Avancerad översättningsredigerare</s> om du vill översätta ditt innehåll automatiskt."
+         "On": [
+            "På"
          ],
-         "You currently use a translation service to translate your content. To translate your site automatically, first disconnect your translation service in your <a><s>Translation Management settings</s></a>.": [
-            "Du använder för närvarande en översättningstjänst för att översätta ditt innehåll. Om du vill översätta din webbplats automatiskt kopplar du först bort översättningstjänsten i dina <a><s>Inställningar för översättningshantering</s></a>."
+         "Off": [
+            "Av"
+         ],
+         "Could not load translation engines": [
+            "Kunde inte ladda översättningsmotorer"
+         ],
+         "Could not update engine": [
+            "Kunde inte uppdatera motor"
+         ],
+         "Could not save review mode": [
+            "Kunde inte spara granskningsläge"
+         ],
+         "Could not save translate everything drafts": [
+            "Kunde inte spara översättning av alla utkast"
+         ],
+         "Settings saved successfully": [
+            "Inställningar sparades framgångsrikt"
          ]
       }
    }

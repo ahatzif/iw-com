@@ -1,38 +1,64 @@
 import { module } from 'modujs';
-import Emitter from "tiny-emitter/instance";
-
 
 export default class extends module {
     constructor(m) {
         super(m);
 
-        Emitter.on('click-outside', () => {
-            this.el.classList.remove( 'active' )
-        } );
-        this.el.addEventListener( 'click', e => {
-            if( ! e.target.closest( 'a' ) ) e.stopPropagation();
-        });
-
-        [...this.$( 'button' )].forEach( btn => btn.addEventListener( 'click', this.toggleMenu.bind( this )));
-
-    }
-
-    init(){
+        this.button = this.$('button')[0];
+        this.panel = this.$('panel')[0];
         this.isOpen = false;
-        this.call( 'addScrollListener', this, 'Scroll' );
+
+        this.toggleMenu = this.toggleMenu.bind(this);
+        this.onDocumentClick = this.onDocumentClick.bind(this);
+        this.onKeydown = this.onKeydown.bind(this);
+
+        this.button?.addEventListener('click', this.toggleMenu);
+        document.addEventListener('click', this.onDocumentClick);
+        document.addEventListener('keydown', this.onKeydown);
+
     }
 
-    onScroll( e ){
-        if( this.isOpen ){
-            this.isOpen = ! this.isOpen;
-            this.el.classList.toggle( 'active' );
+    init() {
+        this.call('addScrollListener', this, 'Scroll');
+    }
+
+    setOpen(isOpen) {
+        this.isOpen = isOpen;
+        this.el.classList.toggle('active', isOpen);
+        this.button?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        this.panel?.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    }
+
+    toggleMenu(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.setOpen(!this.isOpen);
+    }
+
+    onDocumentClick(event) {
+        if (this.isOpen && !this.el.contains(event.target)) {
+            this.setOpen(false);
         }
     }
 
-    toggleMenu(){
-        if( ! document.body.classList.contains( 'logged-in' ) ) return;
-        this.isOpen = ! this.isOpen ;
-        this.el.classList.toggle( 'active' );
+    onKeydown(event) {
+        if (event.key !== 'Escape' || !this.isOpen) return;
+
+        this.setOpen(false);
+        this.button?.focus({ preventScroll: true });
+    }
+
+    onScroll() {
+        if (this.isOpen) {
+            this.setOpen(false);
+        }
+    }
+
+    destroy() {
+        this.button?.removeEventListener('click', this.toggleMenu);
+        document.removeEventListener('click', this.onDocumentClick);
+        document.removeEventListener('keydown', this.onKeydown);
+        this.call('removeScrollListener', this, 'Scroll');
     }
 
 }

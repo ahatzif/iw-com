@@ -209,6 +209,30 @@
       "return_format": "array"
     },
     {
+      "key": "field_com_museums_list_all_ticket_post",
+      "label": "Ticket post",
+      "name": "all_card_ticket_post",
+      "type": "post_object",
+      "instructions": "Choose the sellable museum post used as the all-museums ticket. If empty, the theme uses the post flagged with _com_all_museums_ticket or iw_ticket_scope=all_locations.",
+      "wrapper": {
+        "width": "40",
+        "class": "",
+        "id": ""
+      },
+      "post_type": [
+        "museum"
+      ],
+      "post_status": [
+        "publish"
+      ],
+      "taxonomy": "",
+      "return_format": "object",
+      "multiple": 0,
+      "allow_null": 1,
+      "ui": 1,
+      "bidirectional": 0
+    },
+    {
       "key": "field_com_museums_list_all_price",
       "label": "Ticket price",
       "name": "all_card_price",

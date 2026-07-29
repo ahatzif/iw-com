@@ -18,10 +18,10 @@ class WPML_URL_Converter_Url_Helper {
 
 	/**
 	 *
-	 * @param wpdb             $wpdb
-	 * @param WPML_Include_Url $wpml_include_url_filter
+	 * @param wpdb|null             $wpdb
+	 * @param WPML_Include_Url|null $wpml_include_url_filter
 	 */
-	public function __construct( wpdb $wpdb = null, WPML_Include_Url $wpml_include_url_filter = null ) {
+	public function __construct( ?wpdb $wpdb = null, ?WPML_Include_Url $wpml_include_url_filter = null ) {
 		if ( ! $wpdb ) {
 			global $wpdb;
 		}
@@ -46,7 +46,7 @@ class WPML_URL_Converter_Url_Helper {
 				$this->absolute_home = WP_HOME;
 			} elseif ( $is_multisite && ! is_main_site() ) {
 				$protocol = preg_match( '/^(https)/', get_option( 'home' ) ) === 1 ? 'https://' : 'http://';
-				$sql      = "	
+				$sql      = "
 					SELECT CONCAT(b.domain, b.path)
 					FROM {$this->wpdb->blogs} b
 					WHERE blog_id = {$this->wpdb->blogid}
@@ -86,7 +86,7 @@ class WPML_URL_Converter_Url_Helper {
 		if ( $this->wpml_include_url_filter ) {
 			return $this->wpml_include_url_filter->get_unfiltered_home();
 		} else {
-			$sql = "	
+			$sql = "
 				SELECT option_value
 				FROM {$this->wpdb->options}
 				WHERE option_name = 'home'

@@ -1,19 +1,21 @@
 <?php
 
-use \WPML\LIB\WP\Gutenberg;
+use WPML\LIB\WP\Gutenberg;
 use WPML\FP\Obj;
 
 class WPML_PB_Shortcode_Strategy implements IWPML_PB_Strategy {
 
-	private $shortcodes = array(
-		WPML_PB_Shortcode_Content_Wrapper::WRAPPER_SHORTCODE_NAME => array(
+	/** @var array $shorcodes */
+	private $shortcodes = [
+		WPML_PB_Shortcode_Content_Wrapper::WRAPPER_SHORTCODE_NAME => [
 			'encoding'           => '',
 			'encoding-condition' => '',
 			'type'               => '',
 			'ignore-content'     => false,
-			'attributes'         => array(),
-		),
-	);
+			'attributes'         => [],
+		],
+	];
+
 	/** @var  WPML_PB_Factory $factory */
 	private $factory;
 
@@ -34,7 +36,7 @@ class WPML_PB_Shortcode_Strategy implements IWPML_PB_Strategy {
 				continue;
 			}
 
-			if ( ! in_array( $tag, $this->shortcodes ) ) {
+			if ( ! in_array( $tag, $this->shortcodes, true ) ) {
 				$this->shortcodes[ $tag ] = [
 					'encoding'           => $shortcode['tag']['encoding'],
 					'encoding-condition' => isset( $shortcode['tag']['encoding-condition'] ) ? $shortcode['tag']['encoding-condition'] : '',
@@ -110,13 +112,13 @@ class WPML_PB_Shortcode_Strategy implements IWPML_PB_Strategy {
 	}
 
 	/**
-	 * @param string|int $post_id
-	 * @param string     $content
-	 * @param WPML\PB\Shortcode\StringCleanUp $stringCleanUp
+	 * @param string|int                           $post_id
+	 * @param string                               $content
+	 * @param WPML\PB\Shortcode\StringCleanUp|null $stringCleanUp
 	 *
 	 * @return bool
 	 */
-	public function register_strings_in_content( $post_id, $content, WPML\PB\Shortcode\StringCleanUp $stringCleanUp = null ) {
+	public function register_strings_in_content( $post_id, $content, ?WPML\PB\Shortcode\StringCleanUp $stringCleanUp = null ) {
 		$register_shortcodes = $this->factory->get_register_shortcodes( $this );
 
 		return $register_shortcodes->register_shortcode_strings( $post_id, $content, $stringCleanUp );
@@ -153,12 +155,11 @@ class WPML_PB_Shortcode_Strategy implements IWPML_PB_Strategy {
 
 	public function remove_string( $string_data ) {
 		return $this->factory->get_string_translations( $this )->remove_string( $string_data );
-
 	}
 
 	/**
-	 * @param int $post_id
-	 * @param object $post_content
+	 * @param int    $post_id
+	 * @param string $post_content
 	 */
 	public function migrate_location( $post_id, $post_content ) {
 		$migrate_locations = $this->factory->get_register_shortcodes( $this, true );

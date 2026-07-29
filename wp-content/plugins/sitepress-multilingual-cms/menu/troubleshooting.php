@@ -31,7 +31,7 @@ if ( defined( 'WPML_Templates_Factory::OTGS_TWIG_CACHE_DISABLED_KEY' ) ) {
 	$otgs_twig_cache_disable_key = WPML_Templates_Factory::OTGS_TWIG_CACHE_DISABLED_KEY;
 }
 
-if ( wp_verify_nonce( $nonce, $action ) ) {
+if ( $nonce && $action && wp_verify_nonce( $nonce, $action ) ) {
 	ob_end_clean();
 	global $wpdb;
 	switch ( $action ) {
@@ -57,6 +57,7 @@ if ( wp_verify_nonce( $nonce, $action ) ) {
 			icl_cache_clear();
 			$cache_directory = new WPML_Cache_Directory( new WPML_WP_API() );
 			$cache_directory->remove();
+			WPML_Translation_Roles_Records::delete_cache();
 			exit;
 
 		case 'ghost_clean':
@@ -294,8 +295,9 @@ if ( wp_verify_nonce( $nonce, $action ) ) {
 
 			foreach ( get_taxonomies( array(), 'names' ) as $taxonomy ) {
 
-				$terms_objects = get_terms( $taxonomy, 'hide_empty=0' );
-				if ( $terms_objects ) {
+				$terms_objects = get_terms( [ 'taxonomy' => $taxonomy, 'hide_empty' => 0 ] );
+				if ( is_array( $terms_objects ) ) {
+					/** @phpstan-ignore-next-line For some reason 'get_term_taxonomy_id_from_term_object' is not recognised as function by PHPStan. */
 					$term_taxonomy_ids = array_map( 'get_term_taxonomy_id_from_term_object', $terms_objects );
 					wp_update_term_count( $term_taxonomy_ids, $taxonomy, true );
 				}
@@ -355,7 +357,7 @@ ob_start();
 print_r( $sitepress->get_settings() );
 $ob = ob_get_contents();
 ob_end_clean();
-echo esc_html( $ob );
+echo esc_html( (string) $ob );
 echo '</textarea>';
 
 ?>
@@ -718,7 +720,9 @@ if ( $shared ) {
 		<small style="margin-left:10px;"><?php _e( 'Correct terms count in case something went wrong with translated contents.', 'sitepress' ); ?></small>
 	</p>
 	<p>
-		<input id="icl_fix_post_types" type="button" class="button-secondary" value="<?php _e( 'Fix post type assignment for translations', 'sitepress' ); ?>"/><br/>
+		<input id="icl_fix_post_types" type="button" class="button-secondary" value="<?php _e( 'Fix post type assignment for translations', 'sitepress' ); ?>"/>
+		<span id="icl_fix_post_types_posts_left_msg" style="display: none; padding: 8px 0px 0px 5px"><span>0</span> <?php esc_html_e( 'posts left', 'sitepress' ); ?></span>
+		<br/>
 		<small style="margin-left:10px;"><?php _e( 'Correct post type assignment for translations of custom post types in case something went wrong.', 'sitepress' ); ?></small>
 	</p>
 
@@ -837,6 +841,7 @@ if ( $shared ) {
 
 		<?php do_action( 'wpml_troubleshooting_after_setup_complete_cleanup_end' ); ?>
 		<?php do_action( 'after_setup_complete_troubleshooting_functions' ); ?>
+		<?php ICL_AdminNotifier::troubleshooting(); ?>
 
 	<?php } ?>
 

@@ -17,7 +17,7 @@ if ( $title_args['title'] === '' ) {
 <?php if ( $title_args['title'] !== '' ) : ?>
     <header class="<?= esc_attr( trim( 'mb-40 ' . $title_args['classes'] ) ) ?>">
         <?php if ( $title_args['eyebrow'] !== '' ) : ?>
-            <p class="mb-10 text-[1rem] font-medium uppercase tracking-[.18em] text-blue/50"><?= esc_html( $title_args['eyebrow'] ) ?></p>
+            <p class="mb-10 text-[1rem] font-medium tracking-[.18em] text-blue/50"><?= esc_html( com\theme::remove_accents( $title_args['eyebrow'] ) ) ?></p>
         <?php endif; ?>
         <h2 class="m-0 text-[2.8rem] font-bold leading-[1.1] md:text-[3.6rem]"><?= esc_html( $title_args['title'] ) ?></h2>
         <?php if ( $title_args['description'] !== '' ) : ?>

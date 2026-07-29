@@ -6,6 +6,14 @@
 </select>
 {% endset %}
 
+{% set job_limits_dropdown %}
+<select id="wpml_tm_job_limits_in_email" name="notification[job_limits]"{{ settings.job_limits.disabled }}>
+    {% for option in settings.job_limits.options %}
+    <option value="{{ option.value }}"{{ option.checked }}>{{ option.label }}</option>
+    {% endfor %}
+</select>
+{% endset %}
+
 {% set overdue_offset_input %}
     <input name="notification[overdue_offset]" value="{{ settings.overdue_offset.value }}"
            size="1"{{ settings.overdue_offset.disabled }}>
@@ -18,13 +26,17 @@
     <div class="wpml-section-content">
         <ul>
             <li>
-                <input name="notification[new-job]" type="checkbox" id="wpml_tm_notify_new_job"
-                       data-child="notification[include_xliff]"
+                <input name="notification[new-job]" type="checkbox" id="wpml_tm_notify_new_job" class="wpml-checkbox-native"
+                       data-child="notification[include_xliff]||notification[job_limits]"
                        value="{{ settings.new_job.value }}"{{ settings.new_job.checked }}>
                 <label for="wpml_tm_notify_new_job">{{ strings.label_new_job }}</label>
-                <ul>
+                <ul class="wpml-subsection">
+										<li>
+											<label for="wpml_tm_job_limits_in_email">{{ strings.label_job_limits }}</label>
+											 {{ job_limits_dropdown|raw }}
+										</li>
                     <li>
-                        <input type="checkbox" name="notification[include_xliff]" id="wpml_tm_notify_include_xliff"
+                        <input type="checkbox" name="notification[include_xliff]" id="wpml_tm_notify_include_xliff" class="wpml-checkbox-native"
                                value="{{ settings.include_xliff.value }}"
                                 {{ settings.include_xliff.checked }}{{ settings.include_xliff.disabled }}>
                         <label for="icl_include_xliff">{{ strings.label_include_xliff }}</label>
@@ -33,6 +45,7 @@
             </li>
             <li>
                 <input name="notification[resigned]" type="checkbox" id="wpml_tm_notify_job_resigned"
+                       class="wpml-checkbox-native"
                        value="{{ settings.resigned.value }}"{{ settings.resigned.checked }}>
                 <label for="wpml_tm_notify_job_resigned">{{ strings.label_resigned_job }}</label>
             </li>
@@ -47,6 +60,7 @@
         <ul>
             <li>
                 <input name="notification[completed]" type="checkbox" id="wpml_tm_notify_completed"
+                       class="wpml-checkbox-native"
                        data-child="notification[completed_frequency]"
                        value="{{ settings.completed.value }}"{{ settings.completed.checked }}>
                 <label for="wpml_tm_notify_completed">
@@ -55,6 +69,7 @@
             </li>
             <li>
                 <input name="notification[overdue]" type="checkbox" id="wpml_tm_notify_job_overdue"
+                       class="wpml-checkbox-native"
                        data-child="notification[overdue_offset]"
                        value="{{ settings.overdue.value }}"{{ settings.overdue.checked }}>
                 <label for="wpml_tm_notify_job_overdue">

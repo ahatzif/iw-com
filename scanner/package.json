@@ -1,0 +1,12 @@
+{
+  "name": "com-scanner",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "tailwindcss -i ./assets/tailwind/input.css -c ./tailwind.config.cjs -o ./assets/css/scanner.css --minify",
+    "watch": "tailwindcss -i ./assets/tailwind/input.css -c ./tailwind.config.cjs -o ./assets/css/scanner.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

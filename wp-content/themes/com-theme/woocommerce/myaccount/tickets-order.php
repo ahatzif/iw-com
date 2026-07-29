@@ -92,7 +92,7 @@ $tickets = (array) ( $ticket_bundle['tickets'] ?? [] );
             <article class="relative overflow-hidden rounded-[1.2rem] border border-blue/15 bg-white">
                 <div class="border-b border-dashed border-blue/25 px-20 py-15 md:px-25">
                     <div class="flex items-center justify-between gap-20">
-                        <span class="text-[1.1rem] font-bold uppercase tracking-[.14em] text-blue-soft"><?= esc_html( sprintf( __( 'Εισιτήριο %d', 'com-theme' ), $index + 1 ) ) ?></span>
+                        <span class="text-[1.1rem] font-bold tracking-[.14em] text-blue-soft"><?= esc_html( com\theme::remove_accents( sprintf( __( 'Εισιτήριο %d', 'com-theme' ), $index + 1 ) ) ) ?></span>
                         <span class="text-[1rem] text-blue/50">#<?= esc_html( $reference ) ?></span>
                     </div>
                 </div>
@@ -100,15 +100,15 @@ $tickets = (array) ( $ticket_bundle['tickets'] ?? [] );
                 <div class="grid gap-25 p-20 md:grid-cols-[1fr_auto] md:items-center md:p-25">
                     <dl class="grid gap-x-30 gap-y-20 sm:grid-cols-2">
                         <div>
-                            <dt class="text-[.9rem] uppercase tracking-[.1em] text-blue/50"><?= esc_html__( 'Ονοματεπώνυμο', 'com-theme' ) ?></dt>
+                            <dt class="text-[.9rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Ονοματεπώνυμο', 'com-theme' ) ) ) ?></dt>
                             <dd class="m-0 mt-5 text-[1.6rem] font-bold"><?= esc_html( ( $ticket->attendee_name ?? '' ) ?: '—' ) ?></dd>
                         </div>
                         <div>
-                            <dt class="text-[.9rem] uppercase tracking-[.1em] text-blue/50"><?= esc_html__( 'Κατηγορία', 'com-theme' ) ?></dt>
+                            <dt class="text-[.9rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Κατηγορία', 'com-theme' ) ) ) ?></dt>
                             <dd class="m-0 mt-5 text-[1.6rem] font-bold"><?= esc_html( $price_label ?: '—' ) ?></dd>
                         </div>
                         <div>
-                            <dt class="text-[.9rem] uppercase tracking-[.1em] text-blue/50"><?= esc_html__( 'Τιμή', 'com-theme' ) ?></dt>
+                            <dt class="text-[.9rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Τιμή', 'com-theme' ) ) ) ?></dt>
                             <dd class="m-0 mt-5 text-[1.6rem] font-bold"><?= wp_kses_post( wc_price( isset( $ticket->unit_price ) ? $ticket->unit_price : 0 ) ) ?></dd>
                         </div>
                     </dl>

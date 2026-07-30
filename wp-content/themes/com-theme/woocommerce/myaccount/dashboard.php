@@ -37,7 +37,6 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
                 <a href="<?= esc_url( wc_get_account_endpoint_url( 'tickets' ) ) ?>" data-barba-prevent data-account-pages="link" class="group min-h-[18rem] rounded-[1.2rem] border border-blue/15 bg-white p-20 text-blue transition-colors hover:bg-ochre-light md:p-25">
                     <span class="flex items-start justify-between gap-20">
                         <span class="flex items-center gap-10 text-blue-soft">
-                            <svg class="h-[2.2rem] w-[2.6rem] fill-current" aria-hidden="true"><use xlink:href="#icon-com-ticket"></use></svg>
                             <span class="text-[1.1rem] font-bold tracking-[.1em]"><?= esc_html( com\theme::remove_accents( __( 'Ενεργά εισιτήρια', 'com-theme' ) ) ) ?></span>
                         </span>
                         <span aria-hidden="true">→</span>
@@ -54,7 +53,7 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
                 <a href="<?= esc_url( wc_get_account_endpoint_url( 'tickets' ) ) ?>" data-barba-prevent data-account-pages="link" class="group min-h-[18rem] rounded-[1.2rem] border border-blue/15 bg-white p-20 text-blue transition-colors hover:bg-ochre-light md:p-25">
                     <span class="flex items-start justify-between gap-20">
                         <span class="flex items-center gap-10 text-blue-soft">
-                            <svg class="h-[2.2rem] w-[2.6rem] shrink-0" aria-hidden="true"><use xlink:href="#icon-com-ticket"></use></svg>
+
                             <span class="text-[1.1rem] font-bold tracking-[.1em]"><?= esc_html( com\theme::remove_accents( __( 'Ενεργά εισιτήρια', 'com-theme' ) ) ) ?></span>
                         </span>
                         <span aria-hidden="true">→</span>
@@ -67,7 +66,6 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
                 <a href="<?= esc_url( wc_get_account_endpoint_url( 'orders' ) ) ?>" data-barba-prevent data-account-pages="link" class="group min-h-[18rem] rounded-[1.2rem] border border-blue/15 bg-white p-20 text-blue transition-colors hover:bg-ochre-light md:p-25">
                     <span class="flex items-start justify-between gap-20">
                         <span class="flex items-center gap-10 text-blue-soft">
-                            <svg class="size-25 fill-current" aria-hidden="true"><use xlink:href="#icon-cart"></use></svg>
                             <span class="text-[1.1rem] font-bold tracking-[.1em]"><?= esc_html( com\theme::remove_accents( __( 'Σύνολο αγορών', 'com-theme' ) ) ) ?></span>
                         </span>
                         <span aria-hidden="true">→</span>
@@ -84,7 +82,7 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
                 <a href="<?= esc_url( wc_get_account_endpoint_url( 'orders' ) ) ?>" data-barba-prevent data-account-pages="link" class="group min-h-[18rem] rounded-[1.2rem] border border-blue/15 bg-white p-20 text-blue transition-colors hover:bg-ochre-light md:p-25">
                     <span class="flex items-start justify-between gap-20">
                         <span class="flex items-center gap-10 text-blue-soft">
-                            <svg class="size-25 shrink-0 fill-current" aria-hidden="true"><use xlink:href="#icon-cart"></use></svg>
+
                             <span class="text-[1.1rem] font-bold tracking-[.1em]"><?= esc_html( com\theme::remove_accents( __( 'Σύνολο αγορών', 'com-theme' ) ) ) ?></span>
                         </span>
                         <span aria-hidden="true">→</span>
@@ -126,7 +124,7 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
             <article class="min-h-[18rem] rounded-[1.2rem] border border-blue/15 p-20 sm:col-span-2 md:p-25">
                 <div class="mb-20 flex items-start justify-between gap-20">
                     <div class="flex items-center gap-10 text-blue-soft">
-                        <svg class="size-20 fill-current" aria-hidden="true"><use xlink:href="#icon-location"></use></svg>
+
                         <h4 class="m-0 text-[1.1rem] font-bold tracking-[.1em]"><?= esc_html( com\theme::remove_accents( __( 'Διεύθυνση χρέωσης', 'com-theme' ) ) ) ?></h4>
                     </div>
                     <a href="<?= esc_url( $billing_edit_url ) ?>" data-barba-prevent data-account-pages="link" class="shrink-0 text-[1.3rem] underline underline-offset-4"><?= esc_html__( 'Επεξεργασία', 'com-theme' ) ?></a>
@@ -137,7 +135,7 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
             <article class="hidden min-h-[18rem] rounded-[1.2rem] border border-blue/15 p-20 md:p-25">
                 <div class="mb-20 flex items-start justify-between gap-20">
                     <div class="flex items-center gap-10 text-blue-soft">
-                        <svg class="size-20 fill-current" aria-hidden="true"><use xlink:href="#icon-location"></use></svg>
+
                         <h4 class="m-0 text-[1.1rem] font-bold tracking-[.1em]"><?= esc_html( com\theme::remove_accents( __( 'Διεύθυνση αποστολής', 'com-theme' ) ) ) ?></h4>
                     </div>
                     <a href="<?= esc_url( $shipping_edit_url ) ?>" data-barba-prevent data-account-pages="link" class="shrink-0 text-[1.3rem] underline underline-offset-4"><?= esc_html__( 'Επεξεργασία', 'com-theme' ) ?></a>

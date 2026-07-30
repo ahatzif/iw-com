@@ -15,7 +15,7 @@ $show_shipping = ! wc_ship_to_billing_address_only() && $order->needs_shipping_a
     <div class="grid gap-15<?= $show_shipping ? ' sm:grid-cols-2' : '' ?>">
         <article class="min-h-[18rem] rounded-[1.2rem] border border-blue/15 p-20<?= $show_shipping ? '' : ' sm:col-span-2' ?> md:p-25">
             <div class="mb-20 flex items-start gap-10 text-blue-soft">
-                <svg class="size-20 shrink-0 fill-current" aria-hidden="true"><use xlink:href="#icon-location"></use></svg>
+
                 <h3 class="m-0 text-[1.1rem] font-bold tracking-[.1em]"><?= esc_html( com\theme::remove_accents( __( 'Διεύθυνση χρέωσης', 'com-theme' ) ) ) ?></h3>
             </div>
 
@@ -37,7 +37,7 @@ $show_shipping = ! wc_ship_to_billing_address_only() && $order->needs_shipping_a
         <?php if ( $show_shipping ) : ?>
             <article class="min-h-[18rem] rounded-[1.2rem] border border-blue/15 p-20 md:p-25">
                 <div class="mb-20 flex items-start gap-10 text-blue-soft">
-                    <svg class="size-20 shrink-0 fill-current" aria-hidden="true"><use xlink:href="#icon-location"></use></svg>
+
                     <h3 class="m-0 text-[1.1rem] font-bold tracking-[.1em]"><?= esc_html( com\theme::remove_accents( __( 'Διεύθυνση αποστολής', 'com-theme' ) ) ) ?></h3>
                 </div>
 

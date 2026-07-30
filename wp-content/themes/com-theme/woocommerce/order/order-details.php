@@ -64,51 +64,8 @@ $status_class = $status_is_positive ? 'text-validated' : 'text-limited';
     <?php do_action( 'woocommerce_order_details_before_order_table', $order ); ?>
 
     <div class="overflow-hidden rounded-[1.2rem] border border-blue/15 bg-white">
-        <header class="flex flex-col gap-20 px-20 py-25 md:flex-row md:items-start md:justify-between md:px-25">
-            <div>
-                <p class="m-0 text-[1rem] font-bold tracking-[.12em] text-blue-soft"><?= esc_html( com\theme::remove_accents( __( 'Κατάσταση αγοράς', 'com-theme' ) ) ) ?></p>
-                <h2 class="mt-8 text-[2.2rem] font-bold <?= esc_attr( $status_class ) ?>"><?= esc_html( $status_label ) ?></h2>
-                <p class="mt-8 text-[1.2rem] text-blue/60">
-                    #<?= esc_html( $order->get_order_number() ) ?>
-                    <span aria-hidden="true">·</span>
-                    <?= esc_html( wc_format_datetime( $order->get_date_created(), 'd/m/Y' ) ) ?>
-                </p>
-
-                <?php if ( $order->has_status( 'pending' ) && ! $is_expired_payment ) : ?>
-                    <p class="mt-15 max-w-[48rem] text-[1.2rem] leading-[1.4] text-blue/65"><?= esc_html__( 'Ολοκληρώστε την πληρωμή για να εκδοθούν τα εισιτήριά σας.', 'com-theme' ) ?></p>
-                <?php elseif ( $is_expired_payment ) : ?>
-                    <p class="mt-15 max-w-[48rem] text-[1.2rem] leading-[1.4] text-blue/65"><?= esc_html__( 'Τα εισιτήρια αποδεσμεύτηκαν. Ξεκινήστε νέα αγορά για να ελέγξετε ξανά τη διαθεσιμότητα.', 'com-theme' ) ?></p>
-                <?php endif; ?>
-            </div>
-
-            <?php if ( $actions ) : ?>
-                <div class="flex shrink-0 flex-wrap items-center gap-10">
-                    <?php foreach ( $actions as $key => $action ) : ?>
-                        <a
-                            href="<?= esc_url( $action['url'] ) ?>"
-                            class="<?= $key === 'pay'
-                                ? 'inline-flex min-h-40 items-center justify-center rounded-[.6rem] border border-blue bg-blue px-20 text-[1.2rem] font-bold text-white transition-colors hover:bg-transparent hover:text-blue'
-                                : 'inline-flex min-h-40 items-center justify-center rounded-[.6rem] border border-blue/25 px-20 text-[1.2rem] font-bold text-blue transition-colors hover:border-blue' ?>"
-                            data-barba-prevent
-                            aria-label="<?= esc_attr( $action['aria-label'] ?? $action['name'] ) ?>"
-                        ><?= esc_html( $action['name'] ) ?></a>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </header>
-
-        <div class="border-t border-blue/15">
-            <div class="flex items-center justify-between gap-20 px-20 py-15 md:px-25">
-                <h3 class="m-0 text-[1.1rem] font-bold tracking-[.1em] text-blue-soft"><?= esc_html( com\theme::remove_accents( __( 'Εισιτήρια', 'com-theme' ) ) ) ?></h3>
-                <span class="text-[1.1rem] text-blue/50">
-                    <?= esc_html(
-                        sprintf(
-                            _n( '%d επιλογή', '%d επιλογές', count( $order_items ), 'com-theme' ),
-                            count( $order_items )
-                        )
-                    ) ?>
-                </span>
-            </div>
+        <div class="px-20 pt-20 md:px-25 md:pt-25">
+            <h3 class="m-0 text-[1.1rem] font-bold tracking-[.1em] text-blue-soft"><?= esc_html( com\theme::remove_accents( __( 'Εισιτήρια', 'com-theme' ) ) ) ?></h3>
         </div>
 
         <div>
@@ -140,57 +97,20 @@ $status_class = $status_is_positive ? 'text-validated' : 'text-limited';
                 $quantity = max( 1, (int) $item->get_quantity() );
                 ?>
 
-                <article class="<?= $visible_item_index > 0 ? 'border-t border-blue/15 ' : '' ?>px-20 py-20 md:px-25">
+                <article class="<?= $visible_item_index > 0 ? 'border-t border-blue/15 ' : '' ?>px-20 py-20 md:px-25 md:py-25">
                     <div class="flex flex-col gap-20 md:flex-row md:items-center">
-                        <?php if ( $is_ticket ) : ?>
-                            <div class="relative h-[9rem] w-full shrink-0 overflow-hidden rounded-[.8rem] bg-ochre-light md:w-[12rem]">
-                                <?php if ( $is_all_museums_ticket ) : ?>
-                                    <?php get_template_part( 'templates/parts/all-museums-art' ); ?>
-                                <?php elseif ( $image_id ) : ?>
-                                    <?php get_template_part( 'templates/parts/image', null, [
-                                        'id'       => $image_id,
-                                        'size'     => 'medium',
-                                        'classes'  => '!h-full !w-full object-cover',
-                                        'parallax' => false,
-                                    ] ); ?>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
-
                         <div class="min-w-0 flex-1">
-                            <?php if ( $location ) : ?>
-                                <p class="m-0 text-[1rem] leading-none tracking-[.3em] text-blue-soft"><?= esc_html( com\theme::remove_accents( $location ) ) ?></p>
-                            <?php endif; ?>
-
-                            <h3 class="<?= $location ? 'mt-8 ' : '' ?>m-0 text-[1.6rem] font-bold leading-[1.2]"><?= esc_html( $title ) ?></h3>
-
-                            <div class="mt-12 flex flex-wrap gap-x-12 gap-y-8 text-[1.15rem] text-blue/60">
-                                <?php if ( $date ) : ?><span><?= esc_html( $date ) ?></span><?php endif; ?>
-                                <?php if ( $time ) : ?><span><?= esc_html( sprintf( __( 'Ώρα %s', 'com-theme' ), $time ) ) ?></span><?php endif; ?>
-                                <span><?= esc_html(
+                            <h3 class="m-0 text-[1.3rem] font-bold leading-[1.5]"><?= esc_html( $title ) ?></h3>
+                            <p class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-4 text-[.9rem] leading-[1.45]">
+                                <span><?= esc_html( com\theme::remove_accents( mb_strtoupper( wc_format_datetime( $order->get_date_created(), 'l, j F · H:i' ), 'UTF-8' ) ) ) ?></span>
+                                <span aria-hidden="true">·</span>
+                                <span><?= esc_html( com\theme::remove_accents(
                                     $is_ticket
                                         ? sprintf( _n( '%d εισιτήριο', '%d εισιτήρια', $ticket_count, 'com-theme' ), $ticket_count )
                                         : sprintf( __( 'Ποσότητα: %d', 'com-theme' ), $quantity )
-                                ) ?></span>
-                            </div>
-
-                            <?php if ( $is_ticket && $visitors ) : ?>
-                                <div class="mt-15 flex flex-wrap gap-x-15 gap-y-8 text-[1.1rem]">
-                                    <?php foreach ( $visitors as $visitor_index => $visitor ) : ?>
-                                        <?php
-                                        if ( ! is_array( $visitor ) ) {
-                                            continue;
-                                        }
-                                        $visitor_name = trim( (string) ( $visitor['first'] ?? '' ) . ' ' . (string) ( $visitor['last'] ?? '' ) );
-                                        $category = trim( (string) ( $visitor['category-name'] ?? $visitor['category_name'] ?? __( 'Εισιτήριο', 'com-theme' ) ) );
-                                        ?>
-                                        <span class="rounded-full bg-ochre-light px-10 py-6">
-                                            <strong><?= esc_html( $visitor_name !== '' ? $visitor_name : sprintf( __( 'Επισκέπτης %d', 'com-theme' ), $visitor_index + 1 ) ) ?></strong>
-                                            <span class="text-blue/60"> · <?= esc_html( $category ) ?></span>
-                                        </span>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
+                                ) ) ?></span>
+                                <strong class="font-bold"><?= wp_kses_post( $order->get_formatted_line_subtotal( $item ) ) ?></strong>
+                            </p>
                         </div>
 
                         <div class="shrink-0 text-[1.6rem] font-bold"><?= wp_kses_post( $order->get_formatted_line_subtotal( $item ) ) ?></div>
@@ -210,6 +130,10 @@ $status_class = $status_is_positive ? 'text-validated' : 'text-limited';
         <?php endif; ?>
 
     </div>
+
+    <?php if ( $show_customer_details ) : ?>
+        <?php wc_get_template( 'order/order-details-customer.php', [ 'order' => $order ] ); ?>
+    <?php endif; ?>
 
     <div class="mt-20 grid gap-15 md:grid-cols-2">
         <section class="rounded-[1.2rem] border border-blue/15 p-20 md:p-25">
@@ -238,38 +162,44 @@ $status_class = $status_is_positive ? 'text-validated' : 'text-limited';
         <section class="rounded-[1.2rem] border border-blue/15 p-20 md:p-25">
             <h2 class="m-0 text-[1.2rem] font-bold tracking-[.12em] text-blue-soft"><?= esc_html( com\theme::remove_accents( __( 'Στοιχεία αγοράς', 'com-theme' ) ) ) ?></h2>
 
-            <dl class="m-0 mt-20 grid gap-20 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
+            <dl class="m-0 mt-20">
                 <?php if ( $payment_method ) : ?>
                     <div>
-                        <dt class="text-[1rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Τρόπος πληρωμής', 'com-theme' ) ) ) ?></dt>
-                        <dd class="m-0 mt-8 text-[1.25rem] font-bold leading-[1.35]"><?= esc_html( $payment_method ) ?></dd>
+                        <dd class="m-0 text-[1.3rem] leading-[1.5]"><?= esc_html( $payment_method ) ?></dd>
                     </div>
                 <?php endif; ?>
 
                 <div>
-                    <dt class="text-[1rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Ημερομηνία αγοράς', 'com-theme' ) ) ) ?></dt>
-                    <dd class="m-0 mt-8 text-[1.25rem] font-bold"><?= esc_html( wc_format_datetime( $order->get_date_created(), 'd/m/Y, H:i' ) ) ?></dd>
+                    <dd class="m-0 text-[1.3rem] leading-[1.5]"><?= esc_html( wc_format_datetime( $order->get_date_created(), 'd/m/Y, H:i' ) ) ?></dd>
                 </div>
 
-                <div>
-                    <dt class="text-[1rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Αριθμός αγοράς', 'com-theme' ) ) ) ?></dt>
-                    <dd class="m-0 mt-8 text-[1.25rem] font-bold">#<?= esc_html( $order->get_order_number() ) ?></dd>
-                </div>
-
-                <div>
-                    <dt class="text-[1rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Κατάσταση', 'com-theme' ) ) ) ?></dt>
-                    <dd class="m-0 mt-8 text-[1.25rem] font-bold <?= esc_attr( $status_class ) ?>"><?= esc_html( $status_label ) ?></dd>
+                <div class="mt-15 border-t border-blue/15 pt-15">
+                    <dt class="text-[1.3rem] font-bold <?= esc_attr( $status_class ) ?>"><?= esc_html( $status_label ) ?></dt>
+                    <?php if ( $is_expired_payment ) : ?>
+                        <dd class="m-0 mt-8 text-[1.05rem] leading-[1.4] text-blue/55"><?= esc_html__( 'Τα εισιτήρια αποδεσμεύτηκαν. Ξεκινήστε νέα αγορά για να ελέγξετε ξανά τη διαθεσιμότητα.', 'com-theme' ) ?></dd>
+                    <?php endif; ?>
                 </div>
             </dl>
         </section>
     </div>
 
     <?php do_action( 'woocommerce_order_details_after_order_table', $order ); ?>
+
+    <?php if ( $actions ) : ?>
+        <footer class="mt-20 flex flex-wrap justify-end gap-10">
+            <?php foreach ( $actions as $key => $action ) : ?>
+                <a
+                    href="<?= esc_url( $action['url'] ) ?>"
+                    class="<?= $key === 'pay'
+                        ? 'inline-flex min-h-40 items-center justify-center rounded-[.6rem] border border-blue bg-blue px-20 text-[1.2rem] font-bold text-white transition-colors hover:bg-transparent hover:text-blue'
+                        : 'inline-flex min-h-40 items-center justify-center rounded-[.6rem] border border-blue/25 px-20 text-[1.2rem] font-bold text-blue transition-colors hover:border-blue' ?>"
+                    data-barba-prevent
+                    aria-label="<?= esc_attr( $action['aria-label'] ?? $action['name'] ) ?>"
+                ><?= esc_html( $action['name'] ) ?></a>
+            <?php endforeach; ?>
+        </footer>
+    <?php endif; ?>
 </section>
 
 <?php
 do_action( 'woocommerce_after_order_details', $order );
-
-if ( $show_customer_details ) {
-    wc_get_template( 'order/order-details-customer.php', [ 'order' => $order ] );
-}

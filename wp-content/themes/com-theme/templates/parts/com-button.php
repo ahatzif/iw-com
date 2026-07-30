@@ -15,10 +15,12 @@ $button = wp_parse_args( $args ?? [], [
 
 $tag = in_array( $button['tag'], [ 'a', 'button' ], true ) ? $button['tag'] : 'a';
 $variant_classes = [
-	'light'         => 'border-blue bg-ochre text-blue hover:border-ochre hover:bg-transparent hover:text-ochre',
+	'white'         => 'border-blue bg-white text-blue hover:border-white hover:bg-transparent hover:text-white',
+        'light'         => 'border-blue bg-ochre text-blue hover:border-ochre hover:bg-transparent hover:text-ochre',
 	'blue'          => 'border-blue bg-blue text-white hover:bg-transparent hover:text-blue',
 	'blue-outline'  => 'border-blue bg-transparent text-blue hover:bg-blue hover:text-white',
 	'light-outline' => 'border-ochre-light bg-transparent text-ochre-light hover:bg-ochre-light hover:text-blue',
+    'white-outline' => 'white-light bg-transparent text-white hover:bg-ochre-light hover:text-blue',
 ];
 $size_classes = $button['size'] === 'small'
 	? 'rounded-[.5rem] px-[1.7rem] py-[1.5rem]'

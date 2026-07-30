@@ -41,33 +41,28 @@ $has_notices = ! empty( wc_get_notices() );
                 <?php endforeach; ?>
             </div>
 
-            <aside class="rounded-[1.5rem] bg-white p-30 text-blue md:p-40 lg:sticky lg:top-[14rem]">
-                <div class="flex items-start justify-between gap-20">
+            <aside class="">
+                <div class="flex items-start justify-between gap-20 mt-40 border-t border-white pt-40">
                     <div>
-                        <div class="text-[1.6rem] font-bold text-blue-soft"><?= esc_html__( 'ΣΥΝΟΛΟ', 'com-theme' ) ?></div>
-                        <div class="mt-5 text-[1.2rem]" data-cart="cart-items-count"><?= esc_html( com_theme_cart_count_label( $count ) ) ?></div>
+                        <div class="text-[1.6rem] font-bold "><?= esc_html__( 'ΣΥΝΟΛΟ', 'com-theme' ) ?></div>
+                        <div class="text-[1.2rem]" data-cart="cart-items-count"><?= esc_html( com_theme_cart_count_label( $count ) ) ?></div>
                     </div>
                     <div class="text-[2.4rem] font-bold" data-module-price-html data-key="cart-total"><?= wp_kses_post( $cart->get_total() ) ?></div>
                 </div>
-
-                <div
-                    class="relative -mx-30 mt-30 border-t border-dashed border-blue-soft before:absolute before:-left-15 before:-top-15 before:size-30 before:rounded-full before:bg-blue before:content-[''] after:absolute after:-right-15 after:-top-15 after:size-30 after:rounded-full after:bg-blue after:content-[''] md:-mx-40"
-                    aria-hidden="true"
-                ></div>
 
                 <div class="mt-30 flex flex-wrap items-stretch justify-end gap-15">
                     <?php
                     get_template_part( 'templates/parts/com-button', null, [
                         'href'    => com_theme_page_url( 'buy-tickets' ),
                         'label'   => __( 'ΣΥΝΕΧΕΙΑ ΑΓΟΡΩΝ', 'com-theme' ),
-                        'variant' => 'blue-outline',
+                        'variant' => 'white-outline',
                         'classes' => 'min-h-[5.6rem]',
                     ] );
 
                     get_template_part( 'templates/parts/com-button', null, [
                         'href'    => wc_get_checkout_url(),
                         'label'   => __( 'ΟΛΟΚΛΗΡΩΣΗ ΑΓΟΡΑΣ', 'com-theme' ),
-                        'variant' => 'blue',
+                        'variant' => 'white',
                         'classes' => 'min-h-[5.6rem]',
                     ] );
                     ?>

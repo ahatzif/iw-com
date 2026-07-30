@@ -2,19 +2,10 @@
 
 use WPML\Collect\Support\Collection;
 
-/**
- * @since 4.2.2
- */
 class WCML_WC_Shortcode_Product_Category {
 
-	/**
-	 * @var SitePress
-	 */
 	private $sitepress;
 
-	/**
-	 * @param SitePress $sitepress
-	 */
 	public function __construct( \WPML\Core\ISitePress $sitepress ) {
 		$this->sitepress = $sitepress;
 	}
@@ -24,11 +15,6 @@ class WCML_WC_Shortcode_Product_Category {
 		add_filter( 'woocommerce_shortcode_products_query', [ $this, 'translate_category' ], 10, 2 );
 	}
 
-	/**
-	 * @param array|mixed $attributes
-	 *
-	 * @return array|mixed
-	 */
 	public function shortcode_product_categories_convert_attributes( $attributes ) {
 		if ( ! is_array( $attributes ) ) {
 			return $attributes;
@@ -41,12 +27,6 @@ class WCML_WC_Shortcode_Product_Category {
 		return $attributes;
 	}
 
-	/**
-	 * @param array $args
-	 * @param array $atts
-	 *
-	 * @return array
-	 */
 	public function translate_category( $args, $atts = null ) {
 
 		if ( $this->sitepress->get_default_language() !== $this->sitepress->get_current_language() ) {
@@ -77,12 +57,6 @@ class WCML_WC_Shortcode_Product_Category {
 		return $args;
 	}
 
-	/**
-	 * @param array      $args
-	 * @param Collection $terms
-	 *
-	 * @return array
-	 */
 	private function replace_category_in_query_arguments( array $args, Collection $terms ) {
 
 		foreach ( $args['tax_query'] as $i => $tax_query ) {
@@ -104,11 +78,6 @@ class WCML_WC_Shortcode_Product_Category {
 		return $args;
 	}
 
-	/**
-	 * @param array $args
-	 *
-	 * @return array
-	 */
 	public function translate_categories_using_simple_tax_query( $args ) {
 
 		$category_slugs = array_map( 'trim', explode( ',', $args['product_cat'] ) );

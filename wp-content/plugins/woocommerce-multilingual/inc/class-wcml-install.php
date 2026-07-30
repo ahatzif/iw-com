@@ -7,10 +7,6 @@ class WCML_Install {
 
 	const CHUNK_SIZE = 1000;
 
-	/**
-	 * @param woocommerce_wpml      $woocommerce_wpml
-	 * @param \WPML\Core\ISitePress $sitepress
-	 */
 	public static function initialize( $woocommerce_wpml, $sitepress ) {
 		if ( is_admin() ) {
 
@@ -22,16 +18,10 @@ class WCML_Install {
 		}
 	}
 
-	/**
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress        $sitepress
-	 */
 	private static function initialize_full( $woocommerce_wpml, SitePress $sitepress ) {
-		// Install routine.
-		if ( empty( $woocommerce_wpml->settings['set_up'] ) ) { // from 3.2.
+		if ( empty( $woocommerce_wpml->settings['set_up'] ) ) {
 
 			if ( $woocommerce_wpml->settings['is_term_order_synced'] !== 'yes' ) {
-				// global term ordering resync when moving to >= 3.3.x.
 				add_action( 'init', [ $woocommerce_wpml->terms, 'sync_term_order_globally' ], 20 );
 			}
 
@@ -74,7 +64,6 @@ class WCML_Install {
 
 			set_transient( '_wcml_activation_redirect', 1, 30 );
 
-			// Before the setup wizard redirects from plugins.php, allow WPML to scan the wpml-config.xml file.
 			WPML_Config::load_config_run();
 
 			add_action( 'init', [ __CLASS__, 'insert_default_categories' ] );
@@ -87,7 +76,7 @@ class WCML_Install {
 			$woocommerce_wpml->update_settings();
 		}
 
-		if ( empty( $woocommerce_wpml->settings['downloaded_translations_for_wc'] ) ) { // from 3.3.3.
+		if ( empty( $woocommerce_wpml->settings['downloaded_translations_for_wc'] ) ) {
 			$woocommerce_wpml->languages_upgrader->download_woocommerce_translations_for_active_languages();
 			$woocommerce_wpml->settings['downloaded_translations_for_wc'] = 1;
 			$woocommerce_wpml->update_settings();
@@ -120,13 +109,6 @@ class WCML_Install {
 		}
 	}
 
-	/**
-	 * This is minimal version of full initialization.
-	 * It has a different flag, so the full initialization
-	 * might run later.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 */
 	private static function initialize_standalone( $woocommerce_wpml ) {
 		if ( empty( $woocommerce_wpml->settings['set_up_standalone'] ) ) {
 			if ( ! isset( $woocommerce_wpml->settings['display_custom_prices'] ) ) {
@@ -142,14 +124,10 @@ class WCML_Install {
 		}
 	}
 
-	/**
-	 * @param SitePress $sitepress
-	 */
 	private static function set_language_information( $sitepress ) {
 		global $wpdb;
 
 		$def_lang = $sitepress->get_default_language();
-		// set language info for products.
 		$products = $wpdb->get_results( "SELECT ID FROM $wpdb->posts WHERE post_type = 'product' AND post_status <> 'auto-draft'" );
 		foreach ( $products as $product ) {
 			$exist = $sitepress->get_language_for_element( $product->ID, 'post_product' );
@@ -158,7 +136,6 @@ class WCML_Install {
 			}
 		}
 
-		// set language info for taxonomies.
 		$terms = $wpdb->get_results( "SELECT term_taxonomy_id FROM $wpdb->term_taxonomy WHERE taxonomy = 'product_cat'" );
 		foreach ( $terms as $term ) {
 			$exist = $sitepress->get_language_for_element( $term->term_taxonomy_id, 'tax_product_cat' );
@@ -183,18 +160,13 @@ class WCML_Install {
 		}
 	}
 
-	/**
-	 * Handle situation when product_type terms translated before activating WCML.
-	 */
 	public static function check_product_type_terms() {
 		global $wpdb;
-		// check if terms were translated.
 		$translations = self::translated_product_type_terms();
 
 		if ( $translations ) {
 			foreach ( $translations as $translation ) {
 				if ( ! is_null( $translation->source_language_code ) ) {
-					// check relationships.
 					$term_relationships = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->term_relationships} WHERE term_taxonomy_id = %d", $translation->element_id ) );
 					if ( $term_relationships ) {
 						$orig_term = $wpdb->get_var( $wpdb->prepare( "SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE element_type = 'tax_product_type' AND trid = %d AND source_language_code IS NULL", $translation->trid ) );
@@ -246,7 +218,6 @@ class WCML_Install {
 
 	public static function translated_product_type_terms() {
 		global $wpdb;
-		// check if terms were translated.
 		$translations = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}icl_translations WHERE element_type = 'tax_product_type'" );
 
 		return $translations;
@@ -254,7 +225,6 @@ class WCML_Install {
 
 	private static function handle_admin_texts() {
 		if ( class_exists( 'WooCommerce' ) ) {
-			// emails texts.
 			$emails = new WC_Emails();
 			foreach ( $emails->emails as $email ) {
 				$option_name = $email->plugin_id . $email->id . '_settings';
@@ -322,21 +292,16 @@ class WCML_Install {
 			$sitepress->switch_locale( $language['code'] );
 			$translated_cat_name = __( 'Uncategorized', 'sitepress' );
 			$translated_cat_name = 'Uncategorized' === $translated_cat_name && 'en' !== $language['code'] ? 'Uncategorized @' . $language['code'] : $translated_cat_name;
-			/** @var array|false $translated_term */
 			$translated_term     = get_term_by( 'name', $translated_cat_name, 'product_cat', ARRAY_A );
 			$sitepress->switch_locale();
 
-			// check if the term already exists.
 			if ( ! $translated_term ) {
-				/** @var array|false|WP_Error $translated_term */
 				$translated_term = wp_insert_term( $translated_cat_name, 'product_cat' );
 			}
 
 			if ( ! is_wp_error( $translated_term ) && is_array( $translated_term ) ) {
-				// add it to settings.
 				$settings['default_categories'][ $language['code'] ] = $translated_term['term_taxonomy_id'];
 
-				// update translations table.
 				$default_category_trid = $sitepress->get_element_trid(
 					get_option( 'default_product_cat' ),
 					'tax_product_cat'
@@ -354,14 +319,9 @@ class WCML_Install {
 		$woocommerce_wpml->update_settings( $settings );
 	}
 
-	/**
-	 * @param string $default_language
-	 */
 	public static function set_language_to_existing_orders( $default_language ) {
-		/** @var \wpdb $wpdb */
 		global $wpdb;
 
-		// Set default language for old orders before WCML was installed.
 		$orders_needs_set_language = $wpdb->get_col(
 			"SELECT DISTINCT( pm.post_id ) FROM {$wpdb->postmeta} AS pm 
 					INNER JOIN {$wpdb->posts} AS p ON pm.post_id = p.ID 
@@ -390,8 +350,6 @@ class WCML_Install {
 			$orderTable     = COTHelper::getTableName();
 			$orderMetaTable = COTHelper::getMetaTableName();
 
-			// phpcs:disable WordPress.WP.PreparedSQL.NotPrepared
-			// phpcs:disable WordPress.VIP.DirectDatabaseQuery.NoCaching
 			$wpdb->query(
 				$wpdb->prepare(
 					"
@@ -404,7 +362,6 @@ class WCML_Install {
 					$default_language
 				)
 			);
-			// phpcs::enable.
 		}
 	}
 

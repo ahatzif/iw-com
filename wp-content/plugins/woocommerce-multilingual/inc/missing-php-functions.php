@@ -17,14 +17,11 @@ function wcml_check_wpml_functions() {
 		if ( function_exists( 'wpml_register_single_string_action' ) ) {
 			add_action( 'wpml_register_single_string', 'wpml_register_single_string_action', 10, 4 );
 		} elseif ( function_exists( 'icl_register_string' ) ) {
-			/* @phpstan-ignore-next-line */
 			add_action( 'wpml_register_single_string', 'icl_register_string', 10, 4 );
 		}
 	}
 
-	/* @phpstan-ignore booleanAnd.rightAlwaysFalse */
 	if ( ! function_exists( 'wpml_is_rest_request' ) && defined( 'ICL_SITEPRESS_VERSION' ) && version_compare( ICL_SITEPRESS_VERSION, '4.2.0', '<' ) ) {
-		/* @phpstan-ignore  function.inner */
 		function wpml_is_rest_request() {
 			return array_key_exists( 'rest_route', $_REQUEST ) || false !== strpos( $_SERVER['REQUEST_URI'], 'wp-json' );
 		}
@@ -32,7 +29,6 @@ function wcml_check_wpml_functions() {
 
 }
 
-// two WordPress functions that were added in 4.4.0.
 if ( version_compare( $GLOBALS['wp_version'], '4.4.0', '<' ) ) {
 
 	if ( ! function_exists( 'get_the_post_thumbnail_url' ) ) {
@@ -56,11 +52,6 @@ if ( version_compare( $GLOBALS['wp_version'], '4.4.0', '<' ) ) {
 
 	if ( ! function_exists( 'rest_get_url_prefix' ) ) {
 		function rest_get_url_prefix() {
-			/**
-			 * Filters the REST URL prefix.
-			 *
-			 * @param string $prefix URL prefix. Default 'wp-json'.
-			 */
 			return apply_filters( 'rest_url_prefix', 'wp-json' );
 		}
 	}

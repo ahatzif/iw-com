@@ -9,14 +9,8 @@ use function WCML\functions\getSitePress;
 use function WCML\functions\getWooCommerceWpml;
 use function WCML\functions\isStandAlone;
 
-/**
- * @see https://www.gravityforms.com/
- */
 class Factory extends ComponentFactory implements IStandAloneAction {
 
-	/**
-	 * @inheritDoc
-	 */
 	public function create() {
 		$hooks = [];
 

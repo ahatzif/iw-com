@@ -4,9 +4,6 @@ use WPML\FP\Obj;
 use WPML\FP\Fns;
 use function WCML\functions\getClientCurrency;
 
-/**
- * @see https://wordpress.org/plugins/woocommerce-paypal-payments/
- */
 class WCML_Payment_Gateway_PayPal_V2 extends WCML_Payment_Gateway_PayPal {
 
 	const ID = 'ppcp-gateway';
@@ -40,9 +37,6 @@ class WCML_Payment_Gateway_PayPal_V2 extends WCML_Payment_Gateway_PayPal {
 		];
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_currencies_details() {
 		$currencies_details     = [];
 		$default_currency       = wcml_get_woocommerce_currency_option();
@@ -86,11 +80,6 @@ class WCML_Payment_Gateway_PayPal_V2 extends WCML_Payment_Gateway_PayPal {
 		}
 	}
 
-	/**
-	 * @param array $settings
-	 *
-	 * @return array
-	 */
 	public static function filter_ppcp_args( $settings ) {
 		if ( is_admin() ) {
 			return $settings;
@@ -109,13 +98,6 @@ class WCML_Payment_Gateway_PayPal_V2 extends WCML_Payment_Gateway_PayPal {
 		return $settings;
 	}
 
-	/**
-	 * Sets the PayPal JS API to use the changed currency
-	 *
-	 * @param array|mixed $localize
-	 *
-	 * @return array|mixed
-	 */
 	public function paypal_express_checkout_convert_to_supported_currency( $localize ) {
 		if ( ! is_array( $localize ) ) {
 			return $localize;
@@ -154,11 +136,6 @@ class WCML_Payment_Gateway_PayPal_V2 extends WCML_Payment_Gateway_PayPal {
 		return $localize;
 	}
 
-	/**
-	 * @param string $convert_to_currency
-	 *
-	 * @return callable(array):array
-	 */
 	private function get_convert_price_callable( $convert_to_currency ): callable {
 		return function ( array $price_params ) use ( $convert_to_currency ): array {
 			$value    = $price_params['value'];
@@ -174,13 +151,6 @@ class WCML_Payment_Gateway_PayPal_V2 extends WCML_Payment_Gateway_PayPal {
 		};
 	}
 
-	/**
-	 * Converts the data that will be transferred to PayPal to use the changed currency - at this stage the user confirms the payment (by logging into their account)
-	 *
-	 * @param array $data
-	 *
-	 * @return array
-	 */
 	public function paypal_checkout_convert_to_supported_currency( $data ) {
 		$client_currency = Obj::path( [ 'purchase_units', 0, 'amount', 'currency_code' ], $data );
 		$gateway_setting = $this->get_setting( $client_currency );
@@ -231,13 +201,6 @@ class WCML_Payment_Gateway_PayPal_V2 extends WCML_Payment_Gateway_PayPal {
 		return $data;
 	}
 
-	/**
-	 * Converts the data that will be compared with the one returned from PayPal to use the changed currency - on this basis, our order will know whether PayPal confirmed its payment
-	 *
-	 * @param array|mixed $patches_array
-	 *
-	 * @return array|mixed
-	 */
 	public function paypal_order_patches_convert_to_supported_currency( $patches_array ) {
 		if ( ! is_array( $patches_array ) ) {
 			return $patches_array;
@@ -278,9 +241,6 @@ class WCML_Payment_Gateway_PayPal_V2 extends WCML_Payment_Gateway_PayPal {
 		return $patches_array;
 	}
 
-	/**
-	 * @return false|string false when not found
-	 */
 	private function try_convert_client_currency_using_gateway_to_supported_by_paypal( string $client_currency ) {
 		$gateway_setting = $this->get_setting( $client_currency );
 

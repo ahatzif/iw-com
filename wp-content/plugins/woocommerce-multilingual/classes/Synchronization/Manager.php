@@ -7,18 +7,12 @@ class Manager {
 	const CONTEXT_PRODUCT_EDIT_SCREEN_UPDATE = 'product_edit_screen_update';
 	const CONTEXT_PRODUCT_BULK_OR_QUICK_EDIT = 'product_bulk_or_quick_edit';
 
-	/** @var \WPML_Post_Translation */
 	private $postTranslations;
 
-	/** @var Store */
 	private $syncStore;
 
-	/** @var string|null $context */
 	private $context;
 
-	/**
-	 * @param Store $syncStore
-	 */
 	public function __construct( Store $syncStore ) {
 		$this->syncStore        = $syncStore;
 
@@ -26,31 +20,16 @@ class Manager {
 		$this->postTranslations = $wpml_post_translations;
 	}
 
-	/**
-	 * @param string|null $context
-	 *
-	 * @return void
-	 */
 	public function setContext( $context ) {
 		$this->context = $context;
 	}
 
-	/**
-	 * @param string|array $context
-	 *
-	 * @return bool
-	 */
 	private function isInContext( $context ) {
 		$context = (array) $context;
 
 		return in_array( $this->context, $context, true );
 	}
 
-	/**
-	 * @param \WP_Post $product
-	 *
-	 * @return \WP_Post|array|null
-	 */
 	public function getOriginalProduct( $product ) {
 		$originalProduct   = $product;
 		$originalProductId = $this->postTranslations->get_original_element( $product->ID ) ?: $product->ID;
@@ -60,40 +39,18 @@ class Manager {
 		return $originalProduct;
 	}
 
-	/**
-	 * @param \WP_Post $product
-	 *
-	 * @return bool
-	 */
 	public function isOriginalProduct( $product ) {
 		return null === $this->postTranslations->get_source_lang_code( $product->ID );
 	}
 
-	/**
-	 * @param int $elementId
-	 *
-	 * @return string
-	 */
 	public function getElementLanguage( $elementId ) {
 		return $this->postTranslations->get_element_lang_code( $elementId );
 	}
 
-	/**
-	 * @param int       $elementId
-	 * @param int|false $trid
-	 * @param bool      $actualtranslationsOnly
-	 *
-	 * @return int[]
-	 */
 	public function getElementTranslations( $elementId, $trid = false, $actualtranslationsOnly = true ) {
 		return $this->postTranslations->get_element_translations( $elementId, $trid, $actualtranslationsOnly );
 	}
 
-	/**
-	 * @param \WP_Post          $product
-	 * @param int[]             $translationsIds
-	 * @param array<int,string> $translationsLanguages
-	 */
 	public function run( $product, $translationsIds = [], $translationsLanguages = [] ) {
 		$originalProduct = $this->getOriginalProduct( $product );
 
@@ -117,11 +74,6 @@ class Manager {
 		do_action( 'wcml_after_sync_product', $originalProduct->ID, $product->ID );
 	}
 
-	/**
-	 * @param \WP_Post          $product
-	 * @param int[]             $translationsIds
-	 * @param array<int,string> $translationsLanguages
-	 */
 	public function runProductComponents( $product, $translationsIds, $translationsLanguages ) {
 		$components = $this->getComponentsByPostType( $product->post_type );
 		if ( empty( $components ) ) {
@@ -145,18 +97,8 @@ class Manager {
 			do_action( 'wcml_after_sync_product_data', $product->ID, $translationId, $translationsLanguages[ $translationId ] );
 		}
 
-		// Run cleanup, on product / product parent, abd eventually in translations and translations parens.
-		// EVALUATE which ones runs on the product and which ones in the translations too.
-		// Data store lookup
-		// Cache
-		// Transients
 	}
 
-	/**
-	 * @param \WP_Post          $variation
-	 * @param int[]             $translationsIds
-	 * @param array<int,string> $translationsLanguages
-	 */
 	public function runProductVariationComponents( $variation, $translationsIds, $translationsLanguages ) {
 		$components = $this->getComponentsByPostType( $variation->post_type );
 		if ( empty( $components ) ) {
@@ -174,48 +116,37 @@ class Manager {
 		}
 	}
 
-	/**
-	 * @param \WP_Post          $product
-	 * @param int[]             $translationsIds
-	 * @param array<int,string> $translationsLanguages
-	 * @param string            $componentName
-	 */
 	public function runComponent( $product, $translationsIds, $translationsLanguages, $componentName ) {
 		$component = $this->syncStore->getComponent( $componentName );
 		$component->run( $product, $translationsIds, $translationsLanguages );
 	}
 
-	/**
-	 * @param string $postType
-	 *
-	 * @return string[]
-	 */
 	private function getComponentsByPostType( $postType ) {
 		$components = [];
 
 		if ( 'product' === $postType ) {
 			$components = [
-				Store::COMPONENT_ATTACHMENTS,// CONFIRMED
-				Store::COMPONENT_ATTRIBUTES,// TAX CONFIRMED | MERA CONFIRMED
-				Store::COMPONENT_DOWNLOADABLE_FILES,// CONFIRMED, CAN BE IMPROVED
-				Store::COMPONENT_LINKED,// CONFIRMED
-				Store::COMPONENT_POST,// CONFIRMED
-				Store::COMPONENT_STOCK,// CONFIRMED
-				Store::COMPONENT_TAXONOMIES,// CONFIRMED
-				Store::COMPONENT_META,// CONFIRMED
+				Store::COMPONENT_ATTACHMENTS,
+				Store::COMPONENT_ATTRIBUTES,
+				Store::COMPONENT_DOWNLOADABLE_FILES,
+				Store::COMPONENT_LINKED,
+				Store::COMPONENT_POST,
+				Store::COMPONENT_STOCK,
+				Store::COMPONENT_TAXONOMIES,
+				Store::COMPONENT_META,
 			];
 
 			if ( ! $this->isInContext( [ self::CONTEXT_PRODUCT_EDIT_SCREEN_UPDATE, self::CONTEXT_PRODUCT_BULK_OR_QUICK_EDIT ] ) ) {
-				$components[] = Store::COMPONENT_VARIATIONS; // CONFIRMED
+				$components[] = Store::COMPONENT_VARIATIONS;
 			}
 
 		} elseif ( 'product_variation' === $postType ) {
 			$components = [
-				Store::COMPONENT_VARIATION_ATTACHMENTS,// CONFIRMED
-				Store::COMPONENT_VARIATION_META,// CONFIRMED
-				Store::COMPONENT_DOWNLOADABLE_FILES,// CONFIRMED, CAN BE IMPROVED
-				Store::COMPONENT_VARIATION_TAXONOMIES,// CONFIRMED
-				Store::COMPONENT_STOCK,// CONFIRMED
+				Store::COMPONENT_VARIATION_ATTACHMENTS,
+				Store::COMPONENT_VARIATION_META,
+				Store::COMPONENT_DOWNLOADABLE_FILES,
+				Store::COMPONENT_VARIATION_TAXONOMIES,
+				Store::COMPONENT_STOCK,
 			];
 		}
 

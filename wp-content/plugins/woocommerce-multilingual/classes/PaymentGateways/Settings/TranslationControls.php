@@ -8,16 +8,6 @@ use WCML\Utilities\WcAdminPages;
 use WPML\FP\Obj;
 use WPML\FP\Str;
 
-/**
- * Since WooCommerce 9.9.0, Payment Gateways default settings pages are using a React-based user interface.
- *
- * In those cases, we will not show language controls next to translatable strings for payment gateways:
- * we just link to the Translation Dashboard instead.
- *
- * There might be third-party payment gateways still using the legacy settings page API.
- *
- * This class also manages saving and updating translatable string values, on POST or REST modes.
- */
 class TranslationControls extends TranslationControlsBase {
 
 	public function add_hooks() {
@@ -41,24 +31,10 @@ class TranslationControls extends TranslationControlsBase {
 		add_filter( 'woocommerce_rest_prepare_payment_gateway', [ $this, 'registerStringsOnRestSave' ], 10, 3 );
 	}
 
-	/**
-	 * Checks whether the payment gateway disabled the natural submit button.
-	 *
-	 * Note that this is usually defined at payment gateway options page render time, not before.
-	 * Used by WooCommerce in its settings page template, at /includes/admin/views/html-admin-settings.php.
-	 *
-	 * @return bool
-	 */
 	private function isSubmitButtonHidden() {
 		return ! empty( $GLOBALS['hide_save_button'] );
 	}
 
-	/**
-	 * @param string $domain
-	 * @param string $search
-	 *
-	 * @return string
-	 */
 	protected function getInstructionsWithRegisteredStrings( $domain, $search = '' ) {
 		return Strings::getTranslationInstructions();
 	}
@@ -81,9 +57,6 @@ class TranslationControls extends TranslationControlsBase {
 			] )->show();
 	}
 
-	/**
-	 * @return \WC_Payment_Gateway|null
-	 */
 	private function getCurrentGateway() {
 		static $currentGateway = false;
 		if ( false !== $currentGateway ) {
@@ -93,13 +66,6 @@ class TranslationControls extends TranslationControlsBase {
 		$gatewaysManager = \WC_Payment_Gateways::instance();
 		$gateways        = $gatewaysManager->payment_gateways();
 
-		/**
-		 * Checks if a given gateway provides content for the payments settings section.
-		 *
-		 * @param \WC_Payment_Gateway $gateway
-		 *
-		 * @return bool
-		 */
 		$isCurrentGatewaySection = function( $gateway ) {
 			return WcAdminPages::isSection( $gateway->id );
 		};
@@ -108,9 +74,6 @@ class TranslationControls extends TranslationControlsBase {
 		return $currentGateway;
 	}
 
-	/**
-	 * @return array
-	 */
 	protected function getTranslationControls() {
 		$translationControls = [];
 
@@ -154,7 +117,6 @@ class TranslationControls extends TranslationControlsBase {
 
 		$gatewayKey                 = $gateway->plugin_id . $gateway->id;
 		$languageSelectorNamePrefix = $this->getLanguageSelectorNamePrefix( $gateway->plugin_id . $gateway->id );
-		/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 		$itemsToProcess = wpml_collect( $_POST )
 			->filter( function( $value, $key ) use ( $languageSelectorNamePrefix ) {
 				return Str::startsWith( $languageSelectorNamePrefix, $key );
@@ -176,13 +138,6 @@ class TranslationControls extends TranslationControlsBase {
 		} );
 	}
 
-	/**
-	 * @param \WP_REST_Response   $response The response object.
-	 * @param \WC_Payment_Gateway $gateway  Payment gateway object.
-	 * @param \WP_REST_Request    $request  Request object.
-	 *
-	 * @return \WP_REST_Response
-	 */
 	public function registerStringsOnRestSave( $response, $gateway, $request ) {
 		$requestMethod = $request->get_method();
 		if ( ! in_array( $requestMethod, [ 'POST', 'PUT', 'PATCH' ], true ) ) {
@@ -205,67 +160,26 @@ class TranslationControls extends TranslationControlsBase {
 		return $response;
 	}
 
-	/**
-	 * Gets the keys for email options that relate to translatable strings.
-	 *
-	 * @return array
-	 */
 	private function getGatewayTextKeys() {
-		/**
-		 * @param array $translatableSettings Strings::TRANSLATABLE_SETTINGS
-		 *
-		 * @return array
-		 */
 		return apply_filters( 'wcml_gateway_text_keys_to_translate', Strings::TRANSLATABLE_SETTINGS );
 	}
 
-	/**
-	 * @param string $gatewayId
-	 * @param string $textKey
-	 *
-	 * @return string
-	 */
 	protected function getStringName( $gatewayId, $textKey ) {
 		return Strings::getStringName( $gatewayId, $textKey );
 	}
 
-	/**
-	 * Gets the id attribute value of the input node holding a translatable string.
-	 *
-	 * @param string $gatewayKey
-	 * @param string $textKey
-	 *
-	 * @return string
-	 */
 	protected function getInputId( $gatewayKey, $textKey ) {
 		return $gatewayKey . '_' . $textKey;
 	}
 
-	/**
-	 * @param string $gatewayKey
-	 * @param string $textKey
-	 *
-	 * @return string
-	 */
 	protected function getLanguageSelectorId( $gatewayKey, $textKey ) {
 		return $gatewayKey . '_settings_' . $textKey . '_' . self::LANGUAGE_SELECTOR_ID_SUFFIX;
 	}
 
-	/**
-	 * @param string $gatewayKey
-	 *
-	 * @return string
-	 */
 	private function getLanguageSelectorNamePrefix( $gatewayKey ) {
 		return self::KEY_PREFIX . '-' . $gatewayKey . '_settings-';
 	}
 
-	/**
-	 * @param string $gatewayKey
-	 * @param string $textKey
-	 *
-	 * @return string
-	 */
 	protected function getLanguageSelectorName( $gatewayKey, $textKey ) {
 		return $this->getLanguageSelectorNamePrefix( $gatewayKey ) . $textKey;
 	}

@@ -16,79 +16,46 @@ class AdminPages {
 	const TAB_MULTILINGUAL  = 'multilingual';
 	const TAB_MULTILINGUAL_STANDALONE  = 'multilingual-standalone';
 
-	/**
-	 * @return string
-	 */
 	public static function getDefaultTab() {
 		return isStandAlone() ? self::TAB_MULTICURRENCY : self::TAB_MULTILINGUAL;
 	}
 
-	/**
-	 * @param null|string $fallback
-	 *
-	 * @return string|null
-	 */
 	public static function getCurrentTab( $fallback = null ) {
 		return sanitize_key( Obj::prop( 'tab', $_GET ) ) ?: $fallback;
 	}
 
-	/**
-	 * @return string
-	 */
 	public static function getTabToDisplay() {
 		return WCML_Capabilities::canAccessAllWcmlTabs()
 			? self::getCurrentTab( self::getDefaultTab() )
 			: self::getDefaultTab();
 	}
 
-	/**
-	 * @param string|array $tabs A single tab (string) or one of multiple tabs (array).
-	 *
-	 * @return bool
-	 */
 	public static function isTab( $tabs ) {
 		return Lst::includes( self::getCurrentTab(), (array) $tabs );
 	}
 
-	/**
-	 * @param string $page
-	 *
-	 * @return bool
-	 */
 	public static function isPage( $page ) {
 		return Relation::propEq( 'page', $page, $_GET );
 	}
 
-	/**
-	 * @return bool
-	 */
 	public static function isWcmlSettings() {
 		return self::isPage( WCML_Admin_Menus::SLUG );
 	}
 
-	/**
-	 * @return bool
-	 */
 	public static function isMultiCurrency() {
 		$tabs = [ self::TAB_MULTICURRENCY ];
 
 		if ( isStandAlone() ) {
-			$tabs[] = null; // Also the default tab in Standalone mode.
+			$tabs[] = null;
 		}
 
 		return self::isWcmlSettings() && self::isTab( $tabs );
 	}
 
-	/**
-	 * @return bool
-	 */
 	public static function isTranslationQueue() {
 		return ! isStandAlone() && self::isTmPage( '/menu/translations-queue.php' );
 	}
 
-	/**
-	 * @return bool
-	 */
 	public static function isTranslationsDashboard() {
 		return ! isStandAlone() && self::isTmPage( '/menu/main.php' );
 	}
@@ -97,11 +64,6 @@ class AdminPages {
 		return self::isPage( 'product_attributes' ) && Relation::propEq( 'post_type', 'product', $_GET );
 	}
 
-	/**
-	 * @param string $path Path after the TM folder (e.g. '/menu/main.php')
-	 *
-	 * @return bool
-	 */
 	private static function isTmPage( $path ) {
 		return defined( 'WPML_TM_FOLDER' ) && self::isPage( WPML_TM_FOLDER . $path );
 	}

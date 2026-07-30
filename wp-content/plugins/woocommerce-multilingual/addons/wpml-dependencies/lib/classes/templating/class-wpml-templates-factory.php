@@ -8,33 +8,20 @@ abstract class WPML_Templates_Factory {
 	const NOTICE_GROUP                 = 'template_factory';
 	const OTGS_TWIG_CACHE_DISABLED_KEY = '_otgs_twig_cache_disabled';
 
-	/** @var array */
 	protected $custom_filters;
 
-	/** @var array */
 	protected $custom_functions;
 
-	/** @var string|array */
 	protected $template_paths;
 
-	/** @var string|bool */
 	protected $cache_directory;
 
 	protected $template_string;
 
-	/** @var WPML_WP_API $wp_api */
 	private $wp_api;
 
-	/** @var Twig_Environment */
 	protected $twig;
 
-	/**
-	 * WPML_Templates_Factory constructor.
-	 *
-	 * @param array       $custom_functions
-	 * @param array       $custom_filters
-	 * @param WPML_WP_API $wp_api
-	 */
 	public function __construct( array $custom_functions = array(), array $custom_filters = array(), $wp_api = null ) {
 		$this->init_template_base_dir();
 		$this->custom_functions = $custom_functions;
@@ -47,27 +34,10 @@ abstract class WPML_Templates_Factory {
 
 	abstract protected function init_template_base_dir();
 
-	/**
-	 * @param null $template
-	 * @param null $model
-	 *
-	 * @throws \WPML\Core\Twig\Error\LoaderError
-	 * @throws \WPML\Core\Twig\Error\RuntimeError
-	 * @throws \WPML\Core\Twig\Error\SyntaxError
-	 */
 	public function show( $template = null, $model = null ) {
 		echo $this->get_view( $template, $model );
 	}
 
-	/**
-	 * @param string $template
-	 * @param array<string,mixed> $model
-	 *
-	 * @return string
-	 * @throws \WPML\Core\Twig\Error\LoaderError
-	 * @throws \WPML\Core\Twig\Error\RuntimeError
-	 * @throws \WPML\Core\Twig\Error\SyntaxError
-	 */
 	public function get_view( $template = null, $model = null ) {
 		$output = '';
 		$this->maybe_init_twig();
@@ -141,16 +111,10 @@ abstract class WPML_Templates_Factory {
 
 	abstract public function get_model();
 
-	/**
-	 * @return Twig_Environment
-	 */
 	protected function get_twig() {
 		return $this->twig;
 	}
 
-	/**
-	 * @param RuntimeException $e
-	 */
 	protected function add_exception_notice( RuntimeException $e ) {
 		if ( false !== strpos( $e->getMessage(), 'create' ) ) {
 			/* translators: %s: Cache directory path */
@@ -166,9 +130,6 @@ abstract class WPML_Templates_Factory {
 		$admin_notices->add_notice( $notice );
 	}
 
-	/**
-	 * @return WPML_WP_API
-	 */
 	protected function get_wp_api() {
 		if ( ! $this->wp_api ) {
 			$this->wp_api = new WPML_WP_API();
@@ -185,16 +146,10 @@ abstract class WPML_Templates_Factory {
 		return ! (bool) get_option( self::OTGS_TWIG_CACHE_DISABLED_KEY, false );
 	}
 
-	/**
-	 * @return bool
-	 */
 	protected function is_string_template() {
 		return isset( $this->template_string );
 	}
 
-	/**
-	 * @return \WPML\Core\Twig_LoaderInterface
-	 */
 	protected function get_twig_loader() {
 		if ( $this->is_string_template() ) {
 			$loader = $this->get_wp_api()->get_twig_loader_string();

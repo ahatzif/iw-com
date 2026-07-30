@@ -12,28 +12,19 @@ class Translatable implements IMedia {
 	const META_KEY_THUMBNAIL_ID          = '_thumbnail_id';
 	const META_KEY_PRODUCT_IMAGE_GALLERY = '_product_image_gallery';
 
-	/** @var \SitePress */
 	private $sitepress;
-	/** @var wpdb */
 	private $wpdb;
 
-	/** @var array */
 	public $settings = [];
 
-	/** @var array */
 	private $products_being_synced = [];
 
-	/**
-	 * @param \SitePress $sitepress
-	 * @param \wpdb      $wpdb
-	 */
 	public function __construct( \SitePress $sitepress, $wpdb ) {
 		$this->sitepress = $sitepress;
 		$this->wpdb      = $wpdb;
 	}
 
 	public function add_hooks() {
-		// when save new attachment duplicate product gallery.
 		add_action( 'wpml_media_create_duplicate_attachment', [ $this, 'sync_product_gallery_duplicate_attachment' ], 11, 2 );
 	}
 
@@ -56,13 +47,11 @@ class Translatable implements IMedia {
 		$product_images_ids = [];
 
 		if ( ! $this->is_wpml_media_translation_adds_media_automatically() ) {
-			// thumbnail image.
 			$tmb = get_post_meta( $product_id, self::META_KEY_THUMBNAIL_ID, true );
 			if ( $tmb ) {
 				$product_images_ids[] = $tmb;
 			}
 
-			// product gallery.
 			$product_gallery = get_post_meta( $product_id, self::META_KEY_PRODUCT_IMAGE_GALLERY, true );
 			if ( $product_gallery ) {
 				$product_gallery = explode( ',', $product_gallery );
@@ -77,7 +66,6 @@ class Translatable implements IMedia {
 		}
 
 		if ( isset( $product_type ) && 'variable' === $product_type ) {
-			// phpcs:disable WordPress.WP.PreparedSQL.NotPrepared
 			$get_post_variations_image = $this->wpdb->get_col(
 				$this->wpdb->prepare(
 					"SELECT pm.meta_value FROM {$this->wpdb->posts} AS p
@@ -90,7 +78,6 @@ class Translatable implements IMedia {
 					$product_id
 				)
 			);
-			// phpcs:enable
 			foreach ( $get_post_variations_image as $variation_image ) {
 				if ( $variation_image ) {
 					$product_images_ids[] = $variation_image;
@@ -109,13 +96,6 @@ class Translatable implements IMedia {
 		return $product_images_ids;
 	}
 
-	/**
-	 * @param int    $original_product_id
-	 * @param int    $translated_product_id
-	 * @param string $language
-	 *
-	 * @see \WCML\Synchronization\Attachments::run
-	 */
 	public function sync_thumbnail_id( $original_product_id, $translated_product_id, $language ) {
 		if ( $this->is_thumbnail_image_duplication_enabled( $original_product_id ) ) {
 			$translated_thumbnail_id = $this->get_translated_thumbnail_id( $original_product_id, $language );
@@ -125,13 +105,6 @@ class Translatable implements IMedia {
 		}
 	}
 
-	/**
-	 * @param int    $variation_id
-	 * @param int    $translated_variation_id
-	 * @param string $language
-	 *
-	 * @see \WCML\Synchronization\VariationAttachments::run
-	 */
 	public function sync_variation_thumbnail_id( $variation_id, $translated_variation_id, $language ) {
 		if ( $this->is_thumbnail_image_duplication_enabled( wp_get_post_parent_id( $variation_id ) ) ) {
 			$translated_thumbnail_id = $this->get_translated_thumbnail_id( $variation_id, $language );
@@ -148,12 +121,6 @@ class Translatable implements IMedia {
 		}
 	}
 
-	/**
-	 * @param int|string $post_id
-	 * @param string     $language
-	 *
-	 * @return int|null
-	 */
 	private function get_translated_thumbnail_id( $post_id, $language ) {
 		$thumbnail_id = get_post_meta( $post_id, self::META_KEY_THUMBNAIL_ID, true );
 		if ( ! $thumbnail_id ) {
@@ -164,7 +131,6 @@ class Translatable implements IMedia {
 		if ( is_null( $translated_thumbnail_id ) ) {
 			$factory = new WPML_Media_Attachments_Duplication_Factory();
 
-			/** @var \WPML_Media_Attachments_Duplication */
 			$media_duplicate         = $factory->create();
 			$translated_thumbnail_id = $media_duplicate->create_duplicate_attachment(
 				$thumbnail_id,
@@ -176,13 +142,6 @@ class Translatable implements IMedia {
 		return $translated_thumbnail_id;
 	}
 
-	/**
-	 * @param int    $orig_post_id
-	 * @param int    $trnsl_post_id
-	 * @param string $lang
-	 *
-	 * @see \WCML\Synchronization\Attachments::run
-	 */
 	public function sync_product_gallery( $orig_post_id, $trnsl_post_id, $lang ) {
 		if ( $this->is_media_duplication_enabled( $orig_post_id ) ) {
 			$product_gallery              = get_post_meta( $orig_post_id, self::META_KEY_PRODUCT_IMAGE_GALLERY, true );
@@ -193,9 +152,6 @@ class Translatable implements IMedia {
 		}
 	}
 
-	/**
-	 * @param int $product_id
-	 */
 	public function sync_product_gallery_to_all_languages( $product_id ) {
 		if ( $this->is_media_duplication_enabled( $product_id ) ) {
 			$product_gallery = get_post_meta( $product_id, self::META_KEY_PRODUCT_IMAGE_GALLERY, true );
@@ -214,13 +170,6 @@ class Translatable implements IMedia {
 		}
 	}
 
-	/**
-	 * @param int[]  $gallery_ids
-	 * @param int    $translation_id
-	 * @param string $lang
-	 *
-	 * @return int[]
-	 */
 	private function translated_gallery_ids( $gallery_ids, $translation_id, $lang ) {
 		$translated_gallery_ids = [];
 		foreach ( $gallery_ids as $image_id ) {
@@ -249,7 +198,6 @@ class Translatable implements IMedia {
 	public function create_base_media_translation( $attachment_id, $parent_id, $target_lang ) {
 		$factory = new WPML_Media_Attachments_Duplication_Factory();
 
-		/** @var \WPML_Media_Attachments_Duplication */
 		$media_duplicate = $factory->create();
 		$duplicated_id   = $media_duplicate->create_duplicate_attachment( $attachment_id, $parent_id, $target_lang );
 
@@ -284,7 +232,6 @@ class Translatable implements IMedia {
 		);
 
 		if ( '' === $setting_value ) {
-			// fallback to global setting.
 			$media_options      = get_option( '_wpml_media', [] );
 			$global_setting_key = $this->sitepress->get_wp_api()->constant( $global_key );
 			if ( isset( $media_options['new_content_settings'][ $global_setting_key ] ) ) {

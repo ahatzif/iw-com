@@ -7,13 +7,10 @@ use WPML\FP\Relation;
 
 class WCML_Resources {
 
-	/** @var string */
 	private static $pagenow;
 
-	/** @var woocommerce_wpml */
 	private static $woocommerce_wpml;
 
-	/** @var SitePress */
 	private static $sitepress;
 
 	public static function add_hooks() {
@@ -21,10 +18,6 @@ class WCML_Resources {
 		add_action( 'wp_enqueue_scripts', [ __CLASS__, 'front_scripts' ] );
 	}
 
-	/**
-	 * @param woocommerce_wpml      $woocommerce_wpml
-	 * @param SitePress $sitepress
-	 */
 	public static function set_up_resources( $woocommerce_wpml, $sitepress ) {
 		global $pagenow;
 
@@ -38,11 +31,9 @@ class WCML_Resources {
 			return;
 		}
 
-		/** phpcs:disable WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 		$is_edit_product     = 'post.php' === self::$pagenow && isset( $_GET['post'] ) && 'product' === get_post_type( (int) $_GET['post'] );
 		$is_original_product = isset( $_GET['post'] ) && ! is_array( $_GET['post'] ) && self::$woocommerce_wpml->products->is_original_product( (int) $_GET['post'] );
 		$is_new_product      = 'post-new.php' === self::$pagenow && isset( $_GET['source_lang'] ) && isset( $_GET['post_type'] ) && 'product' === $_GET['post_type'];
-		/** phpcs:enable WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 
 		if ( self::$woocommerce_wpml->is_wpml_prior_4_2() ) {
 			$is_using_native_editor = ! self::$woocommerce_wpml->settings['trnsl_interface'];
@@ -189,6 +180,7 @@ class WCML_Resources {
 						'resign_tooltip' => __( 'This translation job will no longer be assigned to you. Other translators will be able take it and continue the translation.', 'woocommerce-multilingual' ),
 					],
 					'hide_resign' => self::$woocommerce_wpml->products->is_hide_resign_button(),
+					'nonce'       => wp_create_nonce( WCML_Translation_Editor::AUTO_SLUG_NONCE ),
 				]
 			);
 		}
@@ -220,12 +212,9 @@ class WCML_Resources {
 	public static function load_tooltip_resources() {
 
 		if ( class_exists( 'WooCommerce' ) && function_exists( 'WC' ) ) {
-			// After self::admin_scripts() at admin_enqueue_scripts:10
-			// After WC_Admin_Assets::admin_scripts at admin_enqueue_scripts:10
 			add_action( 'admin_enqueue_scripts', function() {
 				$jQueryTipTipHandler = 'wc-jquery-tiptip';
 
-				/* @phpstan-ignore booleanAnd.rightAlwaysTrue */
 				if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '10.3', '<' ) ) {
 					$jQueryTipTipHandler = 'jquery-tiptip';
 				}

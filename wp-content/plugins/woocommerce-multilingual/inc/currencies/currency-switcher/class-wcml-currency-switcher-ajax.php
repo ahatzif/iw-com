@@ -2,18 +2,10 @@
 
 use WPML\FP\Obj;
 
-/**
- * Class WCML_Currency_Switcher_Ajax
- */
 class WCML_Currency_Switcher_Ajax {
 
 	private $woocommerce_wpml;
 
-	/**
-	 * WCML_Currency_Switcher_Ajax constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 */
 	public function __construct( $woocommerce_wpml ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 
@@ -42,7 +34,6 @@ class WCML_Currency_Switcher_Ajax {
 		$wcml_settings     = $this->woocommerce_wpml->settings;
 		$switcher_settings = [];
 
-		// Allow some HTML in the currency switcher
 		$currency_switcher_format = strip_tags( stripslashes_deep( $_POST['template'] ), '<img><span><u><strong><em>' );
 		$currency_switcher_format = htmlentities( $currency_switcher_format );
 		$currency_switcher_format = sanitize_text_field( $currency_switcher_format );
@@ -66,7 +57,6 @@ class WCML_Currency_Switcher_Ajax {
 
 		$wcml_settings['currency_switchers'][ $switcher_id ] = $switcher_settings;
 
-		// update widget settings
 		if ( $switcher_id !== 'product' ) {
 			$widget_settings = get_option( 'widget_currency_sel_widget' );
 			$setting_match   = false;
@@ -108,7 +98,7 @@ class WCML_Currency_Switcher_Ajax {
 				foreach ( $widgets as $key => $widget_id ) {
 					if ( strpos( $widget_id, WCML_Currency_Switcher_Widget::SLUG ) === 0 ) {
 
-						if ( $found ) { // Only synchronize the first CS widget instance per sidebar
+						if ( $found ) {
 							unset( $sidebars_widgets[ $sidebar ][ $key ] );
 							continue;
 						}
@@ -211,15 +201,11 @@ class WCML_Currency_Switcher_Ajax {
 		wp_send_json_success( $return );
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_sidebars_widgets() {
 		if ( ! function_exists( 'wp_get_sidebars_widgets' ) ) {
 			require_once ABSPATH . '/wp-admin/includes/widgets.php';
 		}
 		$sidebars_widgets = wp_get_sidebars_widgets();
-		/** @phpstan-ignore-next-line function.alreadyNarrowedType */
 		return is_array( $sidebars_widgets ) ? $sidebars_widgets : [];
 	}
 	public function update_sidebars_widgets( $sidebars_widgets ) {

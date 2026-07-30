@@ -8,9 +8,7 @@ use WPML\FP\Obj;
 
 class ProductsCount extends Handler {
 
-	/** @var \SitePress */
 	private $sitepress;
-	/** @var \wpdb */
 	private $wpdb;
 
 	public function __construct( \SitePress $sitepress, \wpdb $wpdb ) {
@@ -18,17 +16,6 @@ class ProductsCount extends Handler {
 		$this->wpdb      = $wpdb;
 	}
 
-	/**
-	 * Check the language information for products count response.
-	 *
-	 * @param \WP_REST_Response $response
-	 * @param object            $object
-	 * @param \WP_REST_Request  $request
-	 *
-	 * @throws InvalidLanguage
-	 *
-	 * @return \WP_REST_Response
-	 */
 	public function prepare( $response, $object, $request ) {
 
 		$language = Obj::prop( 'lang', $request->get_params() );

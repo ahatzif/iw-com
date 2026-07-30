@@ -7,14 +7,8 @@ use WCML\StandAlone\IStandAloneAction;
 use function WCML\functions\getSitePress;
 use function WCML\functions\isStandAlone;
 
-/**
- * @see https://woocommerce.com/products/dynamic-pricing/
- */
 class Factory extends ComponentFactory implements IStandAloneAction {
 
-	/**
-	 * @inheritDoc
-	 */
 	public function create() {
 		$hooks = [];
 

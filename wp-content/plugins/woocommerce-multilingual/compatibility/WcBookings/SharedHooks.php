@@ -7,12 +7,8 @@ use WCML_Bookings;
 
 class SharedHooks implements \IWPML_Action {
 
-	/** @var \wpdb $wpdb */
 	private $wpdb;
 
-	/**
-	 * @param \wpdb $wpdb
-	 */
 	public function __construct( \wpdb $wpdb ) {
 		$this->wpdb = $wpdb;
 	}
@@ -24,11 +20,6 @@ class SharedHooks implements \IWPML_Action {
 		$this->clear_transient_fields();
 	}
 
-	/**
-	 * @param string|false $externalProductType
-	 *
-	 * @return void
-	 */
 	public static function load_assets( $externalProductType = false ) {
 		global $pagenow;
 
@@ -48,11 +39,6 @@ class SharedHooks implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param array $actions
-	 *
-	 * @return array
-	 */
 	public static function wcml_multi_currency_is_ajax( $actions ) {
 		$actions[] = 'wc_bookings_calculate_costs';
 
@@ -62,7 +48,6 @@ class SharedHooks implements \IWPML_Action {
 	public function clear_transient_fields() {
 		if ( isset( $_GET['post_type'] ) && $_GET['post_type'] == WCML_Bookings::POST_TYPE && isset( $_GET['page'] ) && $_GET['page'] == 'booking_calendar' ) {
 
-			// delete transient fields
 			$this->wpdb->query(
 				"
                 DELETE FROM {$this->wpdb->options}
@@ -72,11 +57,6 @@ class SharedHooks implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param WC_Product|int|string $product
-	 *
-	 * @return bool
-	 */
 	public static function isBooking( $product ) {
 		if ( ! $product instanceof WC_Product ) {
 			$product = wc_get_product( $product );

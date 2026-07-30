@@ -1,10 +1,4 @@
 <?php
-/**
- * Compatibility class for plugin WooCommerce Bulk Stock Management
- * http://www.woothemes.com/products/bulk-stock-management/
- *
- * @author konrad
- */
 class WCML_Bulk_Stock_Management implements \IWPML_Action {
 
 	public function add_hooks() {

@@ -6,14 +6,7 @@ use WCML\StandAlone\NullSitePress;
 
 class Factory {
 
-	/**
-	 * @return IMedia
-	 */
 	public static function create() {
-		/**
-		 * @var \SitePress $sitepress
-		 * @var \wpdb      $wpdb
-		 */
 		global $sitepress, $wpdb;
 
 		$settingsFactory = new \WPML_Element_Sync_Settings_Factory();

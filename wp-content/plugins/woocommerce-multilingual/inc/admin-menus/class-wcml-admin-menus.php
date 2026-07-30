@@ -9,29 +9,16 @@ use WCML\Utilities\AdminUrl;
 use WPML\FP\Fns;
 use WPML\FP\Str;
 
-/**
- * Class WCML_Admin_Menus
- */
 class WCML_Admin_Menus {
 
 	const SLUG = 'wpml-wcml';
 
-	/** @var woocommerce_wpml */
 	private static $woocommerce_wpml;
 
-	/** @var SitePress|null */
 	private static $sitepress;
 
-	/** @var wpdb */
 	private static $wpdb;
 
-	/**
-	 * Set up menus
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml WCML instance.
-	 * @param SitePress|null   $sitepress        WPML Core instance.
-	 * @param wpdb             $wpdb             wpdb instance.
-	 */
 	public static function set_up_menus( $woocommerce_wpml, $sitepress, $wpdb ) {
 		self::$woocommerce_wpml = $woocommerce_wpml;
 		self::$sitepress        = $sitepress;
@@ -72,9 +59,6 @@ class WCML_Admin_Menus {
 		}
 	}
 
-	/**
-	 * @return bool
-	 */
 	private static function is_page_without_admin_language_switcher() {
 		$get_page = isset( $_GET['page'] ) ? sanitize_text_field( $_GET['page'] ) : false;
 
@@ -97,11 +81,6 @@ class WCML_Admin_Menus {
 		remove_action( 'wp_before_admin_bar_render', [ self::$sitepress, 'admin_language_switcher' ] );
 	}
 
-	/**
-	 * @param array $menu
-	 *
-	 * @return array
-	 */
 	public static function wpml_menu_page( $menu ) {
 		if ( isset( $menu['menu_slug'] ) && WPML_TM_FOLDER . '/menu/translations-queue.php' === $menu['menu_slug'] ) {
 			$menu['capability'] = 'wpml_operate_woocommerce_multilingual';
@@ -197,7 +176,6 @@ class WCML_Admin_Menus {
 				} );
 			</script>
 			<?php
-			// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
 	}
 
@@ -231,16 +209,12 @@ class WCML_Admin_Menus {
 		}
 	}
 
-	/**
-	 * @return bool
-	 */
 	private static function is_post_product_translation_screen() {
 		return isset( $_GET['post'] ) && 'product' === get_post_type( $_GET['post'] ) && ! self::$woocommerce_wpml->products->is_original_product( $_GET['post'] );
 	}
 
 	private static function is_post_action_needs_redirect(): bool {
 		return ! isset( $_GET['action'] ) ||
-			/** @phpstan-ignore-next-line isset.offset */
 			( isset( $_GET['action'] ) &&
 				! in_array (
 					$_GET['action'],
@@ -250,22 +224,11 @@ class WCML_Admin_Menus {
 			);
 	}
 
-	/**
-	 * @param string $pagenow
-	 *
-	 * @return bool
-	 */
 	private static function is_admin_duplicate_page_action( $pagenow ) {
 		return 'admin.php' === $pagenow && isset( $_GET['action'] ) && 'duplicate_product' === $_GET['action'];
 	}
 
-	/**
-	 * @param array $actions
-	 *
-	 * @return array
-	 */
 	public static function add_settings_links_to_plugin_actions( $actions ) {
-		// $getLink :: (string, string) -> string
 		$getLink = function( $label, $url ) {
 			return '<a href="' . esc_url( $url ) . '">' . $label . '</a>';
 		};
@@ -304,11 +267,6 @@ class WCML_Admin_Menus {
 		}
 	}
 
-	/**
-	 * @param bool $prevent_access
-	 *
-	 * @return bool
-	 */
 	public static function check_user_admin_access( $prevent_access ) {
 		if ( \WPML\Container\make( WCML_Dependencies::class )->check() ) {
 			$user_lang_pairs = get_user_meta( get_current_user_id(), self::$wpdb->prefix . 'language_pairs', true );
@@ -337,7 +295,6 @@ class WCML_Admin_Menus {
 				$wcml_short_label = self::getWcmlShortLabel();
 				foreach ( $submenu['woocommerce'] as $key => $menu_item ) {
 					if ( $wcml_short_label === $menu_item[0] ) {
-						// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 						$submenu['woocommerce'][ $key ][0] .= '<span class="wcml-menu-warn"><i class="otgs-ico-warning"></i></span>';
 						break;
 					}
@@ -347,7 +304,6 @@ class WCML_Admin_Menus {
 			$woocommerce_label = __( 'WooCommerce', 'woocommerce' );
 			foreach ( $menu as $key => $menu_item ) {
 				if ( $woocommerce_label === $menu_item[0] ) {
-					// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 					$menu[ $key ][0] .= '<span class="wcml-menu-warn"><i class="otgs-ico-warning"></i></span>';
 					break;
 				}
@@ -355,16 +311,10 @@ class WCML_Admin_Menus {
 		}
 	}
 
-	/**
-	 * @return string
-	 */
 	public static function getWcmlLabel() {
 		return __( 'WPML Multilingual & Multicurrency for WooCommerce', 'woocommerce-multilingual' );
 	}
 
-	/**
-	 * @return string
-	 */
 	public static function getWcmlShortLabel() {
 		return __( 'WCML', 'woocommerce-multilingual' );
 	}

@@ -2,11 +2,7 @@
 
 class WCML_Product_Gallery_Filter implements IWPML_Action {
 
-	/**
-	 * @var WPML_Translation_Element_Factory
-	 */
 	private $translation_element_factory;
-	/** @var WPML_WP_Cache */
 	private $wpml_cache;
 
 	public function __construct( WPML_Translation_Element_Factory $translation_element_factory, $wpml_cache = null ) {
@@ -20,12 +16,6 @@ class WCML_Product_Gallery_Filter implements IWPML_Action {
 	}
 
 	public function add_hooks() {
-		/**
-		 * In case of problems, it allows an easy fallback to the legacy mode based on `get_post_metadata`.
-		 *
-		 * @since 5.5.6
-		 * @param bool $useLegacyMode
-		 */
 		if ( apply_filters( 'wcml_product_localize_image_ids_legacy_mode', false ) ) {
 			add_filter( 'get_post_metadata', [ $this, 'localize_image_ids' ], 10, 3 );
 		} else {
@@ -33,12 +23,6 @@ class WCML_Product_Gallery_Filter implements IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param int[]      $gallery_org_ids
-	 * @param WC_Product $product
-	 *
-	 * @return int[]
-	 */
 	public function translate_image_ids( $gallery_org_ids, $product ) {
 		$product_id        = $product->get_id();
 		$cache_key         = $product_id . '_image_gallery';
@@ -78,13 +62,6 @@ class WCML_Product_Gallery_Filter implements IWPML_Action {
 		return $gallery_ids;
 	}
 
-	/**
-	 * @param mixed  $value
-	 * @param int    $object_id
-	 * @param string $meta_key
-	 *
-	 * @return mixed|null|array
-	 */
 	public function localize_image_ids( $value, $object_id, $meta_key ) {
 
 		$image_ids = false;

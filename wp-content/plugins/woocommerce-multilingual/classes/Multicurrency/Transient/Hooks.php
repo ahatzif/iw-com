@@ -11,9 +11,6 @@ use function WPML\FP\spreadArgs;
 
 class Hooks {
 
-	/**
-	 * @param string $key
-	 */
 	public static function addHooks( $key ) {
 		$getKeyWithCurrency       = Str::concat( $key . '_' );
 		$getKeyWithClientCurrency = function() use ( $getKeyWithCurrency ) {

@@ -26,11 +26,6 @@ class FrontEndHooks implements IWPML_Action, IStandAloneAction {
 	}
 
 	public function getShippingCost( ShippingMode $shippingMode ) {
-		/**
-		 * @param string $rate
-		 * @param string $key
-		 * @param \WC_Shipping_Method $wcShippingMethod
-		 */
 		return function( $rate, $key, $wcShippingMethod ) use ( $shippingMode ) {
 			if ( $shippingMode->isManualPricingEnabled( $wcShippingMethod ) ) {
 				if ( 'cost' === $key ) {
@@ -56,22 +51,10 @@ class FrontEndHooks implements IWPML_Action, IStandAloneAction {
 		return 'no_class_cost' === substr( $key, 0, 13 );
 	}
 
-	/**
-	 * Returns current client currency, respecting result of currency switcher widget actions.
-	 *
-	 * @return string
-	 */
 	private function getClientCurrency() {
 		return $this->adjustCurrencyOnWidgetChange( $this->multiCurrency->get_client_currency() );
 	}
 
-	/**
-	 * Checks if this is currency change triggered from WCML currency widget and updates currency code.
-	 *
-	 * @param string $currencyCode
-	 *
-	 * @return string Currency code.
-	 */
 	private function adjustCurrencyOnWidgetChange( $currencyCode ) {
 		$postData = wpml_collect( $_POST );
 		$currencyCodeInRequest = $postData->get( 'currency' );
@@ -83,13 +66,6 @@ class FrontEndHooks implements IWPML_Action, IStandAloneAction {
 		return $currencyCode;
 	}
 
-	/**
-	 * Checks if given currency code is one of currencies set in WCML.
-	 *
-	 * @param mixed $currencyCode
-	 *
-	 * @return bool
-	 */
 	private function validateCurrencyCode( $currencyCode ) {
 		return in_array( $currencyCode, $this->multiCurrency->get_currency_codes() );
 	}

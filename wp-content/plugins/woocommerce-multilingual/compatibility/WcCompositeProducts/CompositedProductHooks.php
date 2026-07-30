@@ -15,24 +15,11 @@ class CompositedProductHooks implements \IWPML_Action {
 		add_action( 'woocommerce_composited_product_details', [ $this, 'trackCompositedProduct' ], self::EARLY_PRIORITY );
 	}
 
-	/**
-	 * @param \WC_Product|\WC_Product_Variable $product
-	 */
 	public function trackCompositedProduct( $product ) {
-		/**
-		 * @param int $productId
-		 *
-		 * @uses \WC_Product|\WC_Product_Variable $productç
-		 *
-		 * @return int
-		 */
 		$setProductId = function( $productId ) use ( $product ) {
 			return $product->get_id();
 		};
 
-		/**
-		 * @uses callable $setProductId
-		 */
 		$unsetProductId = function() use ( $setProductId ) {
 			remove_filter( 'wcml_translated_attribute_label_product_id', $setProductId );
 		};

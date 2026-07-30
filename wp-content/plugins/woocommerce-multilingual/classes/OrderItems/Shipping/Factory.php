@@ -10,11 +10,6 @@ class Factory implements TranslatorFactory {
 
 	const ORDER_ITEM_TYPE = 'shipping';
 
-	/**
-	 * @param \WC_Order_Item $item
-	 *
-	 * @return Translator|null
-	 */
 	public function getTranslator( $item ) {
 		if ( ! $item instanceof \WC_Order_Item_Shipping ) {
 			return null;
@@ -30,16 +25,6 @@ class Factory implements TranslatorFactory {
 		}
 
 		$orderItemShippingTranslators = [];
-		/**
-		 * Register specific translators for specific shipping order items, based on the shipping method ID.
-		 *
-		 * Translators must be registered within the array with their ID as key, adn the value
-		 * should be a qualified class name implementing the \WCML\OrderItems\Translator interface.
-		 *
-		 * @param array $orderItemShippingTranslators
-		 *
-		 * @return array
-		 */
 		$orderItemShippingTranslators = apply_filters( 'wcml_order_item_shipping_method_translators', $orderItemShippingTranslators );
 
 		if ( array_key_exists( $shippingId, $orderItemShippingTranslators ) ) {

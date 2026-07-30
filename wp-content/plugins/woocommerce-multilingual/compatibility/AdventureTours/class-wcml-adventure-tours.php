@@ -4,27 +4,11 @@ use WCML\Utilities\AdminPages;
 
 class WCML_Adventure_Tours implements \IWPML_Action {
 
-	/**
-	 * @var woocommerce_wpml
-	 */
 	private $woocommerce_wpml;
-	/**
-	 * @var SitePress
-	 */
 	private $sitepress;
 
-	/**
-	 * @var WPML_Element_Translation_Package
-	 */
 	private $tp;
 
-	/**
-	 * WCML_Adventure_Tours constructor.
-	 *
-	 * @param woocommerce_wpml                 $woocommerce_wpml
-	 * @param SitePress                        $sitepress
-	 * @param WPML_Element_Translation_Package $tp
-	 */
 	public function __construct( woocommerce_wpml $woocommerce_wpml, SitePress $sitepress, WPML_Element_Translation_Package $tp ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 		$this->sitepress        = $sitepress;
@@ -71,8 +55,6 @@ class WCML_Adventure_Tours implements \IWPML_Action {
 
 		$post = get_post( $post_id );
 
-		// Skip auto-drafts // skip autosave.
-		/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 		if ( 'auto-draft' === $post->post_status || isset( $_POST['autosave'] ) ) {
 			return false;
 		}

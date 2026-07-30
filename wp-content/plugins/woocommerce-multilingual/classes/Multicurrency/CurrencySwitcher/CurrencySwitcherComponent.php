@@ -5,25 +5,16 @@ namespace WCML\Multicurrency\CurrencySwitcher;
 class CurrencySwitcherComponent implements CurrencySwitcherTemplateInterface {
 	const TEMPLATE_FILENAME = 'template.php';
 
-	/**
-	 * @var ?array{"path": array, "js": array, "css": array, "is_core": bool, "slug": string}
-	 */
 	private $templateSetup;
 
-	/** @var array|string[] */
 	private $templatePaths = [];
 
-	/** @var string */
 	private $prefix = 'wcml-cs-';
 
-	/** @var array|null $model */
 	private $model;
 
 	private ?\WPML_WP_API $wp_api = null;
 
-	/**
-	 * @param array $templateSetup
-	 */
 	public function __construct( $templateSetup ) {
 		$this->templateSetup = $this->formatTemplateSetupData( $templateSetup );
 		$this->initTemplateBaseDir();
@@ -33,9 +24,6 @@ class CurrencySwitcherComponent implements CurrencySwitcherTemplateInterface {
 		$this->templatePaths = (array) $this->templateSetup['path'];
 	}
 
-	/**
-	 * Make sure some elements are of array type
-	 */
 	private function formatTemplateSetupData( array $templateSetup ): array {
 		foreach ( [ 'path', 'js', 'css' ] as $k ) {
 			$templateSetup[ $k ] = $templateSetup[ $k ] ?? [];
@@ -50,7 +38,6 @@ class CurrencySwitcherComponent implements CurrencySwitcherTemplateInterface {
 	}
 
 	public function set_model( $model ) {
-		/* @phpstan-ignore function.alreadyNarrowedType */
 		$this->model = is_array( $model ) ? $model : [ $model ];
 	}
 
@@ -58,12 +45,6 @@ class CurrencySwitcherComponent implements CurrencySwitcherTemplateInterface {
 		echo $this->get_view();
 	}
 
-	/**
-	 * @param string|null $template
-	 * @param array|null  $model
-	 *
-	 * @return string|null
-	 */
 	public function get_view( $template = null, $model = null ) {
 		if ( null === $template ) {
 			$template = $this->get_template();
@@ -95,11 +76,6 @@ class CurrencySwitcherComponent implements CurrencySwitcherTemplateInterface {
 		return $count > 0 ? $this->get_resource_handler( $count - 1 ) : null;
 	}
 
-	/**
-	 * @param bool $withVersion
-	 *
-	 * @return array
-	 */
 	public function get_scripts( bool $withVersion = false ): array {
 		return $withVersion
 			? array_map( [ self::class, 'addResourceVersion' ], $this->templateSetup['js'] )
@@ -112,9 +88,6 @@ class CurrencySwitcherComponent implements CurrencySwitcherTemplateInterface {
 			: $this->templateSetup['css'];
 	}
 
-	/**
-	 * @param string $url
-	 */
 	public static function addResourceVersion( $url ): string {
 		return $url . '?ver=' . WCML_VERSION;
 	}
@@ -144,12 +117,6 @@ class CurrencySwitcherComponent implements CurrencySwitcherTemplateInterface {
 		return $this->templateSetup;
 	}
 
-	/**
-	 * @param string|null $template
-	 * @param array|null  $model
-	 *
-	 * @return string
-	 */
 	private function renderUsingPHPTemplate( $template, $model ): string {
 		if ( ! is_array( $model ) ) {
 			$model = [];

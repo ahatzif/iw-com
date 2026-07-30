@@ -6,7 +6,6 @@ class LookupTableFactory implements \IWPML_Backend_Action_Loader, \IWPML_Fronten
 	const MIN_WC_VERSION = '6.3';
 
 	public function create() {
-		/** @var \SitePress $sitepress */
 		global $sitepress;
 
 		if ( self::hasFeature() ) {
@@ -16,11 +15,7 @@ class LookupTableFactory implements \IWPML_Backend_Action_Loader, \IWPML_Fronten
 		return null;
 	}
 
-	/**
-	 * @return bool
-	 */
 	public static function hasFeature() {
-		/* @phpstan-ignore booleanAnd.rightAlwaysFalse */
 		return defined( 'WC_VERSION' ) && version_compare( WC_VERSION, self::MIN_WC_VERSION, '>=' );
 	}
 

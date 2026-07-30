@@ -1,12 +1,4 @@
 <?php
-/**
- * Editor-scoped sync mode — "Force update all variation translations" AJAX endpoint.
- *
- * Powers the post-save notice's recovery button. Runs the full Complete-sync
- * variation pipeline for one product, regardless of the site setting.
- *
- * @package WCML\EditorScopedSync
- */
 
 namespace WCML\EditorScopedSync;
 
@@ -18,7 +10,6 @@ class ForceUpdateEndpoint implements \IWPML_Backend_Action {
 	const ACTION = 'wcml_force_full_variation_sync';
 	const NONCE  = 'wcml_force_full_variation_sync';
 
-	// After the SyncGate filters (priority 10) so these overrides win.
 	const PRIORITY_OVERRIDE_SYNC_GATE = 100;
 
 	public function add_hooks() {
@@ -41,7 +32,6 @@ class ForceUpdateEndpoint implements \IWPML_Backend_Action {
 			wp_send_json_error( [ 'message' => 'invalid product' ], 404 );
 		}
 
-		// Force-bypass the editor-scoped gate for this single run: null = no narrowing, pass all variations.
 		add_filter( 'wcml_editor_scoped_variation_ids', '__return_null', self::PRIORITY_OVERRIDE_SYNC_GATE );
 
 		try {
@@ -66,9 +56,6 @@ class ForceUpdateEndpoint implements \IWPML_Backend_Action {
 		);
 	}
 
-	/**
-	 * @return string A nonce that the editor's notice JS can use when calling the endpoint.
-	 */
 	public static function nonce() {
 		return wp_create_nonce( self::NONCE );
 	}

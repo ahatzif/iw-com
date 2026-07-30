@@ -16,12 +16,8 @@ class TranslationControlMovedNotice implements IWPML_Backend_Action, IWPML_Front
 		'wcml-translation-control-moved-notice',
 	];
 
-	/** @var WPML_Notices $wpmlNotices */
 	private $wpmlNotices;
 
-	/**
-	 * @param WPML_Notices $wpmlNotices
-	 */
 	public function __construct( WPML_Notices $wpmlNotices ) {
 		$this->wpmlNotices = $wpmlNotices;
 	}

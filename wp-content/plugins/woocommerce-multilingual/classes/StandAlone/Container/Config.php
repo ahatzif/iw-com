@@ -4,9 +4,6 @@ namespace WCML\StandAlone\Container;
 
 class Config {
 
-	/**
-	 * @return array
-	 */
 	public static function getSharedInstances() {
 		global $wpdb;
 
@@ -15,9 +12,6 @@ class Config {
 		];
 	}
 
-	/**
-	 * @return array
-	 */
 	public static function getAliases() {
 		global $wpdb;
 
@@ -32,9 +26,6 @@ class Config {
 		return $aliases;
 	}
 
-	/**
-	 * @return array
-	 */
 	public static function getSharedClasses() {
 		return [
 			\WPML\Core\ISitePress::class,
@@ -43,9 +34,6 @@ class Config {
 		];
 	}
 
-	/**
-	 * @return array
-	 */
 	public static function getDelegated() {
 		return [
 			\WPML_Notices::class => 'wcml_wpml_get_admin_notices',

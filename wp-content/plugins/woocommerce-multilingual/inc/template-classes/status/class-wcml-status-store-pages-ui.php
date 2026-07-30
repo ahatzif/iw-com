@@ -7,12 +7,7 @@ class WCML_Status_Store_Pages_UI extends WCML_Templates_Factory {
 	private $woocommerce_wpml;
 	private $sitepress;
 
-	/**
-	 * @param SitePress        $sitepress
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 */
 	public function __construct( $sitepress, $woocommerce_wpml ) {
-		// @todo Cover by tests, required for wcml-3037.
 		parent::__construct();
 
 		$this->woocommerce_wpml = $woocommerce_wpml;
@@ -22,7 +17,6 @@ class WCML_Status_Store_Pages_UI extends WCML_Templates_Factory {
 	public function init_twig_functions() {
 		$function = new Twig_SimpleFunction( 'get_flag_url', [ $this, 'get_flag_url' ] );
 
-		/** @var WPML\Core\Twig\Environment */
 		$twig = $this->get_twig();
 		$twig->addFunction( $function );
 	}

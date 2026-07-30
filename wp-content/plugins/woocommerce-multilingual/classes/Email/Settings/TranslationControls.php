@@ -44,61 +44,22 @@ class TranslationControls extends TranslationControlsBase {
 		add_action( 'woocommerce_update_options_email', [ $this, 'registerStringsOnSave' ] );
 	}
 
-	/**
-	 * @return bool
-	 */
 	protected function isAdminPage() {
 		return WcAdminPages::isEmailSettings() && WcAdminPages::hasSection();
 	}
 
-	/**
-	 * Gets the option name related to the current email settings section.
-	 *
-	 * Find the right option name with the structure woocommerce_{EMAIL_ID}_settings,
-	 * matching the current settings page URL parameter wc_email_{EMAIL_ID}.
-	 *
-	 * @return string
-	 */
 	private function getCurrentEmailOptionName() {
 		static $currentEmailOptionName = null;
 		if ( ! is_null( $currentEmailOptionName ) ) {
 			return $currentEmailOptionName;
 		}
 
-		/**
-		 * @param array $optionNames self::OPTION_NAMES
-		 *
-		 * @return array
-		 *
-		 * @see \WCML\Compatibility\WcBookings\Emails::add_hooks()
-		 * @see \WCML_WC_Subscriptions::add_hooks()
-		 */
 		$optionNames = apply_filters( 'wcml_emails_options_to_translate', self::OPTION_NAMES );
 
-		/**
-		 * Checks if a given option name provides content for the current email settings section.
-		 *
-		 * @param string $option
-		 *
-		 * @return bool
-		 */
 		$isCurrentOptionSection = function( $option ) {
-			/**
-			 * @param string $section_prefix 'wc_email_'
-			 * @param string $emails_option
-			 *
-			 * @return string
-			 *
-			 * @see \WCML_WC_Subscriptions::add_hooks()
-			 */
 			$sectionPrefix = apply_filters( 'wcml_emails_section_name_prefix', 'wc_email_', $option );
 			$sectionName   = str_replace( 'woocommerce_', $sectionPrefix, $option );
 			$sectionName   = str_replace( '_settings', '', $sectionName );
-			/**
-			 * @param string $sectionName
-			 *
-			 * @return string
-			 */
 			$sectionName = apply_filters( 'wcml_emails_section_name_to_translate', $sectionName );
 			return WcAdminPages::isSection( $sectionName );
 		};
@@ -107,12 +68,6 @@ class TranslationControls extends TranslationControlsBase {
 		return $currentEmailOptionName;
 	}
 
-	/**
-	 * @param string $domain
-	 * @param string $search
-	 *
-	 * @return string
-	 */
 	protected function getInstructionsWithRegisteredStrings( $domain, $search = '' ) {
 		return sprintf(
 			/* translators: %1$s and %2$s are opening and closing HTML link tags */
@@ -137,9 +92,6 @@ class TranslationControls extends TranslationControlsBase {
 			] )->show();
 	}
 
-	/**
-	 * @return array
-	 */
 	protected function getTranslationControls() {
 		$translationControls = [];
 		$optionName          = $this->getCurrentEmailOptionName();
@@ -163,7 +115,6 @@ class TranslationControls extends TranslationControlsBase {
 	}
 
 	public function registerStringsOnSave() {
-		/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 		$itemsToProcess = wpml_collect( $_POST )
 			->filter( function( $value, $key ) {
 				return substr( $key, 0, 9 ) === self::KEY_PREFIX;
@@ -191,29 +142,10 @@ class TranslationControls extends TranslationControlsBase {
 		} );
 	}
 
-	/**
-	 * Gets the keys for email options that relate to translatable strings.
-	 *
-	 * @return array
-	 */
 	private function getEmailTextKeys() {
-		/**
-		 * @param array $email_text_keys self::EMAIL_TEXT_KEYS
-		 *
-		 * @return array
-		 *
-		 * @see \WCML\Compatibility\WcBookings\Emails::add_hooks()
-		 */
 		return apply_filters( 'wcml_emails_text_keys_to_translate', self::EMAIL_TEXT_KEYS );
 	}
 
-	/**
-	 * Get the current email options, and return only those holding translatable strings.
-	 *
-	 * @param string $optionName
-	 *
-	 * @return array
-	 */
 	private function getEmailSettings( $optionName ) {
 		$emailSettings = get_option( $optionName, [] );
 		if ( ! is_array( $emailSettings ) ) {
@@ -234,53 +166,22 @@ class TranslationControls extends TranslationControlsBase {
 		return $relevantSettings;
 	}
 
-	/**
-	 * @param string $optionName
-	 *
-	 * @return string
-	 */
 	protected function getStringDomain( $optionName ) {
 		return 'admin_texts_' . $optionName;
 	}
 
-	/**
-	 * @param string $optionName
-	 * @param string $emailTextKey
-	 *
-	 * @return string
-	 */
 	protected function getStringName( $optionName, $emailTextKey ) {
 		return '[' . $optionName . ']' . $emailTextKey;
 	}
 
-	/**
-	 * Gets the id attribute value of the input node holding a translatable string.
-	 *
-	 * @param string $optionName
-	 * @param string $emailTextKey
-	 *
-	 * @return string
-	 */
 	protected function getInputId( $optionName, $emailTextKey ) {
 		return str_replace( '_settings', '', $optionName ) . '_' . $emailTextKey;
 	}
 
-	/**
-	 * @param string $optionName
-	 * @param string $settingKey
-	 *
-	 * @return string
-	 */
 	protected function getLanguageSelectorId( $optionName, $settingKey ) {
 		return $optionName . '_' . $settingKey . '_' . self::LANGUAGE_SELECTOR_ID_SUFFIX;
 	}
 
-	/**
-	 * @param string $optionName
-	 * @param string $settingKey
-	 *
-	 * @return string
-	 */
 	protected function getLanguageSelectorName( $optionName, $settingKey ) {
 		return self::KEY_PREFIX . '-' . $optionName . '-' . $settingKey;
 	}

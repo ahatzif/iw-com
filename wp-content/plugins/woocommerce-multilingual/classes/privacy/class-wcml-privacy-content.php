@@ -1,20 +1,11 @@
 <?php
 
-/**
- * @author OnTheGo Systems
- */
 class WCML_Privacy_Content extends WPML_Privacy_Content {
 
-	/**
-	 * @return string
-	 */
 	protected function get_plugin_name() {
 		return 'WPML Multilingual & Multicurrency for WooCommerce';
 	}
 
-	/**
-	 * @return string|array
-	 */
 	protected function get_privacy_policy() {
 		return [
 			__( 'WPML Multilingual & Multicurrency for WooCommerce will use cookies to understand the basket info when using languages in domains and to transfer data between the domains.', 'woocommerce-multilingual' ),

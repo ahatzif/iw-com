@@ -21,13 +21,7 @@ class MultilingualHooks implements \IWPML_Frontend_Action, \IWPML_Backend_Action
 				->then( spreadArgs( [ $this, 'pre_option_woocommerce_email_header_alignment' ] ) );
 	}
 
-	/**
-	 * @param array $settings
-	 *
-	 * @return array
-	 */
 	public function woocommerce_email_settings_add_wcml_header_alignment( $settings ) {
-		/* @phpstan-ignore class.notFound */
 		$email_improvements_enabled = FeaturesUtil::feature_is_enabled( 'email_improvements' );
 
 		$new_settings = [];
@@ -58,11 +52,6 @@ class MultilingualHooks implements \IWPML_Frontend_Action, \IWPML_Backend_Action
 		return $new_settings;
 	}
 
-	/**
-	 * @param string|false $value
-	 *
-	 * @return string
-	 */
 	public function pre_option_woocommerce_email_header_alignment( $value ) {
 		if ( self::MULTILINGUAL_HEADER_ALIGNMENT_ON !== get_option( self::WCML_EMAIL_HEADER_ALIGNMENT_ID ) ) {
 			return $value;

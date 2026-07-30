@@ -9,25 +9,15 @@ class ShippingMethod implements Translator {
 
 	use StoreInDefaultLanguage;
 
-	/** @var woocommerce_wpml $woocommerce_wpml */
 	private $woocommerce_wpml;
 
-	/** @var wpdb $wpdb */
 	private $wpdb;
 
-	/**
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param wpdb             $wpdb
-	 */
 	public function __construct( woocommerce_wpml $woocommerce_wpml, wpdb $wpdb ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 		$this->wpdb             = $wpdb;
 	}
 
-	/**
-	 * @param \WC_Order_Item $item
-	 * @param string         $targetLanguage
-	 */
 	public function translateItem( $item, $targetLanguage ) {
 		if ( ! $item instanceof \WC_Order_Item_Shipping ) {
 			return;
@@ -61,7 +51,6 @@ class ShippingMethod implements Translator {
 			return;
 		}
 
-		// phpcs:disable WordPress.WP.PreparedSQL.NotPrepared
 		$itemShippingMethodData = $this->wpdb->get_row( $this->wpdb->prepare(
 			"SELECT s.value as originalMethodTitle, st.language as itemMethodTitleLanguage FROM {$this->wpdb->prefix}icl_strings AS s
 				LEFT JOIN {$this->wpdb->prefix}icl_string_translations AS st
@@ -75,7 +64,6 @@ class ShippingMethod implements Translator {
 			$shippingTitle,
 			str_replace( ':', '', $shippingId . $shippingInstanceId ) . \WCML_WC_Shipping::NAME_SUFFIX
 		) );
-		// phpcs:enable
 
 		if ( ! $itemShippingMethodData ) {
 			return;

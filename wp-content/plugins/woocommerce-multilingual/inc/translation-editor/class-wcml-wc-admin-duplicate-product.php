@@ -2,25 +2,11 @@
 
 class WCML_WC_Admin_Duplicate_Product {
 
-	/**
-	 * @var woocommerce_wpml
-	 */
 	private $woocommerce_wpml;
-	/**
-	 * @var SitePress
-	 */
 	private $sitepress;
 
-	/** @var wpdb $wpdb */
 	private $wpdb;
 
-	/**
-	 * WCML_WC_Admin_Duplicate_Product constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress        $sitepress
-	 * @param wpdb             $wpdb
-	 */
 	public function __construct( $woocommerce_wpml, $sitepress, $wpdb ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 		$this->sitepress        = $sitepress;
@@ -29,10 +15,6 @@ class WCML_WC_Admin_Duplicate_Product {
 		add_action( 'woocommerce_product_duplicate', [ $this, 'woocommerce_duplicate_product' ], 10, 2 );
 	}
 
-	/**
-	 * @param int|\WC_Product $new_id
-	 * @param \WC_Product     $post
-	 */
 	public function woocommerce_duplicate_product( $new_id, $post ) {
 		$duplicated_products = [];
 
@@ -42,7 +24,6 @@ class WCML_WC_Admin_Duplicate_Product {
 		}
 		$element_type = apply_filters( 'wpml_element_type', get_post_type( $product_id ) );
 
-		// duplicate original first.
 		$trid      = $this->sitepress->get_element_trid( $product_id, $element_type );
 		$orig_id   = $this->sitepress->get_original_element_id_by_trid( $trid );
 		$orig_lang = $this->woocommerce_wpml->products->get_original_product_language( $product_id );
@@ -71,7 +52,6 @@ class WCML_WC_Admin_Duplicate_Product {
 			return null;
 		}
 
-		// Set language info for variations.
 		if ( $children_products = get_children( 'post_parent=' . $new_orig_id . '&post_type=product_variation' ) ) {
 			foreach ( $children_products as $child ) {
 				$this->sitepress->set_element_language_details( $child->ID, 'post_product_variation', null, $orig_lang );
@@ -86,10 +66,6 @@ class WCML_WC_Admin_Duplicate_Product {
 
 			foreach ( $translations as $translation ) {
 				if ( ! $translation->original && $translation->element_id != $product_id ) {
-					/**
-					 * @see \WPML_PB_Last_Translation_Edit_Mode::NATIVE_EDITOR
-					 * @see \WPML_PB_Last_Translation_Edit_Mode::POST_META_KEY
-					 */
 					$hasOneTranslationWitWPNativeEditor = $hasOneTranslationWitWPNativeEditor || 'native-editor' === get_post_meta( $translation->element_id, '_last_translation_edit_mode', true );
 
 					$post_to_duplicate = $this->wpdb->get_row( $this->wpdb->prepare( "SELECT * FROM {$this->wpdb->posts} WHERE ID=%d", $translation->element_id ) );
@@ -126,14 +102,6 @@ class WCML_WC_Admin_Duplicate_Product {
 		}
 
 		if ( ! $hasOneTranslationWitWPNativeEditor ) {
-			/**
-			 * If the original product does not have any manual translation,
-			 * we'll force the `_wpml_post_translation_editor_native` post meta to `no`
-			 * so the duplicated translations will open in ATE as for the
-			 * original translations.
-			 *
-			 * @see \WPML_TM_Post_Edit_TM_Editor_Mode::POST_META_KEY_USE_NATIVE
-			 */
 			update_post_meta( $new_orig_id, '_wpml_post_translation_editor_native', 'no' );
 		}
 

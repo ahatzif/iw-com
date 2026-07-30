@@ -1,8 +1,5 @@
 <?php
 
-/**
- * Class WCML_Payment_Gateway_PayPal
- */
 class WCML_Payment_Gateway_PayPal extends WCML_Payment_Gateway {
 
 	const ID                   = 'paypal';
@@ -52,11 +49,6 @@ class WCML_Payment_Gateway_PayPal extends WCML_Payment_Gateway {
 		];
 	}
 
-	/**
-	 * @param string $currency
-	 *
-	 * @return bool
-	 */
 	public function is_valid_for_use( $currency ) {
 
 		$filter_removed = remove_filter( 'woocommerce_paypal_supported_currencies', [ 'WCML_Payment_Gateway_PayPal', 'filter_supported_currencies' ] );
@@ -77,9 +69,6 @@ class WCML_Payment_Gateway_PayPal extends WCML_Payment_Gateway {
 		return $is_valid;
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_currencies_details() {
 
 		$currencies_details     = [];
@@ -108,12 +97,6 @@ class WCML_Payment_Gateway_PayPal extends WCML_Payment_Gateway {
 		add_filter( 'woocommerce_paypal_args', [ $this, 'filter_paypal_args' ], 10, 2 );
 	}
 
-	/**
-	 * @param array    $args
-	 * @param WC_Order $order
-	 *
-	 * @return array
-	 */
 	public function filter_paypal_args( $args, $order ) {
 
 		$order_data      = $order->get_data();
@@ -144,13 +127,6 @@ class WCML_Payment_Gateway_PayPal extends WCML_Payment_Gateway {
 		return $args;
 	}
 
-	/**
-	 * Filter PayPal supported currencies before WC initialized it
-	 *
-	 * @param array $supported_currencies
-	 *
-	 * @return array
-	 */
 	public static function filter_supported_currencies( $supported_currencies ) {
 		global $woocommerce_wpml;
 

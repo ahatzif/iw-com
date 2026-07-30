@@ -1,14 +1,7 @@
 <?php
 
-/**
- * Handles data being passed between different domains using WPML xDomain logic
- * https://wpml.org/?page_id=693147
- */
 class WCML_xDomain_Data implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC_Action {
 
-	/**
-	 * @var WPML_Cookie
-	 */
 	private $cookie_handler;
 
 	public function __construct( WPML_Cookie $cookie_handler ) {
@@ -20,11 +13,6 @@ class WCML_xDomain_Data implements \IWPML_Backend_Action, \IWPML_Frontend_Action
 		add_action( 'before_woocommerce_init', [ $this, 'check_request' ] );
 	}
 
-	/**
-	 * @param array $data
-	 *
-	 * @return array
-	 */
 	public function pass_data_to_domain( $data ) {
 
 		$wcml_session_id = md5( microtime() . uniqid( (string) mt_rand(), true ) );
@@ -49,7 +37,7 @@ class WCML_xDomain_Data implements \IWPML_Backend_Action, \IWPML_Frontend_Action
 
 	public function check_request() {
 
-		if ( has_filter( 'wpml_get_cross_domain_language_data' ) ) { // After WPML 3.2.7.
+		if ( has_filter( 'wpml_get_cross_domain_language_data' ) ) {
 			$xdomain_data = apply_filters( 'wpml_get_cross_domain_language_data', [] );
 		} elseif ( isset( $_GET['xdomain_data'] ) ) {
 			$xdomain_data = json_decode( base64_decode( $_GET['xdomain_data'] ), true );
@@ -61,16 +49,13 @@ class WCML_xDomain_Data implements \IWPML_Backend_Action, \IWPML_Frontend_Action
 
 	}
 
-	/**
-	 * @param string $wcml_session_id
-	 */
 	private function set_session_data( $wcml_session_id ) {
 
 		$data = maybe_unserialize( get_option( 'wcml_session_data_' . $wcml_session_id ) );
 
 		if ( ! empty( $data ) ) {
 
-			$session_expiration = time() + (int) apply_filters( 'wc_session_expiration', 60 * 60 * 48 ); // 48 Hours.
+			$session_expiration = time() + (int) apply_filters( 'wc_session_expiration', 60 * 60 * 48 );
 			$secure             = apply_filters( 'wc_session_use_secure_cookie', false );
 
 			if ( isset( $data['session'] ) ) {

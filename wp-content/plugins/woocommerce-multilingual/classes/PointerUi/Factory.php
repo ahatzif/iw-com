@@ -7,11 +7,6 @@ use WCML_Pointer_UI;
 
 class Factory {
 
-	/**
-	 * @param array $args
-	 *
-	 * @return WCML_Pointer_UI
-	 */
 	public static function create( $args ) {
 		$defaultArgs = [
 			'anchor'     => __( 'How to translate this?', 'woocommerce-multilingual' ),

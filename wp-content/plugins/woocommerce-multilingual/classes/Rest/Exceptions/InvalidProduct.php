@@ -6,9 +6,6 @@ use WC_REST_Exception;
 
 class InvalidProduct extends WC_REST_Exception {
 
-	/**
-	 * @param int $product_id
-	 */
 	public function __construct( $product_id ) {
 		parent::__construct(
 			"422",

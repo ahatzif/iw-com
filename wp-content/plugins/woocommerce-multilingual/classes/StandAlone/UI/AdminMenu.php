@@ -14,24 +14,14 @@ use WPML\FP\Str;
 
 class AdminMenu extends \WCML_Menu_Wrap_Base {
 
-	/** @var SitePress|NullSitePress */
 	private $sitepress;
 
-	/**
-	 * WCML_Menus_Wrap constructor.
-	 *
-	 * @param SitePress|NullSitePress $sitepress
-	 * @param woocommerce_wpml        $woocommerce_wpml
-	 */
 	public function __construct( ISitePress $sitepress, $woocommerce_wpml ) {
 		parent::__construct( $woocommerce_wpml );
 
 		$this->sitepress = $sitepress;
 	}
 
-	/**
-	 * @return array
-	 */
 	protected function get_child_model() {
 		$current_tab = AdminPages::getTabToDisplay();
 

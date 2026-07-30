@@ -2,15 +2,9 @@
 
 class WCML_Sensei implements \IWPML_Action {
 
-	/** @var SitePress */
 	private $sitepress;
-	/** WPML_Custom_Columns $wpml_custom_columns */
 	private $custom_columns;
 
-	/**
-	 * @param SitePress           $sitepress
-	 * @param WPML_Custom_Columns $custom_columns
-	 */
 	public function __construct( SitePress $sitepress, WPML_Custom_Columns $custom_columns ) {
 		$this->sitepress      = $sitepress;
 		$this->custom_columns = $custom_columns;
@@ -45,15 +39,12 @@ class WCML_Sensei implements \IWPML_Action {
 	public function save_post_actions( $post_id, $post ) {
 		global $sitepress;
 
-		// skip not related post types
 		if ( ! in_array( $post->post_type, [ 'lesson', 'course', 'quiz' ] ) ) {
 			return;
 		}
-		// skip auto-drafts
 		if ( $post->post_status == 'auto-draft' ) {
 			return;
 		}
-		// skip autosave
 		if ( isset( $_POST['autosave'] ) ) {
 			return;
 		}
@@ -62,7 +53,6 @@ class WCML_Sensei implements \IWPML_Action {
 			$this->save_post_actions( $_POST['ID'], get_post( $_POST['ID'] ) );
 		}
 
-		// sync fields from original
 		$trid         = $sitepress->get_element_trid( $post_id, 'post_' . $post->post_type );
 		$translations = $sitepress->get_element_translations( $trid, 'post_' . $post->post_type );
 
@@ -95,7 +85,6 @@ class WCML_Sensei implements \IWPML_Action {
 		$language = $sitepress->get_language_for_element( $post_id, 'post_' . $post_type );
 		if ( $post_type == 'quiz' ) {
 
-			// sync quiz lesson
 			$lesson_id = get_post_meta( $original_post_id, '_quiz_lesson', true );
 
 			if ( $lesson_id ) {
@@ -108,7 +97,6 @@ class WCML_Sensei implements \IWPML_Action {
 				delete_post_meta( $post_id, '_quiz_lesson' );
 			}
 		} elseif ( $post_type == 'lesson' ) {
-			// sync lesson course
 			$course_id = get_post_meta( $original_post_id, '_lesson_course', true );
 
 			if ( $course_id ) {
@@ -121,7 +109,6 @@ class WCML_Sensei implements \IWPML_Action {
 				delete_post_meta( $post_id, '_lesson_course' );
 			}
 
-			// sync lesson prerequisite
 			$lesson_id = get_post_meta( $original_post_id, '_lesson_prerequisite', true );
 
 			if ( $lesson_id ) {
@@ -135,7 +122,6 @@ class WCML_Sensei implements \IWPML_Action {
 			}
 		} else {
 
-			// sync course woocommerce_product
 			$product_id = get_post_meta( $original_post_id, '_course_woocommerce_product', true );
 
 			if ( $product_id ) {
@@ -148,7 +134,6 @@ class WCML_Sensei implements \IWPML_Action {
 				delete_post_meta( $post_id, '_course_woocommerce_product' );
 			}
 
-			// sync course prerequisite
 			$course_id = get_post_meta( $original_post_id, '_course_prerequisite', true );
 
 			if ( $course_id ) {
@@ -196,7 +181,6 @@ class WCML_Sensei implements \IWPML_Action {
 	}
 
 	public function filter_bought_product_id( $product_id, $order ) {
-		/** @phpstan-ignore-next-line function.alreadyNarrowedType */
 		$order_id       = method_exists( 'WC_Order', 'get_id' ) ? $order->get_id() : $order->id;
 		$order_language = WCML_Orders::getLanguage( $order_id );
 

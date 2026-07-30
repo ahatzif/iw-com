@@ -11,9 +11,6 @@ class WCML_Composite_Products extends WCML_Compatibility_Helper implements \IWPM
 	const META_KEY_SCENARIO = '_bto_scenario_data';
 	const FIELD_TYPE_PREFIX = 'wc_composite';
 
-	/**
-	 * @var SitePress
-	 */
 	private $sitepress;
 
 	public function __construct( SitePress $sitepress ) {
@@ -30,7 +27,7 @@ class WCML_Composite_Products extends WCML_Compatibility_Helper implements \IWPM
 		add_filter( 'wpml_tm_translation_job_data', [ $this, 'append_composite_data_translation_package' ], 10, 2 );
 
 		if( is_admin() ){
-			if ( ! WPML::useAte() ) {  // Legacy actions/filters for CTE
+			if ( ! WPML::useAte() ) {
 				add_action( 'wcml_gui_additional_box_html', [ $this, 'custom_box_html' ], 10, 3 );
 				add_filter( 'wcml_gui_additional_box_data', [ $this, 'custom_box_html_data' ], 10, 4 );
 				add_action( 'wcml_update_extra_fields', [ $this, 'update_component_strings' ], 10, 4 );
@@ -38,7 +35,6 @@ class WCML_Composite_Products extends WCML_Compatibility_Helper implements \IWPM
 
 			add_filter( 'woocommerce_json_search_found_products', [ $this, 'woocommerce_json_search_found_products' ] );
 
-			//lock fields on translations pages
 			add_filter( 'wcml_js_lock_fields_input_names', [ $this, 'wcml_js_lock_fields_input_names' ] );
 			add_filter( 'wcml_js_lock_fields_ids', [ $this, 'wcml_js_lock_fields_ids' ] );
 			add_filter( 'wcml_after_load_lock_fields_js', [ $this, 'localize_lock_fields_js' ] );
@@ -121,7 +117,6 @@ class WCML_Composite_Products extends WCML_Compatibility_Helper implements \IWPM
 
 						}
 
-						//sync default
 						if ( isset( $component['default_id'] ) && $component['default_id'] ) {
 							$translated_default_id = apply_filters( 'wpml_object_id', $component['default_id'], get_post_type( $component['default_id'] ), false, $product_translation->language_code );
 							if ( $translated_default_id ) {
@@ -134,7 +129,6 @@ class WCML_Composite_Products extends WCML_Compatibility_Helper implements \IWPM
 					update_post_meta( $product_translation->element_id, self::META_KEY_DATA, $composite_data );
 
 					if ( $composite_scenarios_meta ) {
-						// sync product ids
 						$translate_product_ids = function ( $component_data ) use ( $product_translation ) {
 							$translate_assigned_product_id = function( $assigned_product_id ) use ( $product_translation ) {
 								return apply_filters( 'wpml_object_id', $assigned_product_id, get_post_type( $assigned_product_id ), false, $product_translation->language_code ) ?: $assigned_product_id;
@@ -158,13 +152,6 @@ class WCML_Composite_Products extends WCML_Compatibility_Helper implements \IWPM
 		}
 	}
 
-	/**
-	 * @deprecated This method is used by CTE only.
-	 *
-	 * @param object     $obj
-	 * @param string|int $product_id
-	 * @param mixed      $data
-	 */
 	public function custom_box_html( $obj, $product_id, $data ){
 
 		if( $this->get_product_type( $product_id ) == 'composite' ){
@@ -220,16 +207,6 @@ class WCML_Composite_Products extends WCML_Compatibility_Helper implements \IWPM
 
 	}
 
-	/**
-	 * @deprecated This method is used by CTE only.
-	 *
-	 * @param array        $data
-	 * @param string|int   $product_id
-	 * @param object|mixed $translation
-	 * @param string       $lang
-	 *
-	 * @return array
-	 */
 	public function custom_box_html_data( $data, $product_id, $translation, $lang ){
 
 		if( $this->get_product_type( $product_id ) == 'composite' ){
@@ -292,14 +269,6 @@ class WCML_Composite_Products extends WCML_Compatibility_Helper implements \IWPM
 		return $data;
 	}
 
-	/**
-	 * @deprecated This method is used by CTE only.
-	 *
-	 * @param string|int $original_product_id
-	 * @param string|int $product_id
-	 * @param array      $data
-	 * @param string     $language
-	 */
 	public function update_component_strings( $original_product_id, $product_id, $data, $language ){
 
 		$composite_data = $this->get_composite_data( $product_id );
@@ -334,15 +303,8 @@ class WCML_Composite_Products extends WCML_Compatibility_Helper implements \IWPM
 		update_post_meta( $product_id, self::META_KEY_SCENARIO, $composite_scenarios_meta );
 	}
 
-	/**
-	 * @param array              $package
-	 * @param \stdClass|\WP_Post $post
-	 *
-	 * @return array
-	 */
 	public function append_composite_data_translation_package( $package, $post ){
 		if( 'product' === $post->post_type ) {
-			// $add_titles_and_descriptions :: (array, string, array) -> void
 			$add_fields_to_package = function( $data, $fields, $subtype ) use ( &$package ) {
 				if ( $data ) {
 					foreach( $data as $key => $meta ){
@@ -366,23 +328,11 @@ class WCML_Composite_Products extends WCML_Compatibility_Helper implements \IWPM
 		return $package;
 	}
 
-	/**
-	 * @param string $component_id
-	 * @param string $field
-	 * @param string $subtype
-	 *
-	 * @return string
-	 */
 	private static function get_field_name( $component_id, $field, $subtype ) {
 		$subtype = $subtype ? $subtype . ':' : $subtype;
 		return self::FIELD_TYPE_PREFIX . ':' . $subtype . $component_id . ':' . $field;
 	}
 
-	/**
-	 * @param string|int $post_id
-	 * @param array      $data
-	 * @param object     $job
-	 */
 	public function save_composite_data_translation( $post_id, $data, $job ){
 		if (
 			Str::startsWith( 'post_', $job->original_post_type )
@@ -395,7 +345,6 @@ class WCML_Composite_Products extends WCML_Compatibility_Helper implements \IWPM
 					return Obj::path( [ $name, 'data' ], $data );
 				};
 
-				// $apply_translations :: (array, array, string) -> array
 				$apply_translations = function ( $data, $fields, $subtype ) use ( $get_translation ) {
 					foreach ( $data as $key => $meta ) {
 						foreach ( $fields as $field ) {
@@ -410,7 +359,6 @@ class WCML_Composite_Products extends WCML_Compatibility_Helper implements \IWPM
 					return $data;
 				};
 
-				// $adjust_ids :: (array, string) -> array
 				$adjust_ids = function ( $data, $lang ) {
 					foreach ( $data as $key => $meta ) {
 						$ids_key = $cpt = null;
@@ -423,7 +371,6 @@ class WCML_Composite_Products extends WCML_Compatibility_Helper implements \IWPM
 							$cpt     = 'product_cat';
 						}
 
-						/** @phpstan-ignore-next-line booleanAnd.rightAlwaysTrue */
 						if ( $ids_key && $cpt ) {
 							foreach ( $meta[ $ids_key ] as $idx => $assigned_id ) {
 								$data[ $key ][ $ids_key ][ $idx ] = apply_filters( 'wpml_object_id', $assigned_id, $cpt, true, $lang );

@@ -10,9 +10,6 @@ use function WCML\functions\isStandAlone;
 
 class Factory extends ComponentFactory implements IStandAloneAction {
 
-	/**
-	 * @inheritDoc
-	 */
 	public function create() {
 		$hooks = [
 			new SharedHooks( self::getWpdb() ),

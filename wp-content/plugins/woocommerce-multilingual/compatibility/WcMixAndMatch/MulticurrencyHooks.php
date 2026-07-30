@@ -10,14 +10,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		add_filter( 'wcml_after_save_custom_prices', [ $this, 'update_container_base_price' ], 10, 4 );
 	}
 
-	/**
-	 * Add MNM price fields to list to be converted.
-	 *
-	 * @since 5.0.0
-	 *
-	 * @param array $custom_fields
-	 * @return array
-	 */
 	public function get_price_custom_fields( $custom_fields ) {
 		return array_merge(
 			$custom_fields,
@@ -31,15 +23,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		);
 	}
 
-	/**
-	 * Swap the base price for the custom price in that currency.
-	 *
-	 * @since 5.0.0
-	 *
-	 * @param array  $prices
-	 * @param string $code
-	 * @return array
-	 */
 	public function update_container_custom_prices_values( $prices, $code ) {
 		foreach ( [
 			'_custom_regular_price' => '_mnm_base_regular_price',
@@ -53,16 +36,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		return $prices;
 	}
 
-	/**
-	 * Save base price per currency.
-	 *
-	 * @since 5.0.0
-	 *
-	 * @param int    $post_id
-	 * @param string $product_price
-	 * @param array  $custom_prices
-	 * @param string $code
-	 */
 	public function update_container_base_price( $post_id, $product_price, $custom_prices, $code ) {
 
 		if ( isset( $custom_prices['_mnm_base_regular_price'] ) ) {

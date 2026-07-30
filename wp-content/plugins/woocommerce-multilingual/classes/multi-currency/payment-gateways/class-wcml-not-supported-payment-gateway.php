@@ -1,8 +1,5 @@
 <?php
 
-/**
- * Class WCML_Not_Supported_Payment_Gateway
- */
 class WCML_Not_Supported_Payment_Gateway extends WCML_Payment_Gateway{
 
 	public function get_output_model() {

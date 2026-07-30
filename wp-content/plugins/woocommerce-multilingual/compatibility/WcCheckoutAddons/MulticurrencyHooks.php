@@ -8,11 +8,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		add_filter( 'option_wc_checkout_add_ons', [ $this, 'optionWcCheckoutAddOnsFilter' ] );
 	}
 
-	/**
-	 * @param array|mixed $optionValue
-	 *
-	 * @return array|mixed
-	 */
 	public function optionWcCheckoutAddOnsFilter( $optionValue ) {
 		$convertPrice = function( $index, $conf, $checkoutAddOnName, $checkoutAddOnId ) {
 			if (

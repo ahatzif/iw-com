@@ -22,13 +22,11 @@ class WCML_Editor_Save_Filters {
 		remove_filter( 'wpml_save_post_lang', [ $this, 'wpml_save_post_lang_value' ], 10 );
 	}
 
-	// translation-management $trid filter
 	public function wpml_tm_save_post_trid_value( $trid, $post_id ) {
 		$trid = $this->trid ?: $trid;
 		return $trid;
 	}
 
-	// translation-management $lang filter
 	public function wpml_tm_save_post_lang_value( $lang, $post_id ) {
 		if ( isset( $_POST['action'] ) && $_POST['action'] === 'wpml_translation_dialog_save_job' ) {
 			$lang = $this->language ?: $lang;
@@ -36,7 +34,6 @@ class WCML_Editor_Save_Filters {
 		return $lang;
 	}
 
-	// sitepress $trid filter
 	public function wpml_save_post_trid_value( $trid, $post_status ) {
 		if ( $post_status !== 'auto-draft' ) {
 			$trid = $this->trid ?: $trid;
@@ -44,7 +41,6 @@ class WCML_Editor_Save_Filters {
 		return $trid;
 	}
 
-	// sitepress $lang filter
 	public function wpml_save_post_lang_value( $lang ) {
 		$lang = $this->language ?: $lang;
 		return $lang;

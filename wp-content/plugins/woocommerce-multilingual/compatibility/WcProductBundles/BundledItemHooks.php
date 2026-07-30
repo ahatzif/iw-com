@@ -15,24 +15,11 @@ class BundledItemHooks implements \IWPML_Action {
 		add_action( 'woocommerce_bundled_item_details', [ $this, 'trackBundledItem' ], self::EARLY_PRIORITY );
 	}
 
-	/**
-	 * @param \WC_Bundled_Item $bundleItem
-	 */
 	public function trackBundledItem( $bundleItem ) {
-		/**
-		 * @param int $productId
-		 *
-		 * @uses \WC_Bundled_Item $bundleItem
-		 *
-		 * @return int
-		 */
 		$setProductId = function( $productId ) use ( $bundleItem ) {
 			return $bundleItem->get_product()->get_id();
 		};
 
-		/**
-		 * @uses callable $setProductId
-		 */
 		$unsetProductId = function() use ( $setProductId ) {
 			remove_filter( 'wcml_translated_attribute_label_product_id', $setProductId );
 		};

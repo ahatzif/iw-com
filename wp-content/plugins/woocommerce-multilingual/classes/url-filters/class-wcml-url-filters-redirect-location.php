@@ -1,12 +1,8 @@
 <?php
 
 class WCML_Url_Filters_Redirect_Location {
-	/** @var WPML_URL_Converter */
 	private $wpml_url_converter;
 
-	/**
-	 * @param WPML_URL_Converter $wpml_url_converter
-	 */
 	public function __construct( WPML_URL_Converter $wpml_url_converter ) {
 		$this->wpml_url_converter = $wpml_url_converter;
 	}
@@ -19,11 +15,6 @@ class WCML_Url_Filters_Redirect_Location {
 		}
 	}
 
-	/**
-	 * @param string $link
-	 *
-	 * @return string
-	 */
 	public function filter( $link ) {
 		return html_entity_decode( $this->wpml_url_converter->convert_url( $link ) );
 	}

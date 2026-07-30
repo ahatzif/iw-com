@@ -2,13 +2,7 @@
 
 class WCML_Update_Product_Gallery_Translation implements IWPML_Action {
 
-	/**
-	 * @var WPML_Translation_Element_Factory
-	 */
 	private $translation_element_factory;
-	/**
-	 * @var WPML_Media_Usage_Factory
-	 */
 	private $media_usage_factory;
 
 	public function __construct(
@@ -23,11 +17,6 @@ class WCML_Update_Product_Gallery_Translation implements IWPML_Action {
 		add_action( 'wpml_added_media_file_translation', [ $this, 'update_meta' ], PHP_INT_MAX, 3 );
 	}
 
-	/**
-	 * @param int    $original_attachment_id
-	 * @param string $file
-	 * @param string $language
-	 */
 	public function update_meta( $original_attachment_id, $file, $language ) {
 		$media_usage = $this->media_usage_factory->create( $original_attachment_id );
 
@@ -44,12 +33,6 @@ class WCML_Update_Product_Gallery_Translation implements IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param int               $source_post_id
-	 * @param WPML_Post_Element $updated_attachment_element
-	 *
-	 * @return array
-	 */
 	private function get_translated_gallery( $source_post_id, WPML_Post_Element $updated_attachment_element ) {
 		$meta_value = [];
 
@@ -72,11 +55,6 @@ class WCML_Update_Product_Gallery_Translation implements IWPML_Action {
 		return $meta_value;
 	}
 
-	/**
-	 * @param array             $meta_value
-	 * @param WPML_Post_Element $source_post
-	 * @param WPML_Post_Element $updated_attachment_element
-	 */
 	private function update_gallery(
 		array $meta_value,
 		WPML_Post_Element $source_post,
@@ -84,7 +62,6 @@ class WCML_Update_Product_Gallery_Translation implements IWPML_Action {
 	) {
 		if ( ! empty( $meta_value ) ) {
 			$translated_post = $source_post->get_translation( $updated_attachment_element->get_language_code() );
-			/** $translated_post could be null  */
 			if ( $translated_post ) {
 				$value = implode( ',', $meta_value );
 				update_post_meta( $translated_post->get_id(), '_product_image_gallery', $value );

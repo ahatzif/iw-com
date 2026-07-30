@@ -4,7 +4,7 @@ Tags: post order, custom post order, sort posts, reorder posts, drag drop order
 Requires at least: 6.2
 Requires PHP: 7.4
 Tested up to: 7.0
-Stable tag: 2.8.4
+Stable tag: 2.8.6
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -250,6 +250,33 @@ Yes, if you explicitly set `orderby` and `order` parameters in your custom queri
 4. Reset order functionality for specific post types
 
 == Changelog ==
+
+= 2.8.6 - 2026-07-27 =
+
+**Bug fixes**
+
+* Fixed "Couldn't update the order — please try again" when typing a position into the **Order** column. The column had no recovery for an expired security token, so leaving a post list open for a while (or running a security plugin that shortens token lifetime) made every save fail until the page was reloaded by hand. It now quietly fetches a fresh token and retries, the same way drag-and-drop already did. Reported by @nlarenas.
+* Fixed the Order column reporting a failure when the order had actually been saved. If another plugin printed a stray notice or warning before the response, the reply could not be read and the save looked like it had failed. Such output is now tolerated.
+* Fixed the Order column giving up on a brief network hiccup — it now retries once before reporting a problem.
+* The Order column no longer shows an editable box on items you are not allowed to reorder. The box is only offered where the save can actually succeed; elsewhere the position is shown as plain text. This mainly affects custom post types registered with their own capabilities, where the box previously appeared for everyone but every save was rejected.
+
+**Improvements**
+
+* The Order column now reports *why* a save failed — an expired session, a permissions problem, an item that can't be ordered, or a connection problem — instead of showing the same generic message for all of them.
+
+= 2.8.5 - 2026-07-27 =
+
+**Bug fixes**
+
+* Fixed stale and duplicated order numbers on sites running a persistent object cache (Redis, Memcached, etc.). Creating a post and tidying up the order both wrote straight to the database without telling WordPress to refresh its cached copies, so admin lists kept showing the old numbers until the cache was flushed by hand. Every order write now clears the cache for the rows it touched. Reported by @raveendrawpc (#154).
+* Fixed taxonomy terms coming back in the **wrong order on the front end** from that same cause. Unlike posts, term order is applied in PHP using each term's stored order value — and that value comes from the cache, so a stale entry produced genuinely wrong ordering, not just wrong-looking numbers in the admin.
+* Fixed reordering terms clearing the wrong cache entries on sites where a term's ID and its internal taxonomy ID have drifted apart (common on older or heavily migrated sites).
+* Fixed the order not being tidied up in one edge case where the numbering looked correct but started below 1.
+
+**Performance**
+
+* Publishing is now much faster on large sites. With "New items" set to *Top* (the default), creating a single post rewrote the order value of **every other post of that type** — thousands of rows on a big site, on every publish. New items are now placed with a single-row update. Where they land is unchanged.
+* Enabling a post type or taxonomy in Settings now numbers the existing items in one batched query instead of one query per item.
 
 = 2.8.4 - 2026-07-14 =
 
@@ -524,6 +551,12 @@ Yes, if you explicitly set `orderby` and `order` parameters in your custom queri
 * Initial release
 
 == Upgrade Notice ==
+
+= 2.8.6 =
+Fixes "Couldn't update the order" errors in the numeric Order column: expired sessions now recover automatically, stray output from other plugins no longer looks like a failure, and errors finally say what actually went wrong. Recommended if you use the Order column.
+
+= 2.8.5 =
+Fixes stale order numbers on sites using a persistent object cache (Redis/Memcached), and wrong front-end term order caused by the same issue. Also makes publishing much faster on large sites. Recommended for all users.
 
 = 2.8.4 =
 Performance fix: the admin was slow on sites with many posts because the plugin ran its order normalization on every admin page. It now runs only on the sortable list screens and uses a single batched query. Recommended for all users, especially large sites.

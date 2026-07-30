@@ -2,16 +2,8 @@
 
 class WCML_Page_Builders {
 
-	/**
-	 * @var SitePress
-	 */
 	private $sitepress;
 
-	/**
-	 * WCML_Page_Builders constructor.
-	 *
-	 * @param SitePress $sitepress
-	 */
 	public function __construct( $sitepress ) {
 		$this->sitepress = $sitepress;
 	}
@@ -79,7 +71,6 @@ class WCML_Page_Builders {
 		foreach ( $string_packages as $string_package ) {
 
 			if ( isset( $string_package['strings'] ) ) {
-				/** @var stdClass $string */
 				foreach ( $string_package['strings'] as $string ) {
 					$element_data[ $string->name ] = [ 'original' => $string->value ];
 					if ( isset( $string->translated_value ) ) {

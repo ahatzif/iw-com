@@ -1,17 +1,4 @@
 <?php
-/**
- * Editor-scoped sync mode — post-save notices in the product editor.
- *
- * Sync Summary notice: in Editor-scoped mode, when the previous request synced
- * fewer variations than the product has, renders a collapsed-by-default notice
- * summarising what was synced + a "Force update all" button.
- *
- * Switch Hint notice: in Complete sync mode, when all variations were checked
- * but none had changes (wasted iteration), suggests switching to Editor-scoped
- * mode. The suggestion can be dismissed permanently.
- *
- * @package WCML\EditorScopedSync
- */
 
 namespace WCML\EditorScopedSync;
 
@@ -19,40 +6,19 @@ class Notices implements \IWPML_Backend_Action {
 
 	const SYNC_SUMMARY_TRANSIENT_PREFIX = 'wcml_editor_scoped_last_save_';
 	const SWITCH_HINT_TRANSIENT_PREFIX  = 'wcml_editor_scoped_heavy_load_';
-	const TRANSIENT_TTL                 = 600; // 10 minutes — long enough that the next page load picks it up
+	const TRANSIENT_TTL                 = 600;
 
-	// Runs after all WC/WCML save processing has completed so the full sync picture is available.
 	const PRIORITY_AFTER_ALL_SAVE_PROCESSING = 999;
-	// Runs just before PRIORITY_AFTER_ALL_SAVE_PROCESSING so the switch hint is ready if needed.
 	const PRIORITY_BEFORE_SAVE_SUMMARY = 998;
 
-	/**
-	 * Switch Hint trigger floor: only suggest switching when V × L (variations × translation
-	 * languages) crosses this many iterations.
-	 *
-	 * Per-iteration cost measured on a dedicated dev machine: ~6 ms / (variation × language).
-	 * Typical client environment is shared hosting, where MySQL contention, smaller InnoDB
-	 * buffer pools, and noisy-neighbor CPU push the realistic per-iteration cost to
-	 * ~10–15 ms. At 12 ms / iteration, 120 iterations = ~1.4 s of WCML waste — clearly
-	 * perceptible to the user, and well past the "feels slow" UX threshold.
-	 *
-	 * Lowering this further would catch tinier catalogs at the cost of prompting users
-	 * whose saves are still fast enough to ignore.
-	 *
-	 * Override via the `wcml_editor_scoped_heavy_load_threshold` filter.
-	 */
 	const SWITCH_HINT_ITERATION_THRESHOLD = 120;
 
-	// Key within _wcml_settings for the permanent Switch Hint dismiss.
 	const SWITCH_HINT_DISMISS_KEY = 'editor_scoped_sync_switch_hint_dismissed';
 
-	/** @var Mode */
 	private $mode;
 
-	/** @var \woocommerce_wpml */
 	private $woocommerce_wpml;
 
-	/** @var \wpdb */
 	private $wpdb;
 
 	public function __construct( Mode $mode, \woocommerce_wpml $woocommerce_wpml, \wpdb $wpdb ) {
@@ -72,10 +38,6 @@ class Notices implements \IWPML_Backend_Action {
 		}
 	}
 
-	/**
-	 * If we just handled an editor-driven save in editor_scoped mode, store a summary
-	 * in a per-product transient so the next page load can render the notice.
-	 */
 	public function maybePersistSyncSummary() {
 		if ( ! $this->isProductSaveRequest() ) {
 			return;
@@ -90,10 +52,6 @@ class Notices implements \IWPML_Backend_Action {
 		$edited  = EditorChangeTracker::editedVariationIdsFor( $productId );
 		$deleted = EditorChangeTracker::deletedVariationIdsFor( $productId );
 
-		// Merge with any prior transient. The variations-tab AJAX and the main editor save
-		// are separate requests; the user's mental model is one editing session. So if the
-		// previous save in the same session already recorded variation activity for this
-		// product, carry it forward rather than overwriting.
 		$existing = get_transient( self::SYNC_SUMMARY_TRANSIENT_PREFIX . $productId );
 
 		if ( is_array( $existing ) ) {
@@ -105,7 +63,6 @@ class Notices implements \IWPML_Backend_Action {
 			}
 		}
 
-		// Total variations the product has, for context.
 		$allIds = get_posts( [
 			'post_type'   => 'product_variation',
 			'post_parent' => $productId,
@@ -125,21 +82,12 @@ class Notices implements \IWPML_Backend_Action {
 		], self::TRANSIENT_TTL );
 	}
 
-	/**
-	 * @param int $productId
-	 *
-	 * @return string[] Keys from get_changes() excluding variation-attribute related.
-	 */
 	private function changedNonVariationFields( $productId ) {
 		$changes = EditorChangeTracker::productChangesFor( $productId );
-		// Always-noisy keys that we filter out from the summary copy.
 		$ignore = [ 'shipping_class_id', 'stock_quantity' ];
 		return array_values( array_diff( array_keys( $changes ), $ignore ) );
 	}
 
-	/**
-	 * @param \WP_Post|null $post Provided by edit_form_top.
-	 */
 	public function maybeRenderSyncSummary( $post = null ) {
 		$postId = $this->getEditedPostId( $post );
 
@@ -147,7 +95,6 @@ class Notices implements \IWPML_Backend_Action {
 			return;
 		}
 
-		// Only on product editor.
 		if ( get_post_type( $postId ) !== 'product' ) {
 			return;
 		}
@@ -157,7 +104,6 @@ class Notices implements \IWPML_Backend_Action {
 			return;
 		}
 
-		// Only render if at least one variation was skipped this save.
 		$editedCount  = count( $summary['edited'] ?? [] );
 		$total        = (int) $summary['total'];
 		$skippedCount = max( 0, $total - $editedCount - count( $summary['deleted'] ?? 0 ) );
@@ -279,16 +225,9 @@ class Notices implements \IWPML_Backend_Action {
 			})();
 		</script>
 		<?php
-		// Clear the transient now that we've rendered. Subsequent page reloads should not re-show
-		// the same notice; only fresh save activity should produce a new one.
 		delete_transient( self::SYNC_SUMMARY_TRANSIENT_PREFIX . $postId );
 	}
 
-	/**
-	 * If we're in Complete sync mode and a save just iterated all variations but
-	 * produced no variation changes (= wasted full iteration), set a transient so
-	 * the next page load can render the "switch to faster mode" suggestion.
-	 */
 	public function maybePersistSwitchHint() {
 		if ( $this->isSwitchHintDismissed() ) {
 			return;
@@ -303,12 +242,10 @@ class Notices implements \IWPML_Backend_Action {
 			return;
 		}
 
-		// Skip if real variation activity happened — the iteration wasn't wasted.
 		if ( EditorChangeTracker::hasAnyVariationActivity( $productId ) ) {
 			return;
 		}
 
-		// Only suggest for products that actually have variations (a simple product is fine in Complete sync).
 		$variationCount = (int) count( get_posts( [
 			'post_type'   => 'product_variation',
 			'post_parent' => $productId,
@@ -321,7 +258,6 @@ class Notices implements \IWPML_Backend_Action {
 			return;
 		}
 
-		// Count translations of this product so the notice copy can say "× N languages".
 		$trid = $this->wpdb->get_var( $this->wpdb->prepare(
 			"SELECT trid FROM {$this->wpdb->prefix}icl_translations WHERE element_id = %d AND element_type = %s",
 			$productId, 'post_product'
@@ -332,13 +268,10 @@ class Notices implements \IWPML_Backend_Action {
 			$trid, $productId, 'post_product'
 		) ) : 0;
 
-		// No translations => no waste worth flagging.
 		if ( $translationCount < 1 ) {
 			return;
 		}
 
-		// Threshold gate: only suggest the switch when WCML's waste is large enough to feel.
-		// Math: ~6 ms / iteration measured; threshold 200 iterations ≈ 1.2 s WCML waste.
 		$threshold = (int) apply_filters( 'wcml_editor_scoped_heavy_load_threshold', self::SWITCH_HINT_ITERATION_THRESHOLD );
 
 		if ( ( $variationCount * $translationCount ) < $threshold ) {
@@ -352,9 +285,6 @@ class Notices implements \IWPML_Backend_Action {
 		], self::TRANSIENT_TTL );
 	}
 
-	/**
-	 * @param \WP_Post|null $post Provided by edit_form_top.
-	 */
 	public function maybeRenderSwitchHint( $post = null ) {
 		if ( $this->isSwitchHintDismissed() ) {
 			return;
@@ -436,13 +366,9 @@ class Notices implements \IWPML_Backend_Action {
 			</p>
 		</div>
 		<?php
-		// Consume the hint so the notice doesn't keep re-appearing on subsequent reloads.
 		delete_transient( self::SWITCH_HINT_TRANSIENT_PREFIX . $postId );
 	}
 
-	/**
-	 * Handle the "Don't show this again" link click.
-	 */
 	public function maybeHandleSwitchHintDismiss() {
 		if ( ! isset( $_GET['wcml_esn_dismiss'] ) || 'heavy_load' !== $_GET['wcml_esn_dismiss'] ) {
 			return;
@@ -460,7 +386,6 @@ class Notices implements \IWPML_Backend_Action {
 		$settings[ self::SWITCH_HINT_DISMISS_KEY ] = '1';
 		$this->woocommerce_wpml->update_settings( $settings );
 
-		// Drop the dismiss query params from the URL.
 		wp_safe_redirect( remove_query_arg( [ 'wcml_esn_dismiss', '_wpnonce' ] ) );
 		exit;
 	}
@@ -470,11 +395,6 @@ class Notices implements \IWPML_Backend_Action {
 			: ( isset( $_REQUEST['product_id'] ) ? (int) $_REQUEST['product_id'] : 0 );
 	}
 
-	/**
-	 * @param \WP_Post|null $post
-	 *
-	 * @return int
-	 */
 	private function getEditedPostId( $post ): int {
 		return $post
 			? (int) $post->ID

@@ -14,11 +14,7 @@ class Geolocation {
 	const MODE_BY_LANGUAGE = Settings::MODE_BY_LANGUAGE;
 	const MODE_BY_LOCATION = Settings::MODE_BY_LOCATION;
 
-	/**
-	 * @return bool
-	 */
 	public static function isUsed() {
-		/** @var \woocommerce_wpml $woocommerce_wpml */
 		global $woocommerce_wpml;
 
 		$useDefaultCurrencyByLocation = function() use ( $woocommerce_wpml ) {
@@ -30,11 +26,6 @@ class Geolocation {
 		       && ( Settings::isModeByLocation() || $useDefaultCurrencyByLocation() );
 	}
 
-	/**
-	 * Get country code by user IP
-	 *
-	 * @return string
-	 */
 	private static function getCountryByUserIp() {
 		wp_cache_add_non_persistent_groups( __CLASS__ );
 
@@ -54,11 +45,6 @@ class Geolocation {
 		return (string) $country;
 	}
 
-	/**
-	 * Get country currency config file
-	 *
-	 * @return array
-	 */
 	private static function parseConfigFile() {
 		$config             = [];
 		$configuration_file = WCML_PLUGIN_PATH . self::DEFAULT_COUNTRY_CURRENCY_CONFIG;
@@ -71,18 +57,10 @@ class Geolocation {
 		return $config;
 	}
 
-	/**
-	 * @param string $country
-	 *
-	 * @return string|null
-	 */
 	public static function getOfficialCurrencyCodeByCountry( $country ) {
 		return Obj::prop( $country, self::parseConfigFile() );
 	}
 
-	/**
-	 * @return string
-	 */
 	public static function getUserCountry(){
 		if ( defined( 'WCML_GEOLOCATED_COUNTRY' ) ) {
 			return WCML_GEOLOCATED_COUNTRY;
@@ -96,30 +74,9 @@ class Geolocation {
 
 		$userCountry = $allUserCountries['billing'] ?: $allUserCountries['geolocation'];
 
-		/**
-		 * This filter allows to override the address country declared by the user.
-		 *
-		 * @since 4.11.0
-		 *
-		 * @param string $userCountry Billing address used if set otherwise geolocation country used.
-		 * @param array  $allUserCountries {
-		 *      @type string $billing The billing address country
-		 *      @type string $shipping The shipping address country
-		 *      @type string $geolocation The geolocation country
-		 * }
-		 *
-		 * @return string
-		 */
 		return apply_filters( 'wcml_geolocation_get_user_country', $userCountry, $allUserCountries );
 	}
 
-	/**
-	 * Get country code from address if user logged-in.
-	 *
-	 * @param string $addressType Shipping or Billing address.
-	 *
-	 * @return string
-	 */
 	private static function getUserCountryByAddress( $addressType ){
 		$orderCountry = self::getUserCountryFromOrder( $addressType );
 
@@ -138,13 +95,6 @@ class Geolocation {
 		return '';
 	}
 
-	/**
-	 * Get country code from order based on address.
-	 *
-	 * @param string $addressType Shipping or Billing address.
-	 *
-	 * @return string
-	 */
 	private static function getUserCountryFromOrder( $addressType ) {
 		$country = '';
 		$isWcAjax  = Relation::propEq( 'wc-ajax', Fns::__, $_GET );

@@ -1,37 +1,15 @@
 <?php
-/**
- * Class WCML_Order_Status_Manager
- * compatibility class for WC Order Status Manager plugin.
- */
 class WCML_Order_Status_Manager implements \IWPML_Action {
-	/**
-	 * WordPress query object.
-	 *
-	 * @var WP_Query
-	 */
 	private $wp_query;
 
-	/**
-	 * WCML_Order_Status_Manager constructor.
-	 *
-	 * @param WP_Query $wp_query WordPress query object.
-	 */
 	public function __construct( WP_Query $wp_query ) {
 		$this->wp_query = $wp_query;
 	}
 
-	/**
-	 * Adds WordPress hooks.
-	 */
 	public function add_hooks() {
 		add_action( 'pre_get_posts', [ $this, 'pre_get_posts' ], 10, 1 );
 	}
 
-	/**
-	 * Adds post__not_in to the query arguments.
-	 *
-	 * @param WP_Query|null $q the parsed query.
-	 */
 	public function pre_get_posts( $q = null ) {
 		if ( isset( $q->query['post_type'] )
 			&& 'wc_order_status' === $q->query['post_type']
@@ -41,9 +19,6 @@ class WCML_Order_Status_Manager implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * Queries for all statuses in wp_posts table.
-	 */
 	private function get_statuses() {
 		remove_action( 'pre_get_posts', [ $this, 'pre_get_posts' ], 10 );
 		$this->wp_query->query(
@@ -58,14 +33,6 @@ class WCML_Order_Status_Manager implements \IWPML_Action {
 		return $this->wp_query->posts;
 	}
 
-	/**
-	 * Filters out elements not in the current language from query results.
-	 *
-	 * @param WP_Query $q        The WordPress query.
-	 * @param array    $statuses Posts with post type wc_order_status.
-	 *
-	 * @return array The post__not_in array.
-	 */
 	private function prepare_post_not_in( $q, $statuses ) {
 		$post__not_in = [];
 

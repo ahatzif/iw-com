@@ -11,9 +11,6 @@ use function WPML\FP\spreadArgs;
 
 class Hooks implements \IWPML_Backend_Action, \IWPML_REST_Action {
 
-	/**
-	 * @return void
-	 */
 	public function add_hooks() {
 		WpHooks::onFilter( 'woocommerce_product_recount_terms', PHP_INT_MAX )
 			->then( spreadArgs( [ self::class, 'disableTermFilters' ] ) );
@@ -25,17 +22,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_REST_Action {
 			->then( [ self::class, 'recountAllTermsInShutdown' ] );
 	}
 
-	/**
-	 * At the top of `_wc_term_recount` we suspend all WPML term filters,
-	 * and we resume it at the bottom once `wc_term_counts` transient
-	 * is deleted.
-	 *
-	 * @see _wc_term_recount()
-	 *
-	 * @param bool $shouldRecountTerms
-	 *
-	 * @return bool
-	 */
 	public static function disableTermFilters( $shouldRecountTerms ) {
 		if ( $shouldRecountTerms ) {
 			$filtersSuspend = SuspendWpmlFiltersFactory::create();
@@ -49,12 +35,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_REST_Action {
 		return $shouldRecountTerms;
 	}
 
-	/**
-	 * @param \stdClass $originalTax
-	 * @param int       $translatedTerm
-	 *
-	 * @return void
-	 */
 	public static function recountOnSaveTermTranslation( $originalTax, $translatedTerm ) {
 		$taxonomyName = Obj::prop( 'taxonomy', $originalTax );
 
@@ -65,16 +45,10 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_REST_Action {
 		}
 	}
 
-	/**
-	 * @return void
-	 */
 	public static function recountAllTermsInShutdown() {
 		WpHooks::onAction( 'shutdown' )->then( Fns::once( [ self::class, 'recountAllTerms' ] ) );
 	}
 
-	/**
-	 * @return void
-	 */
 	public static function recountAllTerms() {
 		SuspendWpmlFiltersFactory::create()->runAndResume( function() {
 			wc_recount_all_terms();

@@ -8,14 +8,8 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 
 	const AFTER_SITEPRESS_JS_LOAD = 3;
 
-	/**
-	 * @var SitePress $sitepress
-	 */
 	private $sitepress;
 
-	/**
-	 * @param SitePress $sitepress
-	 */
 	public function __construct( SitePress $sitepress ) {
 		$this->sitepress = $sitepress;
 	}
@@ -25,7 +19,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 	}
 
 	public function disableLanguageQuickLinks() {
-		/* phpcs:ignore WordPress.Security.NonceVerification.Recommended */
 		$getData = wpml_collect( $_GET );
 
 		if ( 'product' === $getData->get( 'post_type' ) && 'product-reviews' === $getData->get( 'page' ) ) {

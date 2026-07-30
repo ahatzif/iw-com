@@ -7,7 +7,6 @@ use function WPML\Container\make;
 class FrontendHooksFactory implements \IWPML_Frontend_Action_Loader {
 
 	public function create() {
-		/** @var \SitePress $sitepress */
 		global $sitepress;
 
 		$hooks           = [];

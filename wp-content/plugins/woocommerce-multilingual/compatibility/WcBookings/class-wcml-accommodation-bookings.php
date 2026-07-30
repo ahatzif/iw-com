@@ -5,7 +5,6 @@ use WCML\Compatibility\WcBookings\Prices;
 
 class WCML_Accommodation_Bookings implements \IWPML_Action {
 
-	/** @var \woocommerce_wpml $woocommerce_wpml */
 	private $woocommerce_wpml;
 
 	public function __construct( \woocommerce_wpml $woocommerce_wpml ) {

@@ -4,11 +4,7 @@ class WCML_Status_Multi_Currencies_UI extends WCML_Templates_Factory {
 
 	private $woocommerce_wpml;
 
-	/**
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 */
 	public function __construct( $woocommerce_wpml ) {
-		// @todo Cover by tests, required for wcml-3037.
 		parent::__construct();
 
 		$this->woocommerce_wpml = $woocommerce_wpml;

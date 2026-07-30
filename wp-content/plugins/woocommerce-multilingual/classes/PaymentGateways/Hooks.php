@@ -21,7 +21,6 @@ use WPML\FP\Type;
 class Hooks implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_Action, IStandAloneAction {
 
 	const OPTION_KEY = 'wcml_payment_gateways';
-	/* took this priority from wcgcl but we could not recall the reason of this number.*/
 	const PRIORITY = 1000;
 
 	public function add_hooks() {
@@ -46,7 +45,6 @@ class Hooks implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_Ac
 
 	public function updateSettingsOnSave() {
 
-		/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 		if ( isset( $_POST[ self::OPTION_KEY ] ) ) {
 
 			$gatewaySettings = $_POST[ self::OPTION_KEY ];
@@ -76,12 +74,6 @@ class Hooks implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_Ac
 
 	}
 
-	/**
-	 * @param string $gatewayId
-	 * @param array  $gatewaySettings
-	 *
-	 * @return bool
-	 */
 	private function updateGatewaySettings( $gatewayId, $gatewaySettings ) {
 		$settings          = $this->getSettings();
 		$settingsSignature = maybe_serialize( $settings );
@@ -94,9 +86,7 @@ class Hooks implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_Ac
 
 		$countries = Logic::ifElse(
 			Type::isString(),
-			// updateSettingsOnSave passes countries as a comma-separated list.
 			Str::split( ',' ),
-			// updateSettingsOnAjaxSave passes countries as an array.
 			Fns::identity(),
 			Obj::propOr( [], 'countries', $gatewaySettings )
 		);
@@ -115,7 +105,6 @@ class Hooks implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_Ac
 		$updatedSettingsSignature = maybe_serialize( $settings );
 
 		if ( $settingsSignature === $updatedSettingsSignature ) {
-			// Nothing to update, so let's call it a day and save a database call.
 			return true;
 		}
 
@@ -162,9 +151,6 @@ class Hooks implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_Ac
 		wp_enqueue_style( 'wcml-payment-gateways' );
 	}
 
-	/**
-	 * @return array
-	 */
 	private function getStrings() {
 		return [
 			'translationInstructions'     => Strings::getTranslationInstructions(),
@@ -182,9 +168,6 @@ class Hooks implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_Ac
 		];
 	}
 
-	/**
-	 * @return array
-	 */
 	private function getAllCountries() {
 
 		$buildCountry = function ( $label, $code ) {
@@ -197,14 +180,6 @@ class Hooks implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_Ac
 		return wpml_collect( WC()->countries->get_countries() )->map( $buildCountry )->values()->toArray();
 	}
 
-	/**
-	 * Checks whether the payment gateway disabled the natural submit button.
-	 *
-	 * Note that this is usually defined at payment gateway options page render time, not before.
-	 * Used by WooCommerce in its settings page template, at /includes/admin/views/html-admin-settings.php.
-	 *
-	 * @return bool
-	 */
 	private function isSubmitButtonHidden() {
 		return ! empty( $GLOBALS['hide_save_button'] );
 	}
@@ -231,11 +206,6 @@ class Hooks implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_Ac
 		?><h2>WPML Multilingual & Multicurrency for WooCommerce</h2><div id="wcml-payment-gateways"></div><?php
 	}
 
-	/**
-	 * @param array $payment_gateways
-	 *
-	 * @return array
-	 */
 	public function filterByCountry( $payment_gateways ) {
 
 		$customer_country = Geolocation::getUserCountry();
@@ -269,9 +239,6 @@ class Hooks implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_Ac
 		}
 	}
 
-	/**
-	 * @return string
-	 */
 	private function getNoticeText(){
 
 		$text = '<div id="message" class="updated error">';
@@ -283,36 +250,20 @@ class Hooks implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_Ac
 		return $text;
 	}
 
-	/**
-	 * @param string $gatewayId
-	 *
-	 * @return array
-	 */
 	private function getGatewaySettings( $gatewayId ) {
 		return Maybe::fromNullable( get_option( self::OPTION_KEY, false ) )
 			->map( Obj::prop( $gatewayId ) )
 			->getOrElse( [ 'mode' => 'all', 'countries' => [] ] );
 	}
 
-	/**
-	 * @return array
-	 */
 	private function getSettings() {
 		return get_option( self::OPTION_KEY, [] );
 	}
 
-	/**
-	 * @param array $settings
-	 *
-	 * @return bool
-	 */
 	private function updateSettings( $settings ) {
 		return update_option( self::OPTION_KEY, $settings );
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function isWCGatewaysSettingsScreen() {
 		if ( $this->isWooC10_1_Spa() ) {
 			return $this->isWCGatewaysSettingsScreenSPA();

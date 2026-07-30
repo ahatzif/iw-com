@@ -13,12 +13,8 @@ class Review implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_A
 
 	const OPTION_NAME = 'wcml-rate-notice';
 
-	/** @var WPML_Notices $wpmlNotices */
 	private $wpmlNotices;
 
-	/**
-	 * @param WPML_Notices $wpmlNotices
-	 */
 	public function __construct( WPML_Notices $wpmlNotices ) {
 		$this->wpmlNotices = $wpmlNotices;
 	}
@@ -74,9 +70,6 @@ class Review implements IWPML_Backend_Action, IWPML_Frontend_Action, IWPML_DIC_A
 		return get_option( self::OPTION_NAME, false );
 	}
 
-	/**
-	 * @param \WC_Order $order
-	 */
 	public function onNewOrder( $order ) {
 		if ( ! $this->shouldDisplayNotice() ) {
 			$this->maybeAddOptionToShowNotice( $order );

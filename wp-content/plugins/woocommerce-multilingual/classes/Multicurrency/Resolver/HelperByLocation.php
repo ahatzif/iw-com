@@ -8,12 +8,8 @@ use WPML\FP\Fns;
 
 class HelperByLocation {
 
-	/** @var null|callable $getCurrency */
 	private static $getCurrency;
 
-	/**
-	 * @return string|null
-	 */
 	public static function getCurrencyByUserCountry() {
 		if ( ! self::$getCurrency ) {
 			self::$getCurrency = Fns::memorize( function() {

@@ -9,11 +9,6 @@ use WPML\FP\Obj;
 
 class Variations extends SynchronizerForMeta {
 
-	/**
-	 * @param \WP_Post          $product
-	 * @param int[]             $translationsIds
-	 * @param array<int,string> $translationsLanguages
-	 */
 	public function run( $product, $translationsIds, $translationsLanguages ) {
 		$isVariableProduct = $this->woocommerceWpml->products->is_variable_product( $product->ID );
 		if ( ! $isVariableProduct ) {
@@ -42,9 +37,6 @@ class Variations extends SynchronizerForMeta {
 			return;
 		}
 
-		// Editor-scoped sync mode: narrow the iteration to the variations the editor
-		// actually saved during this request. In Complete sync mode (default) this
-		// filter passes through unchanged. See classes/EditorScopedSync/SyncGate.php.
 		$editorScopedIds = apply_filters( 'wcml_editor_scoped_variation_ids', null, $product->ID );
 		if ( is_array( $editorScopedIds ) ) {
 			if ( empty( $editorScopedIds ) ) {
@@ -69,7 +61,7 @@ class Variations extends SynchronizerForMeta {
 							'post_status'       => $productVariation->post_status,
 							'post_modified'     => $productVariation->post_modified,
 							'post_modified_gmt' => $productVariation->post_modified_gmt,
-							'post_parent'       => $translationId,// This should be already set! We can try and see... and update all other post_* and menu_order at once.
+							'post_parent'       => $translationId,
 							'menu_order'        => $productVariation->menu_order,
 						],
 						[ 'ID' => $variationTranslationId ]
@@ -104,10 +96,8 @@ class Variations extends SynchronizerForMeta {
 							'comment_count'         => $productVariation->comment_count,
 						]
 					);
-					// Set language details and connection for the new variation translation.
 					$trid = $this->sitepress->get_element_trid( $productVariation->ID, 'post_product_variation' );
 					$this->sitepress->set_element_language_details( $variationTranslationId, 'post_product_variation', $trid, $language );
-					// Declare that the new variation translation is a duplicate of the product variation.
 					$preparedVariationsToSetAsDuplication[] = $this->wpdb->prepare( "(%d,%s,%s)", $variationTranslationId, '_wcml_duplicate_of_variation', $productVariation->ID );
 					$this->syncHashManager->initialize( $variationTranslationId, SyncHash::SOURCE_EMPTY, true );
 				}
@@ -140,8 +130,6 @@ class Variations extends SynchronizerForMeta {
 			$variationTranslations = array_keys( $variationTranslationsLanguages );
 			do_action( Hooks::HOOK_SYNCHRONIZE_PRODUCT_VARIATION_TRANSLATIONS, $productVariations[ $variationId ], $variationTranslations, $variationTranslationsLanguages );
 			foreach ( $variationTranslations as $variationTranslationId ) {
-				// NOTE This is still potentially expensive.
-				//$wcmlProductDataStore->update_lookup_table_data( $variationTranslationId );
 				$this->syncHashManager->saveHash( $variationTranslationId, true );
 			}
 		}
@@ -149,10 +137,6 @@ class Variations extends SynchronizerForMeta {
 		add_action( 'save_post', [ $this->elementTranslations, 'save_post_actions' ], 100, 2 );
 	}
 
-	/**
-	 * @param int   $productId
-	 * @param int[] $productVariations
-	 */
 	private function removeOrphanedVariationAttributes( $productId, $productVariations ) {
 		$productAttributes    = get_post_meta( $productId, '_product_attributes', true );
 		$variationsAttributes = $this->wpdb->get_results(
@@ -183,11 +167,6 @@ class Variations extends SynchronizerForMeta {
 		$this->deleteMetaByIds( $metaIdsToDelete );
 	}
 
-	/**
-	 * @param int               $productId
-	 * @param array<int,string> $translationsLanguages
-	 * @param array<int,array>  $variationsTranslations
-	 */
 	private function synchronizeMinMaxPrices( $productId, $translationsLanguages, $variationsTranslations ) {
 		$productsIds = array_merge( [ $productId ], array_keys( $translationsLanguages ) );
 		

@@ -2,10 +2,8 @@
 
 abstract class WCML_Setup_Step extends WCML_Templates_Factory {
 
-	/** @var string */
 	protected $next_step_url;
 
-	/** @var string|null */
 	protected $previous_step_url;
 
 	public function __construct( $next_step_url, $previous_step_url = null ) {

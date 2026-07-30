@@ -6,11 +6,6 @@ class WCML_Append_Gallery_To_Post_Media_Ids implements IWPML_Action {
 		add_filter( 'wpml_ids_of_media_used_in_post', [ $this, 'add_product_gallery_images' ], 10, 2 );
 	}
 
-	/**
-	 * @param array $media_ids
-	 *
-	 * @return mixed
-	 */
 	public function add_product_gallery_images( $media_ids, $post_id ) {
 		$product_gallery = get_post_meta( $post_id, '_product_image_gallery', true );
 		if ( $product_gallery ) {

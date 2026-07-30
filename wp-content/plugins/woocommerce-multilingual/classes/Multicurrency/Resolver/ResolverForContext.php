@@ -11,16 +11,12 @@ use WPML\FP\Relation;
 
 class ResolverForContext implements Resolver {
 
-	/** @var callable $getOriginalProductLanguage */
 	private $getOriginalProductLanguage;
 
 	public function __construct( callable $getOriginalProductLanguage ) {
 		$this->getOriginalProductLanguage = $getOriginalProductLanguage;
 	}
 
-	/**
-	 * @inheritDoc
-	 */
 	public function getClientCurrency() {
 		$getOnWoocommerceQuickEdit = function() {
 			if ( ! empty( $_REQUEST['woocommerce_quick_edit'] ) ) {
@@ -35,7 +31,6 @@ class ResolverForContext implements Resolver {
 				$product                 = wc_get_product();
 				$originalProductLanguage = call_user_func( $this->getOriginalProductLanguage, $product->get_id() );
 
-				// $isMissingCustomPrice :: int -> bool
 				$isMissingCustomPrice = function( $productOrVariationId ) use ( $originalProductLanguage ) {
 					return ! get_post_meta(
 						apply_filters( 'wpml_object_id', $productOrVariationId, get_post_type( $productOrVariationId ), true, $originalProductLanguage ),
@@ -59,17 +54,14 @@ class ResolverForContext implements Resolver {
 		};
 
 		$getOnPayForOrder = function() {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 			if ( isset( $_GET['pay_for_order'], $_GET['key'] ) && $_GET['pay_for_order'] ) {
 				$cacheGroup = 'wcml_client_currency';
-				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash
 				$cacheKey      = 'order' . sanitize_text_field( $_GET['key'] );
 				$orderCurrency = wp_cache_get( $cacheKey, $cacheGroup );
 
 				if ( $orderCurrency ) {
 					return $orderCurrency;
 				} else {
-					// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 					$orderId = wc_get_order_id_by_order_key( wc_clean( wp_unslash( $_GET['key'] ) ) );
 					if ( $orderId ) {
 						$clientCurrency = OrdersHelper::getCurrency( $orderId, true );

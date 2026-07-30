@@ -2,14 +2,8 @@
 
 class WCML_Multi_Currency_Resources {
 
-	/**
-	 * @var WCML_Multi_Currency|null
-	 */
 	private static $multi_currency;
 
-	/**
-	 * @var woocommerce_wpml
-	 */
 	private static $woocommerce_wpml;
 
 	public static function set_up( WCML_Multi_Currency $multi_currency, woocommerce_wpml $woocommerce_wpml ) {
@@ -47,7 +41,6 @@ class WCML_Multi_Currency_Resources {
 
 		$script_vars['cache_enabled'] = false;
 
-		/* @phpstan-ignore-next-line instanceof.alwaysTrue    */
 		$w3tc_enabled = isset( self::$multi_currency->W3TC ) && self::$multi_currency->W3TC instanceof WCML_W3TC_Multi_Currency;
 		$nginx_enabled = class_exists( 'NginxCache' );
 

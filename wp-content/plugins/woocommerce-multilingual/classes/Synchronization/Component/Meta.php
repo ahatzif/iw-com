@@ -4,11 +4,6 @@ namespace WCML\Synchronization\Component;
 
 class Meta extends SynchronizerForMeta {
 
-	/**
-	 * @param \WP_Post          $product
-	 * @param int[]             $translationsIds
-	 * @param array<int,string> $translationsLanguages
-	 */
 	public function run( $product, $translationsIds, $translationsLanguages ) {
 		$this->deleteOrphanedFields( $product->ID, $translationsIds );
 

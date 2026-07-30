@@ -4,25 +4,9 @@ use function WCML\functions\getSitePress;
 
 class WCML_Multi_Currency_Install {
 
-	/**
-	 * The \WCML_Multi_Currency instance.
-	 *
-	 * @var \WCML_Multi_Currency
-	 */
 	private $multi_currency;
-	/**
-	 * The \woocommerce_wpml instance.
-	 *
-	 * @var \woocommerce_wpml
-	 */
 	private $woocommerce_wpml;
 
-	/**
-	 * WCML_Multi_Currency_Install constructor.
-	 *
-	 * @param \WCML_Multi_Currency $multi_currency   And instance of \WCML_Multi_Currency.
-	 * @param \woocommerce_wpml    $woocommerce_wpml And instance of \woocommerce_wpml.
-	 */
 	public function __construct( WCML_Multi_Currency $multi_currency, woocommerce_wpml $woocommerce_wpml ) {
 
 		$this->multi_currency   = $multi_currency;
@@ -38,12 +22,6 @@ class WCML_Multi_Currency_Install {
 		}
 	}
 
-	/**
-	 * It sets the default currency for each language.
-	 *
-	 * @param bool|string $old_value The value of the option before the update.
-	 * @param bool|string $new_value The new value of the option.
-	 */
 	public function set_default_currencies_languages( $old_value = false, $new_value = false ) {
 		$settings         = $this->woocommerce_wpml->get_settings();
 		$active_languages = getSitePress()->get_active_languages();

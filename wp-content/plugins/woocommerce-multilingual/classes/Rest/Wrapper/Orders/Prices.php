@@ -9,16 +9,6 @@ use WCML\Rest\Exceptions\InvalidCurrency;
 
 class Prices extends Handler {
 
-	/**
-	 * Sets the product information according to the provided language
-	 *
-	 * @param object           $object
-	 * @param \WP_REST_Request $request
-	 * @param bool             $creating
-	 *
-	 * @throws InvalidCurrency
-	 *
-	 */
 	public function insert( $object, $request, $creating ) {
 
 		$currency = Obj::prop( 'currency', $request->get_params() );

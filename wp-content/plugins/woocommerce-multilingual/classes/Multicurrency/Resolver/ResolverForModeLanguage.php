@@ -8,11 +8,7 @@ use WPML\FP\Logic;
 
 class ResolverForModeLanguage implements Resolver {
 
-	/**
-	 * @inheritDoc
-	 */
 	public function getClientCurrency() {
-		/** @var string $currentLang */
 		$currentLang    = HelperByLanguage::getCurrentLanguage();
 		$storedLang     = wcml_user_store_get( WCML_Multi_Currency::CURRENCY_LANGUAGE_STORAGE_KEY );
 		$storedCurrency = wcml_user_store_get( WCML_Multi_Currency::CURRENCY_STORAGE_KEY );

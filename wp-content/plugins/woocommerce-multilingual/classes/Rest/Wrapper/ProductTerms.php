@@ -10,11 +10,8 @@ use WCML\Rest\Exceptions\MissingLanguage;
 
 class ProductTerms extends Handler {
 
-	/** @var \SitePress */
 	private $sitepress;
-	/** @var \WPML_Term_Translation */
 	private $wpmlTermTranslations;
-	/** @var \WCML_Terms */
 	private $wcmlTerms;
 
 	public function __construct(
@@ -27,12 +24,6 @@ class ProductTerms extends Handler {
 		$this->wcmlTerms            = $wcmlTerms;
 	}
 
-	/**
-	 * @param array            $args
-	 * @param \WP_REST_Request $request Request object.
-	 *
-	 * @return array
-	 */
 	public function query( $args, $request ) {
 		$language = Obj::prop( 'lang', $request->get_params() );
 
@@ -49,15 +40,6 @@ class ProductTerms extends Handler {
 		return $args;
 	}
 
-	/**
-	 * Appends the language and translation information to the get_product response
-	 *
-	 * @param \WP_REST_Response $response
-	 * @param object|\WP_Term   $object
-	 * @param \WP_REST_Request  $request
-	 *
-	 * @return \WP_REST_Response
-	 */
 	public function prepare( $response, $object, $request ) {
 
 		$response->data['translations'] = [];
@@ -82,16 +64,6 @@ class ProductTerms extends Handler {
 		return $response;
 	}
 
-	/**
-	 * Sets the product information according to the provided language
-	 *
-	 * @param \WP_Term         $term
-	 * @param \WP_REST_Request $request
-	 * @param bool             $creating if true, it is an insert event; otherwise an update.
-	 *
-	 * @throws MissingLanguage When no $language is set yet $translationOf is set.
-	 * @throws InvalidTerm When updating the term and no $trid obtained.
-	 */
 	public function insert( $term, $request, $creating ) {
 		$getParam = Obj::prop( Fns::__, $request->get_params() );
 
@@ -128,11 +100,6 @@ class ProductTerms extends Handler {
 		}
 	}
 
-	/**
-	 * @param string $language
-	 *
-	 * @throws InvalidLanguage When $language is not active.
-	 */
 	private function checkLanguage( $language ) {
 		if ( ! $this->sitepress->is_active_language( $language ) ) {
 			throw new InvalidLanguage( $language );

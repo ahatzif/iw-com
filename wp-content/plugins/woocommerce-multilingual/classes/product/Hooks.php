@@ -15,9 +15,6 @@ class Hooks implements \IWPML_Frontend_Action, \IWPML_Backend_Action {
 			->then( spreadArgs( [ $this, 'flushPostVariationCache' ] ) );
 	}
 
-	/**
-	 * @return \Closure array -> array
-	 */
 	private static function forceProductLanguageInQuery() {
 		return function( $args ) {
 			return Obj::assoc(
@@ -28,12 +25,6 @@ class Hooks implements \IWPML_Frontend_Action, \IWPML_Backend_Action {
 		};
 	}
 
-	/**
-	 * Flush post variation cache after saving a variable product.
-	 *
-	 * @param \WC_Product_Variable|mixed $product
-	 * @return void
-	 */
 	public function flushPostVariationCache( $product ) {
 		if ( ! $product instanceof \WC_Product_Variable ) {
 			return;

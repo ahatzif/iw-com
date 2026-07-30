@@ -6,19 +6,12 @@ use woocommerce_wpml;
 use WPML\FP\Obj;
 use WPML_Notices;
 
-/**
- * Requirements:
- * - multi-currency mode: On
- * - currency switcher does not have a PHP template (only TWIG is found)
- */
 class CurrencySwitcherUseTwigTemplate implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 
 	const NOTICE_ID = 'wcml-multi-currency-currency-switcher-php-template-missing4';
 
-	/** @var woocommerce_wpml */
 	private $wcml;
 
-	/** @var WPML_Notices */
 	private $notices;
 
 	public function __construct( woocommerce_wpml $wcml, WPML_Notices $notices ) {
@@ -32,9 +25,6 @@ class CurrencySwitcherUseTwigTemplate implements \IWPML_Backend_Action, \IWPML_D
 		}
 	}
 
-	/**
-	 * Add hooks to manage visibility of notice.
-	 */
 	public function initNotice() {
 		$notice      = $this->notices->get_notice( self::NOTICE_ID );
 		$needsNotice = wcml_is_multi_currency_on() && $this->hasUniqueCurrency();
@@ -84,9 +74,6 @@ class CurrencySwitcherUseTwigTemplate implements \IWPML_Backend_Action, \IWPML_D
 		$this->notices->add_notice( $notice );
 	}
 
-	/**
-	 * Remove the notice if the problem has been fixed
-	 */
 	private function removeNotice( \WPML_Notice $notice ) {
 		$this->notices->remove_notice( $notice->get_group(), $notice->get_id() );
 	}

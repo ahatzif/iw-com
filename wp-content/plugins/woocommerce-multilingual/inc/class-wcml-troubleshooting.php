@@ -21,13 +21,6 @@ class WCML_Troubleshooting {
 	private $sitepress;
 	private $wpdb;
 
-	/**
-	 * WCML_Troubleshooting constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress        $sitepress
-	 * @param wpdb             $wpdb
-	 */
 	public function __construct( $woocommerce_wpml, $sitepress, $wpdb ) {
 
 		$this->woocommerce_wpml = $woocommerce_wpml;
@@ -357,12 +350,6 @@ class WCML_Troubleshooting {
 		}
 	}
 
-	/**
-	 * @param int    $element_id
-	 * @param string $element_type
-	 *
-	 * @return object|null
-	 */
 	private function get_translation_info_for_element( $element_id, $element_type ) {
 		return $this->wpdb->get_row(
 			$this->wpdb->prepare(
@@ -392,7 +379,6 @@ class WCML_Troubleshooting {
 		$translatedVariationsInRound = array_slice( $translatedVariations, 0, self::ITEMS_PER_AJAX, true );
 
 		foreach ( $translatedVariationsInRound as $key => $translated_variation ) {
-			// check relationships.
 			$tr_info_for_original_variation = $this->get_translation_info_for_element( $translated_variation->meta_value, 'post_product_variation' );
 
 			$language = $this->sitepress->get_language_for_element( wp_get_post_parent_id( $translated_variation->meta_value ), 'post_product' );
@@ -406,7 +392,6 @@ class WCML_Troubleshooting {
 
 			$tr_info_for_current_variation = $this->get_translation_info_for_element( $translated_variation->post_id, 'post_product_variation' );
 
-			// delete wrong element_type for exists variations.
 			if ( ! $tr_info_for_current_variation ) {
 				$tr_info_for_current_variation = $this->get_translation_info_for_element( $translated_variation->post_id, 'post_product' );
 				if ( $tr_info_for_current_variation ) {
@@ -419,7 +404,6 @@ class WCML_Troubleshooting {
 				$this->wpdb->delete( $this->wpdb->prefix . 'icl_translations', [ 'translation_id' => $check_duplicated_post_type->translation_id ] );
 			}
 
-			// set language info for variation if not exists.
 			if ( ! $tr_info_for_original_variation ) {
 
 				$tr_info_for_original_variation = $this->get_translation_info_for_element( $translated_variation->meta_value, 'post_product' );
@@ -461,10 +445,8 @@ class WCML_Troubleshooting {
 	public function trbl_fix_product_type_terms() {
 		self::checkNonce( 'trbl_product_type_terms' );
 
-		// Delete product_type terms translations and fix relationships.
 		WCML_Install::check_product_type_terms();
 
-		// Mark the product_type taxonomy as non-translatable.
 		$sync_settings                 = $this->sitepress->get_setting( 'taxonomies_sync_option', [] );
 		$sync_settings['product_type'] = 0;
 		$this->sitepress->set_setting( 'taxonomies_sync_option', $sync_settings, true );
@@ -490,9 +472,7 @@ class WCML_Troubleshooting {
 
 					if ( is_null( $tr_id ) ) {
 						$term_args = [];
-						// hierarchy - parents.
 						if ( is_taxonomy_hierarchical( $attr ) ) {
-							// fix hierarchy.
 							if ( $term->parent ) {
 								$original_parent_translated = apply_filters( 'wpml_object_id', $term->parent, $attr, false, $language['code'] );
 								if ( $original_parent_translated ) {
@@ -501,7 +481,6 @@ class WCML_Troubleshooting {
 							}
 						}
 
-						// TODO It seems that WPML supports now using the same slug in multiple languages. Check, and adjust.
 						$term_name         = $term->name;
 						$slug              = $term->name . '-' . $language['code'];
 						$slug              = WPML_Terms_Translations::term_unique_slug( $slug, $attr, $language['code'] );
@@ -614,9 +593,6 @@ class WCML_Troubleshooting {
 		wp_send_json_success( $response );
 	}
 
-	/**
-	 * @param string $action
-	 */
 	private static function checkNonce( $action ) {
 		$nonce = filter_var( Obj::prop( 'wcml_nonce', $_POST ), FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 		if ( ! $nonce || ! wp_verify_nonce( $nonce, $action ) ) {

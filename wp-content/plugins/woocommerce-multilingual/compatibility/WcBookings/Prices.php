@@ -10,12 +10,6 @@ class Prices implements \IWPML_Action {
 		add_filter( 'wcml_product_has_custom_prices', [ $this, 'checkCustomCosts' ], 10, 2 );
 	}
 
-	/**
-	 * @param bool $check
-	 * @param int  $productId
-	 *
-	 * @return bool
-	 */
 	public function checkCustomCosts( $check, $productId ) {
 		if ( ! $check ) {
 			$product = wc_get_product( $productId );

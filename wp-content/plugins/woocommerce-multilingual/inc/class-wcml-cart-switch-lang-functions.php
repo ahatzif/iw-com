@@ -5,10 +5,8 @@ use WPML\API\Sanitize;
 
 class WCML_Cart_Switch_Lang_Functions implements \IWPML_Frontend_Action, \IWPML_Backend_Action {
 
-	/** @var string $lang_from */
 	private $lang_from;
 
-	/** @var string $lang_to */
 	private $lang_to;
 
 	public function add_hooks() {
@@ -67,7 +65,6 @@ class WCML_Cart_Switch_Lang_Functions implements \IWPML_Frontend_Action, \IWPML_
 			}
 
 			$cart_for_session = false;
-			/** @phpstan-ignore-next-line instanceof.alwaysTrue */
 			if ( WC()->cart instanceof WC_Cart ) {
 				$cart_for_session = WC()->cart->get_cart_for_session();
 			}
@@ -97,13 +94,7 @@ class WCML_Cart_Switch_Lang_Functions implements \IWPML_Frontend_Action, \IWPML_
 
 	}
 
-	/**
-	 * Get current page url with query parameters.
-	 *
-	 * @return string
-	 */
 	public function get_current_url() {
-		/* phpcs:ignore WordPress.CSRF.NonceVerification.NoNonceVerification, WordPress.VIP.SuperGlobalInputUsage.AccessDetected, WordPress.VIP.ValidatedSanitizedInput.InputNotValidated, WordPress.VIP.ValidatedSanitizedInput.MissingUnslash */
 		$get_query = $_GET;
 
 		foreach ( $get_query as $index => $item ) {

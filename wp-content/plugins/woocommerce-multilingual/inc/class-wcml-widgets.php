@@ -4,13 +4,7 @@ class WCML_Widgets {
 
 	private $woocommerce_wpml;
 
-	/**
-	 * WCML_Widgets constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 */
 	public function __construct( $woocommerce_wpml ) {
-		// @todo Cover by tests, required for wcml-3037.
 		$this->woocommerce_wpml = $woocommerce_wpml;
 
 		add_action( 'widgets_init', [ $this, 'register_widgets' ] );

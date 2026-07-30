@@ -4,17 +4,9 @@ use WPML\Core\Twig_SimpleFunction;
 
 class WCML_Settings_UI extends WCML_Templates_Factory {
 
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
-	/** @var SitePress */
 	private $sitepress;
 
-	/**
-	 * WCML_Settings_UI constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress        $sitepress
-	 */
 	public function __construct( woocommerce_wpml $woocommerce_wpml, \WPML\Core\ISitePress $sitepress ) {
 
 		$functions = [

@@ -12,7 +12,6 @@ class CachePlugins implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 
 	const NOTICE_ID = 'wcml-cache-plugins';
 
-	/** @var \WPML_Notices $notices */
 	private $notices;
 
 	public function __construct( \WPML_Notices $notices ) {
@@ -42,21 +41,16 @@ class CachePlugins implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		$this->notices->add_notice( $notice );
 	}
 
-	/**
-	 * @return bool
-	 */
 	private static function hasActiveCachePlugin() {
 		if ( ! function_exists( 'is_plugin_active' ) ) {
 			include_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 
-		// $isActive :: ( array, string ) -> bool
 		$isActive = pipe(
-			Fns::nthArg( 1 ), // array index.
+			Fns::nthArg( 1 ),
 			'is_plugin_active'
 		);
 
-		// $isAboutCaching :: array -> bool
 		$isAboutCaching = pipe(
 			Obj::prop( 'Description' ),
 			Logic::anyPass(
@@ -67,7 +61,6 @@ class CachePlugins implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 			)
 		);
 
-		// $isHandled :: array -> bool
 		$isHandled = function( $plugin ) {
 			return in_array(
 				$plugin['Name'],

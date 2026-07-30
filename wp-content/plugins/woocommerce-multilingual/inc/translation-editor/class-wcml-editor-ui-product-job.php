@@ -4,48 +4,24 @@ use WPML\Translation\TranslationElements\FieldCompression;
 
 class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 
-	/** @var array */
 	private $data = [];
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
-	/** @var SitePress */
 	private $sitepress;
-	/** @var TranslationManagement */
 	private $tm_instance;
-	/** @var wpdb */
 	private $wpdb;
-	/** @var array */
 	private $job_details;
-	/** @var WC_Product */
 	private $product;
-	/** @var int */
 	private $product_id;
-	/** @var string */
 	private $product_type;
-	/** @var bool */
 	private $product_is_variable;
-	/** @var array */
 	private $product_downloadable_files;
-	/** @var array */
 	private $product_images_ids;
-	/** @var array */
 	private $product_fields;
-	/** @var array */
 	private $not_display_fields_for_variables_product;
-	/** @var array */
 	private $not_display_custom_fields_for_product;
 
-	/** @var WP_Post|null $original_post */
 	private $original_post;
 
-	/**
-	 * WCML_Editor_UI_Product_Job constructor.
-	 *
-	 * @param array            $job_details
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress        $sitepress
-	 * @param wpdb             $wpdb
-	 */
 	public function __construct( $job_details, $woocommerce_wpml, $sitepress, $wpdb ) {
 		global $iclTranslationManagement;
 
@@ -130,8 +106,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 					$product_translations[ $this->get_target_language() ]->translation_id
 				)
 			);
-			// @todo debug
-			/* @phpstan-ignore identical.alwaysFalse */
 			$translation_complete = $tr_status === ICL_TM_COMPLETE;
 		}
 
@@ -175,9 +149,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 		$purchase_note_section->add_field( new WPML_Editor_UI_TextArea_Field( '_purchase_note', null, $this->data, true ) );
 		$this->add_field( $purchase_note_section );
 
-		/*
-		 * Images
-		 */
 		if ( count( $this->product_images_ids ) ) {
 			$images_section = new WPML_Editor_UI_Field_Section( __( 'Images', 'woocommerce-multilingual' ) );
 			foreach ( $this->product_images_ids as $image_id ) {
@@ -229,7 +200,7 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 						case '1':
 							$cf_field = new WPML_Editor_UI_TextArea_Field( $custom_field, $this->get_product_custom_field_label( $custom_field ), $this->data, true );
 							break;
-						default: // line.
+						default:
 							$cf_field = new WPML_Editor_UI_Single_Line_Field( $custom_field, $this->get_product_custom_field_label( $custom_field ), $this->data, true );
 					}
 
@@ -403,9 +374,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_data() {
 		$trn_product_id = apply_filters( 'wpml_object_id', $this->product_id, 'product', false, $this->get_target_language() );
 		$translation    = false;
@@ -439,7 +407,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 		}
 
 		foreach ( $this->product_images_ids as $image_id ) {
-			/** @var stdClass|mixed */
 			$attachment_data = $this->wpdb->get_row( $this->wpdb->prepare( "SELECT post_title, post_excerpt, post_content FROM {$this->wpdb->posts} WHERE ID = %d", $image_id ) );
 			if ( ! is_object( $attachment_data ) ) {
 				continue;
@@ -453,7 +420,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 
 			$trnsl_prod_image = apply_filters( 'wpml_object_id', $image_id, 'attachment', false, $this->get_target_language() );
 			if ( null !== $trnsl_prod_image ) {
-				/** @var stdClass */
 				$trnsl_attachment_data = $this->wpdb->get_row( $this->wpdb->prepare( "SELECT post_title,post_excerpt,post_content FROM {$this->wpdb->posts} WHERE ID = %d", $trnsl_prod_image ) );
 				$alt_text              = get_post_meta( $trnsl_prod_image, '_wp_attachment_image_alt', true );
 				$alt_text              = $alt_text ?: '';
@@ -521,12 +487,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 		return $element_data;
 	}
 
-	/**
-	 * @param array  $array
-	 * @param string $key
-	 *
-	 * @return string
-	 */
 	private function get_array_item( $array, $key ) {
 		return isset( $array[ $key ] ) && $array[ $key ] ? $array[ $key ] : '';
 	}
@@ -616,14 +576,7 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 		return $element_data;
 	}
 
-	/**
-	 * @param array $translations
-	 *
-	 * @todo Port the pending synchronization methods, as they are focused on saving data and nos synchronizing it.
-	 * @todo Unify how we access and execute the synchronization API, we might want to have a dedicated entry point.
-	 */
 	public function save_translations( $translations ) {
-		/** @var TranslationManagement $iclTranslationManagement */
 		global $iclTranslationManagement;
 
 		$return = [];
@@ -641,7 +594,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 
 		if ( null === $tr_product_id ) {
 
-			// insert new post.
 			$args                 = [];
 			$args['post_title']   = $translations[ md5( 'title' ) ];
 			$args['post_name']    = $translations[ md5( 'slug' ) ] ?? '';
@@ -661,9 +613,7 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 			$product_parent         = apply_filters( 'wpml_object_id', $this->original_post->post_parent, 'product', false, $this->get_target_language() );
 			$args['post_parent']    = null === $product_parent ? 0 : $product_parent;
 
-			// TODO: remove after change required WPML version > 3.3.
 			$_POST['to_lang'] = $this->get_target_language();
-			// for WPML > 3.3.
 			$_POST['icl_post_language'] = $this->get_target_language();
 
 			if ( $this->woocommerce_wpml->settings['products_sync_date'] ) {
@@ -674,7 +624,7 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 
 			$tr_product_id = wp_insert_post( $args );
 
-			$this->sitepress->switch_lang(); // switch back.
+			$this->sitepress->switch_lang();
 
 			$translation_id = $this->wpdb->get_var(
 				$this->wpdb->prepare(
@@ -701,7 +651,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 				$this->sitepress->set_element_language_details( $tr_product_id, 'post_' . $this->original_post->post_type, $product_trid, $this->get_target_language() );
 			}
 		} else {
-			// update post.
 			$args                   = [];
 			$args['ID']             = $tr_product_id;
 			$args['post_title']     = $translations[ md5( 'title' ) ];
@@ -721,8 +670,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 
 			$post_name = $this->wpdb->get_var( $this->wpdb->prepare( "SELECT post_name FROM {$this->wpdb->posts} WHERE ID=%d", $tr_product_id ) );
 			if ( isset( $translations[ md5( 'slug' ) ] ) && $translations[ md5( 'slug' ) ] !== $post_name ) {
-				// update post_name.
-				// need set POST variable ( WPML used them when filtered this function).
 				$new_post_name      = sanitize_title( $translations[ md5( 'slug' ) ] ?: $translations[ md5( 'title' ) ] );
 				$_POST['new_title'] = $translations[ md5( 'title' ) ];
 				$_POST['new_slug']  = $new_post_name;
@@ -749,11 +696,7 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 
 		do_action( 'wcml_before_sync_product_data', $this->product_id, $tr_product_id, $this->get_target_language() );
 
-		// ===================================================================== //
-		// ====================== Saving and syncing data ====================== //
-		// ===================================================================== //
 
-		// TODO Port here as a saving method, as it does not only sync data.
 		$this->woocommerce_wpml->sync_product_data->duplicate_product_post_meta( $this->product_id, $tr_product_id, $translations );
 
 		$this->woocommerce_wpml->page_builders->save_page_builders_strings( $translations, $this->product_id, $this->get_target_language() );
@@ -761,17 +704,11 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 
 		do_action( \WCML\Synchronization\Hooks::HOOK_SYNCHRONIZE_PRODUCT_COMPONENT, $this->original_post, $translationsIds, $translationsLanguages, \WCML\Synchronization\Store::COMPONENT_TAXONOMIES );
 
-		// Stay, this is unique to this flow., and used by multiple third-parties compatibility classes
 		do_action( 'wcml_update_extra_fields', $this->product_id, $tr_product_id, $translations, $this->get_target_language() );
 
-		// TODO Port here as a saving method, as it does not only sync data. Heavily related to \WCML\Synchronization\Store::COMPONENT_ATTRIBUTES.
 		$this->woocommerce_wpml->attributes->sync_product_attr( $this->product_id, $tr_product_id, $this->get_target_language(), $translations );
 		$this->woocommerce_wpml->attributes->sync_default_product_attr( $this->product_id, $tr_product_id, $this->get_target_language() );
 
-		// TODO Port here as a saving method, as it does not only sync data. Heavily related to \WCML\Synchronization\Store::COMPONENT_VARIATIONS.
-		// TODO Note that the legacy method is managing the custom fields when saved from the variation translation, see the duplicate_variation_data method. 
-		// TODO Note that the legacy method is managing the _variation_description meta field. 
-		// TODO Note that the legacy method is managing the downloadable fields data from the translation editor. 
 		$this->woocommerce_wpml->sync_variations_data->sync_product_variations(
 			$this->product_id,
 			$tr_product_id,
@@ -786,7 +723,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 		do_action( \WCML\Synchronization\Hooks::HOOK_SYNCHRONIZE_PRODUCT_COMPONENT, $this->original_post, $translationsIds, $translationsLanguages, \WCML\Synchronization\Store::COMPONENT_STOCK );
 		do_action( \WCML\Synchronization\Hooks::HOOK_SYNCHRONIZE_PRODUCT_COMPONENT, $this->original_post, $translationsIds, $translationsLanguages, \WCML\Synchronization\Store::COMPONENT_ATTACHMENTS );
 
-		// save images texts.
 		if ( $this->product_images_ids ) {
 			foreach ( $this->product_images_ids as $image_id ) {
 				$trnsl_prod_image = apply_filters( 'wpml_object_id', $image_id, 'attachment', false, $this->get_target_language() );
@@ -795,7 +731,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 					$trnsl_prod_image = $this->woocommerce_wpml->media->create_base_media_translation( $image_id, $this->product_id, $this->get_target_language() );
 				}
 
-				// update image texts.
 				$this->wpdb->update(
 					$this->wpdb->posts,
 					[
@@ -812,7 +747,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 			}
 		}
 
-		// ===================================================================== //
 
 		do_action( 'wcml_after_sync_product_data', $this->product_id, $tr_product_id, $this->get_target_language() );
 
@@ -844,7 +778,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 		);
 		$return['status_link'] = ob_get_clean();
 
-		// no longer a duplicate.
 		delete_post_meta( $tr_product_id, '_icl_lang_duplicate_of', $this->product_id );
 
 		return $return;
@@ -893,14 +826,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 		return $attributes;
 	}
 
-	/**
-	 * Get product content labels.
-	 *
-	 * @param string    $field
-	 * @param int|false $variation_id
-	 *
-	 * @return string|false
-	 */
 	public function get_product_custom_field_label( $field, $variation_id = false ) {
 		global $sitepress;
 		$settings = $sitepress->get_settings();
@@ -931,32 +856,10 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 		return $label;
 	}
 
-	/**
-	 * @return array
-	 *
-	 * @deprecated Use \WCML_Downloadable_Products::getDownloadableFiles
-	 */
 	public function get_files_for_variations() {
 		return $this->woocommerce_wpml->downloadable->getDownloadableFiles( $this->product );
 	}
 
-	/**
-	 * Get product fields to translate.
-	 *
-	 * Executed for the product being translated, and for each of its variations, if it is a variable product.
-	 *
-	 * Triggered twice: when collecting general data and when adding elements to the GUI;
-	 * because of that, we will store the resulting fields keys per product ID.
-	 *
-	 * @param int $product_id
-	 *
-	 * @return array
-	 *
-	 * @todo The condition check_custom_field_is_single_value might not make sense:
-	 * - This general discard is done on get_product_custom_field_label without any condition.
-	 * - Lists do not match simple/variable product fields, regardless the property names.
-	 * - None of the fields in both lists seem to appear on CTE anyway.
-	 */
 	public function get_product_custom_fields_to_translate( $product_id ) {
 		if ( array_key_exists( $product_id, $this->product_fields ) ) {
 			return $this->product_fields[ $product_id ];
@@ -1005,12 +908,6 @@ class WCML_Editor_UI_Product_Job extends WPML_Editor_UI_Job {
 		return true;
 	}
 
-	/**
-	 * @param int    $product_id
-	 * @param string $field_key
-	 *
-	 * @return array|string
-	 */
 	private function get_custom_field_values( $product_id, $field_key ) {
 		$maybe_double_unserialize = function ( $value ) {
 			return maybe_unserialize( $value );

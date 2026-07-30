@@ -2,22 +2,13 @@
 
 class WCML_Setup_Footer_UI extends WCML_Templates_Factory {
 
-	/** @var bool */
 	private $has_handler;
 
-	/**
-	 * WCML_Setup_Footer_UI constructor.
-	 *
-	 * @param bool $has_handler
-	 */
 	public function __construct( $has_handler ) {
 		parent::__construct();
 		$this->has_handler = $has_handler;
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_model() {
 
 		$model = [
@@ -34,9 +25,6 @@ class WCML_Setup_Footer_UI extends WCML_Templates_Factory {
 		];
 	}
 
-	/**
-	 * @return string
-	 */
 	public function get_template() {
 		return '/setup/footer.twig';
 	}

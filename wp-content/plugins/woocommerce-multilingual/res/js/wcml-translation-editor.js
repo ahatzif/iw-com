@@ -109,7 +109,7 @@ jQuery( function($){
 					url: ajaxurl,
 					type: 'POST',
 					dataType: 'json',
-					data: { action: 'wcml_editor_auto_slug', title: title, job_id: job_id },
+					data: { action: 'wcml_editor_auto_slug', title: title, job_id: job_id, wcml_nonce: wcml_settings.nonce },
 					success: function(response) {
 						slug_field.val( response.slug );
 						slug_field.prop('readonly', false);

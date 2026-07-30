@@ -7,9 +7,6 @@ use WCML_Flatsome;
 
 class Factory extends ComponentFactory {
 
-	/**
-	 * @inheritDoc
-	 */
 	public function create() {
 		return new WCML_Flatsome();
 	}

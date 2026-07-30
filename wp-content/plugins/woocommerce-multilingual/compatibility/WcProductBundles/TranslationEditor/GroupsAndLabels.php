@@ -13,18 +13,10 @@ class GroupsAndLabels implements \IWPML_Action {
 	const BUNDLE_ITEM_GROUP_LABEL  = 'Bundled Product';
 	const BUNDLE_SELLS_FIELD_TITLE = 'Bundle-sells Title';
 
-	/**
-	 * Adds hooks.
-	 */
 	public function add_hooks() {
 		add_filter( 'wpml_tm_adjust_translation_fields', [ $this, 'adjustFields' ] );
 	}
 
-	/**
-	 * @param array[] $fields
-	 *
-	 * @return array[]
-	 */
 	public function adjustFields( $fields ) {
 		foreach ( $fields as &$field ) {
 			if ( WCML_Product_Bundles::META_SELLS_TITLE === Obj::prop( 'field_type', $field ) ) {
@@ -37,11 +29,6 @@ class GroupsAndLabels implements \IWPML_Action {
 		return $fields;
 	}
 
-	/**
-	 * @param array $field
-	 *
-	 * @return array
-	 */
 	private function adjustBundleSellsField( $field ) {
 		$field['title'] = self::BUNDLE_SELLS_FIELD_TITLE;
 		$field['group'] = TranslationJobHooks::getTopLevelGroup();
@@ -49,11 +36,6 @@ class GroupsAndLabels implements \IWPML_Action {
 		return $field;
 	}
 
-	/**
-	 * @param array $field
-	 *
-	 * @return array
-	 */
 	private function adjustBundleField( $field ) {
 		$fieldData  = Str::replace( WCML_Product_Bundles::BUNDLE_FIELD_PREFIX, '', $field['field_type'] );
 		$fieldParts = explode( ':', $fieldData );

@@ -94,9 +94,6 @@ class AdminUrl {
 		] );
 	}
 
-	/**
-	 * @param ?string $step
-	 */
 	public static function getSetup( $step = null ) : string {
 		$args         = [];
 		$args['page'] = \WCML_Setup_UI::SLUG;
@@ -107,14 +104,6 @@ class AdminUrl {
 		return self::getAdminUrl( $args );
 	}
 
-	/**
-	 * @param string[] $sections
-	 * @param string   $stringDomain
-	 *
-	 * @return string
-	 *
-	 * @throws \Error if WPML is not active, since \WPML\UIPage depends on it.
-	 */
 	public static function getWPMLTMDashboard( array $sections = [], string $stringDomain = '' ) : string {
 		$dashboardUrl = admin_url( \WPML\UIPage::getTMDashboard() );
 		if ( empty( $sections ) ) {
@@ -136,13 +125,6 @@ class AdminUrl {
 		return $dashboardUrl;
 	}
 
-	/**
-	 * @param string $domain
-	 *
-	 * @return string
-	 *
-	 * @throws \Error if WPML is not active, since \WPML\UIPage depends on it.
-	 */
 	public static function getWPMLTMDashboardStringDomain( string $domain ) : string {
 		return self::getWPMLTMDashboard(
 			[ self::DASHBOARD_SECTION_STRING ],
@@ -150,22 +132,10 @@ class AdminUrl {
 		);
 	}
 
-	/**
-	 * @return string
-	 *
-	 * @throws \Error if WPML is not active, since \WPML\UIPage depends on it.
-	 */
 	public static function getWPMLTMDashboardProducts() : string {
 		return self::getWPMLTMDashboard( [ self::DASHBOARD_SECTION_PRODUCT ] );
 	}
 
-	/**
-	 * @param ?string $taxonomy
-	 *
-	 * @return string
-	 *
-	 * @throws \Error if WPML is not active, since WPML_PLUGIN_FOLDER depends on it.
-	 */
 	public static function getWPMLTaxonomyTranslation( $taxonomy = null ) : string {
 		$args = [
 			'page'     => WPML_PLUGIN_FOLDER . '/menu/taxonomy-translation.php',
@@ -175,13 +145,6 @@ class AdminUrl {
 		return self::getAdminUrl( $args );
 	}
 
-	/**
-	 * @param array $args
-	 *
-	 * @return string
-	 *
-	 * @throws \Error if WPML is not active, since WPML_ST_FOLDER depends on it.
-	 */
 	public static function getWPMLStringTranslation( array $args = [] ) : string {
 		$args = array_merge(
 			[
@@ -204,9 +167,6 @@ class AdminUrl {
 		);
 	}
 
-	/**
-	 * @param ?string $tab
-	 */
 	public static function getWooSettings( $tab = null ) : string {
 		$args = [
 			'page' => self::PAGE_WOO_SETTINGS,
@@ -216,9 +176,6 @@ class AdminUrl {
 		return self::getAdminUrl( $args );
 	}
 
-	/**
-	 * @param ?string $tab
-	 */
 	public static function getWooStatus( $tab = null ) : string {
 		$args = [
 			'page' => 'wc-status',

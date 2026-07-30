@@ -1,7 +1,4 @@
 <?php
-/*
- * WPBakery Page Builder ( formerly Visual Composer ) Compatibility class
- */
 
 class WCML_Wpb_Vc implements \IWPML_Action {
 

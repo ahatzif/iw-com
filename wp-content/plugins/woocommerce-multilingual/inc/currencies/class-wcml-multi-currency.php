@@ -13,116 +13,46 @@ use WCML\MultiCurrency\ExchangeRateServices\ExchangeRatesApi;
 use WCML\MultiCurrency\ExchangeRateServices\OpenExchangeRates;
 use WPML\API\Sanitize;
 
-/**
- * Class WCML_Multi_Currency
- *
- * Our case:
- * Multi-currency can be enabled by an option in wp_options - wcml_multi_currency_enabled
- * User currency will be set in the woocommerce session as 'client_currency'
- */
 class WCML_Multi_Currency {
 
 	const CURRENCY_STORAGE_KEY          = 'client_currency';
 	const CURRENCY_LANGUAGE_STORAGE_KEY = 'client_currency_language';
 
-	/** @var  array */
 	public $currencies = [];
-	/** @var  array */
 	public $currency_codes = [];
 
-	/** @var  string */
 	private $default_currency;
-	/** @var  string */
 	private $client_currency;
-	/** @var  array */
 	private $exchange_rates = [];
-	/** @var  array */
 	public $currencies_without_cents = [ 'JPY', 'TWD', 'KRW', 'BIF', 'BYR', 'CLP', 'GNF', 'ISK', 'KMF', 'PYG', 'RWF', 'VUV', 'XAF', 'XOF', 'XPF' ];
 
-	/**
-	 * @var WCML_Multi_Currency_Prices
-	 */
 	public $prices;
-	/**
-	 * @var WCML_Multi_Currency_Coupons
-	 */
 	public $coupons;
-	/**
-	 * @var WCML_Multi_Currency_Shipping
-	 */
 	public $shipping;
 
-	/**
-	 * @var WCML_Multi_Currency_Reports
-	 */
 	public $reports;
-	/**
-	 * @var WCML_Multi_Currency_Orders
-	 */
 	public $orders;
-	/**
-	 * @var WCML_Admin_Currency_Selector
-	 */
 	public $admin_currency_selector;
-	/**
-	 * @var WCML_Custom_Prices
-	 */
 	public $custom_prices;
-	/**
-	 * @var WCML_Currency_Switcher
-	 */
 	public $currency_switcher;
-	/**
-	 * @var WCML_Currency_Switcher_Ajax
-	 */
 	public $currency_switcher_ajax;
-	/**
-	 * @var WCML_Multi_Currency_Install
-	 */
 	public $install;
-	/**
-	 * @var WCML_W3TC_Multi_Currency
-	 */
 	public $W3TC = null;
 
-	/**
-	 * @var woocommerce_wpml
-	 */
 	public $woocommerce_wpml;
 
-	/**
-	 * @var WooCommerce
-	 */
 	public $woocommerce;
 
-	/**
-	 * @var WCML_Exchange_Rates
-	 */
 	public $exchange_rate_services;
 
-	/**
-	 * @var WCML_Currencies_Payment_Gateways
-	 */
 	public $currencies_payment_gateways;
 
-	/**
-	 * @var bool
-	 */
 	public $load_filters;
 
-	/**
-	 * @var string
-	 */
 	public $switching_currency_html;
 
-	/**
-	 * @var string
-	 */
 	private $rest_currency;
 
-	/**
-	 * WCML_Multi_Currency constructor.
-	 */
 	public function __construct() {
 		global $woocommerce_wpml, $woocommerce, $wpdb, $wp;
 
@@ -218,7 +148,6 @@ class WCML_Multi_Currency {
 					]
 				);
 
-				/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 				if ( ( isset( $_POST['action'] ) && in_array( $_POST['action'], $ajax_actions ) ) ||
 					 ( isset( $_GET['action'] ) && in_array( $_GET['action'], $ajax_actions ) ) ) {
 					$load = true;
@@ -226,14 +155,8 @@ class WCML_Multi_Currency {
 			}
 		}
 
-		/**
-		 * @deprecated 3.9.2
-		 */
 		$load = apply_filters( 'wcml_load_multi_currency', $load );
 
-		/**
-		 * @since 3.9.2
-		 */
 		$load = apply_filters( 'wcml_load_multi_currency_in_ajax', $load );
 
 		return $load;
@@ -269,7 +192,6 @@ class WCML_Multi_Currency {
 		$this->default_currency = wcml_get_woocommerce_currency_option();
 		$this->currencies       = $this->woocommerce_wpml->settings['currency_options'];
 
-		// Add default currency if missing (set when MC is off).
 		if ( ! empty( $this->default_currency ) && ! isset( $this->currencies[ $this->default_currency ] ) ) {
 			$this->currencies[ $this->default_currency ] = [];
 		}
@@ -309,7 +231,6 @@ class WCML_Multi_Currency {
 
 		$this->currency_codes = array_keys( $this->currencies );
 
-		// default language currencies.
 		foreach ( $active_languages as $language ) {
 			if ( ! isset( $this->woocommerce_wpml->settings['default_currencies'][ $language['code'] ] ) ) {
 				$this->woocommerce_wpml->settings['default_currencies'][ $language['code'] ] = 0;
@@ -317,7 +238,6 @@ class WCML_Multi_Currency {
 			}
 		}
 
-		// sanity check.
 		if ( isset( $this->woocommerce_wpml->settings['default_currencies'] ) ) {
 			foreach ( $this->woocommerce_wpml->settings['default_currencies'] as $language => $value ) {
 				if ( ! isset( $active_languages[ $language ] ) ) {
@@ -331,7 +251,6 @@ class WCML_Multi_Currency {
 			}
 		}
 
-		// add missing currencies to currencies_order.
 		if ( isset( $this->woocommerce_wpml->settings['currencies_order'] ) ) {
 			foreach ( $this->currency_codes as $currency ) {
 				if ( ! in_array( $currency, $this->woocommerce_wpml->settings['currencies_order'] ) ) {
@@ -346,25 +265,18 @@ class WCML_Multi_Currency {
 			$this->woocommerce_wpml->update_settings();
 		}
 
-		// force disable multi-currency when the default currency is empty.
 		if ( empty( $this->default_currency ) ) {
 			$this->woocommerce_wpml->settings['enable_multi_currency'] = WCML_MULTI_CURRENCIES_DISABLED;
 		}
 
 	}
 
-	/**
-	 *
-	 * @return string
-	 * @since 3.9.2
-	 */
 	public function get_default_currency() {
 		return $this->default_currency;
 	}
 
 	public function get_currencies( $include_default = false ) {
 
-		// by default, exclude default currency.
 		$currencies       = [];
 		$default_currency = wcml_get_woocommerce_currency_option();
 
@@ -381,18 +293,10 @@ class WCML_Multi_Currency {
 		return $this->currency_codes;
 	}
 
-	/**
-	 * @param string $code
-	 *
-	 * @return bool
-	 */
 	public function is_currency_active( $code ) {
 		return in_array( $code, $this->get_currency_codes(), true );
 	}
 
-	/**
-	 * @return mixed|string
-	 */
 	public function get_currency_code() {
 		$currency_code  = wcml_get_woocommerce_currency_option();
 		$currency_codes = $this->get_currency_codes();
@@ -449,14 +353,10 @@ class WCML_Multi_Currency {
 		return apply_filters( 'wcml_exchange_rates', $this->exchange_rates );
 	}
 
-	/**
-	 * @return string
-	 */
 	public function get_client_currency() {
 		if ( Functions::isRestApiRequest() ) {
 			return $this->get_rest_currency();
 		} elseif ( ! wcml_is_multi_currency_on() ) {
-			// The filter is documented a few lines below.
 			return apply_filters( 'wcml_client_currency', wcml_get_woocommerce_currency_option() );
 		} elseif ( null === $this->client_currency ) {
 			$this->client_currency = ResolverFactory::create()->getClientCurrency();
@@ -467,17 +367,6 @@ class WCML_Multi_Currency {
 			}
 		}
 
-		/**
-		 * This filter allows overriding the client currency.
-		 *
-		 * WARNING!
-		 * This method is called several times during a request.
-		 * If a filter alters the currency, it's strongly recommended
-		 * to force reloading the page to avoid inconsistencies between
-		 * price numbers and currencies.
-		 *
-		 * @param string $client_currency
-		 */
 		$filteredCurrency = apply_filters( 'wcml_client_currency', $this->client_currency );
 
 		if ( $filteredCurrency !== $this->client_currency ) {
@@ -540,7 +429,6 @@ class WCML_Multi_Currency {
 
 		$this->set_client_currency( $currency );
 
-		// force set user cookie when user is not logged in.
 		global $woocommerce, $current_user;
 		if ( empty( $woocommerce->session->data ) && empty( $current_user->ID ) ) {
 			$woocommerce->session->set_customer_session_cookie( true );
@@ -560,15 +448,6 @@ class WCML_Multi_Currency {
 		return apply_filters( 'wcml_currencies_without_cents', $this->currencies_without_cents );
 	}
 
-	/**
-	 * Set reports currency for REST request.
-	 *
-	 * @param WP_REST_Response|WP_HTTP_Response|WP_Error|mixed $response Result to send to the client. Usually a WP_REST_Response or WP_Error.
-	 * @param array                                            $handler  Route handler used for the request.
-	 * @param WP_REST_Request                                  $request  Request used to generate the response.
-	 *
-	 * @return WP_REST_Response|WP_HTTP_Response|WP_Error|mixed
-	 */
 	public function set_request_currency( $response, $handler, $request ) {
 		$this->rest_currency   = Obj::prop( 'currency', $request->get_params() ) ?: wcml_get_woocommerce_currency_option();
 		$this->client_currency = $this->rest_currency;
@@ -576,11 +455,6 @@ class WCML_Multi_Currency {
 		return $response;
 	}
 
-	/**
-	 * Get REST currency
-	 *
-	 * @return string
-	 */
 	public function get_rest_currency() {
 		return $this->rest_currency ?: wcml_get_woocommerce_currency_option();
 	}

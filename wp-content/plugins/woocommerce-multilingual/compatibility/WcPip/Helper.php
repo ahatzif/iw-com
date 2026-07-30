@@ -4,9 +4,6 @@ namespace WCML\Compatibility\WcPip;
 
 class Helper {
 
-	/**
-	 * @return false|int|string
-	 */
 	public static function getPipOrderId() {
 		$order_id = false;
 

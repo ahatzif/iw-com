@@ -1,15 +1,5 @@
 <?php
-/**
- * This bootstrap file is loaded only when WCML is running in the Standalone mode.
- * It's executed on `plugins_loaded` priority 10000.
- *
- * @see load_wcml_without_wpml
- */
 
-/**
- * This constant `WCML_WPML_DEPENDENCY_URL` is used in several places inside
- * the dependency files (it replaces hard-coded URL base).
- */
 define( 'WCML_WPML_DEPENDENCY_URL', WCML_PLUGIN_URL . '/addons/wpml-dependencies/lib' );
 
 require_once WCML_PLUGIN_PATH . '/addons/wpml-dependencies/vendor/autoload.php';
@@ -43,7 +33,7 @@ if ( is_admin() ) {
 
 	( new \WCML\StandAlone\DependencyAssets( WCML_WPML_DEPENDENCY_URL ) )->add_hooks();
 
-	wcml_wpml_get_admin_notices(); // Initialize the notices hooks.
+	wcml_wpml_get_admin_notices();
 
 	( new WPML_Action_Filter_Loader() )->load( [
 		\WPML\Notices\DismissNotices::class,

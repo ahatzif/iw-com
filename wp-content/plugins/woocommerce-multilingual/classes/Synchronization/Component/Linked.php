@@ -11,15 +11,10 @@ class Linked extends SynchronizerForMeta {
 	];
 
 	const TRANSIENTS_PREFIXES = [
-		'wc_product_children_%s', // Note that this is also removed in the Stock management (!?).
+		'wc_product_children_%s',
 		'_transient_wc_product_children_ids_%s',
 	];
 
-	/**
-	 * @param \WP_Post          $product
-	 * @param int[]             $translationsIds
-	 * @param array<int,string> $translationsLanguages
-	 */
 	public function run( $product, $translationsIds, $translationsLanguages ) {
 		foreach ( self::LINKED_META_KEYS as $metaKey ) {
 			$this->syncLinkType( $product->ID, $translationsIds, $translationsLanguages, $metaKey );
@@ -34,12 +29,6 @@ class Linked extends SynchronizerForMeta {
 		}
 	}
 
-	/**
-	 * @param int               $productId
-	 * @param int[]             $translationsIds
-	 * @param array<int,string> $translationsLanguages
-	 * @param string            $metaKey
-	 */
 	private function syncLinkType( $productId, $translationsIds, $translationsLanguages, $metaKey ) {
 		$productsIds  = array_merge( [ $productId ], $translationsIds );
 		$storedLinks  = $this->getMeta( $metaKey, $productsIds );
@@ -78,14 +67,6 @@ class Linked extends SynchronizerForMeta {
 		$this->updateMeta( $metaKey, $metaToUpdate );
 	}
 
-	/**
-	 * @param int[]  $productLinks
-	 * @param string $language
-	 *
-	 * @return int[]
-	 *
-	 * @todo Request from Core a mechanism to translate multiple IDs belonging to the same post type.
-	 */
 	private function translateLinks( $productLinks, $language ) {
 		$translatedLinkedProducts = [];
 		foreach ( $productLinks as $linkedProduct ) {

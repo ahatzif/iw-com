@@ -5,12 +5,7 @@ class WCML_Custom_Files_UI extends WCML_Templates_Factory {
 	private $product_id;
 	private $is_variation;
 
-	/**
-	 * @param int  $product_id
-	 * @param bool $is_variation
-	 */
 	public function __construct( $product_id, $is_variation = false ) {
-		// @todo Cover by tests, required for wcml-3037.
 		parent::__construct();
 
 		$this->product_id   = $product_id;

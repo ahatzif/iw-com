@@ -4,38 +4,15 @@ use WPML\Core\Twig_SimpleFunction;
 
 class WCML_Multi_Currency_UI extends WCML_Templates_Factory {
 
-	/**
-	 * @var woocommerce_wpml
-	 */
 	private $woocommerce_wpml;
-	/**
-	 * @var SitePress
-	 */
 	private $sitepress;
-	/**
-	 * @var array
-	 */
 	private $currencies;
-	/**
-	 * @var array
-	 */
 	private $wc_currencies;
-	/**
-	 * @var string
-	 */
 	private $wc_currency;
 
-	/** @var WCML_Tracking_Link */
 	private $tracking_link;
 
-	/**
-	 * WCML_Multi_Currency_UI constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress        $sitepress
-	 */
 	public function __construct( $woocommerce_wpml, $sitepress ) {
-		// @todo Cover by tests, required for wcml-3037.
 		$functions = [
 			new Twig_SimpleFunction( 'get_flag_url', [ $this, 'get_flag_url' ] ),
 			new Twig_SimpleFunction( 'get_currency_symbol', [ $this, 'get_currency_symbol' ] ),
@@ -175,7 +152,6 @@ class WCML_Multi_Currency_UI extends WCML_Templates_Factory {
 		$wcml_settings      = $this->woocommerce_wpml->get_settings();
 		$currency_switchers = $wcml_settings['currency_switchers'] ?? [];
 
-		// Add empty dialog for new sidebar currency switcher.
 		$currency_switchers['new_widget'] = [
 			'switcher_style'     => 'wcml-dropdown',
 			'widget_title'       => '',

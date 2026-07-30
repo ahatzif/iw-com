@@ -13,11 +13,6 @@ class Hooks implements IWPML_Frontend_Action {
 			->then( spreadArgs( [ $this, 'setCustomerProfileLanguage' ] ) );
 	}
 
-	/**
-	 * Set user's language to current language
-	 *
-	 * @param int $userId
-	 */
 	public function setCustomerProfileLanguage( $userId ) {
 		return wp_update_user( [
 			'ID'     => $userId,

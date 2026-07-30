@@ -11,9 +11,6 @@ class ProductHooks implements \IWPML_Frontend_Action {
 		Hooks::onAction( 'wp' )->then( [ $this, 'flush_current_product_cache_prefix' ] );
 	}
 
-	/**
-	 * @return void
-	 */
 	public function flush_current_product_cache_prefix() {
 		if ( ! is_singular( 'product' ) ) {
 			return;

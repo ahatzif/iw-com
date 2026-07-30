@@ -7,9 +7,6 @@ use WCML_MaxStore;
 
 class Factory extends ComponentFactory {
 
-	/**
-	 * @inheritDoc
-	 */
 	public function create() {
 		return new WCML_MaxStore();
 	}

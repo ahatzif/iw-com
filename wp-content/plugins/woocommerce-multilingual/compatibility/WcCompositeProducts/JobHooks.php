@@ -15,12 +15,6 @@ class JobHooks {
 			->then( spreadArgs( [ $this, 'setGroupsAndLabels' ] ) );
 	}
 
-	/**
-	 * @param array[]   $fields
-	 * @param \stdClass $job
-	 *
-	 * @return array[]
-	 */
 	public function setGroupsAndLabels( $fields, $job ) {
 		if ( ! Hooks::isProduct( $job ) ) {
 			return $fields;
@@ -33,11 +27,6 @@ class JobHooks {
 		return $fields;
 	}
 
-	/**
-	 * @param array $field
-	 *
-	 * @return array
-	 */
 	private function processField( $field ) {
 		if ( Str::startsWith( \WCML_Composite_Products::FIELD_TYPE_PREFIX . ':', $field['field_type'] ) ) {
 			$parts = explode( ':', $field['field_type'] );

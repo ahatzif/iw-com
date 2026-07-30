@@ -10,14 +10,8 @@ use function WCML\functions\getSitePress;
 
 class HelperByLanguage {
 
-	/** @var null|callable $getCurrency */
 	private static $getCurrency;
 
-	/**
-	 * @param string $currentLang
-	 *
-	 * @return string|null
-	 */
 	public static function getCurrencyByUserCountry( $currentLang ) {
 		if ( ! self::$getCurrency ) {
 			self::$getCurrency = Fns::memorize( function() use ( $currentLang ) {
@@ -36,20 +30,14 @@ class HelperByLanguage {
 	}
 
 
-	/**
-	 * @return string
-	 */
 	public static function getCurrentLanguage() {
-		/** @var string|null|false $currentLang */
 		$currentLang = getSitePress()->get_current_language();
 
 		if ( in_array( $currentLang, [ 'all', null, false ], true ) ) {
-			/** @var string|null|false $currentLang */
 			$currentLang = getSitePress()->get_default_language();
 		}
 
 		if ( ! is_string( $currentLang ) ) {
-			/** @var string $currentLang - WPML default language not set/detected, returns the language as if WPML was not active */
 			$currentLang = ( new NullSitePress() )->get_current_language();
 		}
 

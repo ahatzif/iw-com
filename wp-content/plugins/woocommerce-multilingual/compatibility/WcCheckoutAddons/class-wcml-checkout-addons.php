@@ -2,11 +2,6 @@
 
 use WCML\Compatibility\WcCheckoutAddons\OptionIterator;
 
-/**
- * Compatibility class for  wc_checkout_addons plugin.
- *
- * @author konrad
- */
 class WCML_Checkout_Addons implements \IWPML_Action {
 
 	const PACKAGE_KIND = 'WooCommerce Checkout Add-On';
@@ -14,13 +9,8 @@ class WCML_Checkout_Addons implements \IWPML_Action {
 	const PACKAGE_NAME = 'wc-checkout-woocommerce-addons-%s';
 	const PACKAGE_TITLE = 'WooCommerce Checkout Add-On: %s';
 
-	/** @var array */
 	private $packages;
 
-	/**
-	 * @param string $checkoutAddOnId
-	 * @param string $checkoutAddOnName
-	 */
 	public function createPackage( $checkoutAddOnId, $checkoutAddOnName ): stdClass {
 		if ( ! isset( $this->packages[ $checkoutAddOnId ][ $checkoutAddOnName ] ) ) {
 			return $this->packages[ $checkoutAddOnId ][ $checkoutAddOnName ] = (object) [
@@ -38,11 +28,6 @@ class WCML_Checkout_Addons implements \IWPML_Action {
 		add_filter( 'option_wc_checkout_add_ons', [ $this, 'option_wc_checkout_add_ons' ] );
 	}
 
-	/**
-	 * @param array|mixed $option_value
-	 *
-	 * @return array|mixed
-	 */
 	public function option_wc_checkout_add_ons( $option_value ) {
 		return OptionIterator::apply( [ $this, 'handle_option_part' ], $option_value );
 	}

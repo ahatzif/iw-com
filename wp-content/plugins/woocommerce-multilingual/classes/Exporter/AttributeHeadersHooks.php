@@ -18,9 +18,6 @@ class AttributeHeadersHooks implements \IWPML_Backend_Action {
 		}
 	}
 
-	/**
-	 * @return bool
-	 */
 	private static function isExporting() {
 		if (
 			wp_doing_ajax()

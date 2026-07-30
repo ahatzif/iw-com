@@ -1,24 +1,11 @@
 <?php
 
-/**
- * IMPORTANT NOTICE !!!
- * This target plugin is not maintained anymore.
- * We are stopping our compatibility maintenance too.
- *
- * @deprecated
- */
 class WCML_YIKES_Custom_Product_Tabs implements \IWPML_Action {
 
 	const CUSTOM_TABS_FIELD = 'yikes_woo_products_tabs';
 
-	/**
-	 * @var WPML_Element_Translation_Package
-	 */
 	private $tp;
 
-	/**
-	 * @var SitePress
-	 */
 	private $sitepress;
 
 	public function __construct( SitePress $sitepress, WPML_Element_Translation_Package $tp ) {
@@ -42,11 +29,6 @@ class WCML_YIKES_Custom_Product_Tabs implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param object $obj
-	 * @param int    $product_id
-	 * @param array  $data
-	 */
 	public function custom_box_html( $obj, $product_id, $data ) {
 
 		$orig_prod_tabs = $this->get_product_tabs( $product_id );
@@ -75,14 +57,6 @@ class WCML_YIKES_Custom_Product_Tabs implements \IWPML_Action {
 	}
 
 
-	/**
-	 * @param array        $data
-	 * @param int          $product_id
-	 * @param object|mixed $translation
-	 * @param string       $lang
-	 *
-	 * @return array
-	 */
 	public function custom_box_html_data( $data, $product_id, $translation, $lang ) {
 
 		$orig_prod_tabs = $this->get_product_tabs( $product_id );
@@ -114,17 +88,10 @@ class WCML_YIKES_Custom_Product_Tabs implements \IWPML_Action {
 		return $data;
 	}
 
-	/**
-	 * @param int    $original_product_id
-	 * @param int    $trnsl_product_id
-	 * @param array  $data
-	 * @param string $lang
-	 */
 	public function sync_tabs( $original_product_id, $trnsl_product_id, $data, $lang ) {
 
 		$orig_prod_tabs = $this->get_product_tabs( $original_product_id );
 
-		/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 		if ( ( isset( $_POST['icl_ajx_action'] ) && ( 'make_duplicates' === $_POST['icl_ajx_action'] ) ) || ( get_post_meta( $trnsl_product_id, '_icl_lang_duplicate_of', true ) ) ) {
 			update_post_meta( $trnsl_product_id, self::CUSTOM_TABS_FIELD, $orig_prod_tabs );
 		} elseif ( $orig_prod_tabs ) {
@@ -140,32 +107,16 @@ class WCML_YIKES_Custom_Product_Tabs implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param int $product_id
-	 *
-	 * @return array
-	 */
 	private function get_product_tabs( $product_id ) {
 		return (array) maybe_unserialize( get_post_meta( $product_id, self::CUSTOM_TABS_FIELD, true ) );
 	}
 
 
-	/**
-	 * @param array $fields
-	 *
-	 * @return array
-	 */
 	public function custom_fields_exceptions( $fields ) {
 		$fields[] = self::CUSTOM_TABS_FIELD;
 		return $fields;
 	}
 
-	/**
-	 * @param array  $package
-	 * @param object $post
-	 *
-	 * @return array
-	 */
 	public function append_custom_tabs_to_translation_package( $package, $post ) {
 
 		if ( 'product' === $post->post_type ) {
@@ -195,11 +146,6 @@ class WCML_YIKES_Custom_Product_Tabs implements \IWPML_Action {
 		return $package;
 	}
 
-	/**
-	 * @param int    $post_id
-	 * @param array  $data
-	 * @param object $job
-	 */
 	public function save_custom_tabs_translation( $post_id, $data, $job ) {
 
 		$original_product_tabs = $this->get_product_tabs( $job->original_doc_id );

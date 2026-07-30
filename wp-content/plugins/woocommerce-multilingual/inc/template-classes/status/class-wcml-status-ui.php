@@ -2,29 +2,12 @@
 
 use function WCML\functions\isStandAlone;
 
-/**
- * Created by OnTheGo Systems
- */
 class WCML_Status_UI extends WCML_Templates_Factory {
-	/**
-	 * @var woocommerce_wpml
-	 */
 	private $woocommerce_wpml;
-	/**
-	 * @var SitePress
-	 */
 	private $sitepress;
-	/**
-	 * @var array
-	 */
 	private $sitepress_settings;
 
 
-	/**
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress        $sitepress
-	 * @param array            $sitepress_settings
-	 */
 	public function __construct( $woocommerce_wpml, $sitepress, $sitepress_settings ) {
 		parent::__construct();
 

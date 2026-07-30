@@ -4,11 +4,7 @@ class WCML_Status_Status_UI extends WCML_Templates_Factory {
 
 	private $sitepress;
 
-	/**
-	 * @param SitePress $sitepress
-	 */
 	public function __construct( $sitepress ) {
-		// @todo Cover by tests, required for wcml-3037.
 		parent::__construct();
 
 		$this->sitepress = $sitepress;

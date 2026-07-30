@@ -11,7 +11,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 	}
 
 	public function initializeSession() {
-		/** @phpstan-ignore-next-line instanceof.alwaysTrue */
 		if ( ! ( WC()->session instanceof \WC_Session ) ) {
 			WC()->initialize_session();
 		}

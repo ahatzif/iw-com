@@ -20,24 +20,14 @@ class Hooks implements \IWPML_Action, IStandAloneAction {
 
 	const HANDLE = 'wcml-multicurrency-options';
 
-	/** @var WCML_Multi_Currency $multiCurrency */
 	private $multiCurrency;
 
-	/** @var WCML_Currencies_Payment_Gateways $currenciesPaymentGateways */
 	private $currenciesPaymentGateways;
 
-	/** @var SitePress|NullSitePress $sitepress */
 	private $sitepress;
 
-	/** @var array $wcmlSettings */
 	private $wcmlSettings;
 
-	/**
-	 * @param WCML_Multi_Currency              $multiCurrency
-	 * @param WCML_Currencies_Payment_Gateways $currenciesPaymentGateways
-	 * @param SitePress|NullSitePress          $sitepress
-	 * @param array                            $wcmlSettings
-	 */
 	public function __construct(
 		WCML_Multi_Currency $multiCurrency,
 		WCML_Currencies_Payment_Gateways $currenciesPaymentGateways,
@@ -76,11 +66,6 @@ class Hooks implements \IWPML_Action, IStandAloneAction {
 		] );
 	}
 
-	/**
-	 * @param Collection $gateways
-	 *
-	 * @return array
-	 */
 	private function getActiveCurrencies( Collection $gateways ) {
 		$defaultCurrency = wcml_get_woocommerce_currency_option();
 
@@ -125,9 +110,6 @@ class Hooks implements \IWPML_Action, IStandAloneAction {
 			->toArray();
 	}
 
-	/**
-	 * @return array
-	 */
 	private function getAllCurrencies() {
 		$currencyFormats = json_decode( file_get_contents( WCML_PLUGIN_PATH . '/res/currencies/currency_formats.json' ) );
 
@@ -150,9 +132,6 @@ class Hooks implements \IWPML_Action, IStandAloneAction {
 		return wpml_collect( get_woocommerce_currencies() )->map( $buildCurrency )->values()->toArray();
 	}
 
-	/**
-	 * @return array
-	 */
 	private function getLanguages() {
 		$buildLanguage = function( $data ) {
 			return (object) [
@@ -169,9 +148,6 @@ class Hooks implements \IWPML_Action, IStandAloneAction {
 			->toArray();
 	}
 
-	/**
-	 * @return Collection
-	 */
 	private function getGateways() {
 		$isSupported = function( \WCML_Payment_Gateway $gateway ) {
 			return ! $gateway instanceof \WCML_Not_Supported_Payment_Gateway;
@@ -187,9 +163,6 @@ class Hooks implements \IWPML_Action, IStandAloneAction {
 			->values();
 	}
 
-	/**
-	 * @return array
-	 */
 	private function getStrings() {
 		$trackingLink = new \WCML_Tracking_Link();
 
@@ -275,9 +248,6 @@ class Hooks implements \IWPML_Action, IStandAloneAction {
 		];
 	}
 
-	/**
-	 * @return array
-	 */
 	private function getAllCountries() {
 
 		$buildCountry = function( $label, $code ) {
@@ -290,20 +260,12 @@ class Hooks implements \IWPML_Action, IStandAloneAction {
 		return wpml_collect( WC()->countries->get_countries() )->map( $buildCountry )->values()->toArray();
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function checkMaxMindKeyExist() {
 		$integrations = WC()->integrations->get_integrations();
 
 		return isset( $integrations['maxmind_geolocation'] ) ? (bool) $integrations['maxmind_geolocation']->get_option( 'license_key' ) : false;
 	}
 
-	/**
-	 * @param string $lastRateUpdate
-	 *
-	 * @return string|null
-	 */
 	public static function formatLastRateUpdate( $lastRateUpdate ) {
 		return $lastRateUpdate
 			? sprintf(

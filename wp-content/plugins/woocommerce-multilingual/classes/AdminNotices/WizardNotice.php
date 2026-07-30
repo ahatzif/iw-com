@@ -4,9 +4,6 @@ namespace WCML\AdminNotices;
 
 class WizardNotice extends \WCML_Menu_Wrap_Base {
 
-	/**
-	 * @return array
-	 */
 	protected function get_child_model() {
 		return [
 			'strings'       => [

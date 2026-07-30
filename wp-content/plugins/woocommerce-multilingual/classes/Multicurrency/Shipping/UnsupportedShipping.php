@@ -12,9 +12,6 @@ class UnsupportedShipping implements ShippingMode {
 		return null;
 	}
 
-	/**
-	 * @param string|mixed $currencyCode
-	 */
 	public function getFieldDescription( $currencyCode ): ?string {
 		return null;
 	}
@@ -32,7 +29,6 @@ class UnsupportedShipping implements ShippingMode {
 	}
 
 	public function getMinimalOrderAmountKey( $currencyCode ) {
-		// TODO: Implement getMinAmountKey() method.
 	}
 
 	public function getShippingCostValue( $rate, $currency ) {

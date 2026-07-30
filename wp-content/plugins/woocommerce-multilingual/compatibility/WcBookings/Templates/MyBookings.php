@@ -16,11 +16,6 @@ class MyBookings implements \IWPML_Action {
 			->then( spreadArgs( [ $this, 'filterByCurrentLanguage' ] ) );
 	}
 
-	/**
-	 * @param array[] $tables
-	 *
-	 * @return array[]
-	 */
 	public function filterByCurrentLanguage( $tables ) {
 
 		$currentLanguage = Languages::getCurrentCode();
@@ -30,11 +25,9 @@ class MyBookings implements \IWPML_Action {
 				foreach ( $table['bookings'] as $key => $booking ) {
 					$languageCode = Post::getLang( $booking->get_id() );
 
-					// Remove bookings in other languages.
 					if ( $languageCode !== $currentLanguage ) {
 						unset( $tables[ $section ]['bookings'][ $key ] );
 
-					// Fallback to original (display-as-translated).
 					} elseif ( ! $booking->get_product() ) {
 						$originalBookingId = PostTranslations::getOriginalId( $booking->get_id() );
 						$originalBooking   = get_wc_booking( $originalBookingId );

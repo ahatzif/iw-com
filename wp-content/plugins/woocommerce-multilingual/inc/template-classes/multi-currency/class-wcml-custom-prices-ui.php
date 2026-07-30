@@ -1,8 +1,5 @@
 <?php
 
-/**
- * Created by OnTheGo Systems
- */
 class WCML_Custom_Prices_UI extends WCML_Templates_Factory {
 
 	private $woocommerce_wpml;
@@ -10,21 +7,12 @@ class WCML_Custom_Prices_UI extends WCML_Templates_Factory {
 	private $custom_prices;
 	private $is_variation;
 
-	/** @var array $custom_prices_fields */
 	private $custom_prices_fields;
 
-	/** @var array $custom_prices_fields_labels */
 	private $custom_prices_fields_labels;
 
 
-	/**
-	 * WCML_Custom_Prices_UI constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param int              $product_id
-	 */
 	public function __construct( $woocommerce_wpml, $product_id ) {
-		// @todo Cover by tests, required for wcml-3037.
 		parent::__construct();
 
 		$this->woocommerce_wpml            = $woocommerce_wpml;

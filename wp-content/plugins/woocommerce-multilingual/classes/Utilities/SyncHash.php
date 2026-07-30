@@ -15,12 +15,8 @@ class SyncHash {
 	const SOURCE_META  = 'meta';
 	const SOURCE_EMPTY = 'empty';
 
-	/** @var array[] $hashes */
 	private $hashes = [];
 
-	/**
-	 * @return string[]
-	 */
 	private function getEmpty() {
 		return [
 			self::GROUP_FIELDS             => '',
@@ -29,11 +25,6 @@ class SyncHash {
 		];
 	}
 
-	/**
-	 * @param mixed $hash
-	 *
-	 * @return array
-	 */
 	private function validate( $hash ) {
 		if ( is_array( $hash ) ) {
 			return $hash;
@@ -41,11 +32,6 @@ class SyncHash {
 		return $this->getEmpty();
 	}
 
-	/**
-	 * @param int    $objectId
-	 * @param string $source
-	 * @param bool   $setChanged
-	 */
 	public function initialize( $objectId, $source, $setChanged = false ) {
 		switch ( $source ) {
 			case self::SOURCE_META:
@@ -60,28 +46,14 @@ class SyncHash {
 		}
 	}
 
-	/**
-	 * @param int $objectId
-	 *
-	 * @return array
-	 */
 	private function getHash( $objectId ) {
 		return array_key_exists( $objectId, $this->hashes ) ? $this->validate( $this->hashes[ $objectId ] ) : $this->getEmpty();
 	}
 
-	/**
-	 * @param int   $objectId
-	 * @param array $hash
-	 */
 	private function setHash( $objectId, $hash ) {
 		$this->hashes[ $objectId ] = $hash;
 	}
 
-	/**
-	 * @param int    $objectId
-	 * @param string $group
-	 * @param string $hashValue
-	 */
 	public function updateGroupValue( $objectId, $group, $hashValue ) {
 		if ( $this->isNewGroupValue( $objectId, $group, $hashValue ) ) {
 			$hash                           = $this->getHash( $objectId );
@@ -91,22 +63,11 @@ class SyncHash {
 		}
 	}
 
-	/**
-	 * @param int    $objectId
-	 * @param string $group
-	 * @param string $hashValue
-	 *
-	 * @return bool
-	 */
 	public function isNewGroupValue( $objectId, $group, $hashValue ) {
 		$hash = $this->getHash( $objectId );
 		return Obj::propOr( null, $group, $hash ) !== $hashValue;
 	}
 
-	/**
-	 * @param int  $objectId
-	 * @param bool $clear
-	 */
 	public function saveHash( $objectId, $clear = false ) {
 		$hash       = $this->getHash( $objectId );
 		$hasChanges = (bool) Obj::propOr( null, self::HAS_CHANGES_FLAG, $hash );

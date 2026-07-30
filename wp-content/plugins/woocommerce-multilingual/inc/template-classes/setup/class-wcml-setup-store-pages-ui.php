@@ -4,22 +4,11 @@ class WCML_Setup_Store_Pages_UI extends WCML_Setup_Step {
 
 	const SLUG = 'store-pages';
 
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
 
-	/** @var SitePress */
 	private $sitepress;
 
-	/**
-	 * WCML_Setup_Store_Pages_UI constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress        $sitepress
-	 * @param string           $next_step_url
-	 * @param string           $previous_step_url
-	 */
 	public function __construct( $woocommerce_wpml, $sitepress, $next_step_url, $previous_step_url ) {
-		// @todo Cover by tests, required for wcml-3037.
 		parent::__construct( $next_step_url, $previous_step_url );
 
 		$this->woocommerce_wpml = $woocommerce_wpml;
@@ -83,9 +72,6 @@ class WCML_Setup_Store_Pages_UI extends WCML_Setup_Step {
 		return '/setup/store-pages.twig';
 	}
 
-	/**
-	 * @return string
-	 */
 	private function get_secondary_languages() {
 		$default_language = $this->sitepress->get_default_language();
 		$languages        = $this->sitepress->get_active_languages();

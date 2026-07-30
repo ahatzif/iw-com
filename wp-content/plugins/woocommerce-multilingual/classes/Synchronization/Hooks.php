@@ -6,7 +6,6 @@ use WCML\Utilities\SyncHash;
 use WPML\FP\Obj;
 use function WCML\functions\isCli;
 
-//class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_AJAX_Action, \IWPML_REST_Action, \IWPML_CLI_Action, \IWPML_DIC_Action {
 class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC_Action {
 
 	const HOOK_SYNCHRONIZE_PRODUCT_TRANSLATIONS           = 'wcml_synchronize_product_translations';
@@ -15,13 +14,10 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 
 	const PRIORITY_BEFORE_STOCK_EMAIL_TRIGGER = 9;
 
-	/** @var \woocommerce_wpml */
 	protected $woocommerceWpml;
 
-	/** @var \SitePress */
 	protected $sitepress;
 
-	/** @var Manager */
 	private $manager;
 
 	public function __construct(
@@ -44,7 +40,7 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 
 	public function add_hooks() {
 		if ( is_admin() || isCli() ) {
-			add_action( 'save_post', [ $this, 'synchronizeProductTranslationsOnSave' ], PHP_INT_MAX, 2 ); // After WPML.
+			add_action( 'save_post', [ $this, 'synchronizeProductTranslationsOnSave' ], PHP_INT_MAX, 2 );
 			add_action( 'icl_make_duplicate', [ $this, 'synchronizeProductDuplication' ], 110, 4 );
 
 			add_action( 'woocommerce_product_quick_edit_save', [ $this, 'synchronizeOnEditSave' ] );
@@ -68,11 +64,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		add_action( 'woocommerce_variation_set_stock', [ $this, 'syncProductStock' ], self::PRIORITY_BEFORE_STOCK_EMAIL_TRIGGER );
 	}
 
-	/**
-	 * @param \WP_Post $post
-	 *
-	 * @return bool
-	 */
 	private function canRunProductSynchronization( $post ) {
 		if ( 'product' !== $post->post_type ) {
 			return false;
@@ -82,7 +73,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 			return false;
 		}
 
-		/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 		if ( isset( $_POST['autosave'] ) ) {
 			return false;
 		}
@@ -94,13 +84,8 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		return true;
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function isProductSynchronizationValidContext() {
 		global $pagenow, $wp;
-		// exceptions.
-		/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 		$isDuplicating  = ( ! empty( $_POST['icl_ajx_action'] ) && 'make_duplicates' === $_POST['icl_ajx_action'] );
 		$isApiRequest   = ! empty( $wp->query_vars['wc-api-version'] );
 		$isValidContext = isCli()
@@ -111,10 +96,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		return apply_filters( 'wcml_product_synchronization_on_save_is_valid_context', $isValidContext );
 	}
 
-	/**
-	 * @param int    $postId
-	 * @param \WP_Post $post
-	 */
 	public function synchronizeProductTranslationsOnSave( $postId, $post ) {
 		if ( 'product_variation' === $post->post_type ) {
 			$this->setVariationLanguageDetails( $postId, $post );
@@ -136,9 +117,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		}
 
 		if ( $is_using_native_editor ) {
-			// WARNING!!!
-			// This depends on the stored/selected setting, not the actual editor being used for editing a translation.
-			// Keeping it for backward compatibility since this is the original logic.
 			$this->synchronizeProductTranslationsOnSaveInNativeEditor( $postId, $post );
 			return;
 		}
@@ -148,9 +126,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		$this->manager->setContext( null );
 	}
 
-	/**
-	 * @return string|null
-	 */
 	private function getContext() {
 		$isUpdatingProductFromEditScreen = isset( $_POST['action'] ) && 'editpost' === sanitize_key( wp_unslash( $_POST['action'] ) );
 
@@ -161,10 +136,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		return null;
 	}
 
-	/**
-	 * @param int      $variationId
-	 * @param \WP_Post $variation
-	 */
 	private function setVariationLanguageDetails( $variationId, $variation ) {
 		$productId                  = (int) $variation->post_parent;
 		$productLanguage            = $this->sitepress->get_language_for_element( $productId, 'post_product' );
@@ -181,14 +152,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		}
 	}
 
-	/**
-	 * Legacy logic dealing with the native editor as the preferred translation editor.
-	 *
-	 * Copied verbatim from the original implementation.
-	 *
-	 * @param int      $postId
-	 * @param \WP_Post $post
-	 */
 	private function synchronizeProductTranslationsOnSaveInNativeEditor( $postId, $post ) {
 		$originalProduct = $this->manager->getOriginalProduct( $post );
 		if ( $originalProduct->ID === $postId ) {
@@ -213,18 +176,11 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		$this->manager->run( $originalProduct, [ $postId ], [ $postId => $currentLanguage ] );
 	}
 
-	/**
-	 * @param int    $productId
-	 * @param string $language
-	 * @param array  $duplicatedPostData
-	 * @param int    $duplicatedProductId
-	 */
 	public function synchronizeProductDuplication( $productId, $language, $duplicatedPostData, $duplicatedProductId ) {
 		if ( 'product' !== $duplicatedPostData['post_type'] ) {
 			return;
 		}
 
-		// Duplication should clone de variation description field.
 		global $iclTranslationManagement;
 		$customFieldSettings              = $iclTranslationManagement->settings['custom_fields_translation'];
 		$variationDescriptionFieldSetting = Obj::prop( '_variation_description', $customFieldSettings );
@@ -236,7 +192,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 
 		$this->manager->runProductComponents( $originalProduct, [ $duplicatedProductId ], [ $duplicatedProductId => $language ] );
 
-		// Restore the variation description field original setting.
 		if ( null === $variationDescriptionFieldSetting ) {
 			unset( $iclTranslationManagement->settings['custom_fields_translation']['_variation_description'] );
 		} else {
@@ -244,9 +199,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		}
 	}
 
-	/**
-	 * @param int $translatedProductId
-	 */
 	public function synchronizeProductTranslation( $translatedProductId ) {
 		if ( 'product' !== get_post_type( $translatedProductId ) ) {
 			return;
@@ -263,12 +215,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		}
 	}
 
-	/**
-	 * @todo There is a regression here that we need to investigate.
-	 *
-	 * @see https://git.onthegosystems.com/glue-plugins/wpml/woocommerce-multilingual/-/merge_requests/1028
-	 * @see https://git.onthegosystems.com/glue-plugins/wpml/woocommerce-multilingual/-/commit/e64378a8656bdf938f1e20565c2f65c94a26a3bb
-	 */
 	public function synchronizeConnectedTranslations() {
 		if ( 'connect_translations' !== Obj::prop( 'icl_ajx_action', $_POST ) ) {
 			return;
@@ -289,12 +235,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		$setAsSource = Obj::prop( 'set_as_source', $_POST );
 
 		remove_action( 'wpml_translation_update', [ $this, 'synchronizeConnectedTranslations' ] );
-		// Before the referenced commit:
-		// 		* If the translations being looped reached the original, syncing it to the post being sent to the AJAX call,
-		//					unless there is a mandatory setting to set the post being sent as original, in which case we update the previous original to be in sync with the new (?)
-		// 		* For every other translation, if there is a mandatory setting to set the post being sent as original, sync this sent post into the translation
-		// After the referended commit:
-		//  	* We loop over the tranbslations but we act over just the first one that matches any of the two criteria.
 		foreach ( $translations as $translation ) {
 			if ( $setAsSource && ! $translation->original ) {
 				$productId           = $postId;
@@ -318,9 +258,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		add_action( 'wpml_translation_update', [ $this, 'synchronizeConnectedTranslations' ] );
 	}
 
-	/**
-	 * @param \WC_Product $productObject
-	 */
 	public function synchronizeOnEditSave( $productObject ) {
 		$productId       = $productObject->get_id();
 		$product         = get_post( $productId );
@@ -355,11 +292,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		$this->manager->setContext( null );
 	}
 
-	/**
-	 * @param \WP_Post          $product
-	 * @param int[]             $translationsIds
-	 * @param array<int,string> $translationsLanguages
-	 */
 	public function synchronizeProductTranslations( $product, $translationsIds = [], $translationsLanguages = [] ) {
 		if ( ! $this->canRunProductSynchronization( $product ) ) {
 			return;
@@ -367,21 +299,10 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		$this->manager->run( $product, $translationsIds, $translationsLanguages );
 	}
 
-	/**
-	 * @param \WP_Post          $variation
-	 * @param int[]             $variationTranslations
-	 * @param array<int,string> $variationTranslationsLanguages
-	 */
 	public function synchronizeProductVariationTranslations( $variation, $variationTranslations, $variationTranslationsLanguages ) {
 		$this->manager->runProductVariationComponents( $variation, $variationTranslations, $variationTranslationsLanguages );
 	}
 
-	/**
-	 * @param \WP_Post          $product
-	 * @param int[]             $translationsIds
-	 * @param array<int,string> $translationsLanguages
-	 * @param string            $componentName
-	 */
 	public function synchronizeProductComponent( $product, $translationsIds, $translationsLanguages, $componentName ) {
 		if ( ! $this->canRunProductSynchronization( $product ) ) {
 			return;
@@ -389,9 +310,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		$this->manager->runComponent( $product, $translationsIds, $translationsLanguages, $componentName );
 	}
 
-	/**
-	 * @param int $productId
-	 */
 	public function synchronizeProductVariationsOnAjax( $productId ) {
 		$product    = get_post( $productId );
 		$isOriginal = $this->manager->isOriginalProduct( $product );
@@ -418,18 +336,10 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC
 		$this->manager->runComponent( $product, $translations, $translationsLanguages, Store::COMPONENT_ATTRIBUTES );
 	}
 
-	/**
-	 * @param string $bulkAction
-	 * @param array  $data
-	 * @param int    $productId
-	 */
 	public function synchronizeProductVariationsOnBulkEdit( $bulkAction, $data, $productId ) {
 		$this->synchronizeProductVariationsOnAjax( $productId );
 	}
 
-	/**
-	 * @param \WC_Product $product
-	 */
 	public function syncProductStock( $product ) {
 		$productId    = $product->get_id();
 		$translations = $this->manager->getElementTranslations( $productId, false, false );

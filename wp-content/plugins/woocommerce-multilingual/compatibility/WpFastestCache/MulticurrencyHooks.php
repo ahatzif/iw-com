@@ -14,11 +14,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		);
 	}
 
-	/**
-	 * @param bool $cache_enabled
-	 *
-	 * @return bool
-	 */
 	public function is_cache_enabled_for_switching_currency( $cache_enabled ) {
 
 		$wp_fastest_cache_options = json_decode( get_option( 'WpFastestCache' ) );

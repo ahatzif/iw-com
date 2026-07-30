@@ -10,11 +10,6 @@
  */
 namespace WPML\Core\Twig\Sandbox;
 
-/**
- * Exception thrown when a not allowed class property is used in a template.
- *
- * @author Kit Burton-Senior <mail@kitbs.com>
- */
 class SecurityNotAllowedPropertyError extends \WPML\Core\Twig\Sandbox\SecurityError
 {
     private $className;

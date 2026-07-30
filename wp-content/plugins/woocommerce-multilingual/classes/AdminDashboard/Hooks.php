@@ -11,16 +11,10 @@ use IWPML_Backend_Action;
 
 class Hooks implements IWPML_Backend_Action, IWPML_DIC_Action {
 
-	/** @var SitePress|NullSitePress $sitepress */
 	private $sitepress;
 
-	/** @var wpdb $wpdb */
 	private $wpdb;
 
-	/**
-	 * @param SitePress|NullSitePress $sitepress
-	 * @param wpdb                    $wpdb
-	 */
 	public function __construct( ISitePress $sitepress, wpdb $wpdb ) {
 		$this->sitepress = $sitepress;
 		$this->wpdb      = $wpdb;
@@ -37,11 +31,6 @@ class Hooks implements IWPML_Backend_Action, IWPML_DIC_Action {
 		delete_transient( 'wc_low_stock_count' );
 	}
 
-	/**
-	 * @param string $query
-	 *
-	 * @return string
-	 */
 	public function addLanguageQuery( $query ) {
 
 		$currentLanguage = $this->sitepress->get_current_language();

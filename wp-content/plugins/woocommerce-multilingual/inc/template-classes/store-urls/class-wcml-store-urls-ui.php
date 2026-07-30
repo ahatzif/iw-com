@@ -1,20 +1,10 @@
 <?php
 
 class WCML_Store_URLs_UI extends WCML_Templates_Factory {
-	/**
-	 * @var woocommerce_wpml
-	 */
 	private $woocommerce_wpml;
-	/**
-	 * @var SitePress
-	 */
 	private $sitepress;
 	private $active_languages;
 
-	/**
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress        $sitepress
-	 */
 	public function __construct( $woocommerce_wpml, $sitepress ) {
 		parent::__construct();
 
@@ -93,20 +83,6 @@ class WCML_Store_URLs_UI extends WCML_Templates_Factory {
 	}
 
 	public function get_endpoint_info() {
-		/**
-		 * Register WooCommerce endpoints that should appear in the WPML Store URLs settings page, as a key => endpoint value pair..
-		 *
-		 * The key should match the query var used to define the endpoint.
-		 * The value should match the current endpoint value.
-		 *
-		 * This is required because third parties might not register their endpoints as part of WC()->query->query_vars in the backend.
-		 *
-		 * @since 5.5.3
-		 *
-		 * @param array<string,string> $keysToOptions An array of key => value pairs.
-		 *
-		 * @return array<string,string>
-		 */
 		$query_vars          = apply_filters( 'wcml_register_endpoints_store_urls', WC()->query->query_vars );
 		$is_original_slug    = function( $endpoint, $endpointName ) {
 			return (bool) apply_filters( 'wpml_get_string_language', '', WCML_Endpoints::STRING_CONTEXT, $endpointName );
@@ -138,7 +114,6 @@ class WCML_Store_URLs_UI extends WCML_Templates_Factory {
 					$this->woocommerce_wpml->url_translation->url_string_name( 'attribute_slug', $attribute->attribute_name )
 				);
 
-				// $this->woocommerce_wpml->url_translation
 				$attributes_info[ $attribute->attribute_name ] = [
 					'label'      => $attribute->attribute_label,
 					'orig_value' => $attribute->attribute_name,

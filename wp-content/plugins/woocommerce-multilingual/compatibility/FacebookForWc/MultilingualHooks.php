@@ -6,18 +6,7 @@ use WPML\LIB\WP\Hooks as WPHooks;
 use function WPML\FP\spreadArgs;
 
 class MultilingualHooks implements \IWPML_Action {
-	/**
-	 * Supported values
-	 * - null - settings not retrieved from filter
-	 * - [] - don't filter - allow products in all languages
-	 * - [ 'en', 'fr' ] - leave only products in these languages
-	 *
-	 * @var ?array
-	 */
 	private $cache_sync_product_only_allow_these_languages = null;
-	/**
-	 * @var int[]
-	 */
 	private $cache_sync_product_list = [];
 
 	public function add_hooks() {
@@ -28,12 +17,6 @@ class MultilingualHooks implements \IWPML_Action {
 			->then( spreadArgs( [ $this, 'facebook_sync_product_filtered_by_language' ] ) );
 	}
 
-	/**
-	 * @param array $product_data An array of product data.
-	 * @param int   $id           Woocommerce product id.
-	 *
-	 * @retur array
-	 */
 	public function facebook_product_url_with_correct_language( $product_data, $id ) {
 		if ( empty( $product_data['url'] ) ) {
 			return $product_data;
@@ -47,26 +30,11 @@ class MultilingualHooks implements \IWPML_Action {
 		return $product_data;
 	}
 
-	/**
-	 * @param bool        $should_sync
-	 * @param \WC_Product $product the product object.
-	 *
-	 * @return bool
-	 */
 	public function facebook_sync_product_filtered_by_language( $should_sync, $product ) {
 		if ( null === $this->cache_sync_product_only_allow_these_languages ) {
-			/**
-			 * [] - default: don't filter - allow products in all languages
-			 * [ 'en', 'fr' ] - leave only products in these languages
-			 *
-			 * @param array $allow_languages
-			 *
-			 * @return array
-			 */
 			$this->cache_sync_product_only_allow_these_languages = apply_filters( 'wcml_facebook_sync_products_languages', [] );
 		}
 
-		/** @phpstan-ignore booleanNot.alwaysFalse */
 		if ( empty( $this->cache_sync_product_only_allow_these_languages ) || ! is_array( $this->cache_sync_product_only_allow_these_languages ) ) {
 			return $should_sync;
 		}

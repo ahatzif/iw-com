@@ -4,10 +4,6 @@ namespace WCML\AdminNotices;
 
 class ExportImport implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 
-	// Cascade of priorities before 10.
-	// 7: WPML.
-	// 8: WCML.
-	// 9: WPML Export and Import.
 	const PRIORITY = 8;
 	const GROUP    = 'wpml-import-notices';
 
@@ -19,7 +15,6 @@ class ExportImport implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		'wpml-import-notice-from-wcml',
 	];
 
-	/** @var \WPML_Notices $notices */
 	private $wpmlNotices;
 
 	public function __construct( \WPML_Notices $wpmlNotices ) {
@@ -28,7 +23,6 @@ class ExportImport implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 
 	public function add_hooks() {
 		if ( defined( 'WPML_IMPORT_VERSION' ) ) {
-			// WPML Export and Import will take care of this.
 			return;
 		}
 
@@ -58,11 +52,6 @@ class ExportImport implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		} );
 	}
 
-	/**
-	 * @param string $id
-	 * @param string $path
-	 * @param string $message
-	 */
 	private function maybeAddNotice( $id, $path, $message ) {
 		if ( ! self::isOnPage( $path ) ) {
 			return;
@@ -79,9 +68,6 @@ class ExportImport implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		$this->wpmlNotices->add_notice( $notice, true );
 	}
 
-	/**
-	 * @return array
-	 */
 	private static function getExportNotices() {
 		$notices = [
 			'woocommerce-export' => '/edit.php?post_type=product&page=product_exporter',
@@ -92,9 +78,6 @@ class ExportImport implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		return $notices;
 	}
 
-	/**
-	 * @return array
-	 */
 	private static function getImportNotices() {
 		$notices = [
 			'woocommerce-import' => '/edit.php?post_type=product&page=product_importer',
@@ -105,11 +88,6 @@ class ExportImport implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		return $notices;
 	}
 
-	/**
-	 * @param  string $path
-	 *
-	 * @return bool
-	 */
 	private static function isOnPage( $path ) {
 		if ( ! isset( $_SERVER['REQUEST_URI'] ) ) {
 			return false;
@@ -129,9 +107,6 @@ class ExportImport implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		return false;
 	}
 
-	/**
-	 * @return bool
-	 */
 	public static function isOnMigrationPages() {
 		$exportNotices  = self::getExportNotices();
 		$importNotices  = self::getImportNotices();
@@ -145,9 +120,6 @@ class ExportImport implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		return false;
 	}
 
-	/**
-	 * @return string
-	 */
 	private function getExportMessage() {
 		return sprintf(
 			/* translators: %s is a link. */
@@ -156,9 +128,6 @@ class ExportImport implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		);
 	}
 
-	/**
-	 * @return string
-	 */
 	private function getImportMessage() {
 		return sprintf(
 			/* translators: %1$s and %2$s are both links. */
@@ -168,9 +137,6 @@ class ExportImport implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		);
 	}
 
-	/**
-	 * @return string
-	 */
 	private function getWpmlImportLink() {
 		$url   = self::WPML_IMPORT_URL;
 		$title = esc_html__( 'WPML Export and Import', 'woocommerce-multilingual' );
@@ -179,9 +145,6 @@ class ExportImport implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 			. '</a>';
 	}
 
-	/**
-	 * @return string
-	 */
 	private function getWcmlLink() {
 		$url   = self::WCML_URL;
 		$title = esc_html__( 'WPML Multilingual & Multicurrency for WooCommerce', 'woocommerce-multilingual' );

@@ -5,14 +5,8 @@ use PHPUnit\Framework\ExpectationFailedException;
 class WCML_WC_Memberships implements \IWPML_Action {
 
 	const SAVED_POST_PARENT = 'wcml_memberships_post_parent';
-	/**
-	 * @var WPML_WP_API
-	 */
 	private $wp_api;
 
-	/**
-	 * @param WPML_WP_API $wp_api
-	 */
 	public function __construct( WPML_WP_API $wp_api ) {
 		$this->wp_api = $wp_api;
 	}
@@ -30,10 +24,6 @@ class WCML_WC_Memberships implements \IWPML_Action {
 		add_filter( 'woocommerce_order_get__wc_memberships_access_granted', [ $this, 'orderMemberships' ] );
 	}
 
-	/**
-	 * @param array $actions
-	 * @return array
-	 */
 	public function filter_actions_links( $actions ) {
 		foreach ( $actions as $key => $action ) {
 			if ( 'view' === $key ) {
@@ -45,11 +35,6 @@ class WCML_WC_Memberships implements \IWPML_Action {
 		return $actions;
 	}
 
-	/**
-	 * @param WP_Query $q
-	 *
-	 * @return WP_Query
-	 */
 	public function save_post_parent( $q ) {
 		if ( isset( $q->query_vars['post_type'] )
 			&& in_array( 'wc_user_membership', (array) $q->query_vars['post_type'], true )
@@ -60,11 +45,6 @@ class WCML_WC_Memberships implements \IWPML_Action {
 		return $q;
 	}
 
-	/**
-	 * @param WP_Query $q
-	 *
-	 * @return WP_Query
-	 */
 	public function restore_post_parent( $q ) {
 		if ( isset( $q->query_vars[ self::SAVED_POST_PARENT ] ) ) {
 			$q->query_vars['post_parent'] = $q->query_vars[ self::SAVED_POST_PARENT ];
@@ -74,11 +54,6 @@ class WCML_WC_Memberships implements \IWPML_Action {
 		return $q;
 	}
 
-	/**
-	 * @param int[] $object_ids
-	 *
-	 * @return int[]
-	 */
 	public function add_translated_object_ids( $object_ids ) {
 		$result = [];
 		foreach ( $object_ids as $object_id ) {
@@ -105,9 +80,6 @@ class WCML_WC_Memberships implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @return array
-	 */
 	private function get_members_area_endpoint() {
 		$endpoint            = get_option( 'woocommerce_myaccount_members_area_endpoint', 'members-area' );
 		$string_context      = WCML_Url_Translation::get_endpoints_string_context();
@@ -119,11 +91,6 @@ class WCML_WC_Memberships implements \IWPML_Action {
 		];
 	}
 
-	/**
-	 * @param array $memberships
-	 *
-	 * @return array
-	 */
 	public function orderMemberships( $memberships ) {
 		if ( ! doing_action( 'woocommerce_thankyou' ) ) {
 			return $memberships;
@@ -155,33 +122,18 @@ class WCML_WC_Memberships implements \IWPML_Action {
 		return $relevantMemberships;
 	}
 
-	/**
-	 * @param array<string,string> $endpoint_keys_to_options
-	 *
-	 * @return array<string,string>
-	 */
 	public function endpoint_keys_to_options( $endpoint_keys_to_options ) {
 		$endpoint_keys_to_options['members_area']        = 'woocommerce_myaccount_members_area_endpoint';
 		$endpoint_keys_to_options['profile_fields_area'] = 'woocommerce_myaccount_profile_fields_area_endpoint';
 		return $endpoint_keys_to_options;
 	}
 
-	/**
-	 * @param array<string,string> $store_urls
-	 *
-	 * @return array<string,string>
-	 */
 	public function register_endpoints_store_urls( $store_urls ) {
 		$store_urls['members_area']        = get_option( 'woocommerce_myaccount_members_area_endpoint', 'members-area' );
 		$store_urls['profile_fields_area'] = get_option( 'woocommerce_myaccount_profile_fields_area_endpoint', 'my-profile' );
 		return $store_urls;
 	}
 
-	/**
-	 * @param array<string,string> $translation_controls
-	 *
-	 * @return array<string,string>
-	 */
 	public function register_translation_controls( $translation_controls ) {
 		$translation_controls['members_area']        = 'woocommerce_myaccount_members_area_endpoint';
 		$translation_controls['profile_fields_area'] = 'woocommerce_myaccount_profile_fields_area_endpoint';

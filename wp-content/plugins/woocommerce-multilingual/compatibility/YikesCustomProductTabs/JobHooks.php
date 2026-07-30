@@ -8,13 +8,6 @@ use WPML\LIB\WP\Hooks as WPHooks;
 
 use function WPML\FP\spreadArgs;
 
-/**
- * IMPORTANT NOTICE !!!
- * This target plugin is not maintained anymore.
- * We are stopping our compatibility maintenance too.
- *
- * @deprecated
- */
 class JobHooks {
 
 	public function add_hooks() {
@@ -22,12 +15,6 @@ class JobHooks {
 			->then( spreadArgs( [ $this, 'setGroupsAndLabels' ] ) );
 	}
 
-	/**
-	 * @param array[]   $fields
-	 * @param \stdClass $job
-	 *
-	 * @return array[]
-	 */
 	public function setGroupsAndLabels( $fields, $job ) {
 		if ( ! Hooks::isProduct( $job ) ) {
 			return $fields;
@@ -40,11 +27,6 @@ class JobHooks {
 		return $fields;
 	}
 
-	/**
-	 * @param array $field
-	 *
-	 * @return array
-	 */
 	private function processField( $field ) {
 		if ( Str::startsWith( \WCML_YIKES_Custom_Product_Tabs::CUSTOM_TABS_FIELD . ':', $field['field_type'] ) ) {
 			$parts = explode( ':', $field['field_type'] );

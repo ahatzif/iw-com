@@ -4,7 +4,6 @@ use WPML\FP\Obj;
 
 class WCML_Setup_Handlers {
 
-	/** @var  woocommerce_wpml */
 	private $woocommerce_wpml;
 
 	public function __construct( woocommerce_wpml $woocommerce_wpml ) {

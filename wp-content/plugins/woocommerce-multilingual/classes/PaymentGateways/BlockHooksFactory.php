@@ -4,9 +4,6 @@ namespace WCML\PaymentGateways;
 
 class BlockHooksFactory implements \IWPML_Frontend_Action_Loader, \IWPML_Deferred_Action_Loader {
 
-	/**
-	 * @return \IWPML_Action
-	 */
 	public function create() {
 		global $woocommerce_wpml;
 

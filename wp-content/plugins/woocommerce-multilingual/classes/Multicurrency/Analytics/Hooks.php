@@ -13,13 +13,10 @@ use WCML\Utilities\WpAdminPages;
 
 class Hooks implements \IWPML_Action, IStandAloneAction {
 
-	/** @var \woocommerce_wpml $woocommerce_wpml */
 	private $woocommerce_wpml;
 
-	/** @var \wpdb $wpdb */
 	private $wpdb;
 
-	/** @var string $requestedCurrencyForReport */
 	private $requestedCurrencyForReport;
 
 	public function __construct( \woocommerce_wpml $woocommerce_wpml, \wpdb $wpdb ) {
@@ -91,19 +88,10 @@ class Hooks implements \IWPML_Action, IStandAloneAction {
 			]
 		);
 
-		// Preload our assets.
-		// See Automattic\WooCommerce\Internal\Admin\WCAdminAssets::output_header_preload_tags.
 		$source = WCML_PLUGIN_URL . '/dist/js/multicurrencyAnalytics/app.js?ver=' . WCML_VERSION;
 		echo '<link rel="preload" href="' . esc_url( $source ) . '" as="script" />', "\n";
 	}
 
-	/**
-	 * Labels for the currency dropdown (filter).
-	 *
-	 * @param array $currencies
-	 *
-	 * @return array
-	 */
 	private function getCurrencyFilterItems( $currencies ) {
 		$currencyLabels = get_woocommerce_currencies();
 
@@ -118,14 +106,6 @@ class Hooks implements \IWPML_Action, IStandAloneAction {
 			)->toArray();
 	}
 
-	/**
-	 * Currency settings for displaying prices.
-	 *
-	 * @param array                $currencies
-	 * @param \WCML_Multi_Currency $multiCurrency
-	 *
-	 * @return array
-	 */
 	private function getCurrencyConfigs( $currencies, $multiCurrency ) {
 		return wpml_collect( $currencies )
 			->mapWithKeys(
@@ -146,20 +126,10 @@ class Hooks implements \IWPML_Action, IStandAloneAction {
 			)->toArray();
 	}
 
-	/**
-	 * @param array $args
-	 *
-	 * @return array
-	 */
 	public function addCurrencyArg( $args ) {
 		return Obj::assoc( 'currency', $this->getCurrency(), $args );
 	}
 
-	/**
-	 * @param array $clauses
-	 *
-	 * @return array
-	 */
 	public function addWhere( $clauses ) {
 		if ( COTHelper::isUsageEnabled() ) {
 			$orderTable = COTHelper::getTableName();
@@ -187,12 +157,6 @@ class Hooks implements \IWPML_Action, IStandAloneAction {
 		return $clauses;
 	}
 
-	/**
-	 * @param int    $page
-	 * @param string $id
-	 * @param string $type
-	 * @param array  $args
-	 */
 	public function saveRequestedCurrencyForReport( $page, $id, $type, $args ) {
 		if ( 'orders' === $type && isset( $args['currency'] ) ) {
 			$this->requestedCurrencyForReport = $args['currency'];

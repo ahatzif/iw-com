@@ -22,12 +22,8 @@ class MulticurrencyHooks implements \IWPML_Action {
 	const SETTINGS_TEMPLATE = 'product-addons-prices-settings.twig';
 	const PRICE_OPTION_KEY  = '_product_addon_prices';
 
-	/** @var woocommerce_wpml $woocommerce_wpml */
 	private $woocommerce_wpml;
 
-	/**
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 */
 	public function __construct( woocommerce_wpml $woocommerce_wpml ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 	}
@@ -51,13 +47,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * Addon price when adding to cart is saved after conversion to the currently selected currency.
-	 * When we change currency, we have to go back to the default currency and convert to the selected
-	 *
-	 * @param string $toCurrency
-	 * @param string $fromCurrency
-	 */
 	public function convertAddonPriceSavedInSession( $toCurrency, $fromCurrency ) {
 
 		$cart = WC()->session->get( 'cart', null );
@@ -96,12 +85,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param array $addons
-	 * @param int   $postId
-	 *
-	 * @return array
-	 */
 	public function product_addons_price_filter( $addons, $postId ) {
 		foreach ( $addons as $addonId => $addon ) {
 
@@ -121,15 +104,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		return $addons;
 	}
 
-	/**
-	 * Special case for WC Bookings plugin - need add addon cost after re-calculating booking costs.
-	 *
-	 * @see https://onthegosystems.myjetbrains.com/youtrack/issue/wcml-1877
-	 *
-	 * @param array $cartItem
-	 *
-	 * @return array
-	 */
 	public function filter_booking_addon_product_in_cart_contents( $cartItem ) {
 		$isBookingProductWithAddons = $cartItem['data'] instanceof WC_Product_Booking && isset( $cartItem['addons'] );
 
@@ -146,12 +120,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		return $cartItem;
 	}
 
-	/**
-	 * @param  array $addon
-	 * @param  int   $postId
-	 *
-	 * @return string
-	 */
 	private function converted_addon_price( $addon, $postId ) {
 		$addonData = wpml_collect( $addon );
 
@@ -172,11 +140,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		return $addonData->get( 'price' );
 	}
 
-	/**
-	 * @param int|false $productId
-	 *
-	 * @return bool|mixed
-	 */
 	private function isProductCustomPricesOn( $productId ) {
 		if ( $productId ) {
 			return get_post_meta( $productId, '_wcml_custom_prices_status', true );
@@ -189,9 +152,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		return false;
 	}
 
-	/**
-	 * @return bool|mixed
-	 */
 	private function getGlobalAddonPricesStatus() {
 		if ( isset( $_GET['edit'] ) ) {
 			return get_post_meta( $_GET['edit'], '_wcml_custom_prices_status', true );
@@ -206,38 +166,20 @@ class MulticurrencyHooks implements \IWPML_Action {
 		wp_enqueue_script( 'wcml-dialogs', WCML_PLUGIN_URL . '/res/js/dialogs' . WCML_JS_MIN . '.js', [ 'jquery-ui-dialog', 'underscore' ], WCML_VERSION );
 	}
 
-	/**
-	 * @param \WP_Post|null $product
-	 * @param array         $productAddons
-	 * @param int           $loop
-	 * @param array         $option
-	 */
 	public function dialog_button_after_option_row( $product, $productAddons, $loop, $option ) {
 		if ( $option ) {
 			$this->renderEditPriceElement( $this->getPricesDialogModel( $productAddons, $option, $loop, $this->isProductCustomPricesOn( $product ? $product->ID : false ) ) );
 		}
 	}
 
-	/**
-	 * @param \WP_Post|null $product
-	 * @param array         $productAddons
-	 * @param int           $loop
-	 */
 	public function dialog_button_before_options( $product, $productAddons, $loop ) {
 		$this->renderEditPriceElement( $this->getPricesDialogModel( [], $productAddons, $loop, $this->isProductCustomPricesOn( $product ? $product->ID : false ) ) );
 	}
 
-	/**
-	 * @param int $metaId
-	 * @param int $id
-	 */
 	public function onGlobalAddonsUpdated( $metaId, $id ) {
 		$this->update_custom_prices_values( $id );
 	}
 
-	/**
-	 * @param string|int $productId
-	 */
 	public function update_custom_prices_values( $productId ) {
 		$this->saveGlobalAddonPricesSetting( $productId );
 		$productAddons = SharedHooks::getProductAddons( $productId );
@@ -262,14 +204,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param array  $productAddons
-	 * @param string $priceOptionKey
-	 * @param string $addonKey
-	 * @param string $code
-	 *
-	 * @return array
-	 */
 	private function updateSingleOptionPrices( $productAddons, $priceOptionKey, $addonKey, $code ) {
 		if ( isset( $_POST[ $priceOptionKey ][ $addonKey ][ 'price_' . $code ][0] ) ) {
 			$productAddons[ $addonKey ][ 'price_' . $code ] = wc_format_decimal( $_POST[ $priceOptionKey ][ $addonKey ][ 'price_' . $code ][0] );
@@ -278,14 +212,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		return $productAddons;
 	}
 
-	/**
-	 * @param array  $productAddons
-	 * @param string $priceOptionKey
-	 * @param string $addonKey
-	 * @param string $code
-	 *
-	 * @return array
-	 */
 	private function updateMultipleOptionsPrices( $productAddons, $priceOptionKey, $addonKey, $code ) {
 		$addon_data = wpml_collect( $productAddons[ $addonKey ] );
 
@@ -301,28 +227,17 @@ class MulticurrencyHooks implements \IWPML_Action {
 	}
 
 	public function custom_prices_settings_block() {
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo $this->getTwigLoader()->get_template()->show( $this->getCustomPricesSettingsModel(), self::SETTINGS_TEMPLATE );
 	}
 
-	/**
-	 * @param array $model
-	 */
 	private function renderEditPriceElement( $model ) {
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo $this->getTwigLoader()->get_template()->show( $model, self::DIALOG_TEMPLATE );
 	}
 
-	/**
-	 * @return WPML_Twig_Template_Loader
-	 */
 	private function getTwigLoader() {
 		return new WPML_Twig_Template_Loader( [ WCML_PLUGIN_PATH . SharedHooks::TEMPLATE_FOLDER ] );
 	}
 
-	/**
-	 * @return array
-	 */
 	private function getCustomPricesSettingsModel() {
 		return [
 			'strings'          => [
@@ -335,14 +250,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		];
 	}
 
-	/**
-	 * @param array       $productAddons
-	 * @param array       $option
-	 * @param int         $loop
-	 * @param string|bool $customPricesOn
-	 *
-	 * @return array
-	 */
 	private function getPricesDialogModel( $productAddons, $option, $loop, $customPricesOn ) {
 
 		$label = isset( $option['label'] ) ? $option['label'] : $option['name'];
@@ -365,9 +272,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		];
 	}
 
-	/**
-	 * @param int $productId
-	 */
 	private function saveGlobalAddonPricesSetting( $productId ) {
 		if ( SharedHooks::isGlobalAddon( $productId ) ) {
 			$nonce = filter_var( isset( $_POST['_wcml_custom_prices_nonce'] ) ? $_POST['_wcml_custom_prices_nonce'] : '', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
@@ -378,9 +282,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @return array
-	 */
 	private static function getOnePriceTypes() {
 		return [
 			'custom_text',

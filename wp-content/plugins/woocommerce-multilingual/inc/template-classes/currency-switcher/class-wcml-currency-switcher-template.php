@@ -8,24 +8,14 @@ class WCML_Currency_Switcher_Template extends WCML_Templates_Factory implements 
 
 	const TEMPLATE_FILENAME_LEGACY_TWIG = 'template.twig';
 
-	/**
-	 * backward compatibility
-	 * @deprcated 5.5.0
-	 */
 	const FILENAME = self::TEMPLATE_FILENAME_LEGACY_TWIG;
 
-	/* @var array $template */
 	private $template;
 
-	/* @var string $prefix */
 	private $prefix = 'wcml-cs-';
 
-	/** @var array|null $model */
 	private $model;
 
-	/**
-	 * @param array $template_data
-	 */
 	public function __construct( $template_data ) {
 		$this->template = $this->format_data( $template_data );
 
@@ -40,16 +30,10 @@ class WCML_Currency_Switcher_Template extends WCML_Templates_Factory implements 
 		parent::__construct( $functions );
 	}
 
-	/**
-	 * @param array|mixed $model
-	 */
 	public function set_model( $model ) {
 		$this->model = is_array( $model ) ? $model : [ $model ];
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_model() {
 		return $this->model;
 	}
@@ -61,11 +45,6 @@ class WCML_Currency_Switcher_Template extends WCML_Templates_Factory implements 
 	protected function before_render() {
 		$templateSetup = $this->get_template_data();
 
-		/**
-		 * Hook fired when a currency switcher is using legacy TWIG template
-		 *
-		 * @param string $templateSlug Template slug
-		 */
 		do_action( 'wpml_currency_switcher_uses_twig_templates', $templateSetup['slug'] ?? '' );
 	}
 
@@ -86,13 +65,6 @@ class WCML_Currency_Switcher_Template extends WCML_Templates_Factory implements 
 		return $currency_format;
 	}
 
-	/**
-	 * Make sure some elements are of array type
-	 *
-	 * @param array $template_data
-	 *
-	 * @return array
-	 */
 	private function format_data( $template_data ) {
 		foreach ( [ 'path', 'js', 'css' ] as $k ) {
 			$template_data[ $k ] = $template_data[ $k ] ?? [];
@@ -135,9 +107,6 @@ class WCML_Currency_Switcher_Template extends WCML_Templates_Factory implements 
 		$this->template_paths = $this->template['path'];
 	}
 
-	/**
-	 * @return string Template filename
-	 */
 	public function get_template() {
 		$template = self::FILENAME;
 
@@ -154,9 +123,6 @@ class WCML_Currency_Switcher_Template extends WCML_Templates_Factory implements 
 		return $this->template;
 	}
 
-	/**
-	 * return bool
-	 */
 	public function is_core() {
 		return isset( $this->template['is_core'] ) ? (bool) $this->template['is_core'] : false;
 	}

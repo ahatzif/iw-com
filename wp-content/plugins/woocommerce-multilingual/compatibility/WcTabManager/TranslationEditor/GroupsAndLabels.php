@@ -15,18 +15,10 @@ class GroupsAndLabels implements \IWPML_Action {
 	const DEFAULT_FIELD_LABEL = 'Field';
 	const TAB_CONTENT_LABEL   = 'Content';
 
-	/**
-	 * Adds hooks.
-	 */
 	public function add_hooks() {
 		add_filter( 'wpml_tm_adjust_translation_fields', [ $this, 'adjustFields' ] );
 	}
 
-	/**
-	 * @param array[] $fields
-	 *
-	 * @return array[]
-	 */
 	public function adjustFields( $fields ) {
 		foreach ( $fields as &$field ) {
 			if ( Str::startsWith( WCML_Tab_Manager::TAB_FIELD_PREFIX, Obj::prop( 'field_type', $field ) ) ) {
@@ -37,11 +29,6 @@ class GroupsAndLabels implements \IWPML_Action {
 		return $fields;
 	}
 
-	/**
-	 * @param array $field
-	 *
-	 * @return array
-	 */
 	private function adjustField( $field ) {
 		$fieldData = Str::replace( WCML_Tab_Manager::TAB_FIELD_PREFIX, '', $field['field_type'] );
 
@@ -54,13 +41,6 @@ class GroupsAndLabels implements \IWPML_Action {
 		return $field;
 	}
 
-	/**
-	 * Those fields follow a structure of product_tabs:core_tab_{fieldName}:{tabId}
-	 *
-	 * @param array $field
-	 *
-	 * @return array
-	 */
 	private function adjustCoreTabField( $field ) {
 		$fieldData  = Str::replace( WCML_Tab_Manager::TAB_FIELD_PREFIX . WCML_Tab_Manager::TAB_FIELD_CORE_INTERFIX, '', $field['field_type'] );
 		$fieldParts = explode( ':', $fieldData );
@@ -70,13 +50,6 @@ class GroupsAndLabels implements \IWPML_Action {
 		return $this->adjustTabField( $field, $name, $tabId );
 	}
 
-	/**
-	 * Those fields follow a structure of product_tabs:product_tab:{tabId}:{fieldName}
-	 *
-	 * @param array $field
-	 *
-	 * @return array
-	 */
 	private function adjustProductTabField( $field ) {
 		$fieldData  = Str::replace( WCML_Tab_Manager::TAB_FIELD_PREFIX . WCML_Tab_Manager::TAB_FIELD_PRODUCT_INTERFIX, '', $field['field_type'] );
 		$fieldParts = explode( ':', $fieldData );
@@ -86,13 +59,6 @@ class GroupsAndLabels implements \IWPML_Action {
 		return $this->adjustTabField( $field, $name, $tabId );
 	}
 
-	/**
-	 * @param array        $field
-	 * @param string|false $name
-	 * @param string|false $tabId
-	 *
-	 * @return array
-	 */
 	private function adjustTabField( $field, $name, $tabId ) {
 		$getTitle = function( $slug ) {
 			if ( empty( $slug ) ) {

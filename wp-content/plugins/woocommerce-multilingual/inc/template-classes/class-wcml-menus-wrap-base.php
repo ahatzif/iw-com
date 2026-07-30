@@ -2,9 +2,6 @@
 
 abstract class WCML_Menu_Wrap_Base extends WCML_Templates_Factory {
 
-	/**
-	 * @var \woocommerce_wpml $woocommerce_wpml
-	 */
 	protected $woocommerce_wpml;
 
 	public function __construct( woocommerce_wpml $woocommerce_wpml ) {
@@ -13,9 +10,6 @@ abstract class WCML_Menu_Wrap_Base extends WCML_Templates_Factory {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_model() {
 		return array_merge(
 			[
@@ -25,9 +19,6 @@ abstract class WCML_Menu_Wrap_Base extends WCML_Templates_Factory {
 		);
 	}
 
-	/**
-	 * @return array
-	 */
 	abstract protected function get_child_model();
 
 	protected function init_template_base_dir() {

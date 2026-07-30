@@ -2,22 +2,10 @@
 
 class WCML_Exchange_Rates_UI extends WCML_Templates_Factory {
 
-	/**
-	 * @var woocommerce_wpml
-	 */
 	private $woocommerce_wpml;
-	/**
-	 * @var \WCML_Exchange_Rates $exchange_rates_services
-	 */
 	private $exchange_rates_services;
 
-	/**
-	 * WCML_Exchange_Rates_UI constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 */
 	public function __construct( $woocommerce_wpml ) {
-		// @todo Cover by tests, required for wcml-3037.
 		parent::__construct();
 
 		$this->woocommerce_wpml        = $woocommerce_wpml;
@@ -78,9 +66,6 @@ class WCML_Exchange_Rates_UI extends WCML_Templates_Factory {
 		return $model;
 	}
 
-	/**
-	 * @return array
-	 */
 	private function get_services_model() {
 		$services = [];
 

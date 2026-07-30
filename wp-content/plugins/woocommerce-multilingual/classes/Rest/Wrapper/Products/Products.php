@@ -13,13 +13,9 @@ use WPML\FP\Obj;
 
 class Products extends Handler {
 
-	/** @var \SitePress */
 	private $sitepress;
-	/** @var \WPML_Post_Translation */
 	private $wpmlPostTranslations;
-	/** @var ProductSaveActions $productSaveActions */
 	private $productSaveActions;
-	/** @var \WCML_WC_Strings $strings */
 	private $strings;
 
 	public function __construct(
@@ -34,12 +30,6 @@ class Products extends Handler {
 		$this->strings              = $strings;
 	}
 
-	/**
-	 * @param array $args
-	 * @param \WP_REST_Request $request Request object.
-	 *
-	 * @return array
-	 */
 	public function query( $args, $request ) {
 		$data = $request->get_params();
 		if ( isset( $data['lang'] ) && $data['lang'] === 'all' ) {
@@ -50,15 +40,6 @@ class Products extends Handler {
 	}
 
 
-	/**
-	 * Appends the language and translation information to the get_product response
-	 *
-	 * @param \WP_REST_Response $response
-	 * @param object $object
-	 * @param \WP_REST_Request $request
-	 *
-	 * @return \WP_REST_Response
-	 */
 	public function prepare( $response, $object, $request ) {
 		$response->data['translations'] = [];
 
@@ -84,18 +65,6 @@ class Products extends Handler {
 	}
 
 
-	/**
-	 * Sets the product information according to the provided language
-	 *
-	 * @param object|\WC_Abstract_Legacy_Product $object
-	 * @param \WP_REST_Request                   $request
-	 * @param bool                               $creating
-	 *
-	 * @throws InvalidLanguage
-	 * @throws InvalidProduct
-	 * @throws Generic
-	 *
-	 */
 	public function insert( $object, $request, $creating ) {
 		$getParam = Obj::prop( Fns::__, $request->get_params() );
 

@@ -6,10 +6,6 @@ use WCML\OrderItems\Translator;
 
 class Product implements Translator {
 
-	/**
-	 * @param \WC_Order_Item $item
-	 * @param string         $targetLanguage
-	 */
 	public function translateItem( $item, $targetLanguage ) {
 		if ( ! $item instanceof \WC_Order_Item_Product ) {
 			return;

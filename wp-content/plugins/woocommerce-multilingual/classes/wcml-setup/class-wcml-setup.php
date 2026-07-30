@@ -3,25 +3,12 @@
 class WCML_Setup {
 	const MULTI_CURRENCY_STATUS_GET_KEY = 'enabled';
 
-	/** @var WCML_Setup_UI */
 	private $ui;
-	/** @var WCML_Setup_Handlers */
 	private $handlers;
-	/** @var array */
 	private $steps;
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
-	/** @var SitePress */
 	private $sitepress;
 
-	/**
-	 * WCML_Setup constructor.
-	 *
-	 * @param WCML_Setup_UI       $ui
-	 * @param WCML_Setup_Handlers $handlers
-	 * @param woocommerce_wpml    $woocommerce_wpml
-	 * @param SitePress           $sitepress
-	 */
 	public function __construct( WCML_Setup_UI $ui, WCML_Setup_Handlers $handlers, woocommerce_wpml $woocommerce_wpml, SitePress $sitepress ) {
 
 		$this->ui               = $ui;
@@ -72,7 +59,6 @@ class WCML_Setup {
 	}
 
 	private function is_submitting_last_step_multicurrency_status(): bool {
-		/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 		$value = \WPML\FP\Obj::prop( self::MULTI_CURRENCY_STATUS_GET_KEY, $_GET );
 
 		return in_array( $value, [ "0", "1" ], true );
@@ -101,16 +87,14 @@ class WCML_Setup {
 	}
 
 	private function do_not_redirect_to_setup() {
-		// Before WC 4.6.
 		$woocommerce_notices       = get_option( 'woocommerce_admin_notices', [] );
 		$woocommerce_setup_not_run = in_array( 'install', $woocommerce_notices, true );
 
-		// Since WC 4.6.
 		$needsWcWizardFirst = get_transient( '_wc_activation_redirect' );
 
 		return $this->is_wcml_setup_page() ||
 			is_network_admin() ||
-			isset( $_GET['activate-multi'] ) ||  /* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
+			isset( $_GET['activate-multi'] ) ||   
 			! current_user_can( 'manage_options' ) ||
 			$woocommerce_setup_not_run ||
 			$needsWcWizardFirst ||
@@ -118,16 +102,10 @@ class WCML_Setup {
 
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function is_wcml_setup_page() {
 		return isset( $_GET['page'] ) && WCML_Setup_UI::SLUG === $_GET['page'];
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function is_wcml_admin_page() {
 		return isset( $_GET['page'] ) && 'wcml' === $_GET['page'];
 	}
@@ -169,9 +147,6 @@ class WCML_Setup {
 		wp_die();
 	}
 
-	/**
-	 * @param string $step
-	 */
 	private function is_setup_complete( $step ): bool {
 		if ( WCML_Setup_Multi_Currency_UI::SLUG !== $step ) {
 			return false;
@@ -179,9 +154,6 @@ class WCML_Setup {
 		return $this->is_submitting_last_step_multicurrency_status();
 	}
 
-	/**
-	 * @return void
-	 */
 	private function redirect_to_tm_dashboard_on_setup_complete() {
 		wcml_safe_redirect( \WCML\Utilities\AdminUrl::getWPMLTMDashboard() );
 	}
@@ -206,18 +178,13 @@ class WCML_Setup {
 		$this->woocommerce_wpml->settings['set_up_wizard_splash'] = 1;
 		$this->woocommerce_wpml->update_settings();
 
-		/**
-		 * Fires after the setup wizard finishes.
-		 *
-		 * @since 5.3.0
-		 */
 		do_action( 'wcml_setup_completed' );
 	}
 
 	public function save_term_meta_thumbnail_id_to_copy() {
 		$tm_settings = $this->sitepress->get_setting( 'translation-management', [] );
 		if ( ! isset( $tm_settings['custom_term_fields_translation']['thumbnail_id'] ) ) {
-			$tm_settings['custom_term_fields_translation']['thumbnail_id'] = "1"; // since WCML 5.5.3
+			$tm_settings['custom_term_fields_translation']['thumbnail_id'] = "1";
 			$this->sitepress->set_setting( 'translation-management', $tm_settings, true );
 		}
 	}
@@ -249,11 +216,6 @@ class WCML_Setup {
 		return ! empty( $this->woocommerce_wpml->settings['set_up_wizard_run'] );
 	}
 
-	/**
-	 * @param string $url
-	 *
-	 * @return string
-	 */
 	public function redirect_filters( $url ) {
 		if ( isset( $_POST['next_step_url'] ) && $_POST['next_step_url'] ) {
 			$url = sanitize_text_field( $_POST['next_step_url'] );
@@ -262,11 +224,6 @@ class WCML_Setup {
 		return $url;
 	}
 
-	/**
-	 * @param string $step
-	 *
-	 * @return mixed
-	 */
 	private function get_handler( $step ) {
 		$handler = ! empty( $this->steps[ $step ]['handler'] ) ? $this->steps[ $step ]['handler'] : '';
 

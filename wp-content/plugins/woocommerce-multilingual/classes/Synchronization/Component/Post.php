@@ -6,11 +6,6 @@ use WCML\Utilities\DB;
 
 class Post extends Synchronizer {
 
-	/**
-	 * @param \WP_Post          $product
-	 * @param int[]             $translationsIds
-	 * @param array<int,string> $translationsLanguages
-	 */
 	public function run( $product, $translationsIds, $translationsLanguages ) {
 		$productsIds = array_merge( [ $product->ID ], $translationsIds );
 		$fields      = [ 'ID', 'post_parent' ];
@@ -25,7 +20,6 @@ class Post extends Synchronizer {
 
 		$fieldsInQuery = implode( ',', $fields );
 
-		// phpcs:disable WordPress.WP.PreparedSQL.NotPrepared
 		$productsData = $this->wpdb->get_results(
 			$this->wpdb->prepare(
 				"
@@ -38,7 +32,6 @@ class Post extends Synchronizer {
 			),
 			OBJECT_K
 		);
-		// phpcs:enable
 
 		$productData = $productsData[ $product->ID ] ?? null;
 		if ( ! $productData ) {
@@ -52,11 +45,6 @@ class Post extends Synchronizer {
 		$this->manageDate( $productData, $productsData );
 	}
 
-	/**
-	 * @param object            $productData
-	 * @param array<int,object> $translationsData
-	 * @param array<int,string> $translationsLanguages
-	 */
 	private function managePostParent( $productData, $translationsData, $translationsLanguages ) {
 		$productParent = $productData->post_parent;
 		if ( ! $productParent ) {
@@ -77,10 +65,6 @@ class Post extends Synchronizer {
 		}
 	}
 
-	/**
-	 * @param object            $productData
-	 * @param array<int,object> $translationsData
-	 */
 	private function manageMenuOrder( $productData, $translationsData ) {
 		if ( ! isset( $this->woocommerceWpml->settings['products_sync_order'] ) || !$this->woocommerceWpml->settings['products_sync_order'] ) {
 			return;
@@ -96,7 +80,6 @@ class Post extends Synchronizer {
 		}
 
 		if ( ! empty( $translationsToUpdate ) ) {
-			// phpcs:disable WordPress.WP.PreparedSQL.NotPrepared
 			$this->wpdb->query(
 				$this->wpdb->prepare(
 					"
@@ -107,14 +90,9 @@ class Post extends Synchronizer {
 					$productMenuOrder
 				)
 			);
-			// phpcs:enable
 		}
 	}
 
-	/**
-	 * @param object            $productData
-	 * @param array<int,object> $translationsData
-	 */
 	private function manageDate( $productData, $translationsData ) {
 		if ( empty( $this->woocommerceWpml->settings['products_sync_date'] ) ) {
 			return;
@@ -131,7 +109,6 @@ class Post extends Synchronizer {
 		}
 
 		if ( ! empty( $translationsToUpdate ) ) {
-			// phpcs:disable WordPress.WP.PreparedSQL.NotPrepared
 			$this->wpdb->query(
 				$this->wpdb->prepare(
 					"
@@ -143,7 +120,6 @@ class Post extends Synchronizer {
 					$productDateGmt
 				)
 			);
-			// phpcs:enable
 		}
 	}
 

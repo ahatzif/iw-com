@@ -12,12 +12,8 @@ use WPML\FP\Fns;
 
 class LookupTable implements \IWPML_Action {
 
-	/** @var \SitePress $sitepress */
 	private $sitepress;
 
-	/**
-	 * @param \SitePress $sitepress
-	 */
 	public function __construct( \SitePress $sitepress ) {
 		$this->sitepress = $sitepress;
 	}
@@ -26,18 +22,13 @@ class LookupTable implements \IWPML_Action {
 		Hooks::onAction( 'save_post' )
 			->then( spreadArgs( [ $this, 'triggerUpdateForTranslations' ] ) );
 
-		// For defered updates, we adjust terms filter just before the action scheduler.
 		Hooks::onAction( 'woocommerce_run_product_attribute_lookup_update_callback', 5 )
 			->then( [ $this, 'adjustTermsFilters' ] );
 
-		// When regenerating the table we need all products and all terms.
 		Hooks::onFilter( 'woocommerce_attribute_lookup_regeneration_step_size' )
 			->then( spreadArgs( Fns::tap( [ $this, 'regenerateTable' ] ) ) );
 	}
 
-	/**
-	 * @param int $productId
-	 */
 	public function triggerUpdateForTranslations( $productId ) {
 		if (
 			'product' === get_post_type( $productId )
@@ -54,7 +45,6 @@ class LookupTable implements \IWPML_Action {
 						switch_to_blog( $savedOnBlogId );
 					}
 
-					// For direct updates, we adjust terms filters just before triggering the update.
 					$hasTermsClausesFilter = $this->adjustTermsFilters();
 
 					wc_get_container()->get( ProductAttributesLookupDataStore::class )->on_product_changed( $productId );
@@ -68,9 +58,6 @@ class LookupTable implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @return \WCML\Utilities\Suspend\Suspend
-	 */
 	public function adjustTermsFilters() {
 		add_filter( 'woocommerce_product_get_attributes', [ $this, 'translateAttributeOptions' ], 10, 2 );
 		add_filter( 'woocommerce_product_variation_get_attributes', [ $this, 'translateVariationTerms' ], 10, 2 );
@@ -78,9 +65,6 @@ class LookupTable implements \IWPML_Action {
 		return SuspendWpmlFiltersFactory::create();
 	}
 
-	/**
-	 * @param \WCML\Utilities\Suspend\Suspend $filtersSuspend
-	 */
 	private function restoreTermsFilters( $filtersSuspend ) {
 		$filtersSuspend->resume();
 
@@ -88,12 +72,6 @@ class LookupTable implements \IWPML_Action {
 		remove_filter( 'woocommerce_product_variation_get_attributes', [ $this, 'translateVariationTerms' ] );
 	}
 
-	/**
-	 * @param \WC_Product_Attribute[] $attributes
-	 * @param \WC_Product             $product
-	 *
-	 * @return \WC_Product_Attribute[]
-	 */
 	public function translateAttributeOptions( $attributes, $product ) {
 		$language = $this->sitepress->get_language_for_element(
 			$product->get_id(),
@@ -101,7 +79,6 @@ class LookupTable implements \IWPML_Action {
 		);
 
 		if ( $language ) {
-			// $getTranslatedOptions :: string -> string|null
 			$getTranslatedOptions = function( $attribute, $taxonomy ) use ( $language ) {
 				$attribute->set_options( Ids::convert( $attribute->get_options(), $taxonomy, true, $language ) );
 
@@ -116,12 +93,6 @@ class LookupTable implements \IWPML_Action {
 		return $attributes;
 	}
 
-	/**
-	 * @param array                 $attributes
-	 * @param \WC_Product_Variation $product
-	 *
-	 * @return array
-	 */
 	public function translateVariationTerms( $attributes, $product ) {
 		$language = $this->sitepress->get_language_for_element(
 			$product->get_id(),
@@ -129,7 +100,6 @@ class LookupTable implements \IWPML_Action {
 		);
 
 		if ( $language ) {
-			// $getTranslatedSlug :: string -> string|null
 			$getTranslatedSlug = function( $slug, $taxonomy ) use ( $language ) {
 				$term = get_term_by( 'slug', $slug, $taxonomy );
 				if ( false === $term ) {

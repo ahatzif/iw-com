@@ -78,7 +78,6 @@ class WCML_Requests {
 
 		add_action( 'wp_ajax_wcml_ignore_warning', [ $this, 'update_settings_from_warning' ] );
 
-		// Override cached widget id.
 		add_filter( 'woocommerce_cached_widget_id', [ $this, 'override_cached_widget_id' ] );
 	}
 

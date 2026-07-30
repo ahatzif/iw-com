@@ -7,11 +7,8 @@ class WCML_Url_Translation {
 	const WC_STRING_CONTEXT = 'WooCommerce Endpoints';
 	
 
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
-	/** @var SitePress */
 	private $sitepress;
-	/** @var wpdb */
 	private $wpdb;
 
 	public $default_product_base;
@@ -21,13 +18,6 @@ class WCML_Url_Translation {
 	public $default_product_tag_gettext_base;
 	public $wc_permalinks;
 
-	/**
-	 * WCML_Url_Translation constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress        $sitepress
-	 * @param wpdb             $wpdb
-	 */
 	public function __construct( woocommerce_wpml $woocommerce_wpml, \WPML\Core\ISitePress $sitepress, wpdb $wpdb ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 		$this->sitepress        = $sitepress;
@@ -53,7 +43,7 @@ class WCML_Url_Translation {
 				],
 				1,
 				1
-			); // avoid using the _x translations.
+			);
 			add_action(
 				'init',
 				[
@@ -61,7 +51,7 @@ class WCML_Url_Translation {
 					'fix_post_object_rewrite_slug',
 				],
 				6
-			); // handle the particular case of the default product base: wpmlst-540.
+			);
 		}
 
 		add_filter(
@@ -72,9 +62,9 @@ class WCML_Url_Translation {
 			],
 			1,
 			1
-		); // high priority.
-		add_filter( 'option_rewrite_rules', [ $this, 'translate_bases_in_rewrite_rules' ], 0, 1 ); // high priority
-		add_filter( 'term_link', [ $this, 'translate_taxonomy_base' ], 0, 3 ); // high priority
+		);
+		add_filter( 'option_rewrite_rules', [ $this, 'translate_bases_in_rewrite_rules' ], 0, 1 );
+		add_filter( 'term_link', [ $this, 'translate_taxonomy_base' ], 0, 3 );
 		add_filter( 'woocommerce_taxonomy_archive_description_raw', [ $this, 'process_taxonomy_description_links' ], 10, 2 );
 
 		add_action( 'wp_ajax_wcml_update_base_translation', [ $this, 'wcml_update_base_translation' ] );
@@ -89,7 +79,6 @@ class WCML_Url_Translation {
 
 			$this->clean_up_product_and_taxonomy_bases();
 
-			// set translate product by default
 			$this->translate_product_base();
 
 			$this->register_product_and_taxonomy_bases();
@@ -101,10 +90,6 @@ class WCML_Url_Translation {
 		add_action( 'init', [ $this, 'add_hooks_after_init' ], PHP_INT_MAX );
 	}
 
-	/**
-	 * Only after 'init' we can check if the product is set as "Display as Translated".
-	 * Thanks to this, instead of checking every time the filter is called, we can check it at the registration level once.
-	 */
 	public function add_hooks_after_init() {
 		if ( ! is_admin() ) {
 			if ( $this->isProductDisplayAsTranslatedDocument() ) {
@@ -121,13 +106,6 @@ class WCML_Url_Translation {
 		add_filter( 'wpml_absolute_links_permalink_query_vars', [ $this, 'adjustQueryVarsOfShopAbsoluteLink' ], 10, 3 );
 	}
 
-	/**
-	 * @param array  $permalink_query_vars
-	 * @param string $query
-	 * @param string $language
-	 *
-	 * @return array
-	 */
 	public function adjustQueryVarsOfShopAbsoluteLink( $permalink_query_vars, $query, $language ) {
 		if ( 'post_type=product' === $query ) {
 			$default_language = $this->sitepress->get_default_language();
@@ -147,11 +125,6 @@ class WCML_Url_Translation {
 		return $permalink_query_vars;
 	}
 
-	/**
-	 * @param \stdClass $elementLanguageDetails
-	 *
-	 * @return \stdClass
-	 */
 	public function translate_product_slug_when_product_is_display_as_translated_document( $elementLanguageDetails ) {
 		if ( $elementLanguageDetails->source_language_code ) {
 			return $elementLanguageDetails;
@@ -167,17 +140,10 @@ class WCML_Url_Translation {
 		return $elementLanguageDetails;
 	}
 
-	/**
-	 * This method depends on the registration of all CPTs [`register_post_type()`]
-	 * which should not happen before init
-	 */
 	private function isProductDisplayAsTranslatedDocument(): bool {
 		return in_array( 'product', \WPML\API\PostTypes::getDisplayAsTranslated(), true );
 	}
 
-	/**
-	 * Refreshes the CoCommerce permalink settings from its stored option.
-	 */
 	public function flushWcSettings() {
 		$this->wc_permalinks = get_option( 'woocommerce_permalinks' );
 	}
@@ -186,7 +152,6 @@ class WCML_Url_Translation {
 
 		$base = $this->get_woocommerce_product_base();
 
-		// delete other old product bases
 		$this->wpdb->query( 
 			$this->wpdb->prepare(
 				"DELETE FROM {$this->wpdb->prefix}icl_strings WHERE context = %s AND value != %s AND name LIKE 'URL slug:%' ",
@@ -195,7 +160,6 @@ class WCML_Url_Translation {
 			)
 		);
 
-		// update name for current base
 		$this->wpdb->update(
 			$this->wpdb->prefix . 'icl_strings',
 			[
@@ -246,23 +210,10 @@ class WCML_Url_Translation {
 		}
 	}
 
-	/**
-	 * @return string
-	 *
-	 * @deprecated Use Strings::TRANSLATION_DOMAIN.
-	 */
 	public function url_strings_context() {
 		return Strings::TRANSLATION_DOMAIN;
 	}
 
-	/**
-	 * @param string $type
-	 * @param string $value
-	 *
-	 * @return string
-	 *
-	 * @deprecated Use Strings::getStringName().
-	 */
 	public function url_string_name( $type, $value = '' ) {
 		return Strings::getStringName( $type, $value );
 	}
@@ -283,30 +234,11 @@ class WCML_Url_Translation {
 		} elseif ( get_option( 'woocommerce_product_slug' ) != false ) {
 			return trim( get_option( 'woocommerce_product_slug' ), '/' );
 		} else {
-			return $this->default_product_base; // the default WooCommerce value. Before permalinks options are saved
+			return $this->default_product_base;
 		}
 
 	}
 
-	/**
-	 * Registers some permalink bases for translation.
-	 *
-	 * This also:
-	 * - Maybe sets the string languages for those bases, when saving them from the permalinks settings page.
-	 *   See $_POST['{item}_base_language'].
-	 *   See \WCML\Permalinks\Settings\TranslationControls::registerStringsOnSave().
-	 * - Maybe sets missing translations for default bases, if provided by WooCommerce itself.
-	 *
-	 * This method is called in multiple places, and also used to be a callback for the pre_update_option_woocommerce_permalinks filter.
-	 * For backward compatibility, it still takes two optional parameters and returns the first, untouched one.
-	 *
-	 * @see https://onthegosystems.myjetbrains.com/youtrack/issue/wcml-4739
-	 *
-	 * @param array|false $wcPermalinks The WooCommerce permalink settings to use, defaults to the stored ones.
-	 * @param array|false $deprecated   Not used, never used.
-	 *
-	 * @return array|false
-	 */
 	public function register_product_and_taxonomy_bases( $wcPermalinks = false, $deprecated = false ) {
 
 		if ( empty( $wcPermalinks ) ) {
@@ -315,7 +247,6 @@ class WCML_Url_Translation {
 			$permalink_options = $wcPermalinks;
 		}
 
-		// products
 		$product_base = ! empty( $permalink_options['product_base'] ) ? trim( $permalink_options['product_base'], '/' ) : $this->default_product_base;
 		$name         = Strings::getStringName( 'product' );
 
@@ -333,7 +264,6 @@ class WCML_Url_Translation {
 			$this->add_default_slug_translations( $product_base, $name );
 		}
 
-		// categories
 		$category_base = ! empty( $permalink_options['category_base'] ) ? $permalink_options['category_base'] : $this->default_product_category_base;
 		$name          = Strings::getStringName( 'product_cat' );
 
@@ -351,7 +281,6 @@ class WCML_Url_Translation {
 			$this->add_default_slug_translations( $category_base, $name );
 		}
 
-		// tags
 		$tag_base = ! empty( $permalink_options['tag_base'] ) ? $permalink_options['tag_base'] : $this->default_product_tag_base;
 		$name     = Strings::getStringName( 'product_tag' );
 
@@ -387,14 +316,8 @@ class WCML_Url_Translation {
 		return $wcPermalinks;
 	}
 
-	/**
-	 * @param mixed $permalinks
-	 *
-	 * @return mixed
-	 */
 	public function use_untranslated_default_url_bases( $permalinks ) {
 
-		// exception (index.php in WP permalink structure) #wcml-1939
 		if ( preg_match( '#^/?index\.php/#', get_option( 'permalink_structure' ) ) ) {
 			return $permalinks;
 		}
@@ -417,7 +340,6 @@ class WCML_Url_Translation {
 		$string_id       = icl_get_string_id( $slug, Strings::TRANSLATION_DOMAIN, $name );
 		$string_language = $this->woocommerce_wpml->strings->get_string_language( $slug, Strings::TRANSLATION_DOMAIN, $name );
 
-		// will use a filter in the future wpmlst-529
 		$string_object               = new WPML_ST_String( $string_id, $this->wpdb );
 		$string_translation_statuses = $string_object->get_translation_statuses();
 
@@ -431,13 +353,11 @@ class WCML_Url_Translation {
 
 			if ( $language != $string_language ) {
 
-				// check if there's an existing translation
 				if ( ! isset( $string_translations[ $language ] ) ) {
 
 					$slug_translation = $this->woocommerce_wpml->strings->get_translation_from_woocommerce_mo_file( $slug, $language, false );
 
 					if ( $slug_translation ) {
-						// add string translation
 						icl_add_string_translation( $string_id, $language, $slug_translation, ICL_STRING_TRANSLATION_COMPLETE );
 					}
 				}
@@ -509,11 +429,6 @@ class WCML_Url_Translation {
 
 	}
 
-	/**
-	 * @param array $value
-	 *
-	 * @return array
-	 */
 	public function translate_bases_in_rewrite_rules( $value ) {
 
 		if ( ! empty( $value ) ) {
@@ -525,11 +440,6 @@ class WCML_Url_Translation {
 		return $value;
 	}
 
-	/**
-	 * @param array $value
-	 *
-	 * @return array
-	 */
 	public function translate_wc_default_taxonomies_bases_in_rewrite_rules( $value ) {
 		$taxonomies = [ WCTaxonomies::TAXONOMY_PRODUCT_CATEGORY, WCTaxonomies::TAXONOMY_PRODUCT_TAG ];
 
@@ -564,14 +474,8 @@ class WCML_Url_Translation {
 		return $value;
 	}
 
-	/**
-	 * @param array $value
-	 *
-	 * @return array
-	 */
 	public function translate_attributes_bases_in_rewrite_rules( $value ) {
 
-		// handle attributes
 		$wc_taxonomies           = wc_get_attribute_taxonomies();
 		$wc_taxonomies_wc_format = [];
 		foreach ( $wc_taxonomies as $v ) {
@@ -624,13 +528,7 @@ class WCML_Url_Translation {
 
 	}
 
-	/**
-	 * @param array $value
-	 *
-	 * @return array
-	 */
 	public function translate_shop_page_base_in_rewrite_rules( $value ) {
-		// filter shop page rewrite slug
 		$current_shop_id = wc_get_page_id( 'shop' );
 		$default_shop_id = apply_filters( 'wpml_object_id', $current_shop_id, 'page', true, $this->sitepress->get_default_language() );
 
@@ -663,14 +561,6 @@ class WCML_Url_Translation {
 		return $value;
 	}
 
-	/**
-	 * @param array  $value
-	 * @param string $pattern
-	 * @param string $replacement_pattern
-	 * @param string $replacement
-	 *
-	 * @return array
-	 */
 	public function replace_bases_in_rewrite_rules( $value, $pattern, $replacement_pattern, $replacement ) {
 
 		$buff_value = [];
@@ -691,7 +581,6 @@ class WCML_Url_Translation {
 		global $wp_rewrite, $wpml_term_translations;
 		static $no_recursion_flag;
 
-		// handles product categories, product tags and attributes
 		$wc_taxonomies = wc_get_attribute_taxonomies();
 		foreach ( $wc_taxonomies as $v ) {
 			$wc_taxonomies_wc_format[] = WCTaxonomies::TAXONOMY_PREFIX_ATTRIBUTE . $v->attribute_name;
@@ -724,11 +613,9 @@ class WCML_Url_Translation {
 						$buff = $wp_rewrite->extra_permastructs[ $taxonomy ]['struct'];
 
 						if ( $base_translated !== $base ) {
-							// translate the attribute base
 							$wp_rewrite->extra_permastructs[ $taxonomy ]['struct'] = preg_replace( '#^' . $base . '/(.*)#', $base_translated . '/$1', $wp_rewrite->extra_permastructs[ $taxonomy ]['struct'] );
 						}
 
-						// translate the attribute slug
 						$attribute_slug             = preg_replace( '#^' . $base . '/([^/]+)/.+$#', '$1', $wp_rewrite->extra_permastructs[ $taxonomy ]['struct'] );
 						$attribute_slug_default     = preg_replace( '#^pa_#', '', $taxonomy );
 						$attribute_slug_translation = apply_filters(
@@ -773,14 +660,6 @@ class WCML_Url_Translation {
 		return $termlink;
 	}
 
-	/**
-	 * Currently, html links placed in the product category description are not always translated
-	 *
-	 * @param string|mixed $term_description Raw description text.
-	 * @param WP_Term      $term Term object for this taxonomy archive.
-	 *
-	 * @return string|mixed
-	 */
 	public function process_taxonomy_description_links( $term_description, $term ) {
 		if ( ! is_string( $term_description ) ) {
 			return $term_description;
@@ -848,7 +727,6 @@ class WCML_Url_Translation {
 	public function get_base_translation( $base, $language ) {
 		$original_base = $base;
 
-		// case of attribute slugs
 		if ( strpos( $base, 'attribute_slug-' ) === 0 ) {
 			$base = 'attribute_slug';
 		}
@@ -918,11 +796,6 @@ class WCML_Url_Translation {
 		return class_exists( WPML_Endpoints_Support::class ) ? WPML_Endpoints_Support::STRING_CONTEXT : self::WC_STRING_CONTEXT;
 	}
 
-	/**
-	 * @param string $base
-	 *
-	 * @return string
-	 */
 	public function get_source_slug_language( $base ) {
 
 		if ( $base == 'shop' ) {
@@ -980,7 +853,6 @@ class WCML_Url_Translation {
 		}
 
 		if ( in_array( $original_base, [ WCTaxonomies::TAXONOMY_PRODUCT_CATEGORY, WCTaxonomies::TAXONOMY_PRODUCT_TAG ], true ) ) {
-			// Notify WPML that the taxonomy slug was translated.
 			do_action( 'wpml_activate_slug_translation', $original_base, $original_base_value, WPML_Slug_Translation_Factory::TAX );
 		}
 
@@ -992,7 +864,6 @@ class WCML_Url_Translation {
 
 	}
 
-	// return correct redirect URL for WC standard taxonomies when pretty permalink uses with lang as parameter in WPML
 	public function check_wc_tax_url_on_redirect( $redirect_url, $requested_url ) {
 		global $wp_query;
 
@@ -1064,14 +935,12 @@ class WCML_Url_Translation {
 
 	public function translate_product_post_type_link( $permalink, $post ) {
 
-		// Abort if post is not a product or permalink don't have 'uncategorized' flag
 		if ( 'product' !== $post->post_type || false === strpos( $permalink, '/uncategorized/' ) ) {
 			return $permalink;
 		}
 
 		$permalinks = wc_get_permalink_structure();
 
-		// Make sure the product permalink have %product_cat% flag.
 		if ( preg_match( '`/(.+)(/%product_cat%)`', $permalinks['product_rewrite_slug'] ) ) {
 			$find             = 'uncategorized';
 			$element_language = $this->sitepress->get_language_for_element( $post->ID, 'post_product' );

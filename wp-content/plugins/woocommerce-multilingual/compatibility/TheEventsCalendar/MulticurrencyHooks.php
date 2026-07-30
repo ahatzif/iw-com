@@ -10,11 +10,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param float $cost
-	 *
-	 * @return float
-	 */
 	public function convert_events_cost( $cost ) {
 		return apply_filters( 'wcml_raw_price_amount', $cost );
 	}

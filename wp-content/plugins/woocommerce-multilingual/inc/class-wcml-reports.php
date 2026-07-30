@@ -2,13 +2,6 @@
 
 use WCML\Utilities\DB;
 
-/**
- * This class is responsible for handling legacy WC reports. Legacy WC reports are being phased out in favor of newer WC analytics.
- * Legacy WC reports are not HPOS-compatible: https://github.com/woocommerce/woocommerce/issues/40671
- *
- * @deprecated This class is deprecated and should no longer be used because it's incompatible with HPOS.
- * @link https://onthegosystems.myjetbrains.com/youtrack/issue/wcml-4489
- */
 class WCML_Reports{
 
     public $tab;
@@ -92,13 +85,13 @@ class WCML_Reports{
                     $query[ 'where' ] = str_replace( "order_item_meta__product_id.meta_value = '{$product_id}'", "order_item_meta__product_id.meta_value IN (" . DB::prepareIn( array_filter( $product_ids ), '%d' ) . ")", $query[ 'where' ] );
                 }
 
-                $query[ 'select' ] .= ', translations.language_code AS language_code_' . esc_sql( str_replace('-', '_', $current_language)  ); // user for per-language caching.
+                $query[ 'select' ] .= ', translations.language_code AS language_code_' . esc_sql( str_replace('-', '_', $current_language)  );
 
             }elseif(
-                $query[ 'select' ]==='SELECT SUM( order_item_meta__line_total.meta_value) as order_item_amount' || //sales for the selected items
-                $query[ 'select' ]==='SELECT SUM( order_item_meta__qty.meta_value) as order_item_count'         || //purchases for the selected items
-                $query[ 'select' ]==='SELECT SUM( order_item_meta__qty.meta_value) as order_item_count, posts.post_date as post_date, order_item_meta__product_id.meta_value as product_id' || //Get orders and dates in range - main chart: order_item_counts
-                $query[ 'select' ]==='SELECT SUM( order_item_meta__line_total.meta_value) as order_item_amount, posts.post_date as post_date, order_item_meta__product_id.meta_value as product_id' //Get orders and dates in range - main chart: order_item_amounts
+                $query[ 'select' ]==='SELECT SUM( order_item_meta__line_total.meta_value) as order_item_amount' ||
+                $query[ 'select' ]==='SELECT SUM( order_item_meta__qty.meta_value) as order_item_count'         ||
+                $query[ 'select' ]==='SELECT SUM( order_item_meta__qty.meta_value) as order_item_count, posts.post_date as post_date, order_item_meta__product_id.meta_value as product_id' ||
+                $query[ 'select' ]==='SELECT SUM( order_item_meta__line_total.meta_value) as order_item_amount, posts.post_date as post_date, order_item_meta__product_id.meta_value as product_id'
 
             ){
                 preg_match("#order_item_meta__product_id_array\.meta_value IN \(([^\)]+)\)#", $query[ 'where' ], $matches);

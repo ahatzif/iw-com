@@ -16,19 +16,10 @@ class GroupsAndLabels implements \IWPML_Action {
 	const RESOURCE_GROUP_SUFFIX = '/resource';
 	const RESOURCE_GROUP_LABEL  = 'Resource';
 
-	/**
-	 * Adds hooks.
-	 */
 	public function add_hooks() {
 		add_filter( 'wpml_tm_adjust_translation_fields', [ $this, 'adjustFields' ], 10, 2 );
 	}
 
-	/**
-	 * @param array[]   $fields
-	 * @param \stdClass $job
-	 *
-	 * @return array[]
-	 */
 	public function adjustFields( $fields, $job ) {
 		if ( ! SharedHooks::isBooking( $job->original_doc_id ) ) {
 			return $fields;
@@ -41,11 +32,6 @@ class GroupsAndLabels implements \IWPML_Action {
 		return $fields;
 	}
 
-	/**
-	 * @param array $field
-	 *
-	 * @return array
-	 */
 	private function adjustField( $field ) {
 		$typeStartsWith = Str::startsWith( Fns::__, Obj::prop( 'field_type', $field ) );
 

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * Class WCML_Currency_Switcher_Properties
- *
- * Main class
- */
 class WCML_Currency_Switcher_Properties {
 
 	public function is_currency_switcher_active( $switcher_id, $wcml_settings ) {

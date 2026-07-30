@@ -4,9 +4,6 @@ namespace WCML\Reviews\Translations;
 
 class Mapper {
 
-	/**
-	 * @var \wpdb
-	 */
 	private $wpdb;
 
 	public function __construct( \wpdb $wpdb ) {
@@ -19,18 +16,11 @@ class Mapper {
 		}
 	}
 
-	/**
-	 * @return int
-	 */
 	public function countMissingReviewStrings() {
 		return count( $this->getUnregisteredReviews() );
 	}
 
-	/**
-	 * @return array
-	 */
 	private function getUnregisteredReviews() {
-		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
 		$sql = "
 SELECT c.comment_ID,
        c.comment_post_ID,

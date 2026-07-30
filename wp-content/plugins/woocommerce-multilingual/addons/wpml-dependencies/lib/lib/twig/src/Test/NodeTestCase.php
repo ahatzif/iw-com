@@ -18,9 +18,6 @@ use WPML\Core\Twig\Node\Node;
 abstract class NodeTestCase extends \WPML\Core\PHPUnit\Framework\TestCase
 {
     public abstract function getTests();
-    /**
-     * @dataProvider getTests
-     */
     public function testCompile($node, $source, $environment = null, $isPattern = \false)
     {
         $this->assertNodeCompilation($source, $node, $environment, $isPattern);

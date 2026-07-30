@@ -1,16 +1,10 @@
 <?php
 
 class WCML_Status_Taxonomies_UI extends WCML_Templates_Factory {
-	/** @var \woocommerce_wpml */
 	private $woocommerce_wpml;
 
-	/** @var \SitePress */
 	private $sitepress;
 
-	/**
-	 * @param \SitePress        $sitepress
-	 * @param \woocommerce_wpml $woocommerce_wpml
-	 */
 	public function __construct( $sitepress, $woocommerce_wpml ) {
 		parent::__construct();
 

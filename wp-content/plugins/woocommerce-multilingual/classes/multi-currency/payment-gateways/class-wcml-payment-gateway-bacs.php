@@ -1,8 +1,5 @@
 <?php
 
-/**
- * Class WCML_Payment_Gateway_Bacs
- */
 class WCML_Payment_Gateway_Bacs extends WCML_Payment_Gateway {
 
 	public function get_output_model() {

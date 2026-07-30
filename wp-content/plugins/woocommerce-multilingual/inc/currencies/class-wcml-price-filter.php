@@ -2,16 +2,8 @@
 
 class WCML_Price_Filter {
 
-	/**
-	 * @var woocommerce_wpml
-	 */
 	private $woocommerce_wpml;
 
-	/**
-	 * WCML_Price_Filter constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 */
 	public function __construct( woocommerce_wpml $woocommerce_wpml ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 	}
@@ -37,11 +29,6 @@ class WCML_Price_Filter {
 		<?php
 	}
 
-	/**
-	 * @param array $meta_query
-	 *
-	 * @return array
-	 */
 	public function unconvert_price_filter_limits( $meta_query ) {
 
 		$multi_currency = $this->woocommerce_wpml->multi_currency;

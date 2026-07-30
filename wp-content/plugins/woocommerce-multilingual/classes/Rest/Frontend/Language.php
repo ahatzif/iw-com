@@ -8,10 +8,8 @@ use WPML_URL_Converter;
 
 class Language {
 
-	/** @var WPML_Cookie $cookie */
 	private $cookie;
 
-	/** @var WPML_URL_Converter $urlConverter */
 	private $urlConverter;
 
 	public function __construct(
@@ -22,7 +20,6 @@ class Language {
 		$this->urlConverter = $urlConverter;
 	}
 
-	/** @return string */
 	public function get() {
 		$lang = $this->cookie->get_cookie( WCML_Switch_Lang_Request::COOKIE_NAME );
 

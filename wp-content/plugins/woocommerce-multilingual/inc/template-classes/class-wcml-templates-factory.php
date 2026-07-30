@@ -8,15 +8,6 @@ use WPML\Core\Twig_Loader_Filesystem;
 
 abstract class WCML_Templates_Factory extends WPML_Templates_Factory {
 
-	/**
-	 * @param string $template
-	 * @param array  $model
-	 *
-	 * @return string
-	 * @throws Twig_Error_Syntax
-	 * @throws Twig_Error_Runtime
-	 * @throws Twig_Error_Loader
-	 */
 	public function get_view( $template = null, $model = null ) {
 		$output = '';
 		$this->maybe_init_twig();
@@ -31,7 +22,6 @@ abstract class WCML_Templates_Factory extends WPML_Templates_Factory {
 		$this->before_render();
 
 		try {
-			/* @phpstan-ignore class.notFound */
 			$output = $this->twig->render( $template, $model );
 		} catch ( RuntimeException $e ) {
 			if ( $this->is_caching_enabled() ) {
@@ -54,9 +44,6 @@ abstract class WCML_Templates_Factory extends WPML_Templates_Factory {
 
 	}
 
-	/**
-	 * Maybe init twig for WCML
-	 */
 	protected function maybe_init_twig() {
 		if ( $this->twig instanceof Twig_Environment ) {
 			return;
@@ -81,15 +68,12 @@ abstract class WCML_Templates_Factory extends WPML_Templates_Factory {
 				}
 			}
 
-			/* @phpstan-ignore assign.propertyType */
 			$this->twig = $this->get_twig_environment( $loader, $environment_args );
-		/** @phpstan-ignore-next-line function.alreadyNarrowedType */
 			if ( is_array( $this->custom_functions ) ) {
 				foreach ( $this->custom_functions as $custom_function ) {
 					$this->twig->addFunction( $custom_function );
 				}
 			}
-			/** @phpstan-ignore-next-line function.alreadyNarrowedType */
 			if ( is_array( $this->custom_filters ) ) {
 				foreach ( $this->custom_filters as $custom_filter ) {
 					$this->twig->addFilter( $custom_filter );
@@ -97,17 +81,10 @@ abstract class WCML_Templates_Factory extends WPML_Templates_Factory {
 			}
 	}
 
-	/**
-	 * @return Twig_Loader_Filesystem
-	 */
 	protected function get_twig_loader() {
 		return new Twig_Loader_Filesystem( $this->template_paths );
 	}
 
-	/**
-	 * @param Twig_Loader_Filesystem $loader
-	 * @param array                  $environment_args
-	 */
 	private function get_twig_environment( $loader, $environment_args ): Twig_Environment {
 		return new Twig_Environment( $loader, $environment_args );
 	}

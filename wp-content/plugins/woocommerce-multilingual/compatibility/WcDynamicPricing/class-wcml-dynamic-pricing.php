@@ -2,21 +2,10 @@
 
 use WPML\FP\Obj;
 
-/**
- * Class WCML_Dynamic_Pricing
- */
 class WCML_Dynamic_Pricing implements \IWPML_Action {
 
-	/**
-	 * @var SitePress
-	 */
 	private $sitepress;
 
-	/**
-	 * WCML_Dynamic_Pricing constructor.
-	 *
-	 * @param SitePress $sitepress
-	 */
 	public function __construct( SitePress $sitepress ) {
 		$this->sitepress = $sitepress;
 	}
@@ -32,11 +21,6 @@ class WCML_Dynamic_Pricing implements \IWPML_Action {
 		add_filter( 'woocommerce_product_get__pricing_rules', [ $this, 'translate_variations_in_rules' ] );
 	}
 
-	/**
-	 * @param array $modules
-	 *
-	 * @return array
-	 */
 	public function translate_collector_args( $modules ) {
 		foreach ( $modules as $mod_key => $module ) {
 			if ( isset( $module->available_advanced_rulesets ) ) {
@@ -55,13 +39,6 @@ class WCML_Dynamic_Pricing implements \IWPML_Action {
 		return $modules;
 	}
 
-	/**
-	 * @param boolean $result
-	 * @param int     $product_id
-	 * @param array   $categories
-	 *
-	 * @return boolean
-	 */
 	public function is_object_in_translated_terms( $result, $product_id, $categories ) {
 		foreach ( $categories as &$cat_id ) {
 			$cat_id = apply_filters( 'wpml_object_id', $cat_id, 'product_cat', true );
@@ -72,15 +49,6 @@ class WCML_Dynamic_Pricing implements \IWPML_Action {
 		return is_object_in_term( $product_id, 'product_cat', $categories );
 	}
 
-	/**
-	 * @param bool                                                            $process_discounts
-	 * @param WC_Product                                                      $_product
-	 * @param int                                                             $module_id
-	 * @param WC_Dynamic_Pricing_Simple_Base|WC_Dynamic_Pricing_Advanced_Base $dynamic_pricing
-	 * @param array|int                                                       $cat_ids
-	 *
-	 * @return bool|WP_Error
-	 */
 	public function woocommerce_dynamic_pricing_is_applied_to( $process_discounts, WC_Product $_product, $module_id, $dynamic_pricing, $cat_ids ) {
 		if ( ! $cat_ids || ! $this->has_requirements( $dynamic_pricing ) ) {
 			return $process_discounts;
@@ -95,24 +63,15 @@ class WCML_Dynamic_Pricing implements \IWPML_Action {
 		return is_object_in_term( $product_id, $taxonomy, $this->adjust_cat_ids( $cat_ids, $taxonomy ) );
 	}
 
-	/**
-	 * @param WC_Dynamic_Pricing_Simple_Base|WC_Dynamic_Pricing_Advanced_Base|mixed $dynamic_pricing
-	 */
 	private function get_taxonomy( $dynamic_pricing ): string {
 		$taxonomy = 'product_cat';
 		if ( $dynamic_pricing instanceof WC_Dynamic_Pricing_Simple_Taxonomy || $dynamic_pricing instanceof WC_Dynamic_Pricing_Advanced_Taxonomy ) {
-			/* @phpstan-ignore property.notFound */
 			$taxonomy = $dynamic_pricing->taxonomy;
 		}
 
 		return $taxonomy;
 	}
 
-	/**
-	 * @param WC_Dynamic_Pricing_Simple_Base|WC_Dynamic_Pricing_Advanced_Base $dynamic_pricing
-	 *
-	 * @return bool
-	 */
 	private function has_requirements( $dynamic_pricing ) {
 		$requirements = [
 			'WC_Dynamic_Pricing_Advanced_Category' => [
@@ -158,12 +117,6 @@ class WCML_Dynamic_Pricing implements \IWPML_Action {
 		return false;
 	}
 
-	/**
-	 * @param array|int $cat_ids
-	 * @param string    $taxonomy
-	 *
-	 * @return array
-	 */
 	private function adjust_cat_ids( $cat_ids, $taxonomy ) {
 		if ( ! is_array( $cat_ids ) ) {
 			$cat_ids = [ $cat_ids ];
@@ -177,11 +130,6 @@ class WCML_Dynamic_Pricing implements \IWPML_Action {
 		);
 	}
 
-	/**
-	 * @param array|mixed $rules
-	 *
-	 * @return array|mixed
-	 */
 	public function translate_variations_in_rules( $rules ) {
 		if ( is_array( $rules ) ) {
 			foreach ( $rules as $r_key => $rule ) {

@@ -13,13 +13,6 @@ class Factory implements \IWPML_Deferred_Action_Loader, \IWPML_Frontend_Action_L
 		];
 	}
 
-	/**
-	 * These hooks are deferred to allow 3rd party
-	 * themes/plugins to disable the feature
-	 * with 'wcml_enable_product_review_translation'.
-	 *
-	 * @return string
-	 */
 	public function get_load_action() {
 		return 'init';
 	}

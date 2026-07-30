@@ -2,7 +2,6 @@
 
 class WCML_Coupons {
 
-	/** @var SitePress */
 	private $sitepress;
 
 	public function __construct( SitePress $sitepress ) {
@@ -49,9 +48,6 @@ class WCML_Coupons {
 		}
 	}
 
-	/**
-	 * @param WC_Coupon $coupon Coupon object.
-	 */
 	public function wcml_coupon_loaded( WC_Coupon $coupon ) {
 
 		$this->apply_translated_product_ids( $coupon->get_product_ids(), $coupon, 'set_product_ids' );
@@ -68,14 +64,6 @@ class WCML_Coupons {
 		}
 	}
 
-	/**
-	 * @param bool $valid
-	 * @param WC_Product $product
-	 * @param WC_Coupon $object
-	 * @param array $values
-	 *
-	 * @return bool
-	 */
 	public function is_valid_for_product( $valid, $product, $object, $values ) {
 
 		$product_id = $product->is_type( 'variation' ) ? $product->get_parent_id() : $product->get_id();

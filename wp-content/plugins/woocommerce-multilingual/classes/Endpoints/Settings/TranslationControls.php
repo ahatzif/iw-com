@@ -33,9 +33,6 @@ class TranslationControls extends TranslationControlsBase {
 		add_action( 'woocommerce_update_options_advanced', [ $this, 'registerStringsOnSave' ] );
 	}
 
-	/**
-	 * @return bool
-	 */
 	protected function isAdminPage() {
 		return WcAdminPages::isAdvancedSettings();
 	}
@@ -43,24 +40,9 @@ class TranslationControls extends TranslationControlsBase {
 	public function translationInstructions() {}
 
 	private function getOptionNames() {
-		/**
-		 * Register WooCommerce endpoints that should get language controls, as a key => input ID pair.
-		 *
-		 * The key should match the query var used to define the endpoint.
-		 * The input ID should match the ID of the input holding the endpoint value in the WooCommerce advanced settings tab..
-		 *
-		 * @since 5.5.3
-		 *
-		 * @param array<string,string> $keysToOptions An array of key => input ID pairs.
-		 *
-		 * @return array<string,string>
-		 */
 		return apply_filters( 'wcml_endpoints_translation_controls', self::OPTION_NAMES );
 	}
 
-	/**
-	 * @return array
-	 */
 	protected function getTranslationControls() {
 		$optionNames         = $this->getOptionNames();
 		$translationControls = [];
@@ -80,7 +62,6 @@ class TranslationControls extends TranslationControlsBase {
 	public function registerStringsOnSave() {
 		$optionNames = $this->getOptionNames();
 
-		/* phpcs:ignore WordPress.Security.NonceVerification.Missing */
 		wpml_collect( $_POST )
 			->filter( function( $language, $key ) {
 				return Str::startsWith( self::KEY_PREFIX . '-', $key );
@@ -97,7 +78,6 @@ class TranslationControls extends TranslationControlsBase {
 				$stringValue = wp_kses_post( Obj::propOr(
 					'',
 					$this->getInputName( $stringName, $optionName ),
-					/* phpcs:ignore WordPress.Security.NonceVerification.Missing */
 					$_POST
 				) );
 				if ( empty( $stringValue ) ) {
@@ -107,42 +87,18 @@ class TranslationControls extends TranslationControlsBase {
 			} );
 	}
 
-	/**
-	 * @param string $stringName
-	 * @param string $optionName
-	 *
-	 * @return string
-	 */
 	protected function getStringName( $stringName, $optionName ) {
 		return $stringName;
 	}
 
-	/**
-	 * @param string $stringName
-	 * @param string $optionName
-	 *
-	 * @return string
-	 */
 	protected function getInputId( $stringName, $optionName ) {
 		return $optionName;
 	}
 
-	/**
-	 * @param string $stringName
-	 * @param string $optionName
-	 *
-	 * @return string
-	 */
 	protected function getLanguageSelectorId( $stringName, $optionName ) {
 		return $stringName . '_' . self::LANGUAGE_SELECTOR_ID_SUFFIX;
 	}
 
-	/**
-	 * @param string $stringName
-	 * @param string $optionName
-	 *
-	 * @return string
-	 */
 	protected function getLanguageSelectorName( $stringName, $optionName ) {
 		return self::KEY_PREFIX . '-' . $stringName;
 	}

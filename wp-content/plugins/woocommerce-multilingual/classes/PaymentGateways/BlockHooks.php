@@ -9,9 +9,6 @@ use function WPML\FP\spreadArgs;
 
 class BlockHooks implements \IWPML_Action {
 
-	/**
-	 * @var \woocommerce_wpml
-	 */
 	private $woocommerce_wpml;
 
 	public function __construct( \woocommerce_wpml $woocommerce_wpml ) {
@@ -23,9 +20,6 @@ class BlockHooks implements \IWPML_Action {
 			->then( spreadArgs( [ $this, 'translateSettings' ] ) );
 	}
 
-	/**
-	 * @param PaymentMethodRegistry $registry
-	 */
 	public function translateSettings( $registry ) {
 		if ( $this->woocommerce_wpml->gateways instanceof \WCML_WC_Gateways ) {
 			foreach ( $registry->get_all_registered() as $gatewayId => $gateway ) {

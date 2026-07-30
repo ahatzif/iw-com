@@ -11,12 +11,6 @@ class Strings {
 
 	const TRANSLATION_DOMAIN = 'WordPress';
 
-	/**
-	 * @param string $baseType
-	 * @param string $attributeSlug
-	 *
-	 * @return string
-	 */
 	public static function getStringName( $baseType, $attributeSlug = '' ) {
 		switch ( $baseType ) {
 			case 'product':

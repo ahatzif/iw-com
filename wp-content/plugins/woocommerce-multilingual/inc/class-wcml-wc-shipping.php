@@ -8,12 +8,8 @@ class WCML_WC_Shipping {
 	const NAME_SUFFIX     = '_shipping_method_title';
 
 	private $current_language;
-	/** @var SitePress */
 	private $sitepress;
 
-	/**
-	 * @param SitePress $sitepress
-	 */
 	public function __construct( \WPML\Core\ISitePress $sitepress ) {
 		$this->sitepress = $sitepress;
 
@@ -76,7 +72,7 @@ class WCML_WC_Shipping {
 		if ( ! isset( $_POST['wc_shipping_zones_nonce'] ) ) {
 			return;
 		}
-		if ( ! wp_verify_nonce( wp_unslash( $_POST['wc_shipping_zones_nonce'] ), 'wc_shipping_zones_nonce' ) ) {// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		if ( ! wp_verify_nonce( wp_unslash( $_POST['wc_shipping_zones_nonce'] ), 'wc_shipping_zones_nonce' ) ) {
 			return;
 		}
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
@@ -127,9 +123,6 @@ class WCML_WC_Shipping {
 	public function translate_shipping_methods_in_package( $available_methods ) {
 
 		foreach ( $available_methods as $key => $method ) {
-			/**
-			 * @since 4.6.5
-			 */
 			if ( apply_filters( 'wcml_translate_shipping_method_in_package', true, $key, $method ) ) {
 				$available_methods[ $key ]->label = $this->translate_shipping_method_title( $method->label, $key );
 			}
@@ -138,26 +131,9 @@ class WCML_WC_Shipping {
 		return apply_filters( 'wcml_translated_package_rates', $available_methods );
 	}
 
-	/**
-	 * @param string      $title
-	 * @param string      $shipping_id
-	 * @param string|bool $language
-	 *
-	 * @return string
-	 */
 	public function translate_shipping_method_title( $title, $shipping_id, $language = false ) {
 
 		$is_edit_order = did_action( 'admin_init' ) && did_action( 'current_screen' ) && ( \WCML\Orders\Helper::isOrderEditAdminScreen() || \WCML\Orders\Helper::isOrderCreateAdminScreen() );
-		/**
-		 * This filter hook allows to override if we need to translate shipping method title.
-		 *
-		 * @since 4.11.0
-		 *
-		 * @param bool   $true        If we should translate shipping method title.
-		 * @param string $title       Shipping title.
-		 * @param string $shipping_id Shipping id.
-		 * @param string $language    Language.
-		 */
 		$translate_title = apply_filters( 'wcml_should_translate_shipping_method_title', ! is_admin() || $is_edit_order, $title, $shipping_id, $language );
 
 		if ( $translate_title ) {
@@ -179,7 +155,6 @@ class WCML_WC_Shipping {
 	}
 
 	public function sync_class_costs_for_new_shipping_classes( $original_tax, $result ) {
-		// update flat rate options for shipping classes.
 		if ( $original_tax->taxonomy == 'product_shipping_class' ) {
 
 			$settings = get_option( 'woocommerce_flat_rate_settings' );
@@ -234,7 +209,7 @@ class WCML_WC_Shipping {
 		if ( ! isset( $_POST['wc_shipping_zones_nonce'] ) ) {
 			return;
 		}
-		if ( ! wp_verify_nonce( wp_unslash( $_POST['wc_shipping_zones_nonce'] ), 'wc_shipping_zones_nonce' ) ) {// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		if ( ! wp_verify_nonce( wp_unslash( $_POST['wc_shipping_zones_nonce'] ), 'wc_shipping_zones_nonce' ) ) {
 			return;
 		}
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
@@ -252,12 +227,6 @@ class WCML_WC_Shipping {
 		}
 	}
 
-	/**
-	 * @param array $data
-	 * @param array|mixed $inst_settings
-	 *
-	 * @return array|mixed
-	 */
 	public function sync_flat_rate_class_cost( $data, $inst_settings ) {
 
 		$settings = [];
@@ -276,13 +245,6 @@ class WCML_WC_Shipping {
 		return $updated_costs_settings;
 	}
 
-	/**
-	 * @param string             $rate
-	 * @param string             $class_name
-	 * @param WC_Shipping_Method $shipping_method
-	 *
-	 * @return string
-	 */
 	public function get_original_shipping_class_rate( $rate, $class_name, $shipping_method ) {
 		if ( ! $rate && 'class_cost_' === substr( $class_name, 0, 11 ) ) {
 			$original_class_id = $this->sitepress->term_translations()->get_original_element( substr( $class_name, 11 ) );

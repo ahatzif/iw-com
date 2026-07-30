@@ -14,9 +14,6 @@ class AllLanguagesHooks implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 
 	const KEY_EXPORT_ALL_LANGUAGES = 'wpml_export_all_languages';
 
-	/**
-	 * @var \SitePress $sitepress
-	 */
 	private $sitepress;
 
 	public function __construct( \SitePress $sitepress ) {
@@ -31,18 +28,12 @@ class AllLanguagesHooks implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 			->then( spreadArgs( tap( [ $this, 'suspendWpmlLanguageFilters' ] ) ) );
 	}
 
-	/**
-	 * @return void
-	 */
 	public function addLanguageField() {
 		if ( 'all' === $this->sitepress->get_current_language() ) {
 			echo '<input type="hidden" name="' . self::KEY_EXPORT_ALL_LANGUAGES . '" value="1" />';
 		}
 	}
 
-	/**
-	 * @return void
-	 */
 	public function suspendWpmlLanguageFilters() {
 		if ( $this->isExportingAllLanguages() ) {
 			SuspendPostsQueryFiltersFactory::create();
@@ -50,9 +41,6 @@ class AllLanguagesHooks implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		}
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function isExportingAllLanguages() {
 		$formQueryString = Sanitize::string( (string) Obj::prop( 'form', $_POST ) );
 		wp_parse_str( $formQueryString, $queryArgs );

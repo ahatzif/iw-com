@@ -3,7 +3,6 @@
 class WCML_Relevanssi implements \IWPML_Action {
 
 	public function add_hooks() {
-		// Re-index translated product to add missing terms (wcml-2282)
 		add_action( 'wcml_update_extra_fields', [ $this, 'index_product' ], 10, 4 );
 	}
 

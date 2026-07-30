@@ -4,11 +4,7 @@ namespace WCML\Utilities\Suspend;
 
 class PostsQueryFiltersFactory {
 
-	/**
-	 * @return Filters
-	 */
 	public static function create() {
-		/** @var \WPML_Query_Filter $wpml_query_filter */
 		global $wpml_query_filter;
 
 		return new Filters( [

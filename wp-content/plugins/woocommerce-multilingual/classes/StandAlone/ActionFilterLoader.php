@@ -8,33 +8,16 @@ use function WCML\functions\isStandAlone;
 
 class ActionFilterLoader {
 
-	/**
-	 * @var WPML_Action_Filter_Loader
-	 */
 	private $loader;
 
-	/**
-	 * @param WPML_Action_Filter_Loader|null $loader
-	 */
 	public function __construct( $loader = null ) {
 		$this->loader = null === $loader ? new WPML_Action_Filter_Loader() : $loader;
 	}
 
-	/**
-	 * Load action filter limiting the loaders processed depending on whether WPML is installed
-	 *
-	 * @param string[] $loaders Action loaders.
-	 */
 	public function load( $loaders ) {
 		$this->loader->load( $this->mayBeFilterLoaders( $loaders ) );
 	}
 
-	/**
-	 * Only pass through IStandAloneAction loaders if WPML is not available.
-	 *
-	 * @param string[] $loaders Action loaders.
-	 * @return string[] $loaders.
-	 */
 	private function mayBeFilterLoaders( $loaders ) {
 		if ( isStandAlone() ) {
 			$filtered_loaders = [];

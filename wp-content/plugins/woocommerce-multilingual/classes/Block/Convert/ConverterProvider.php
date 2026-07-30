@@ -11,11 +11,6 @@ use WPML\PB\Gutenberg\ConvertIdsInBlock\TagAttributes;
 
 class ConverterProvider {
 
-	/**
-	 * @param string $blockName
-	 *
-	 * @return \WPML\PB\Gutenberg\ConvertIdsInBlock\Base
-	 */
 	public static function get( $blockName ) {
 		switch ( $blockName ) {
 			case 'woocommerce/product-category':

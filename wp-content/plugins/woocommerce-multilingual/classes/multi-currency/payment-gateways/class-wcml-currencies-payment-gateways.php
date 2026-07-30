@@ -2,27 +2,18 @@
 
 use WCML\Multicurrency\Transient\Hooks as TransientHooks;
 
-/**
- * Class WCML_Currencies_Payment_Gateways
- */
 class WCML_Currencies_Payment_Gateways {
 
 	const OPTION_KEY = 'wcml_custom_payment_gateways_for_currencies';
 
-	/** @var WCML_Payment_Gateway[] */
 	private $payment_gateways;
 
-	/** @var array */
 	private $available_gateways;
 
 	private array $supported_gateways = [];
 
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
 
-	/**
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 */
 	public function __construct( woocommerce_wpml $woocommerce_wpml ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 	}
@@ -45,11 +36,6 @@ class WCML_Currencies_Payment_Gateways {
 		}
 	}
 
-	/**
-	 * @param string $currency
-	 *
-	 * @return bool
-	 */
 	public function is_enabled( $currency ) {
 		$gateway_enabled_settings = $this->get_settings();
 
@@ -60,10 +46,6 @@ class WCML_Currencies_Payment_Gateways {
 		return false;
 	}
 
-	/**
-	 * @param string $currency
-	 * @param bool   $value
-	 */
 	public function set_enabled( $currency, $value ) {
 		$gateway_enabled_settings              = $this->get_settings();
 		$gateway_enabled_settings[ $currency ] = $value;
@@ -71,9 +53,6 @@ class WCML_Currencies_Payment_Gateways {
 		update_option( self::OPTION_KEY, $gateway_enabled_settings );
 	}
 
-	/**
-	 * @return array
-	 */
 	private function get_settings() {
 		return get_option( self::OPTION_KEY, [] );
 	}
@@ -103,33 +82,18 @@ class WCML_Currencies_Payment_Gateways {
 		$this->store_non_supported_gateways();
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_gateways() {
 		$this->init_gateways();
 
 		return $this->payment_gateways;
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_supported_gateways() {
 		$this->init_gateways();
 
 		return $this->supported_gateways;
 	}
 
-	/**
-	 * @since WooCommerce PayPal Payments 3.3.0
-	 *
-	 * @param string $description Gateway description (already sanitized with wp_kses_post).
-	 * @param object $gateway     Gateway instance.
-	 * @see \WooCommerce\PayPalCommerce\WcGateway\Gateway\PayPalGateway
-	 *
-	 * @return string
-	 */
 	public function filter_paypal_payments_gateway_description( $description, $gateway ) {
 		$id = \WPML\FP\Obj::prop( 'id', $gateway );
 		if ( is_null( $id ) ) {
@@ -139,12 +103,6 @@ class WCML_Currencies_Payment_Gateways {
 		return $this->filter_gateway_description( $description, $id );
 	}
 
-	/**
-	 * @param string $description
-	 * @param string $id
-	 *
-	 * @return string
-	 */
 	public function filter_gateway_description( $description, $id ) {
 		$this->init_gateways();
 
@@ -185,12 +143,6 @@ class WCML_Currencies_Payment_Gateways {
 		return $description;
 	}
 
-	/**
-	 * @param string $id
-	 * @param object $supported_gateway
-	 *
-	 * @return bool
-	 */
 	private function is_a_valid_gateway( $id, $supported_gateway ) {
 		return is_subclass_of( $supported_gateway, 'WCML_Payment_Gateway' ) && array_key_exists( $id, $this->available_gateways );
 	}
@@ -215,15 +167,11 @@ class WCML_Currencies_Payment_Gateways {
 	private function store_non_supported_gateways() {
 		$non_supported_gateways = array_diff( array_keys( $this->available_gateways ), array_keys( $this->payment_gateways ) );
 
-		/** @var int $non_supported_gateway */
 		foreach ( $non_supported_gateways as $non_supported_gateway ) {
 			$this->payment_gateways[ $non_supported_gateway ] = new WCML_Not_Supported_Payment_Gateway( $this->available_gateways[ $non_supported_gateway ], $this->woocommerce_wpml );
 		}
 	}
 
-	/**
-	 * @return array
-	 */
 	private function get_available_payment_gateways() {
 		return WC()->payment_gateways()->get_available_payment_gateways();
 	}

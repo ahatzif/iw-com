@@ -3,24 +3,13 @@
 use WCML\Utilities\WpAdminPages;
 use WPML\API\Sanitize;
 
-/**
- * Class WCML_Admin_Currency_Selector
- */
 class WCML_Admin_Currency_Selector {
 
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
-	/** @var  WCML_Admin_Cookie */
 	private $currency_cookie;
 
 	const NONCE_KEY = 'wcml-admin-currency-selector';
 
-	/**
-	 * WCML_Admin_Currency_Selector constructor.
-	 *
-	 * @param woocommerce_wpml  $woocommerce_wpml
-	 * @param WCML_Admin_Cookie $currency_cookie
-	 */
 	public function __construct( woocommerce_wpml $woocommerce_wpml, WCML_Admin_Cookie $currency_cookie ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 		$this->currency_cookie  = $currency_cookie;
@@ -46,9 +35,6 @@ class WCML_Admin_Currency_Selector {
 		}
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function user_can_manage_woocommerce() {
 		return current_user_can( 'view_woocommerce_reports' ) ||
 			   current_user_can( 'manage_woocommerce' ) ||
@@ -74,9 +60,6 @@ class WCML_Admin_Currency_Selector {
 		);
 	}
 
-	/**
-	 * Add currency drop-down on dashboard page ( WooCommerce status block )
-	 */
 	public function show_dashboard_currency_selector() {
 
 		$current_dashboard_currency = $this->get_cookie_dashboard_currency();
@@ -111,11 +94,6 @@ class WCML_Admin_Currency_Selector {
 		}
 	}
 
-	/**
-	 * Set dashboard currency cookie
-	 *
-	 * @param string $currency_code
-	 */
 	public function set_dashboard_currency( $currency_code = '' ) {
 		global $pagenow;
 
@@ -128,11 +106,6 @@ class WCML_Admin_Currency_Selector {
 		}
 	}
 
-	/**
-	 * Get dashboard currency cookie
-	 *
-	 * @return string
-	 */
 	public function get_cookie_dashboard_currency() {
 
 		$currency = $this->currency_cookie->get_value();
@@ -143,13 +116,6 @@ class WCML_Admin_Currency_Selector {
 		return $currency;
 	}
 
-	/**
-	 * Filter currency symbol on dashboard page
-	 *
-	 * @param string $currencySymbol Currency symbol
-	 *
-	 * @return string
-	 */
 	public function filter_dashboard_currency_symbol( $currencySymbol ) {
 		if (
 			( WpAdminPages::isDashboard() && empty( $_REQUEST['action'] ) )
@@ -163,9 +129,6 @@ class WCML_Admin_Currency_Selector {
 		return $currencySymbol;
 	}
 
-	/**
-	 * @return bool
-	 */
 	public static function isDashboardWidgetRequest() {
 		return wp_doing_ajax()
 				&& 'woocommerce_load_status_widget' === Sanitize::stringProp( 'action', $_GET );

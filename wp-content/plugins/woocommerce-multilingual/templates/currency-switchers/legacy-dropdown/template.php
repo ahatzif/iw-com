@@ -1,10 +1,4 @@
 <?php
-/**
- * @var string $css_classes
- * @var string $format
- * @var string $selected_currency
- * @var string[] $currencies
- */
 ?>
 <div class="<?php echo esc_attr( $css_classes ) ?>">
 	<ul>

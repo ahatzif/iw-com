@@ -1,8 +1,5 @@
 <?php
 
-/**
- * Class WCML_Payment_Gateway_Stripe
- */
 class WCML_Payment_Gateway_Stripe extends WCML_Payment_Gateway {
 
 	const ID = 'stripe';
@@ -35,13 +32,6 @@ class WCML_Payment_Gateway_Stripe extends WCML_Payment_Gateway {
 		}
 	}
 
-	/**
-	 * Convert currency to the one set in payment gateway
-	 *
-	 * @param array    $request
-	 * @param WC_Order $order
-	 * @param object   $source
-	 */
 	public function convert_stripe_payment_request( $request, $order, $source ) {
 		$client_currency = $request ['currency'] ?? null;
 		$client_currency = strtoupper( $client_currency );
@@ -60,9 +50,6 @@ class WCML_Payment_Gateway_Stripe extends WCML_Payment_Gateway {
 		return $request;
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_currencies_details() {
 		$currencies_details = [];
 		$default_currency   = wcml_get_woocommerce_currency_option();
@@ -90,13 +77,6 @@ class WCML_Payment_Gateway_Stripe extends WCML_Payment_Gateway {
 
 	}
 
-	/**
-	 * Filter Stripe settings before WC initialized them
-	 *
-	 * @param array $settings
-	 *
-	 * @return array
-	 */
 	public static function filter_stripe_settings( $settings ) {
 		if ( is_admin() ) {
 			return $settings;
@@ -122,11 +102,6 @@ class WCML_Payment_Gateway_Stripe extends WCML_Payment_Gateway {
 		return $settings;
 	}
 
-	/**
-	 * @param string $convert_to_currency
-	 *
-	 * @return callable(array):array
-	 */
 	private function get_convert_price_callable( $convert_to_currency ): callable {
 		return function ( array $price_params ) use ( $convert_to_currency ): array {
 			$value    = $price_params['amount'];
@@ -142,9 +117,6 @@ class WCML_Payment_Gateway_Stripe extends WCML_Payment_Gateway {
 		};
 	}
 
-	/**
-	 * @return null|string nul when not found
-	 */
 	private function maybe_convert_currency( string $client_currency ) {
 		$gateway_setting = $this->get_setting( $client_currency );
 

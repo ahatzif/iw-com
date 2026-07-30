@@ -10,11 +10,6 @@
  */
 namespace WPML\Core\Twig\Sandbox;
 
-/**
- * Exception thrown when a not allowed tag is used in a template.
- *
- * @author Martin Hasoň <martin.hason@gmail.com>
- */
 class SecurityNotAllowedTagError extends \WPML\Core\Twig\Sandbox\SecurityError
 {
     private $tagName;

@@ -8,7 +8,6 @@ use WPML\FP\Obj;
 class Set {
 
 	public static function fromUrlQueryVar() {
-		/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 		$lang = self::sanitize( Obj::prop( 'lang', $_GET ) );
 
 		if ( $lang ) {
@@ -16,13 +15,6 @@ class Set {
 		}
 	}
 
-	/**
-	 * @param \WP_REST_Response|\WP_HTTP_Response|\WP_Error|mixed $response
-	 * @param array                                               $handler
-	 * @param \WP_REST_Request                                    $request
-	 *
-	 * @return \WP_REST_Response|\WP_HTTP_Response|\WP_Error|mixed
-	 */
 	public static function beforeCallbacks( $response, $handler, \WP_REST_Request $request ) {
 		$lang = self::getFromRequestParams( $request )
 			?: self::getFromProduct( $handler, $request );
@@ -34,21 +26,10 @@ class Set {
 		return $response;
 	}
 
-	/**
-	 * @param \WP_REST_Request $request
-	 *
-	 * @return string
-	 */
 	private static function getFromRequestParams( \WP_REST_Request $request ) {
 		return self::sanitize( $request->get_param( 'lang' ) );
 	}
 
-	/**
-	 * @param array            $handler
-	 * @param \WP_REST_Request $request
-	 *
-	 * @return string
-	 */
 	private static function getFromProduct( $handler, \WP_REST_Request $request ) {
 		$callback = Obj::prop( 'callback', $handler );
 
@@ -66,11 +47,6 @@ class Set {
 		return '';
 	}
 
-	/**
-	 * @param string $lang
-	 *
-	 * @return string
-	 */
 	private static function sanitize( $lang ) {
 		return Sanitize::string( $lang );
 	}

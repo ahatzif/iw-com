@@ -14,11 +14,6 @@ class WCML_Languages_Upgrader {
 		$this->load_js();
 	}
 
-	/**
-	 * Automatically download translations for WC ( when user install WCML ( from 3.3.3) / add new language in WPML )
-	 *
-	 * @param  string $lang_code Language code
-	 */
 	public function download_woocommerce_translations( $lang_code, $wc_version ) {
 		global $sitepress;
 
@@ -38,7 +33,7 @@ class WCML_Languages_Upgrader {
 			$title   = '';
 			$context = WP_LANG_DIR;
 
-			$upgrader = new Language_Pack_Upgrader( new Automatic_Upgrader_Skin( compact( 'url', 'nonce', 'title', 'context' ) ) ); // use Language_Pack_Upgrader_Skin instead of Automatic_Upgrader_Skin to display upgrade process.
+			$upgrader = new Language_Pack_Upgrader( new Automatic_Upgrader_Skin( compact( 'url', 'nonce', 'title', 'context' ) ) );
 
 			$upgr_object                = [];
 			$upgr_object[0]             = new stdClass();
@@ -54,7 +49,6 @@ class WCML_Languages_Upgrader {
 
 			$upgrader->bulk_upgrade( $upgr_object );
 
-			// Close a potential unclosed output buffer.
 			$ob_level_after = ob_get_level();
 			if ( $ob_level_after > $ob_level_before ) {
 				ob_end_clean();
@@ -66,10 +60,6 @@ class WCML_Languages_Upgrader {
 	}
 
 
-	/*
-	 * Automatically download translations for WC for active languages
-	 *
-	 */
 	public function download_woocommerce_translations_for_active_languages( $wc_version = false ) {
 		global $sitepress, $woocommerce_wpml;
 
@@ -101,15 +91,6 @@ class WCML_Languages_Upgrader {
 		return $repo . $version . '/' . $locale . '.zip';
 	}
 
-	/*
-	 * Update the WC language version in database
-	 *
-	 *
-	 * @param  bool   $reply   Whether to bail without returning the package (default: false)
-	 * @param  string $package Package URL
-	 *
-	 * @return bool
-	 */
 	public function version_update( $reply, $package ) {
 
 		$notices = maybe_unserialize( get_option( 'wcml_translations_upgrade_notice' ) );
@@ -134,7 +115,6 @@ class WCML_Languages_Upgrader {
 
 		$notices = maybe_unserialize( get_option( 'wcml_translations_upgrade_notice' ) );
 
-		// Update the language pack version.
 		update_option( 'woocommerce_language_pack_version_' . $locale, [ $wc_version ?: WC_VERSION, $locale ] );
 
 		if ( is_array( $notices ) ) {
@@ -143,7 +123,6 @@ class WCML_Languages_Upgrader {
 				$key = array_search( $locale, $notices );
 			}
 
-			// Remove the translation upgrade notice.
 			unset( $notices[ $key ] );
 
 			update_option( 'wcml_translations_upgrade_notice', $notices );
@@ -152,13 +131,6 @@ class WCML_Languages_Upgrader {
 
 	}
 
-	/*
-	 * Check if has available translation update
-	 *
-	 * @param string $locale Locale code
-	 *
-	 * @return bool
-	 */
 	public function has_available_update( $locale, $wc_version = false ) {
 		$wc_version = $wc_version ?: WC_VERSION;
 
@@ -181,7 +153,6 @@ class WCML_Languages_Upgrader {
 
 				return true;
 			} else {
-				// Updated the woocommerce_language_pack_version to avoid searching translations for this release again.
 				update_option( 'woocommerce_language_pack_version_' . $locale, [ $wc_version, $locale ] );
 			}
 		}
@@ -190,11 +161,6 @@ class WCML_Languages_Upgrader {
 	}
 
 
-	/**
-	 * Check if language pack exists
-	 *
-	 * @return bool
-	 */
 	public function check_if_language_pack_exists( $locale, $wc_version ) {
 
 		$response = wp_safe_remote_get( $this->get_language_pack_uri( $locale, $wc_version ), [ 'timeout' => 60 ] );
@@ -207,9 +173,6 @@ class WCML_Languages_Upgrader {
 	}
 
 
-	/*
-	 * Display Translations upgrade notice message
-	 */
 	public function translation_upgrade_notice() {
 		$screen  = get_current_screen();
 		$notices = maybe_unserialize( get_option( 'wcml_translations_upgrade_notice' ) );
@@ -221,9 +184,6 @@ class WCML_Languages_Upgrader {
 		}
 	}
 
-	/*
-	 * Hide Translations upgrade notice message ( update option in DB )
-	 */
 	public function hide_wcml_translations_message() {
 		$nonce = filter_input( INPUT_POST, 'wcml_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 		if ( ! $nonce || ! wp_verify_nonce( $nonce, 'hide_wcml_translations_message' ) ) {

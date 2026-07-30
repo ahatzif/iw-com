@@ -11,9 +11,6 @@ class PriceFilteringByPostMeta extends AbstractPriceByPostMeta implements \IWPML
 		}
 	}
 
-	/**
-	 * These Hooks have a huge impact on the performance of the application, we only want to use them when necessary
-	 */
 	private function detectProductFilteringByPriceInMultiCurrency(): bool {
 		if ( ! isset( $_GET['min_price'] ) && ! isset( $_GET['max_price'] ) ) {
 			return false;
@@ -22,11 +19,6 @@ class PriceFilteringByPostMeta extends AbstractPriceByPostMeta implements \IWPML
 		return $this->default_currency !== $this->client_currency;
 	}
 
-	/**
-	 * @param string      $needle
-	 * @param array|mixed $haystack
-	 * @param array       $matches
-	 */
 	public function searchAndRemoveMetaQueryPrice( $needle, &$haystack, &$matches ): bool {
 		if ( ! is_array( $haystack ) ) {
 			return false;
@@ -51,14 +43,6 @@ class PriceFilteringByPostMeta extends AbstractPriceByPostMeta implements \IWPML
 		return false;
 	}
 
-	/**
-	 * We find, move and remove the parameters searching for the price from meta_query - so that they
-	 * do not add incorrect SQL - we will build this based on this data later
-	 *
-	 * @param \WP_Query $wp_query The WP_Query instance (passed by reference).
-	 *
-	 * @return \WP_Query
-	 */
 	public function pre_get_posts( $wp_query ) {
 		if ( isset( $wp_query->query['post_type'] ) && $wp_query->query['post_type'] === 'product' ) {
 			if ( isset( $wp_query->query['meta_query'] ) ) {
@@ -68,7 +52,6 @@ class PriceFilteringByPostMeta extends AbstractPriceByPostMeta implements \IWPML
 				$matchesQueryVars = [];
 				$this->searchAndRemoveMetaQueryPrice( $needle, $wp_query->query['meta_query'], $matchesQuery );
 				$this->searchAndRemoveMetaQueryPrice( $needle, $wp_query->query_vars['meta_query'], $matchesQueryVars );
-				/* @phpstan-ignore property.notFound */
 				$wp_query->wcml_filter_price = $this->findMinMax( $matchesQuery );
 			} else {
 				$query = [];
@@ -83,7 +66,6 @@ class PriceFilteringByPostMeta extends AbstractPriceByPostMeta implements \IWPML
 					unset( $wp_query->query['max_price'] );
 					unset( $wp_query->query_vars['max_price'] );
 				}
-				/* @phpstan-ignore property.notFound */
 				$wp_query->wcml_filter_price = $query;
 			}
 		}
@@ -91,14 +73,6 @@ class PriceFilteringByPostMeta extends AbstractPriceByPostMeta implements \IWPML
 		return $wp_query;
 	}
 
-	/**
-	 * based on meta query data we build our own SQL
-	 *
-	 * @param array $clauses
-	 * @param \WP_Query $wp_query
-	 *
-	 * @return array
-	 */
 	public function posts_clauses_wcml_price_filter_post_meta( $clauses, $wp_query ) {
 		if ( empty( $wp_query->wcml_filter_price ) || ! is_array( $wp_query->wcml_filter_price ) ) {
 			return $clauses;
@@ -107,7 +81,6 @@ class PriceFilteringByPostMeta extends AbstractPriceByPostMeta implements \IWPML
 		$min_price_in_MC = $wp_query->wcml_filter_price['min'] ?? null;
 		$max_price_in_MC = $wp_query->wcml_filter_price['max'] ?? null;
 
-		// in case there is no price saved in the selected currency, we have to search in the default
 		$min_price_in_default_currency = $this->woocommerce_wpml->multi_currency->prices->unconvert_price_amount( $min_price_in_MC );
 		$max_price_in_default_currency = $this->woocommerce_wpml->multi_currency->prices->unconvert_price_amount( $max_price_in_MC );
 
@@ -130,11 +103,6 @@ class PriceFilteringByPostMeta extends AbstractPriceByPostMeta implements \IWPML
 		return $clauses;
 	}
 
-	/**
-	 * @param array $wcml_filter_price
-	 *
-	 * @return array (float|null[])
-	 */
 	public function findMinMax( array $wcml_filter_price ): array {
 		$result = [
 			'min' => null,

@@ -7,14 +7,8 @@ use WCML\StandAlone\IStandAloneAction;
 use WCML_Checkout_Addons;
 use function WCML\functions\isStandAlone;
 
-/**
- * @see http://www.woocommerce.com/products/woocommerce-checkout-add-ons/
- */
 class Factory extends ComponentFactory implements IStandAloneAction {
 
-	/**
-	 * @inheritDoc
-	 */
 	public function create() {
 		$hooks = [];
 

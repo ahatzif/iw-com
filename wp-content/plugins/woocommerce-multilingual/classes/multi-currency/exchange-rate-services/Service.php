@@ -4,53 +4,24 @@ namespace WCML\MultiCurrency\ExchangeRateServices;
 
 use WPML\FP\Obj;
 
-/**
- * Class Service
- */
 abstract class Service {
 
-	/** @var array  */
 	private $settings;
 
-	/**
-	 * @return string
-	 */
 	abstract public function getId();
 
-	/**
-	 * @return string
-	 */
 	abstract public function getName();
 
-	/**
-	 * @return string
-	 */
 	abstract public function getUrl();
 
-	/**
-	 * @return string
-	 */
 	abstract public function getApiUrl();
 
-	/**
-	 * @return bool
-	 */
 	abstract public function isKeyRequired();
 
-	/**
-	 * @return void
-	 */
 	public function resetConnectionCache() {
 
 	}
 
-	/**
-	 * @param string $from Base currency.
-	 * @param array  $tos  Target currencies.
-	 *
-	 * @return mixed
-	 * @throws \Exception Thrown where there are connection problems.
-	 */
 	public function getRates( $from, $tos ) {
 		$this->clearLastError();
 
@@ -73,12 +44,6 @@ abstract class Service {
 		return $this->extractRates( $data, $from, $tos );
 	}
 
-	/**
-	 * @param string $from The base currency code.
-	 * @param array  $tos  The target currency codes.
-	 *
-	 * @return array|\WP_Error
-	 */
 	protected function makeRequest( $from, $tos ) {
 		if ( $this->isKeyRequired() ) {
 			$url = sprintf( $this->getApiUrl(), $this->getApiKey(), $from, implode( ',', $tos ) );
@@ -89,29 +54,14 @@ abstract class Service {
 		return wp_safe_remote_get( $url, [ 'headers' => $this->getRequestHeaders() ] );
 	}
 
-	/**
-	 * @return array
-	 */
 	protected function getRequestHeaders() {
 		return [];
 	}
 
-	/**
-	 * @param object $decodedData
-	 *
-	 * @return bool
-	 */
 	protected function isInvalidResponse( $decodedData ) {
 		return empty( $decodedData->rates );
 	}
 
-	/**
-	 * @param object $validData
-	 * @param string $from
-	 * @param array  $tos
-	 *
-	 * @return array
-	 */
 	protected function extractRates( $validData, $from, $tos ) {
 		$rates = [];
 
@@ -122,22 +72,7 @@ abstract class Service {
 		return $rates;
 	}
 
-	/**
-	 * Each service has its own response signature,
-	 * and I also noticed that it does not always
-	 * respect their own doc.
-	 *
-	 * So the idea is to just catch all possible information
-	 * and return it as raw output.
-	 *
-	 * Example: "error_code: 104 - error_message: ..."
-	 *
-	 * @param array|\stdClass $response
-	 *
-	 * @return string
-	 */
 	public static function get_formatted_error( $response ) {
-		// $getFromPath :: array -> string|null
 		$getFromPath = function( $path ) use ( $response ) {
 			try {
 				$value = Obj::path( $path, $response );
@@ -148,11 +83,9 @@ abstract class Service {
 		};
 
 		$formattedError = wpml_collect( [
-			// Codes or types
 			'error'         => $getFromPath( [ 'error' ] ),
 			'error_code'    => $getFromPath( [ 'error', 'code' ] ),
 			'error_type'    => $getFromPath( [ 'error', 'type' ] ),
-			// Descriptions or messages
 			'error_info'    => $getFromPath( [ 'error', 'info' ] ),
 			'error_message' => $getFromPath( [ 'error', 'message' ] ),
 			'message'       => $getFromPath( [ 'message' ] ),
@@ -168,9 +101,6 @@ abstract class Service {
 			: esc_html__( 'Cannot get exchange rates. Connection failed.', 'woocommerce-multilingual' );
 	}
 
-	/**
-	 * @return array
-	 */
 	public function getSettings() {
 		if ( null === $this->settings ) {
 			$this->settings = get_option( 'wcml_exchange_rate_service_' . $this->getId(), [] );
@@ -183,28 +113,16 @@ abstract class Service {
 		update_option( 'wcml_exchange_rate_service_' . $this->getId(), $this->getSettings() );
 	}
 
-	/**
-	 * @param string $key
-	 *
-	 * @return mixed|null
-	 */
 	public function getSetting( $key ) {
 		return Obj::prop( $key, $this->getSettings() );
 	}
 
-	/**
-	 * @param string $key
-	 * @param mixed  $value
-	 */
 	public function saveSetting( $key, $value ) {
 		$this->getSettings();
 		$this->settings[ $key ] = $value;
 		$this->saveSettings();
 	}
 
-	/**
-	 * @param string $error_message
-	 */
 	public function saveLastError( $error_message ) {
 		$this->saveSetting(
 			'last_error',
@@ -219,16 +137,10 @@ abstract class Service {
 		$this->saveSetting( 'last_error', false );
 	}
 
-	/**
-	 * @return mixed
-	 */
 	public function getLastError() {
 		return $this->getSetting( 'last_error' );
 	}
 
-	/**
-	 * @return string|null
-	 */
 	protected function getApiKey() {
 		return $this->getSetting( 'api-key' );
 	}

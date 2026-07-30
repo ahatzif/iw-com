@@ -6,9 +6,6 @@ use WC_REST_Exception;
 
 class InvalidCurrency extends WC_REST_Exception {
 
-	/**
-	 * @param string $currency_code
-	 */
 	public function __construct( $currency_code ) {
 		parent::__construct(
 			"422",

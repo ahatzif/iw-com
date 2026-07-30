@@ -13,9 +13,6 @@ class Slots implements \IWPML_Action {
 			->then( spreadArgs( [ $this, 'deleteTranslationsSlotsTransients' ] ) );
 	}
 
-	/**
-	 * @param \WC_Product $product
-	 */
 	public function deleteTranslationsSlotsTransients( $product ) {
 		if ( ! $product instanceof \WC_Product_Booking ) {
 			return;

@@ -6,12 +6,8 @@ use WCML\Utilities\AdminPages;
 
 class DependencyAssets {
 
-	/** @var string $dependencyBaseUrl */
 	private $dependencyBaseUrl;
 
-	/**
-	 * @param string $dependencyBaseUrl
-	 */
 	public function __construct( $dependencyBaseUrl ) {
 		$this->dependencyBaseUrl = $dependencyBaseUrl;
 	}
@@ -21,7 +17,6 @@ class DependencyAssets {
 	}
 
 	public function enqueue() {
-		/* phpcs:ignore WordPress.WP.EnqueuedResourceParameters.NotInFooter */
 		wp_register_script( 'wpml-scripts', $this->dependencyBaseUrl . '/res/js/scripts.js', [], WCML_VERSION );
 		wp_add_inline_script( 'wpml-scripts', "var icl_ajxloaderimg_src = '" . esc_url( $this->dependencyBaseUrl . '/res/img/ajax-loader.gif' ) . "';", 'before' );
 		wp_register_style( 'wpml-styles', $this->dependencyBaseUrl . '/res/css/style.css', [], WCML_VERSION );

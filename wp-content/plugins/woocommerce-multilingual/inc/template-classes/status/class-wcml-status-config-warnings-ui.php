@@ -8,13 +8,7 @@ class WCML_Status_Config_Warnings_UI extends WCML_Templates_Factory {
 	private $sitepress;
 	private $sitepress_settings;
 
-	/**
-	 * @param SitePress        $sitepress
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param array            $sitepress_settings
-	 */
 	public function __construct( $sitepress, $woocommerce_wpml, $sitepress_settings ) {
-		// @todo Cover by tests, required for wcml-3037.
 		parent::__construct();
 
 		$this->woocommerce_wpml   = $woocommerce_wpml;
@@ -25,7 +19,6 @@ class WCML_Status_Config_Warnings_UI extends WCML_Templates_Factory {
 	public function init_twig_functions() {
 		$function = new Twig_SimpleFunction( 'get_flag_url', [ $this, 'get_flag_url' ] );
 
-		/** @var WPML\Core\Twig\Environment */
 		$twig = $this->get_twig();
 		$twig->addFunction( $function );
 	}
@@ -33,7 +26,6 @@ class WCML_Status_Config_Warnings_UI extends WCML_Templates_Factory {
 	public function get_model() {
 		$this->init_twig_functions();
 
-		/** @var WCML_Dependencies $wcml_dependencies */
 		$wcml_dependencies = \WPML\Container\make( WCML_Dependencies::class );
 
 		$model = [

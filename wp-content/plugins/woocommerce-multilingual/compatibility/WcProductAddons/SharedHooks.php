@@ -29,9 +29,6 @@ class SharedHooks implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @return bool
-	 */
 	public static function isGlobalAddonEditPage() {
 		global $pagenow;
 
@@ -42,32 +39,16 @@ class SharedHooks implements \IWPML_Action {
 			   ( 'global_addons' === $_GET['page'] || 'addons' === $_GET['page'] );
 	}
 
-	/**
-	 * @param int    $metaId
-	 * @param int    $id
-	 * @param string $metaKey
-	 * @param array  $addons
-	 */
 	public function triggerGlobalAddonUpdated( $metaId, $id, $metaKey, $addons ) {
 		if ( self::ADDONS_OPTION_KEY === $metaKey && self::isGlobalAddon( $id ) ) {
 			do_action( 'wcml_product_addons_global_updated', $metaId, $id, $metaKey, $addons );
 		}
 	}
 
-	/**
-	 * @param int $postId
-	 *
-	 * @return bool
-	 */
 	public static function isGlobalAddon( $postId ) {
 		return 'global_product_addon' === get_post_type( $postId );
 	}
 
-	/**
-	 * @param string $productId
-	 *
-	 * @return array
-	 */
 	public static function getProductAddons( $productId ) {
 		$data = get_post_meta( $productId, self::ADDONS_OPTION_KEY, true );
 		return $data ? maybe_unserialize( $data ) : [];

@@ -11,7 +11,6 @@ use function WCML\functions\isStandAlone;
 
 class WCML_Upgrade {
 
-	/** @var array */
 	private $versions = [
 		'2.9.9.1',
 		'3.1',
@@ -84,7 +83,6 @@ class WCML_Upgrade {
 		if ( ! empty( $wcml_settings['notifications'] ) ) {
 			foreach ( $wcml_settings['notifications'] as $k => $notification ) {
 
-				// Exceptions.
 				if ( isset( $_GET['tab'] ) && \WCML\Utilities\AdminUrl::TAB_TROUBLESHOOTING === $_GET['tab'] && 'varimages' === $k ) {
 					continue;
 				}
@@ -115,7 +113,6 @@ class WCML_Upgrade {
 	public function run() {
 		$version_in_db = get_option( '_wcml_version' );
 
-		// Exception - starting in 2.3.2.
 		if ( empty( $version_in_db ) && get_option( 'icl_is_wcml_installed' ) ) {
 			$version_in_db = '2.3.2';
 		}
@@ -148,10 +145,8 @@ class WCML_Upgrade {
 	public function upgrade_2_9_9_1() {
 		global $wpdb;
 
-		// Migrate existing currencies.
 		$currencies = $wpdb->get_results( 'SELECT * FROM ' . $wpdb->prefix . 'icl_currencies ORDER BY id DESC' );
 
-		/** @var stdClass $currency */
 		foreach ( $currencies as $currency ) {
 			if ( isset( $currency->language_code ) ) {
 				$wpdb->insert(
@@ -169,7 +164,6 @@ class WCML_Upgrade {
 			$wpdb->query( "ALTER TABLE {$wpdb->prefix}icl_currencies DROP COLUMN language_code" );
 		}
 
-		// Migrate settings.
 		$new_settings = [
 			'is_term_order_synced'       => get_option( 'icl_is_wcml_term_order_synched' ),
 			'file_path_sync'             => get_option( 'wcml_file_path_sync' ),
@@ -206,10 +200,8 @@ class WCML_Upgrade {
 
 		update_option( '_wcml_settings', $wcml_settings );
 
-		// Multi-currency migration.
 		if ( 'yes' === $wcml_settings['enable_multi_currency'] && 2 === (int) $wcml_settings['currency_converting_option'] ) {
 
-			// Get languages currencies map.
 			$results = $wpdb->get_results( "SELECT l.language_code, c.code FROM {$wpdb->prefix}icl_languages_currencies l JOIN {$wpdb->prefix}icl_currencies c ON l.currency_id = c.id" );
 			foreach ( $results as $row ) {
 				 $language_currencies[ $row->language_code ] = $row->code;
@@ -228,7 +220,6 @@ class WCML_Upgrade {
 				)
 			);
 
-			// Set custom conversion rates.
 			foreach ( $results as $row ) {
 				$translations                      = $sitepress->get_element_translations( $row->trid, $row->element_type );
 				$meta                              = get_post_meta( $row->ID );
@@ -270,7 +261,6 @@ class WCML_Upgrade {
 	public function upgrade_3_2() {
 		WCML_Capabilities::set_up_capabilities();
 
-		// Delete not existing currencies in WC.
 		global $wpdb;
 		$currencies    = $wpdb->get_results( 'SELECT id,code FROM ' . $wpdb->prefix . 'icl_currencies ORDER BY `id` DESC' );
 		$wc_currencies = get_woocommerce_currencies();
@@ -389,7 +379,6 @@ class WCML_Upgrade {
 				)
 			);
 
-			// Update domain_name_context_md5 value.
 			$string_id = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}icl_strings WHERE context = %s AND name = %s", WCML_Url_Translation::WC_STRING_CONTEXT, $endpoint_key ) );
 
 			if ( $string_id ) {
@@ -417,7 +406,6 @@ class WCML_Upgrade {
 
 		update_option( '_wcml_settings', $wcml_settings );
 
-		// Update custom fields for bookings.
 		$bookable_resources = $wpdb->get_results( "SELECT element_id FROM {$wpdb->prefix}icl_translations WHERE element_type = 'post_bookable_resource' AND source_language_code IS NOT NULL" );
 
 		foreach ( $bookable_resources as $bookable_resource ) {
@@ -524,7 +512,6 @@ class WCML_Upgrade {
 
 				$min_stock = false;
 
-				// Collect min stock.
 				foreach ( $translations as $translation ) {
 					$stock = get_post_meta( $translation->element_id, '_stock', true );
 					if ( ! $min_stock || $stock < $min_stock ) {
@@ -532,7 +519,6 @@ class WCML_Upgrade {
 					}
 				}
 
-				// Update stock value.
 				foreach ( $translations as $translation ) {
 					update_post_meta( $translation->element_id, '_stock', $min_stock );
 				}
@@ -618,7 +604,6 @@ class WCML_Upgrade {
 	}
 
 	private function upgrade_4_2_2() {
-		// #wcml-2128
 		$user = new WP_User( 'admin' );
 		if ( $user->exists() && ! is_super_admin( $user->ID ) ) {
 			$user->remove_cap( 'wpml_manage_woocommerce_multilingual' );
@@ -629,7 +614,6 @@ class WCML_Upgrade {
 	}
 
 	private function upgrade_4_2_7() {
-		// #wcml-2242
 		$wcml_settings = get_option( '_wcml_settings' );
 		if ( 'yahoo' === $wcml_settings['multi_currency']['exchange_rates']['service'] ) {
 			$wcml_settings['multi_currency']['exchange_rates']['service'] = 'fixerio';
@@ -638,9 +622,7 @@ class WCML_Upgrade {
 	}
 
 	private function upgrade_4_2_10() {
-		// #wcml-2307
 		global $wpdb;
-		/* @phpstan-ignore booleanAnd.rightAlwaysTrue */
 		if ( defined( 'WC_BOOKINGS_VERSION' ) && version_compare( WC_BOOKINGS_VERSION, '1.10.9', '>=' ) ) {
 			$results = $wpdb->get_results(
 				"
@@ -711,7 +693,6 @@ class WCML_Upgrade {
 	private function upgrade_4_3_4() {
 		global $wpdb;
 
-		// Delete wrongly duplicated attachments.
 		$wpdb->query( "DELETE FROM {$wpdb->prefix}icl_translations WHERE `element_id` IN ( SELECT ID FROM {$wpdb->prefix}posts WHERE `guid` LIKE '%attachment_id%' ) " );
 		$wpdb->query( "DELETE FROM {$wpdb->prefix}postmeta WHERE `post_id` IN ( SELECT ID FROM {$wpdb->prefix}posts WHERE `guid` LIKE '%attachment_id%' ) " );
 		$wpdb->query( "DELETE FROM {$wpdb->prefix}posts WHERE `guid` LIKE '%attachment_id%'" );
@@ -720,7 +701,6 @@ class WCML_Upgrade {
 	private function upgrade_4_3_5() {
 		if ( class_exists( 'WC_Product_Bundle' ) && function_exists( 'WC_PB' ) ) {
 			global $wpdb;
-			// Delete wrongly bundled items.
 			$wpdb->query( "DELETE FROM {$wpdb->prefix}woocommerce_bundled_itemmeta WHERE `meta_key` LIKE 'translation_item_id_of_%' AND `meta_value` IN ( SELECT bundled_item_id FROM {$wpdb->prefix}woocommerce_bundled_items WHERE `product_id` = 0 AND `bundle_id` = 0 ) " );
 			$wpdb->query( "DELETE FROM {$wpdb->prefix}woocommerce_bundled_items WHERE `product_id` = 0 AND `bundle_id` = 0 " );
 			$not_existing_items = $wpdb->get_col( "SELECT m.`meta_id` FROM {$wpdb->prefix}woocommerce_bundled_itemmeta AS m LEFT JOIN {$wpdb->prefix}woocommerce_bundled_items as i ON m.meta_value = i.bundled_item_id WHERE m.`meta_key` LIKE 'translation_item_id_of_%' AND i.`bundled_item_id` IS NULL" );
@@ -729,7 +709,6 @@ class WCML_Upgrade {
 	}
 
 	private function upgrade_4_4_1() {
-		/** @var woocommerce_wpml $woocommerce_wpml */
 		global $sitepress, $woocommerce_wpml;
 
 		if ( ! $woocommerce_wpml->is_wpml_prior_4_2() ) {
@@ -877,13 +856,10 @@ class WCML_Upgrade {
 		}
 	}
 
-	/**
-	 * @return WPML_Notices|null
-	 */
 	private function get_wpml_admin_notices() {
 		if ( function_exists( 'wpml_get_admin_notices' ) ) {
 			return wpml_get_admin_notices();
-		} elseif ( function_exists( 'wcml_wpml_get_admin_notices' ) ) { // Case Standalone.
+		} elseif ( function_exists( 'wcml_wpml_get_admin_notices' ) ) {
 			return wcml_wpml_get_admin_notices();
 		}
 

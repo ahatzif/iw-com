@@ -8,14 +8,10 @@ use WPML\FP\Obj;
 class WCML_Multi_Currency_Orders {
 	const WCML_CONVERTED_META_KEY_PREFIX = '_wcml_converted_';
 
-	/** @var WCML_Multi_Currency */
 	private $multi_currency;
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
-	/** @var WP $wp */
 	private $wp;
 
-	/** @var string|null $order_currency */
 	private $order_currency;
 
 	public function __construct( WCML_Multi_Currency $multi_currency, woocommerce_wpml $woocommerce_wpml, WP $wp ) {
@@ -38,7 +34,6 @@ class WCML_Multi_Currency_Orders {
 		add_filter( 'posts_join', [ $this, 'filter_orders_by_currency_join' ] );
 		add_filter( 'posts_where', [ $this, 'filter_orders_by_currency_where' ] );
 
-		// new order currency/language switchers.
 		add_action( 'woocommerce_process_shop_order_meta', [ $this, 'set_order_currency_on_update' ] );
 		add_action( 'woocommerce_order_actions_start', [ $this, 'show_order_currency_selector' ] );
 
@@ -49,9 +44,7 @@ class WCML_Multi_Currency_Orders {
 
 		add_action( 'wp_ajax_wcml_order_set_currency', [ $this, 'set_order_currency_on_ajax_update' ] );
 
-		// dashboard status screen.
 		if ( current_user_can( 'view_woocommerce_reports' ) || current_user_can( 'manage_woocommerce' ) || current_user_can( 'publish_shop_orders' ) ) {
-			// filter query to get order by status.
 			add_filter( 'query', [ $this, 'filter_order_status_query' ] );
 		}
 
@@ -93,11 +86,6 @@ class WCML_Multi_Currency_Orders {
 		<?php
 	}
 
-	/**
-	 * Check if a currency filter is applied on the current page.
-	 *
-	 * @return bool True if a currency filter is applied, false otherwise.
-	 */
 	private function is_currency_filter_applied() {
 		global $wp_query;
 		return ! empty( $wp_query->query['_order_currency'] );
@@ -123,17 +111,6 @@ class WCML_Multi_Currency_Orders {
 		return $where;
 	}
 
-	/**
-	 * Filter orders by currency in a WooCommerce system.
-	 *
-	 * This method is responsible for modifying the query arguments used for filtering orders
-	 * based on the selected currency from the WooCommerce admin selector. If a currency is
-	 * selected in the admin, it adds the 'currency' filter to the query arguments.
-	 *
-	 * @param array $query_args The original query arguments for filtering orders.
-	 *
-	 * @return array The modified query arguments, including the 'currency' filter if applicable.
-	 */
 	public function hpos_filter_orders_by_currency( $query_args ) {
 		$currencyFromAdminSelector = $this->get_order_currency_get();
 
@@ -146,7 +123,6 @@ class WCML_Multi_Currency_Orders {
 
 	public function set_order_currency_on_update( $post_id ) {
 
-		/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 		if ( isset( $_POST['wcml_shop_order_currency'] ) ) {
 			OrdersHelper::setCurrency( $post_id, filter_input( INPUT_POST, 'wcml_shop_order_currency', FILTER_SANITIZE_FULL_SPECIAL_CHARS ) );
 		}
@@ -156,7 +132,7 @@ class WCML_Multi_Currency_Orders {
 	public function show_order_currency_selector( $order_id ) {
 		$order = wc_get_order( $order_id );
 
-		if ( $order && $order->get_status() === 'auto-draft' ) { /** @see https://onthegosystems.myjetbrains.com/youtrack/issue/wcml-4500 */
+		if ( $order && $order->get_status() === 'auto-draft' ) {  
 
 			$current_order_currency = $this->get_order_currency_cookie();
 
@@ -220,13 +196,6 @@ JS;
 
 	}
 
-	/**
-	 * @param WC_Order_Item|false      $item
-	 * @param int                      $itemId
-	 * @param WC_Order|WC_Order_Refund $order
-	 *
-	 * @return WC_Order_Item|false
-	 */
 	public function setTotalsForOrderNewItem( $item, $itemId, $order ) {
 		if ( false === $item ) {
 			return $item;
@@ -257,11 +226,6 @@ JS;
 		return $item;
 	}
 
-	/**
-	 * @param int $orderId
-	 *
-	 * @return string
-	 */
 	private function setCurrencyFromOrder( $orderId ) {
 		$orderCurrency = OrdersHelper::getCurrency( $orderId );
 
@@ -273,12 +237,6 @@ JS;
 		return $orderCurrency;
 	}
 
-	/**
-	 * @param WC_Order_Item $item
-	 * @param string        $orderCurrency
-	 *
-	 * @return string
-	 */
 	private function getConvertedItemPrice( $item, $orderCurrency ) {
 		$productId         = $item->get_variation_id() ? $item->get_variation_id() : $item->get_product_id();
 		$originalProductId = $this->woocommerce_wpml->products->get_original_product_id( $productId );
@@ -291,9 +249,6 @@ JS;
 		return $convertedPrice;
 	}
 
-	/**
-	 * @param WC_Order_Item $item
-	 */
 	public function updateTotalsForOrderItem( $item ) {
 		if ( 'line_item' !== $item->get_type() ) {
 			return;
@@ -305,7 +260,6 @@ JS;
 			$converted_meta_key = $this->get_converted_meta_key( $propertySlug );
 			if ( $this->is_value_changed( $item, $propertySlug ) ) {
 				$get_key = 'get_' . $propertySlug;
-				/** @phpstan-ignore-next-line method.notFound */
 				$item->update_meta_data( $converted_meta_key, $item->$get_key() );
 			}
 		}
@@ -313,11 +267,6 @@ JS;
 		$item->update_meta_data( '_wcml_total_qty', $item->get_quantity() );
 	}
 
-	/**
-	 * @param WC_Order $order
-	 *
-	 * @return array
-	 */
 	private function get_order_coupons_objects( $order ) {
 		$order_coupons   = $order->get_items( 'coupon' );
 		$coupons_objects = [];
@@ -340,32 +289,13 @@ JS;
 		return $itemmeta;
 	}
 
-	/**
-	 * @param WC_Order_Item_Product $item
-	 * @param array $coupons
-	 * @param int|bool $order_id
-	 * @param string|bool $order_currency
-	 * @deprecated since WCML 4.11.0
-	 */
 	public function set_converted_totals_for_item( $item, $coupons, $order_id = false, $order_currency = false ) {
-			// Add a deprecation notice?
 	}
 
-	/**
-	 * @param string $key
-	 *
-	 * @return string
-	 */
 	private function get_converted_meta_key( $key ) {
 		return self::WCML_CONVERTED_META_KEY_PREFIX . $key;
 	}
 
-	/**
-	 * @param WC_Order_Item_Product $item
-	 * @param string                $key
-	 *
-	 * @return bool
-	 */
 	private function is_value_changed( $item, $key ) {
 		$converted_meta_key = $this->get_converted_meta_key( $key );
 
@@ -380,16 +310,6 @@ JS;
 		return $item->$get_key() !== $item->get_meta( $converted_meta_key );
 	}
 
-	/**
-	 * @param string                $meta
-	 * @param float                 $item_price
-	 * @param bool                  $is_custom_price
-	 * @param WC_Order_Item_Product $item
-	 * @param string                $order_currency
-	 * @param array                 $coupons
-	 *
-	 * @return float
-	 */
 	private function get_converted_item_meta( $meta, $item_price, $is_custom_price, $item, $order_currency, $coupons ) {
 
 		if ( 'total' === $meta && $coupons ) {
@@ -421,11 +341,6 @@ JS;
 		return wcml_get_woocommerce_currency_option();
 	}
 
-	/**
-	 * This function extracts and sanitizes the order currency filter value from the QUERY_STRING.
-	 *
-	 * @return string|null The sanitized value, or null if it is not present.
-	 */
 
 	private function get_order_currency_get() {
 		return isset( $_GET['_order_currency'] ) ? sanitize_text_field( wp_unslash( $_GET['_order_currency'] ) ) : null;
@@ -440,8 +355,6 @@ JS;
 		$currency = filter_input( INPUT_POST, 'currency', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
 		$cookie_name = '_wcml_order_currency';
-		// @todo uncomment or delete when #wpmlcore-5796 is resolved.
-		// do_action( 'wpsc_add_cookie', $cookie_name );
 		setcookie( $cookie_name, $currency, time() + 86400, COOKIEPATH, COOKIE_DOMAIN );
 
 		$return['currency'] = $currency;
@@ -451,14 +364,6 @@ JS;
 		die();
 	}
 
-	/*
-	* Filter status query
-	*
-	* @param string $query
-	*
-	* @return string
-	*
-	*/
 	public function filter_order_status_query( $query ) {
 		global $pagenow, $wpdb;
 
@@ -489,7 +394,6 @@ JS;
 		return $query;
 	}
 
-	// handle currency in order emails before handled in woocommerce.
 	public function fix_currency_before_order_email( $order ) {
 
 		$order_currency = $order->get_currency();
@@ -515,15 +419,8 @@ JS;
 		return $currency;
 	}
 
-	/**
-	 * @param string             $currency
-	 * @param \WC_Abstract_Order $order
-	 *
-	 * @return string
-	 */
 	public function get_currency_for_new_order( $currency, $order ) {
 		if ( OrdersHelper::isOrderCreateAdminScreen() || OrdersHelper::isEditingNewOrderItems() ) {
-			/** @phpstan-ignore-next-line function.alreadyNarrowedType */
 			$orderId       = method_exists( $order, 'get_id' ) ? $order->get_id() : Obj::prop( 'id', $order );
 			$orderCurrency = OrdersHelper::getCurrency( $orderId, true );
 

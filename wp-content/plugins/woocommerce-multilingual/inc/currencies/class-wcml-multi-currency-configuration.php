@@ -9,13 +9,7 @@ use function WPML\Container\make;
 class WCML_Multi_Currency_Configuration {
 
 
-	/**
-	 * @var WCML_Multi_Currency
-	 */
 	private static $multi_currency;
-	/**
-	 * @var woocommerce_wpml
-	 */
 	private static $woocommerce_wpml;
 
 	public static function set_up( WCML_Multi_Currency $multi_currency, woocommerce_wpml $woocommerce_wpml ) {
@@ -49,7 +43,6 @@ class WCML_Multi_Currency_Configuration {
 	}
 
 	public static function save_configuration() {
-		// @todo Cover by tests, required for wcml-3037.
 		if ( check_admin_referer( 'wcml_mc_options', 'wcml_nonce' ) ) {
 
 			$wcml_settings = self::$woocommerce_wpml->settings;
@@ -57,7 +50,6 @@ class WCML_Multi_Currency_Configuration {
 			$wcml_settings['enable_multi_currency'] = isset( $_POST['multi_currency'] ) ? intval( $_POST['multi_currency'] ) : 0;
 			$wcml_settings['display_custom_prices'] = isset( $_POST['display_custom_prices'] ) ? intval( $_POST['display_custom_prices'] ) : 0;
 
-			// update default currency settings
 			if ( $wcml_settings['enable_multi_currency'] == WCML_MULTI_CURRENCIES_INDEPENDENT ) {
 
 				$options = [
@@ -249,7 +241,6 @@ class WCML_Multi_Currency_Configuration {
 
 	public static function currency_options_update_default_currency( $settings, $current_currency, $new_currency ) {
 
-		// When the default WooCommerce currency is updated, if it existed as a secondary currency, remove it
 		if ( isset( $settings['currency_options'][ $current_currency ] ) ) {
 			$currency_settings                             = $settings['currency_options'][ $current_currency ];
 			$settings['currency_options'][ $new_currency ] = $currency_settings;
@@ -274,7 +265,7 @@ class WCML_Multi_Currency_Configuration {
 			'hide'         => true,
 		];
 
-		ICL_AdminNotifier::remove_message( $message_id ); // clear any previous instances
+		ICL_AdminNotifier::remove_message( $message_id );
 		ICL_AdminNotifier::add_message( $message_args );
 
 		return $settings;
@@ -344,7 +335,6 @@ class WCML_Multi_Currency_Configuration {
 				$save = true;
 			}
 
-			/** @phpstan-ignore-next-line instanceof.alwaysTrue */
 			if ( self::$multi_currency instanceof WCML_Multi_Currency ) {
 				foreach ( self::$multi_currency->get_currency_codes() as $code ) {
 					$new_key = $key . '_' . $code;
@@ -377,7 +367,6 @@ class WCML_Multi_Currency_Configuration {
 		self::verify_nonce();
 		$data = self::get_data();
 
-		/** @phpstan-ignore-next-line instanceof.alwaysTrue */
 		if ( WC()->integrations instanceof WC_Integrations) {
 			$integrations = WC()->integrations->get_integrations();
 

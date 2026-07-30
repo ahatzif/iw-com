@@ -10,14 +10,10 @@ use function WPML\FP\spreadArgs;
 
 class ProductCatHooks implements \IWPML_Frontend_Action {
 
-	/**
-	 * @var bool $isTermsFilterLoaded
-	 */
 	private $isTermsFilterLoaded = false;
 
 	const KEY_FIX_TERM_COUNT_ZERO = 'wcml_fix_term_count_zero';
 
-	/** @var \WPML_Translation_Element_Factory $elementFactory */
 	private $elementFactory;
 
 	public function __construct( \WPML_Translation_Element_Factory $elementFactory ) {
@@ -29,19 +25,11 @@ class ProductCatHooks implements \IWPML_Frontend_Action {
 			->then( spreadArgs( [ $this, 'addFixCountArg' ] ) );
 	}
 
-	/**
-	 * @param array $args
-	 *
-	 * @return array
-	 */
 	public function addFixCountArg( $args ) {
 		$this->loadTermsFilter();
 		return (array) Obj::assoc( self::KEY_FIX_TERM_COUNT_ZERO, true, $args );
 	}
 
-	/**
-	 * @return void
-	 */
 	private function loadTermsFilter() {
 		if ( ! $this->isTermsFilterLoaded ) {
 			Hooks::onFilter( 'get_terms', 10, 4 )
@@ -51,13 +39,6 @@ class ProductCatHooks implements \IWPML_Frontend_Action {
 		}
 	}
 
-	/**
-	 * @param array      $terms
-	 * @param array|null $taxonomy
-	 * @param array      $termQueryVars
-	 *
-	 * @return array
-	 */
 	public function fixTermsWithZeroCount( $terms, $taxonomy, $termQueryVars ) {
 		if ( ! empty( $termQueryVars[ self::KEY_FIX_TERM_COUNT_ZERO ] ) ) {
 			foreach ( $terms as $term ) {
@@ -70,11 +51,6 @@ class ProductCatHooks implements \IWPML_Frontend_Action {
 		return $terms;
 	}
 
-	/**
-	 * @param \WP_Term $term
-	 *
-	 * @return int
-	 */
 	private function getSourceTermCount( $term ) {
 		return (int) Just::of( $this->elementFactory->create_term( $term->term_taxonomy_id ) )
 			->map( invoke( 'get_source_element' ) )

@@ -5,30 +5,16 @@ use WCML\Utilities\AdminPages;
 use function WCML\functions\getSetting;
 
 class WCML_Menus_Wrap extends WCML_Menu_Wrap_Base {
-	/**
-	 * @var SitePress
-	 */
 	private $sitepress;
 
-	/**
-	 * @var array
-	 */
 	private $sitepress_settings;
 
-	/**
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress $sitepress
-	 * @param array $sitepress_settings
-	 */
 	public function __construct( $woocommerce_wpml, $sitepress, $sitepress_settings ) {
 		parent::__construct( $woocommerce_wpml );
 		$this->sitepress          = $sitepress;
 		$this->sitepress_settings = $sitepress_settings;
 	}
 
-	/**
-	 * @return array
-	 */
 	protected function get_child_model() {
 		$current_tab = AdminPages::getTabToDisplay();
 
@@ -132,11 +118,6 @@ class WCML_Menus_Wrap extends WCML_Menu_Wrap_Base {
 
 		}
 
-		/**
-		 * Support for legacy urls
-		 * This functionality has been moved from WCML to WPML
-		 * Links point to WPML equivalents of the screens - preserved so that users can still use the "old links"
-		 */
 		switch ( $current_tab ) {
 
 			case \WCML\Utilities\AdminUrl::TAB_PRODUCTS:
@@ -207,9 +188,6 @@ class WCML_Menus_Wrap extends WCML_Menu_Wrap_Base {
 		return $product_attribute_names;
 	}
 
-	/**
-	 * @param ?string $taxonomy
-	 */
 	private function redirectToWPMLTaxonomyTranslation( $taxonomy = null ) {
 		wcml_safe_redirect( \WCML\Utilities\AdminUrl::getWPMLTaxonomyTranslation( $taxonomy ) );
 	}

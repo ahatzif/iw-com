@@ -1,18 +1,9 @@
 <?php
-/*
- *  Woo Variations table Compatibility class
- */
 
 class WCML_Woo_Var_Table implements \IWPML_Action {
 
-	/**
-	 * @var string
-	 */
 	private $current_language;
 
-	/**
-	 * @param string $current_language
-	 */
 	public function __construct( $current_language ) {
 		$this->current_language = $current_language;
 	}

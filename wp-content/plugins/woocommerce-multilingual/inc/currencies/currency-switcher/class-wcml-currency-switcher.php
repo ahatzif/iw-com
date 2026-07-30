@@ -5,22 +5,11 @@ use WCML\MultiCurrency\Geolocation;
 use WPML\Core\ISitePress;
 use WCML\StandAlone\NullSitePress;
 
-/**
- * Class WCML_Currency_Switcher
- *
- * Main class
- */
 class WCML_Currency_Switcher {
 
-	/** @var woocommerce_wpml $woocommerce_wpml */
 	private $woocommerce_wpml;
-	/** @var SitePress|NullSitePress $sitepress */
 	private $sitepress;
 
-	/**
-	 * @param woocommerce_wpml        $woocommerce_wpml
-	 * @param SitePress|NullSitePress $sitepress
-	 */
 	public function __construct( woocommerce_wpml $woocommerce_wpml, ISitePress $sitepress ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 		$this->sitepress        = $sitepress;
@@ -32,10 +21,8 @@ class WCML_Currency_Switcher {
 
 	public function on_init() {
 		add_action( 'wcml_currency_switcher', [ $this, 'do_currency_switcher' ] );
-		// @deprecated 3.9
 		add_action( 'currency_switcher', [ $this, 'currency_switcher' ] );
 		add_shortcode( 'currency_switcher', [ $this, 'currency_switcher_shortcode' ] );
-		// Built in currency switcher
 		add_action( 'woocommerce_product_meta_start', [ $this, 'show_currency_switcher' ] );
 		add_action( 'pre_update_option_sidebars_widgets', [ $this, 'update_option_sidebars_widgets' ], 10, 2 );
 	}
@@ -60,9 +47,6 @@ class WCML_Currency_Switcher {
 		return $html;
 	}
 
-	/**
-	 * @param array|mixed $args
-	 */
 	public function do_currency_switcher( $args = [] ) {
 		if ( ! is_array( $args ) ) {
 			$args = [];
@@ -138,11 +122,6 @@ class WCML_Currency_Switcher {
 		}
 	}
 
-	/**
-	 * @param array|mixed $args
-	 *
-	 * @deprecated 5.5.0 Use do_currency_switcher instead. The method sharing name with the class can have unexpected outcomes, for example, on PHPUnit.
-	 */
 	public function wcml_currency_switcher( $args = [] ) {
 		if ( ! is_array( $args ) ) {
 			$args = [];
@@ -151,16 +130,10 @@ class WCML_Currency_Switcher {
 		if ( ! isset( $args['echo'] ) || $args['echo'] ) {
 			$this->do_currency_switcher( $args );
 		} else {
-			// phpcs:ignore Universal.CodeAnalysis.ConstructorDestructorReturn.ReturnValueFound
 			return $this->do_currency_switcher( $args );
 		}
 	}
 
-	/**
-	 * @param array $currencies
-	 *
-	 * @return array
-	 */
 	private function filter_allowed_currencies_on_frontend( $currencies ) {
 		$ifDisallowedByLanguage = function( $currency ) {
 			return ! Settings::isValidCurrencyForLang( $currency, $this->sitepress->get_current_language() );
@@ -224,17 +197,11 @@ class WCML_Currency_Switcher {
 		}
 	}
 
-	/**
-	 * @deprecated 3.9
-	 */
 	public function currency_switcher( $args = [] ) {
 
 		$this->wcml_currency_switcher( $args );
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_registered_sidebars() {
 		global $wp_registered_sidebars;
 
@@ -264,7 +231,7 @@ class WCML_Currency_Switcher {
 			if ( is_array( $widgets ) ) {
 				foreach ( $widgets as $key => $widget_id ) {
 					if ( strpos( $widget_id, WCML_Currency_Switcher_Widget::SLUG ) === 0 ) {
-						if ( $found ) { // Only one CS widget instance per sidebar
+						if ( $found ) {
 							unset( $sidebars[ $sidebar ][ $key ] );
 							continue;
 						}
@@ -305,7 +272,6 @@ class WCML_Currency_Switcher {
 		];
 	}
 
-	// backward compatibility to convert switcher style for users who uses old parameters wcml-1874
 	public function check_and_convert_switcher_style( $args ) {
 
 		if ( isset( $args['switcher_style'] ) ) {
@@ -327,11 +293,6 @@ class WCML_Currency_Switcher {
 		return $args;
 	}
 
-	/**
-	 * @param array $wcml_settings
-	 *
-	 * @return bool
-	 */
 	public function should_display_currency_switcher_based_on_custom_prices( $wcml_settings ) {
 		if ( empty( $wcml_settings['display_custom_prices'] ) ) {
 			return true;

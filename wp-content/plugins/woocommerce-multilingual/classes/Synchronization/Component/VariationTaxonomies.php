@@ -9,11 +9,6 @@ use WPML_Non_Persistent_Cache;
 
 class VariationTaxonomies extends Synchronizer {
 
-	/**
-	 * @param \WP_Post          $variation
-	 * @param int[]             $translationsIds
-	 * @param array<int,string> $translationsLanguages
-	 */
 	public function run( $variation, $translationsIds, $translationsLanguages ) {
 		$filtersSuspend = SuspendWpmlFiltersFactory::create();
 		foreach ( $translationsLanguages as $translationId => $language ) {
@@ -22,26 +17,9 @@ class VariationTaxonomies extends Synchronizer {
 		$filtersSuspend->resume();
 	}
 
-	/**
-	 * @param int    $variationId
-	 * @param int    $translationId
-	 * @param string $language
-	 */
 	private function runForTranslation( $variationId, $translationId, $language ) {
 		$taxonomies       = get_object_taxonomies( 'product_variation' );
 		$taxonomiesToSync = array_values( array_diff( $taxonomies, [ 'translation_priority' ] ) );
-		/**
-		 * Filters the taxonomy objects to synchronize.
-		 *
-		 * @since 5.2.0
-		 * @todo This filter hass useless 3rd/4th parameters. Cache does not care about the translationId, so it does not matter what taxonomies we decide to change for each translationId! The same for $language!
-		 * @todo We should deprecate this filter, or at least deprecate the last two parameters. So we can extract this out since it is shared for all translations!
-		 *
-		 * @param string[]   $taxonomiesToSync
-		 * @param int|string $variationId
-		 * @param int|string $translationId
-		 * @param string     $language
-		 */
 		$taxonomiesToSync = apply_filters( 'wcml_product_variations_taxonomies_to_sync', $taxonomiesToSync, $variationId, $translationId, $language );
 		$found            = false;
 		$allTerms         = WPML_Non_Persistent_Cache::get( $variationId, __CLASS__, $found );
@@ -86,8 +64,6 @@ class VariationTaxonomies extends Synchronizer {
 				}
 
 				foreach ( $ttIds as $ttId ) {
-					// Avoid the wpml_object_id filter to escape from the WPML_Term_Translations::maybe_warm_term_id_cache() hell
-					// given that we invalidate the cache at every step on wp_set_post_terms().
 					$ttIdTrans = $this->elementTranslations->element_id_in( $ttId, $language );
 					if ( $ttIdTrans ) {
 						$ttIdsTrans[] = $ttIdTrans;
@@ -96,14 +72,12 @@ class VariationTaxonomies extends Synchronizer {
 
 				$ttIdsTrans   = array_values( array_unique( array_map( 'intval', $ttIdsTrans ) ) );
 				if ( ! empty( $ttIdsTrans ) ) {
-					// phpcs:disable WordPress.WP.PreparedSQL.NotPrepared
 					$termIdsTrans = $this->wpdb->get_col(
 						$this->wpdb->prepare(
 							"SELECT term_id FROM {$this->wpdb->term_taxonomy} WHERE term_taxonomy_id IN (" . DB::prepareIn( $ttIdsTrans, '%d' ) . ") LIMIT %d",
 							count( $ttIdsTrans )
 						)
 					);
-					// phpcs:enable
 				}
 
 				$termsToSync = array_merge( $termIds, $termIdsTrans );
@@ -112,7 +86,6 @@ class VariationTaxonomies extends Synchronizer {
 				if ( empty( $termsToSync ) ) {
 					continue;
 				}
-				// set the fourth parameter in 'true' because we need to add new terms, instead of replacing all.
 				wp_set_object_terms( $translationId, $termsToSync, $taxonomy, true );
 			}
 

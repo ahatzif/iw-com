@@ -15,19 +15,7 @@ use function WCML\functions\isStandAlone;
 
 class Factory {
 
-	/**
-	 * @param string $objectType
-	 *
-	 * @return Handler
-	 */
 	public static function create( $objectType ) {
-		/**
-		 * @var \woocommerce_wpml      $woocommerce_wpml
-		 * @var \WPML_Post_Translation $wpml_post_translations
-		 * @var \WPML_Term_Translation $wpml_term_translations
-		 * @var \SitePress             $sitepress
-		 * @var \wpdb                  $wpdb
-		 */
 		global $woocommerce_wpml, $wpml_post_translations, $wpml_term_translations, $sitepress, $wpdb;
 
 		$isMultiCurrencyOn = wcml_is_multi_currency_on();

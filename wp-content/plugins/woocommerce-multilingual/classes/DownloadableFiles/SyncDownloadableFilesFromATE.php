@@ -13,11 +13,6 @@ class SyncDownloadableFilesFromATE {
 		], 20, 3 );
 	}
 
-	/**
-	 * @param int       $post_id
-	 * @param array     $fields
-	 * @param \stdClass $job
-	 */
 	public function save_downloadable_files_fields_translations( $post_id, $fields, $job ) {
 		if ( ! Hooks::isProduct( $job ) ) {
 			return null;
@@ -55,13 +50,6 @@ class SyncDownloadableFilesFromATE {
 		}
 	}
 
-	/**
-	 * @param int    $product_id
-	 * @param array  $fields
-	 * @param string $language
-	 *
-	 * @return array
-	 */
 	private function groupDownloadableFilesByProductIdConsideringProductVariants( $product_id, array $fields, $language ) {
 		$data = [];
 		foreach ( $fields as $field ) {
@@ -71,13 +59,11 @@ class SyncDownloadableFilesFromATE {
 				continue;
 			}
 
-			// Default: When a product has no variants
 			$variation_id = $product_id;
 
 			$exp = explode( ':', $title, 2 );
 
 			if ( ! empty( $exp[1] ) ) {
-				// Product Variant
 				$title        = $exp[0];
 				$variation_id = $exp[1];
 			}

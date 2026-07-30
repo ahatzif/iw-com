@@ -12,9 +12,6 @@ class Products implements \IWPML_Backend_Action {
 			->then( spreadArgs( [ $this, 'synchronizeProducts' ] ) );
 	}
 
-	/**
-	 * @param \WC_Product $product 
-	 */
 	public function synchronizeProducts( $product ) {
 		do_action( 'wpml_sync_all_custom_fields', getId( $product ) );
 		do_action( \WCML\Synchronization\Hooks::HOOK_SYNCHRONIZE_PRODUCT_TRANSLATIONS, get_post( getId( $product ) ), [], [] );

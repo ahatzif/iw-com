@@ -10,7 +10,6 @@ class WCML_W3TC_Multi_Currency {
 
 	public function init() {
 
-		// Only needed for older W3TC versions.
 		if ( function_exists( 'w3_require_once' ) ) {
 			add_action( 'wcml_switch_currency', [ $this, 'flush_page_cache' ] );
 		}

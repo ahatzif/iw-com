@@ -6,18 +6,12 @@ class WCML_Dependencies {
 	const MIN_WPML_ST     = '3.0.5';
 	const MIN_WOOCOMMERCE = '3.9.0';
 
-	/** @var string $err_message */
 	private $err_message = '';
 
-	/** @var bool|null $allok */
 	private $allok;
 
-	/**
-	 * @var WCML_Tracking_Link
-	 */
 	private $tracking_link;
 
-	/** @var array $xml_config_errors */
 	public $xml_config_errors = [];
 
 	public function __construct() {
@@ -30,10 +24,6 @@ class WCML_Dependencies {
 	}
 
 	public function check() {
-		/**
-		 * @var SitePress|null   $sitepress
-		 * @var WooCommerce|null $woocommerce
-		 */
 		global $sitepress, $woocommerce;
 
 		if ( null === $this->allok ) {
@@ -44,18 +34,15 @@ class WCML_Dependencies {
 			$st_ok   = true;
 			$wc_ok   = true;
 
-			/* @phpstan-ignore booleanOr.rightAlwaysFalse */
 			if ( ! defined( 'ICL_SITEPRESS_VERSION' ) || ICL_PLUGIN_INACTIVE || is_null( $sitepress ) || ! class_exists( 'SitePress' ) ) {
 				$missing['WPML'] = $this->tracking_link->getWpmlHome();
 				$core_ok         = false;
 			} elseif (
-				/* @phpstan-ignore elseif.alwaysFalse */
 				version_compare( ICL_SITEPRESS_VERSION, self::MIN_WPML, '<' )
 			) {
 				add_action( 'admin_notices', [ $this, '_old_wpml_warning' ] );
 				$core_ok = false;
 			} elseif ( ! $sitepress->setup() ) {
-				/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 				if ( ! ( isset( $_GET['page'] ) && WPML_PLUGIN_FOLDER . '/menu/languages.php' === $_GET['page'] ) ) {
 					add_action( 'admin_notices', [ $this, '_wpml_not_installed_warning' ] );
 				}
@@ -66,7 +53,6 @@ class WCML_Dependencies {
 				$missing['WooCommerce'] = 'http://www.woothemes.com/woocommerce/';
 				$wc_ok                  = false;
 			} elseif (
-				/* @phpstan-ignore booleanAnd.rightAlwaysFalse */
 				defined( 'WC_VERSION' ) && version_compare( WC_VERSION, self::MIN_WOOCOMMERCE, '<' ) ||
 				isset( $woocommerce->version ) && version_compare( $woocommerce->version, self::MIN_WOOCOMMERCE, '<' )
 			) {
@@ -98,7 +84,6 @@ class WCML_Dependencies {
 			}
 
 			if ( $sitepress instanceof SitePress ) {
-				/* @phpstan-ignore booleanAnd.rightAlwaysTrue */
 				$this->allok = $full_mode && $sitepress->setup();
 			}
 		}
@@ -106,9 +91,6 @@ class WCML_Dependencies {
 		return $this->allok;
 	}
 
-	/**
-	 * Adds admin notice.
-	 */
 	public function _old_wpml_warning() {
 		?>
 		<div class="message error">
@@ -177,9 +159,6 @@ class WCML_Dependencies {
 		<?php
 	}
 
-	/**
-	 * Adds default taxonomies notice.
-	 */
 	public function check_for_translatable_default_taxonomies() {
 
 		$default_taxonomies = [
@@ -216,16 +195,9 @@ class WCML_Dependencies {
 		}
 	}
 
-	/**
-	 * @param array $missing_plugins
-	 * @param bool  $possibly_standalone
-	 *
-	 * @return Closure
-	 */
 	private static function show_missing_plugins_warning( $missing_plugins, $possibly_standalone ) {
 		return function() use ( $missing_plugins, $possibly_standalone ) {
 			if ( $possibly_standalone ) {
-				// Limit missing plugins to 'WooCommerce'
 				$missing_plugins = array_intersect_key( $missing_plugins, [ 'WooCommerce' => 1 ] );
 			}
 
@@ -254,17 +226,9 @@ class WCML_Dependencies {
 		};
 	}
 
-	/**
-	 * For all the urls to work we need either:
-	 * 1) the shop page slug must be the same in all languages
-	 * 2) or the shop prefix disabled in woocommerce settings
-	 * one of these must be true for product urls to work
-	 * if none of these are true, display a warning message
-	 */
 	private function check_for_incompatible_permalinks() {
 		global $sitepress_settings, $pagenow;
 
-		// WooCommerce 2.x specific checks
 		$permalinks = get_option( 'woocommerce_permalinks', [ 'product_base' => '' ] );
 		if ( empty( $permalinks['product_base'] ) ) {
 			return;
@@ -280,7 +244,6 @@ class WCML_Dependencies {
 		$message .= ' | ';
 		$message .= '<a href="' . admin_url( 'admin.php?page=' . $tm_folder . '/menu/main.php&sm=mcsetup#icl_custom_posts_sync_options' ) . '">' . __( 'Configure products slug translation', 'woocommerce-multilingual' ) . '</a>';
 
-		// Check if slug translation is enabled
 		$compatible          = true;
 		$permalink_structure = get_option( 'permalink_structure' );
 		if ( empty( $permalink_structure )
@@ -316,9 +279,8 @@ class WCML_Dependencies {
 			if ( isset( $config['wpml-config'] ) ) {
 				$cfs = [];
 
-				// custom-fields
 				if ( isset( $config['wpml-config']['custom-fields'] ) ) {
-					if ( isset( $config['wpml-config']['custom-fields']['custom-field']['value'] ) ) { // single
+					if ( isset( $config['wpml-config']['custom-fields']['custom-field']['value'] ) ) {
 						$cfs[] = $config['wpml-config']['custom-fields']['custom-field'];
 					} else {
 						foreach ( $config['wpml-config']['custom-fields']['custom-field'] as $cf ) {
@@ -343,11 +305,10 @@ class WCML_Dependencies {
 					}
 				}
 
-				// custom-types
 				if ( isset( $config['wpml-config']['custom-types'] ) ) {
 					$cts = [];
 
-					if ( isset( $config['wpml-config']['custom-types']['custom-type']['value'] ) ) { // single
+					if ( isset( $config['wpml-config']['custom-types']['custom-type']['value'] ) ) {
 						$cts[] = $config['wpml-config']['custom-types']['custom-type'];
 					} else {
 						foreach ( $config['wpml-config']['custom-types']['custom-type'] as $cf ) {
@@ -375,11 +336,10 @@ class WCML_Dependencies {
 					}
 				}
 
-				// taxonomies
 				if ( isset( $config['wpml-config']['taxonomies'] ) ) {
 					$txs = [];
 
-					if ( isset( $config['wpml-config']['taxonomies']['taxonomy']['value'] ) ) { // single
+					if ( isset( $config['wpml-config']['taxonomies']['taxonomy']['value'] ) ) {
 						$txs[] = $config['wpml-config']['taxonomies']['taxonomy'];
 					} else {
 						foreach ( $config['wpml-config']['taxonomies']['taxonomy'] as $cf ) {

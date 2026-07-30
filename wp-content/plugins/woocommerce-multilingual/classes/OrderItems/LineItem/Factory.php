@@ -10,11 +10,6 @@ class Factory implements TranslatorFactory {
 
 	const ORDER_ITEM_TYPE = 'line_item';
 
-	/**
-	 * @param \WC_Order_Item $item
-	 *
-	 * @return Translator|null
-	 */
 	public function getTranslator( $item ) {
 		if ( ! $item instanceof \WC_Order_Item_Product ) {
 			return null;

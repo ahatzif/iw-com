@@ -13,23 +13,11 @@ class WCML_TP_Support {
 
 	const PACKAGE_IMAGE_KEY_PREFIX = 'image-id-';
 
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
-	/** @var  wpdb */
 	private $wpdb;
-	/** @var WPML_Element_Translation_Package */
 	private $tp;
-	/** @var array */
 	private $tm_settings;
 
-	/**
-	 * WCML_Attributes constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param wpdb $wpdb
-	 * @param WPML_Element_Translation_Package $tp
-	 * @param array $tm_settings
-	 */
 	public function __construct( woocommerce_wpml $woocommerce_wpml, wpdb $wpdb, WPML_Element_Translation_Package $tp, array $tm_settings ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 		$this->wpdb             = $wpdb;
@@ -62,7 +50,7 @@ class WCML_TP_Support {
 		add_action( 'wpml_pro_translation_completed', [
 			$this,
 			'save_variation_custom_fields_translations'
-		], self::PRIORITY_SAVE_VARIATION_CUSTOM_FIELDS_TRANSLATION, 3 ); //after WCML_Products
+		], self::PRIORITY_SAVE_VARIATION_CUSTOM_FIELDS_TRANSLATION, 3 );
 
 		add_action(
 			'wpml_pro_translation_completed',
@@ -80,11 +68,6 @@ class WCML_TP_Support {
 		add_filter( 'wpml_custom_field_settings_override_lock_render', [ $this, 'set_wpml_term_custom_field_thumbnail_id_as_read_only' ], 10, 2 );
 	}
 
-	/**
-	 * @param bool $override
-	 * @param WPML_Custom_Field_Setting $setting
-	 * @return bool
-	 */
 	public function set_wpml_term_custom_field_thumbnail_id_as_read_only( $override, $setting ) {
 		if ( 'thumbnail_id' === $setting->get_index() && ( $setting instanceof WPML_Term_Custom_Field_Setting ) ) {
 			if( WPML_COPY_CUSTOM_FIELD === $setting->status() ) {
@@ -95,12 +78,6 @@ class WCML_TP_Support {
 		return $override;
 	}
 
-	/**
-	 * @param array $package
-	 * @param \WP_Post $post
-	 *
-	 * @return array
-	 */
 	public function append_custom_attributes_to_translation_package( $package, $post ) {
 		if ( $this->isWpPostAWcProduct( $post ) ) {
 
@@ -198,11 +175,6 @@ class WCML_TP_Support {
 
 	}
 
-	/**
-	 * @param int $variation_id
-	 *
-	 * @return array
-	 */
 	private function get_variation_custom_fields_to_translate( $variation_id ) {
 		$is_field_translatable = function ( $meta_key ) {
 			return isset( $this->tm_settings['custom_fields_translation'][ $meta_key ] )
@@ -214,21 +186,13 @@ class WCML_TP_Support {
 			->toArray();
 	}
 
-	/**
-	 * @param array $package
-	 * @param \WP_Post $post
-	 *
-	 * @return array
-	 */
 	public function append_variation_custom_fields_to_translation_package( $package, $post ) {
 		if ( $this->isWpPostAWcProduct( $post ) ) {
 
-			/** @var WC_Product_Variable $product */
 			$product = wc_get_product( $post->ID );
 
 			$allowed_variations_types = apply_filters( 'wcml_xliff_allowed_variations_types', [ 'variable' ] );
 
-			/** @phpstan-ignore-next-line instanceof.alwaysTrue */
 			if ( $product instanceof WC_Product && in_array( $product->get_type(), $allowed_variations_types, true ) ) {
 
 				$variations = $this->woocommerce_wpml->sync_variations_data->get_product_variations( $post->ID );
@@ -258,21 +222,13 @@ class WCML_TP_Support {
 
 	}
 
-	/**
-	 * @param array $package
-	 * @param \WP_Post $post
-	 *
-	 * @return array
-	 */
 	public function append_variation_downloadable_fields_to_translation_package( $package, $post ) {
 		if ( $this->isWpPostAWcProduct( $post ) ) {
 
-			/** @var WC_Product_Variable $product */
 			$product = wc_get_product( $post->ID );
 
 			$allowed_variations_types = apply_filters( 'wcml_xliff_allowed_variations_types', [ 'variable' ] );
 
-			/** @phpstan-ignore-next-line instanceof.alwaysTrue */
 			if ( $product instanceof WC_Product && in_array( $product->get_type(), $allowed_variations_types, true ) ) {
 
 				$variations = $this->woocommerce_wpml->sync_variations_data->get_product_variations( $post->ID );
@@ -311,24 +267,16 @@ class WCML_TP_Support {
 		return $package;
 	}
 
-	/**
-	 * @param array $package
-	 * @param \WP_Post $post
-	 *
-	 * @return array
-	 */
 	public function append_simple_downloadable_fields_to_translation_package( $package, $post ) {
 		if ( $this->isWpPostAWcProduct( $post ) ) {
 			if ( WCML_Downloadable_Products::isDownloadableFilesSetToUseSame( $post->ID ) ) {
 				return $package;
 			}
 
-			/** @var WC_Product_Variable $product */
 			$product = wc_get_product( $post->ID );
 
 			$allowed_types = [ 'simple' ];
 
-			/** @phpstan-ignore-next-line instanceof.alwaysTrue */
 			if ( $product instanceof WC_Product && in_array( $product->get_type(), $allowed_types, true ) ) {
 
 				$meta_value = get_post_meta( $post->ID, WCML_Downloadable_Products::DOWNLOADABLE_FILES_META, true );
@@ -391,18 +339,11 @@ class WCML_TP_Support {
 
 	}
 
-	/**
-	 * @param array $package
-	 * @param \WP_Post $post
-	 *
-	 * @return array
-	 */
 	public function append_images_to_translation_package( $package, $post ) {
 		if ( $this->isWpPostAWcProduct( $post ) ) {
 
 			$product_images = $this->woocommerce_wpml->media->product_images_ids( $post->ID );
 			foreach ( $product_images as $image_id ) {
-				/** @var stdClass|mixed */
 				$attachment_data = $this->wpdb->get_row( $this->wpdb->prepare( "SELECT post_title,post_excerpt,post_content FROM {$this->wpdb->posts} WHERE ID = %d", $image_id ) );
 				if ( ! is_object( $attachment_data ) ) {
 					continue;
@@ -452,9 +393,6 @@ class WCML_TP_Support {
 		}
 	}
 
-	/**
-	 * @param \WP_Post $post
-	 */
 	private function isWpPostAWcProduct( $post ): bool {
 		return 'product' === $post->post_type;
 	}
@@ -493,12 +431,6 @@ class WCML_TP_Support {
 
 	}
 
-	/**
-	 * @param int                                        $post_id
-	 * @param array                                      $data
-	 * @param bool|stdClass|WPML_Element_Translation_Job $job
-	 * @return void
-	 */
 	public function flush_variable_product_cache_prefix( $post_id, $data, $job ) {
 		if ( Hooks::isProduct( $job ) ) {
 			flushProductCachePrefixById( $post_id );

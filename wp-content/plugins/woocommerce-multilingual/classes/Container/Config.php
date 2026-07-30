@@ -21,21 +21,12 @@ class Config {
 		];
 	}
 
-	/**
-	 * When WPML and WCML are active, but WC is not:
-	 * - WCML needs very basic classes to function properly (e.g., checking requirements to display a message about the lack, or too old version of WC)
-	 */
 	public static function getSharedClassesWhenWooCommerceIsInactive(): array {
 		return [
 			\WCML_Dependencies::class,
 		];
 	}
 
-	/**
-	 * Replaces global $sitepress with null object.
-	 *
-	 * @return array
-	 */
 	public static function getAliases() {
 		return [
 			\WPML\Core\ISitePress::class => \WCML\functions\isStandAlone()
@@ -44,9 +35,6 @@ class Config {
 		];
 	}
 
-	/**
-	 * @return array
-	 */
 	public static function getDelegated() {
 		return [
 			\WCML_Exchange_Rates::class => [ \WCML_Exchange_Rates::class, 'create' ],

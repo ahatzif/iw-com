@@ -10,7 +10,6 @@ class WCML_Extra_Product_Options implements \IWPML_Action {
 	}
 
 	public function inf_translate_strings() {
-		// phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected
 		if ( isset( $_GET['page'] ) && 'tm-global-epo' === sanitize_text_field( $_GET['page'] ) ) {
 			$this->inf_message( 'Options Form' );
 		}
@@ -20,9 +19,6 @@ class WCML_Extra_Product_Options implements \IWPML_Action {
 		$this->inf_message( 'Product' );
 	}
 
-	/**
-	 * @param string $text Deprecated
-	 */
 	public function inf_message( $text ) {
 		$dashboardUrl  = \WCML\Utilities\AdminUrl::getWPMLTMDashboardStringDomain( self::TRANSLATION_DOMAIN );
 		$message       = '<div><p class="icl_cyan_box">';
@@ -34,7 +30,6 @@ class WCML_Extra_Product_Options implements \IWPML_Action {
 		);
 		$message .= '</p></div>';
 
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo $message;
 	}
 }

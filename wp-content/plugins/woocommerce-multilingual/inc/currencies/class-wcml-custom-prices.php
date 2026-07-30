@@ -8,9 +8,7 @@ use function WPML\FP\invoke;
 
 class WCML_Custom_Prices {
 
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
-	/** @var wpdb */
 	private $wpdb;
 
 	public function __construct( woocommerce_wpml $woocommerce_wpml, wpdb $wpdb ) {
@@ -31,7 +29,6 @@ class WCML_Custom_Prices {
 			add_action( 'save_post_product_variation', [ $this, 'sync_product_variations_custom_prices' ] );
 			add_action( 'woocommerce_variation_options', [ $this, 'add_individual_variation_nonce' ], 10, 3 );
 
-			// custom prices for different currencies for products/variations [BACKEND].
 			add_action( 'woocommerce_product_options_pricing', [ $this, 'woocommerce_product_options_custom_pricing' ] );
 			add_action( 'woocommerce_product_after_variable_attributes', [ $this, 'woocommerce_product_after_variable_attributes_custom_pricing' ], 10, 3 );
 
@@ -55,12 +52,6 @@ class WCML_Custom_Prices {
 
 	}
 
-	/**
-	 * @param int  $product_id
-	 * @param bool $currency
-	 *
-	 * @return array|false
-	 */
 	public function get_product_custom_prices( $product_id, $currency = false ) {
 		if ( empty( $currency ) ) {
 			$currency = $this->woocommerce_wpml->multi_currency->get_client_currency();
@@ -104,7 +95,6 @@ class WCML_Custom_Prices {
 			update_post_meta( $product_id, '_price_' . $currency, $custom_prices['_price'] );
 		}
 
-		// detemine min/max variation prices.
 		if ( ! empty( $product_meta['_min_variation_price'] ) && is_array( $product_meta['_min_variation_price'] ) && $product_meta['_min_variation_price'] !== [ '' ] ) {
 
 			static $product_min_max_prices = [];
@@ -113,22 +103,18 @@ class WCML_Custom_Prices {
 
 				$product_min_max_prices[ $product_id ] = [];
 
-				// get variation ids.
 				$variation_ids = $this->wpdb->get_col( $this->wpdb->prepare( "SELECT ID FROM {$this->wpdb->posts} WHERE post_parent = %d", $product_id ) );
 
-				// get all prices for the above variations.
 				$rows = $this->wpdb->get_results(
 					"SELECT post_id, meta_key, meta_value FROM {$this->wpdb->postmeta}
 					WHERE meta_key IN ('_price', '_regular_price', '_sale_price', '_price_$currency', '_regular_price_$currency', '_sale_price_$currency')
 						AND post_id IN (" . DB::prepareIn( $variation_ids, '%d' ) . ')'
 				);
 
-				// $extractPricesByType :: array, string => array
 				$extractPricesByType = function( $rows, $key ) use ( $currency, $variation_ids ) {
 					$prices   = wp_list_pluck( wp_list_filter( $rows, [ 'meta_key' => $key . '_' . $currency ] ), 'meta_value', 'post_id' );
 					$defaults = wp_list_pluck( wp_list_filter( $rows, [ 'meta_key' => $key ] ), 'meta_value', 'post_id' );
 
-					// calculate missing prices automatically.
 					foreach ( $variation_ids as $id ) {
 						if ( empty( $prices[ $id ] ) && isset( $defaults[ $id ] ) ) {
 							$prices[ $id ] = apply_filters( 'wcml_raw_price_amount', $defaults[ $id ] );
@@ -307,7 +293,6 @@ class WCML_Custom_Prices {
 		return $is_visible;
 	}
 
-	// display products with custom prices only if enabled "Show only products with custom prices in secondary currencies" option on settings page.
 	public function filter_products_with_custom_prices( $filtered_posts ) {
 
 		if ( $this->is_filtering_products_with_custom_prices_enabled() ) {
@@ -338,7 +323,6 @@ class WCML_Custom_Prices {
 						$matched_products[] = apply_filters( 'wpml_object_id', $product->post_parent, get_post_type( $product->post_parent ), true );
 					}
 				}
-				// Add Grouped products only if **all** of their children have the custom price meta key
 				$groupedProducts = [];
 
 				$groupedProductRawData = $this->wpdb->get_results(
@@ -374,7 +358,6 @@ class WCML_Custom_Prices {
 				add_filter( 'get_post_metadata', [ $this->woocommerce_wpml->multi_currency->prices, 'product_price_filter' ], 10, 4 );
 			}
 
-			// Filter the id's.
 			if ( sizeof( $filtered_posts ) == 0 ) {
 				$filtered_posts   = $matched_products;
 				$filtered_posts[] = 0;
@@ -387,12 +370,6 @@ class WCML_Custom_Prices {
 		return $filtered_posts;
 	}
 
-	/**
-	 * @param array $prices_array
-	 * @param \WC_Product $product
-	 *
-	 * @return array
-	 */
 	public function exclude_hidden_variation_prices_from_prices( $prices_array, $product ) {
 		if ( ! $this->is_filtering_products_with_custom_prices_enabled() ) {
 			return $prices_array;
@@ -409,9 +386,6 @@ class WCML_Custom_Prices {
 		return $prices_array;
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function is_filtering_products_with_custom_prices_enabled() {
 
 		return wcml_is_multi_currency_on() &&
@@ -436,12 +410,6 @@ class WCML_Custom_Prices {
 		}
 	}
 
-	/**
-	 * @param $post_id
-	 * @param \WP_REST_Request $wpRestRequest
-	 *
-	 * @return void
-	 */
 	public function save_custom_prices_on_rest( $post_id, $wpRestRequest ) {
 		if ( WCML_MULTI_CURRENCIES_INDEPENDENT !== $this->woocommerce_wpml->settings['enable_multi_currency'] ) {
 			return;
@@ -455,8 +423,8 @@ class WCML_Custom_Prices {
 		$rest2post = [];
 
 		$rest2post['_wcml_custom_prices'] = [
-			$original_product_id => null, // update product - Not implemented in REST API
-			'new'    => null // create new product - Not implemented in REST API
+			$original_product_id => null,
+			'new'    => null
 		];
 
 		$rest2post['_custom_sale_price']            = [];
@@ -466,31 +434,19 @@ class WCML_Custom_Prices {
 		$rest2post['_custom_sale_price_dates_to']   = [];
 		if( isset( $wpRestRequest['custom_prices'] ) && is_array( $wpRestRequest['custom_prices'] ) ) {
 			foreach ( $wpRestRequest['custom_prices'] as $code => $currency ) {
-				// REST API does not have the option to pass this parameter at the moment,
-				// so I assume that when I pass prices in currencies, I want to use them
 				$rest2post['_wcml_custom_prices']['new'] = (int) true;
 
 				$rest2post['_custom_regular_price'][ $code ]         = $currency['regular_price'] ?? null;
 				$rest2post['_custom_sale_price'][ $code ]            = $currency['sale_price'] ?? null;
-				$rest2post['_wcml_schedule'][ $code ]                = null; // Not implemented in REST API
-				$rest2post['_custom_sale_price_dates_from'][ $code ] = null; // Not implemented in REST API
-				$rest2post['_custom_sale_price_dates_to'][ $code ]   = null; // Not implemented in REST API
+				$rest2post['_wcml_schedule'][ $code ]                = null;
+				$rest2post['_custom_sale_price_dates_from'][ $code ] = null;
+				$rest2post['_custom_sale_price_dates_to'][ $code ]   = null;
 			}
 		}
 
 		$this->save_custom_prices_without_post_form( $original_product_id, $rest2post );
 	}
 
-	/**
-	 * the method was separated from a larger method
-	 * that ran the logic based on data obtained from
-	 * the form submitted $_POST - we need REST to behave in the same way
-	 *
-	 * @param $post_id
-	 * @param array $formPostData
-	 *
-	 * @return void
-	 */
 	private function save_custom_prices_without_post_form( $post_id, array $formPostData ) {
 		if ( WCML_MULTI_CURRENCIES_INDEPENDENT !== $this->woocommerce_wpml->settings['enable_multi_currency'] ) {
 			return;
@@ -565,11 +521,6 @@ class WCML_Custom_Prices {
 		return $price;
 	}
 
-	/**
-	 * @param int    $post_id
-	 * @param string $code
-	 * @param array  $custom_prices
-	 */
 	private function validate_and_update_sale_price_dates( $post_id, $code, array $custom_prices ) {
 		$date_from = $custom_prices['_sale_price_dates_from'];
 		$date_to   = $custom_prices['_sale_price_dates_to'];
@@ -587,11 +538,6 @@ class WCML_Custom_Prices {
 		}
 	}
 
-	/**
-	 * @param array $custom_prices
-	 *
-	 * @return bool
-	 */
 	protected function is_sale_price_valid( array $custom_prices ) {
 		$sale_price_dates_from = $custom_prices['_sale_price_dates_from'];
 		$sale_price_dates_to   = $custom_prices['_sale_price_dates_to'];
@@ -601,23 +547,16 @@ class WCML_Custom_Prices {
 		return $custom_prices['_sale_price'] !== '' && ( $not_depend_on_date || $valid_sale_date );
 	}
 
-	/**
-	 * @param int $product_id
-	 */
 	public function sync_product_variations_custom_prices_on_ajax( $product_id ) {
 		Maybe::fromNullable( wc_get_product( $product_id ) )
 			->map( invoke( 'get_children' ) )
 			->map( Fns::map( [ $this, 'sync_product_variations_custom_prices' ] ) );
 	}
 
-	/**
-	 * @param int $product_id
-	 */
 	public function sync_product_variations_custom_prices( $product_id ) {
 
 		if ( isset( $_POST['_wcml_custom_prices'][ $product_id ] ) ) {
 
-			// save custom prices for variation.
 			$nonce = filter_input( INPUT_POST, '_wcml_custom_prices_variation_' . $product_id . '_nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 			if ( isset( $_POST['_wcml_custom_prices'][ $product_id ] ) && isset( $nonce ) && wp_verify_nonce( $nonce, 'wcml_save_custom_prices_variation_' . $product_id ) ) {
 				update_post_meta( $product_id, '_wcml_custom_prices_status', $_POST['_wcml_custom_prices'][ $product_id ] );
@@ -651,11 +590,6 @@ class WCML_Custom_Prices {
 		}
 	}
 
-	/**
-	 * @param WC_Product $product_object
-	 *
-	 * @return bool
-	 */
 	private function is_on_sale( $product_object ) {
 		$custom_prices = $this->get_product_custom_prices( $product_object->get_id() );
 
@@ -666,12 +600,6 @@ class WCML_Custom_Prices {
 			   && $custom_prices['_sale_price'] !== $custom_prices['_regular_price'];
 	}
 
-	/**
-	 * @param bool       $on_sale
-	 * @param WC_Product $product_object
-	 *
-	 * @return bool
-	 */
 	public function filter_product_is_on_sale( $on_sale, $product_object ) {
 		if (
 			! $on_sale &&
@@ -684,27 +612,10 @@ class WCML_Custom_Prices {
 		return $on_sale;
 	}
 
-	/**
-	 * @param int $product_id
-	 *
-	 * @return mixed
-	 */
 	private function is_custom_prices_set_for_product( $product_id ) {
-		/**
-		 * Allow to override the detection of custom prices.
-		 *
-		 * @param bool $check
-		 * @param int  $productId
-		 */
 		return (bool) apply_filters( 'wcml_product_has_custom_prices', (bool) get_post_meta( $product_id, '_wcml_custom_prices_status', true ), $product_id );
 	}
 
-	/**
-	 * WC when starts the sale copies price from _sale_price into _price field
-	 * we should do the same for _sale_price_{currency} and _price_{currency}
-	 *
-	 * @param array $product_ids
-	 */
 	public function maybe_set_sale_prices( $product_ids ) {
 		foreach ( $product_ids as $product_id ) {
 			if ( $this->is_custom_prices_set_for_product( $product_id ) ) {
@@ -715,9 +626,6 @@ class WCML_Custom_Prices {
 		}
 	}
 
-	/**
-	 * @param array $product_ids
-	 */
 	public function maybe_remove_sale_prices( $product_ids ) {
 
 		foreach ( $product_ids as $product_id ) {

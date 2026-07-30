@@ -26,12 +26,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_REST_Action {
 			   ->then( spreadArgs( [ $this, 'adjustGlobalAttributes' ] ) );
 	}
 
-	/**
-	 * @param array[]   $fields
-	 * @param \stdClass $job
-	 *
-	 * @return array[]
-	 */
 	public function adjustFields( $fields, $job ) {
 		if ( ! self::isProduct( $job ) ) {
 			return $fields;
@@ -44,11 +38,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_REST_Action {
 		return $fields;
 	}
 
-	/**
-	 * @param array $field
-	 *
-	 * @return array
-	 */
 	private function adjustField( $field ) {
 		$typeStartsWith = Str::startsWith( Fns::__, Obj::prop( 'field_type', $field ) );
 
@@ -67,12 +56,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_REST_Action {
 		return $field;
 	}
 
-	/**
-	 * @param string $title
-	 * @param array  $field
-	 *
-	 * @return array
-	 */
 	private function handleAttribute( $title, $field ) {
 		$parts = explode( ':', $field['field_type'] );
 		$group = end( $parts ) . '-attribute';
@@ -85,11 +68,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_REST_Action {
 		return $field;
 	}
 
-	/**
-	 * @param array $field
-	 *
-	 * @return array
-	 */
 	private function handleVariationField( $field ) {
 		$parts = explode( ':', $field['field_type'] );
 		array_shift( $parts );
@@ -102,11 +80,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_REST_Action {
 		return $field;
 	}
 
-	/**
-	 * @param array $field
-	 *
-	 * @return array
-	 */
 	private function handleImage( $field ) {
 		list( , $imageId, $title ) = Str::match( '/^' . preg_quote( \WCML_TP_Support::PACKAGE_IMAGE_KEY_PREFIX, '/' ) . '(\d+)-(.*)$/', $field['field_type'] );
 
@@ -119,11 +92,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_REST_Action {
 		return $field;
 	}
 
-	/**
-	 * @param array $field
-	 *
-	 * @return array
-	 */
 	private function handleDownloadableFile( $field ) {
 		list( , $fileNo, $fileId, $title ) = \WCML_Downloadable_Products::parseDownloadableFileField( $field['field_type'] );
 
@@ -131,7 +99,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_REST_Action {
 
 		$ex = explode( ':', $title );
 		if ( isset( $ex[1] ) ) {
-			// Product Variant
 			$title    = $ex[0];
 			$labelNo .= ' [' . $ex[1] . ']';
 		}
@@ -143,12 +110,6 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_REST_Action {
 		return $field;
 	}
 
-	/**
-	 * @param array[]   $fields
-	 * @param \stdClass $job
-	 *
-	 * @return array
-	 */
 	public function adjustGlobalAttributes( $fields, $job ) {
 		if ( ! self::isProduct( $job ) ) {
 			return $fields;
@@ -177,25 +138,14 @@ class Hooks implements \IWPML_Backend_Action, \IWPML_REST_Action {
 		return $fields;
 	}
 
-	/**
-	 * @param \stdClass $job
-	 *
-	 * @return bool
-	 */
 	public static function isProduct( $job ) {
 		return 'post_product' === $job->original_post_type;
 	}
 
-	/**
-	 * @return string[]
-	 */
 	public static function getTopLevelGroup() {
 		return [ self::TOP_LEVEL_GROUP => self::TOP_LEVEL_GROUP_LABEL ];
 	}
 
-	/**
-	 * @param string $fileId
-	 */
 	private function convertDownloadableFileIdToNumber( $fileId ): int  {
 		static $downloadableFileNo = [];
 

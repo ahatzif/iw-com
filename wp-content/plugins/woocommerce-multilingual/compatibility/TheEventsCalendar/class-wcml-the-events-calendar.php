@@ -2,23 +2,14 @@
 
 class WCML_The_Events_Calendar implements \IWPML_Action {
 
-	/** @var SitePress */
 	private $sitepress;
 
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
 
-	/** @var WPML_Translation_Job_Helper */
 	private $job_helper;
 
-	/** @var int|null */
 	private $ticket_post_id_backup;
 
-	/**
-	 * @param SitePress                   $sitepress
-	 * @param woocommerce_wpml            $woocommerce_wpml
-	 * @param WPML_Translation_Job_Helper $job_helper
-	 */
 	public function __construct( $sitepress, $woocommerce_wpml, $job_helper ) {
 		$this->sitepress        = $sitepress;
 		$this->woocommerce_wpml = $woocommerce_wpml;
@@ -26,7 +17,6 @@ class WCML_The_Events_Calendar implements \IWPML_Action {
 	}
 
 	public function add_hooks() {
-		/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 		if ( isset( $_POST['action'] ) && 0 === strpos( $_POST['action'], 'tribe-ticket-add-' ) ) {
 			add_action( 'tribe_tickets_ticket_add', [ $this, 'unset_post_post_id' ] );
 			add_action( 'event_tickets_after_save_ticket', [ $this, 'restore_post_post_id' ] );
@@ -147,7 +137,6 @@ class WCML_The_Events_Calendar implements \IWPML_Action {
 						];
 					}
 
-					// fieldsets.
 					$package = $this->append_tickets_meta( $package, $ticket_id, $original_ticket_id );
 
 				}
@@ -243,7 +232,6 @@ class WCML_The_Events_Calendar implements \IWPML_Action {
 						];
 					}
 
-					// Fieldsets.
 					$package = $this->append_tickets_meta( $package, $ticket_id, $original_ticket_id );
 
 				}
@@ -338,11 +326,6 @@ class WCML_The_Events_Calendar implements \IWPML_Action {
 		return $package;
 	}
 
-	/**
-	 * @param int $ticket_id
-	 * @param int $translated_ticket_id
-	 * @param array $data
-	 */
 	private function save_ticket_meta_translations( $ticket_id, $translated_ticket_id, $data ) {
 		$ticket_meta            = get_post_meta( $ticket_id, '_tribe_tickets_meta', true );
 		$translated_ticket_meta = $ticket_meta;
@@ -381,7 +364,6 @@ class WCML_The_Events_Calendar implements \IWPML_Action {
 	}
 
 	private function sync_custom_fields( $original_ticket_id, $translated_ticket_id ) {
-		// Sync custom fields.
 		$custom_fields_sync = [ '_stock', '_manage_stock', 'total_sales', '_price' ];
 		foreach ( $custom_fields_sync as $custom_field ) {
 			$value = get_post_meta( $original_ticket_id, $custom_field, true );
@@ -412,7 +394,7 @@ class WCML_The_Events_Calendar implements \IWPML_Action {
 							}
 						}
 					}
-				} else { // delete venue from translations.
+				} else {
 					foreach ( $event_translations as $language_code => $event_translation ) {
 						if ( $event_translation->element_id != $original_event_id ) {
 							delete_post_meta( $event_translation->element_id, '_EventVenueID' );
@@ -434,7 +416,6 @@ class WCML_The_Events_Calendar implements \IWPML_Action {
 				if ( $original_venue_id ) {
 					$translated_venue_id = apply_filters( 'wpml_object_id', $original_venue_id, 'tribe_venue', false, $_GET['lang'] );
 					if ( $translated_venue_id ) {
-						// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 						echo "<script type=\"text/javascript\">
 								jQuery('#saved_tribe_venue').val($translated_venue_id);
 							  </script>";

@@ -4,17 +4,8 @@ class WCML_Cart_Sync_Warnings {
 
 	const KEY_DISMISS = 'dismiss_cart_warning';
 
-	/**
-	 * @var woocommerce_wpml
-	 */
 	private $woocommerce_wpml;
-	/**
-	 * @var SitePress
-	 */
 	private $sitepress;
-	/**
-	 * @var array
-	 */
 	private $extensions_list = [
 		'WC_Subscriptions'                 => 'Woocommerce Subscriptions',
 		'WC_Product_Addons'                => 'Woocommerce Product Addons',
@@ -90,7 +81,6 @@ class WCML_Cart_Sync_Warnings {
 		$message .= '<a class="notice-dismiss" href="' . esc_url( add_query_arg( 'wcml_action', self::KEY_DISMISS, $request_url ) ) . '"><span class="screen-reader-text">' . esc_html__( 'Dismiss', 'woocommerce-multilingual' ) . '</span></a>';
 		$message .= '</div>';
 
-		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo $message;
 	}
 
@@ -123,7 +113,7 @@ class WCML_Cart_Sync_Warnings {
 		if ( isset( $_GET['wcml_action'] ) && $_GET['wcml_action'] === self::KEY_DISMISS ) {
 			$this->woocommerce_wpml->settings[self::KEY_DISMISS] = true;
 			$this->woocommerce_wpml->update_settings();
-			wcml_safe_redirect( remove_query_arg( 'wcml_action' ) ); // Redirect to avoid repeating the action
+			wcml_safe_redirect( remove_query_arg( 'wcml_action' ) );
 		}
 	}	
 }

@@ -4,20 +4,11 @@ class WCML_Switch_Lang_Request implements \IWPML_Frontend_Action, \IWPML_Backend
 
 	const COOKIE_NAME = 'wp-wpml_current_language';
 
-	/** @var string $default_language */
 	protected $default_language;
-	/** @var WPML_WP_API */
 	protected $wp_api;
-	/** @var WPML_Cookie */
 	private $cookie;
-	/** @var SitePress */
 	private $sitepress;
 
-	/**
-	 * @param WPML_Cookie $cookie
-	 * @param WPML_WP_API $wp_api
-	 * @param SitePress   $sitepress
-	 */
 	public function __construct( WPML_Cookie $cookie, WPML_WP_API $wp_api, SitePress $sitepress ) {
 
 		if ( ! is_admin() ) {
@@ -43,21 +34,12 @@ class WCML_Switch_Lang_Request implements \IWPML_Frontend_Action, \IWPML_Backend
 			$lang_to   = $this->get_requested_lang();
 
 			if ( $lang_from && $lang_from !== $lang_to ) {
-				/**
-				 * Hook fired when the user changes the site language
-				 *
-				 * @param string $lang_from   the previous language
-				 * @param string $lang_to     the new language
-				 */
 				do_action( 'wcml_user_switch_language', $lang_from, $lang_to );
 			}
 		}
 
 	}
 
-	/**
-	 * @return string language code stored in the user's wp-wpml_current_language cookie
-	 */
 	public function get_cookie_lang() {
 		global $wpml_language_resolution;
 
@@ -73,19 +55,11 @@ class WCML_Switch_Lang_Request implements \IWPML_Frontend_Action, \IWPML_Backend
 		return self::COOKIE_NAME;
 	}
 
-	/**
-	 * @return bool|string
-	 */
 	public function get_cookie_domain() {
 
 		return defined( 'COOKIE_DOMAIN' ) ? COOKIE_DOMAIN : $this->get_server_host_name();
 	}
 
-	/**
-	 * Returns SERVER_NAME, or HTTP_HOST if the first is not available
-	 *
-	 * @return string
-	 */
 	public function get_server_host_name() {
 		$host = $_SERVER['HTTP_HOST'] ?? null;
 		if ( ! $host ) {
@@ -108,13 +82,7 @@ class WCML_Switch_Lang_Request implements \IWPML_Frontend_Action, \IWPML_Backend
 		return 'wp-comments-post.php' === $pagenow;
 	}
 
-	/**
-	 * @global $wpml_url_converter
-	 *
-	 * @return string|false language code that can be determined from the currently requested URI.
-	 */
 	public function get_request_uri_lang() {
-		/** @var WPML_URL_Converter $wpml_url_converter */
 		global $wpml_url_converter;
 
 		$req_url = isset( $_SERVER['HTTP_HOST'] ) ? untrailingslashit( $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] ) : '';

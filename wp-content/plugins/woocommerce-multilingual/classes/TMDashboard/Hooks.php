@@ -16,22 +16,11 @@ class Hooks implements \IWPML_REST_Action {
 		       ->then( spreadArgs( [ $this, 'addFooterNoteToProductsBlock' ] ) );
 	}
 
-	/**
-	 * @param array[] $posts Post[] from \WPML\UserInterface\Web\Core\Component\Dashboard\Application\Endpoint\GetPosts\GetPostsController
-	 * @param array   $searchCriteria SearchCriteriaRaw from \WPML\UserInterface\Web\Core\Component\Dashboard\Application\Endpoint\GetPosts\GetPostsController
-	 *
-	 * @return array[]
-	 */
 	public function addProductThumbnail( $posts, $searchCriteria ) {
 		if ( $searchCriteria['type'] !== 'product' ) {
 			return $posts;
 		}
 
-		/**
-		 * @param array $post Post from \WPML\UserInterface\Web\Core\Component\Dashboard\Application\Endpoint\GetPosts\GetPostsController
-		 *
-		 * @return array
-		 */
 		$transformAddProductThumbnail = function ( array $post ) {
 			$postId = (int) $post['id'];
 
@@ -45,11 +34,6 @@ class Hooks implements \IWPML_REST_Action {
 		return array_map( $transformAddProductThumbnail, $posts );
 	}
 
-	/**
-	 * @param array[] $itemSections
-	 *
-	 * @return array[]
-	 */
 	public function addFooterNoteToProductsBlock( array $itemSections ): array {
 		return array_map( function ( $itemSection ) {
 			if ( 'post/product' === $itemSection['id'] ) {

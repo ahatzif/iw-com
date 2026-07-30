@@ -6,11 +6,8 @@ use WPML\FP\Str;
 
 class WCML_WC_Strings {
 
-	/** @see \WPML_ST_Taxonomy_Strings::LEGACY_STRING_DOMAIN */
 	const DOMAIN_WORDPRESS              = 'WordPress';
-	/** @see \WPML_ST_Taxonomy_Strings::LEGACY_NAME_PREFIX_SINGULAR */
 	const TAXONOMY_SINGULAR_NAME_PREFIX = 'taxonomy singular name: ';
-	/** @see \WPML_ST_Taxonomy_Strings::LEGACY_NAME_PREFIX_GENERAL */
 	const TAXONOMY_GENERAL_NAME_PREFIX  = 'taxonomy general name: ';
 	const TAXONOMY_GENERAL_VALUE_PREFIX = 'Product ';
 
@@ -18,22 +15,12 @@ class WCML_WC_Strings {
 	private $mo_files                  = [];
 	private $current_language;
 
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
-	/** @var SitePress */
 	private $sitepress;
-	/** @var wpdb */
 	private $wpdb;
 
 	public $settings = [];
 
-	/**
-	 * WCML_WC_Strings constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress        $sitepress
-	 * @param wpdb             $wpdb
-	 */
 	public function __construct( woocommerce_wpml $woocommerce_wpml, \WPML\Core\ISitePress $sitepress, wpdb $wpdb ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 		$this->sitepress        = $sitepress;
@@ -44,7 +31,6 @@ class WCML_WC_Strings {
 
 		add_action( 'init', [ $this, 'add_on_init_hooks' ] );
 
-		// Needs to run before WC registers taxonomies on init priority 5.
 		foreach ( wc_get_attribute_taxonomies() as $tax ) {
 			add_filter(
 				'woocommerce_taxonomy_args_' . wc_attribute_taxonomy_name( $tax->attribute_name ),
@@ -63,7 +49,6 @@ class WCML_WC_Strings {
 			$this->current_language = $this->sitepress->get_default_language();
 		}
 
-		// translate attribute label.
 		add_filter( 'woocommerce_attribute_label', Fns::withoutRecursion( Fns::identity(), [ $this, 'translated_attribute_label' ] ), 10, 3 );
 		add_filter( 'woocommerce_checkout_product_title', [ $this, 'translated_checkout_product_title' ], 10, 2 );
 		add_filter( 'woocommerce_cart_item_name', [ $this, 'translated_cart_item_name' ], -1, 2 );
@@ -114,36 +99,11 @@ class WCML_WC_Strings {
 			$product_id = $product->get_id();
 		}
 
-		/**
-		 * Adjusts the product being considered when translating variable product attribute labels.
-		 *
-		 * Sometimes, WooCommerce or its addons prints an attribute label without referencing the relevant product;
-		 * in those cases, WCML might fail to translate local attribute labels if the current product is not the relevant one
-		 * (for example, on bundled or composited products containing such variable products).
-		 * This filter helps setting the right product to translate local attribute labels.
-		 *
-		 * @param int|false $product_id
-		 * @param string    $label
-		 * @param string    $name
-		 * @param mixed     $product_obj
-		 *
-		 * @return int|false
-		 */
 		$product_id = apply_filters( 'wcml_translated_attribute_label_product_id', $product_id, $label, $name, $product_obj );
 
 		$name = $this->woocommerce_wpml->attributes->filter_attribute_name(
 			$name,
 			$product_id,
-			/**
-			 * This filter allows to override the attribute name sanitization, used only for legacy and specific purposes.
-			 *
-			 *
-			 * @param  bool   $state Whether we should run sanitization.
-			 * @param  string $name  Attribute name
-			 * @param  string $label Attribute label
-			 *
-			 * @return string
-			 */
 			apply_filters( 'wcml_sanitize_name_for_translated_attribute_label', true, $name, $label )
 		);
 
@@ -179,7 +139,6 @@ class WCML_WC_Strings {
 			}
 		}
 
-		// backward compatibility for WCML < 3.6.1.
 		$trnsl_labels = get_option( 'wcml_custom_attr_translations' );
 
 		if ( ! empty( $trnsl_labels[ $lang ][ $name ] ) ) {
@@ -189,12 +148,6 @@ class WCML_WC_Strings {
 		return $label;
 	}
 
-	/**
-	 * @param string $title
-	 * @param array  $values
-	 *
-	 * @return string
-	 */
 	public function translated_cart_item_name( $title, array $values ) {
 
 		if ( $values ) {
@@ -225,7 +178,6 @@ class WCML_WC_Strings {
 		return $title;
 	}
 
-	// Catch the default slugs for translation.
 	public function translate_default_slug( $translation, $text, $context, $domain ) {
 
 		if ( 'slug' === $context || 'default-slug' === $context ) {
@@ -269,9 +221,6 @@ class WCML_WC_Strings {
 
 	}
 
-	/**
-	 * @return \WCML_Url_Translation
-	 */
 	public function getUrlTranslation() {
 		return $this->woocommerce_wpml->url_translation;
 	}
@@ -341,10 +290,6 @@ class WCML_WC_Strings {
 	}
 
 
-	/*
-	 * Filter breadcrumbs
-	 *
-	 */
 	public function filter_woocommerce_breadcrumbs( $breadcrumbs ) {
 
 		$current_language = $this->sitepress->get_current_language();
@@ -360,8 +305,6 @@ class WCML_WC_Strings {
 
 				$shop_page = get_post( $woocommerce_shop_page );
 
-				// If permalinks contain the shop page in the URI prepend the breadcrumb with shop.
-				// Similar to WC_Breadcrumb::prepend_shop_page
 				$trnsl_base = $this->woocommerce_wpml->url_translation->get_base_translation( 'product', $current_language );
 				if ( $trnsl_base['translated_base'] === '' ) {
 					$trnsl_base['translated_base'] = $trnsl_base['original_value'];
@@ -373,7 +316,6 @@ class WCML_WC_Strings {
 
 					foreach ( $breadcrumbs as $key => $breadcrumb ) {
 
-						// Prepend the shop page to shop breadcrumbs
 						if ( $key === 0 ) {
 
 							if ( isset( $breadcrumbs[1][1] ) && $breadcrumbs[1][1] != get_post_type_archive_link( 'product' ) ) {
@@ -407,13 +349,9 @@ class WCML_WC_Strings {
 		return $breadcrumbs;
 	}
 
-	/*
-	 * Add notice message to users
-	 */
 	public function notice_after_woocommerce_product_options_attributes() {
 
 		if ( isset( $_GET['post'] ) && $this->sitepress->get_default_language() != $this->sitepress->get_current_language() ) {
-			//The message used to include a link to translate THIS product, not sure if this will be doable when linking to the TM dashboard
 			$pointerFactory = new WCML\PointerUi\Factory();
 			$pointerFactory
 				->create( [
@@ -486,12 +424,6 @@ class WCML_WC_Strings {
 
 	}
 
-	/**
-	 * @param array  $args
-	 * @param string $attribute_label
-	 *
-	 * @return array
-	 */
 	public function translate_attribute_labels( $args, $attribute_label ) {
 		$singular_label = $this->get_translated_string_by_name_and_context( self::DOMAIN_WORDPRESS, self::TAXONOMY_SINGULAR_NAME_PREFIX . $attribute_label, null, $attribute_label );
 		if ( $singular_label ) {
@@ -507,43 +439,18 @@ class WCML_WC_Strings {
 		return $args;
 	}
 
-	/**
-	 * @param string $context
-	 * @param string $name
-	 * @param string $language
-	 *
-	 * @return string|false
-	 */
 	public function get_translated_string_by_name_and_context( $context, $name, $language = null, $value = false ) {
 		return apply_filters( 'wpml_translate_single_string', $value, $context, $name, $language );
 	}
 
-	/**
-	 * Return what msgid lookup would be for a specific content in a MO file.
-	 *
-	 * @param string $string The 'msgid' string to look up translation.
-	 * @param string $string_context The string context.
-	 * @return string
-	 */
 	public function get_msgid_for_mo( $string, $string_context ) {
 		return $string_context . self::mo_context_separator() . $string;
 	}
 
-	/**
-	 * The context separator used in MO files
-	 *
-	 * @return string
-	 */
 	private static function mo_context_separator() {
 		return chr( 4 );
 	}
 
-	/**
-	 * Return original msgid from modified lookup used in MO file
-	 *
-	 * @param string $string The 'msgid' string to look up translation.
-	 * @return string
-	 */
 	private function get_original_string( $string ) {
 		return Lst::last( Str::split( self::mo_context_separator(), $string ) );
 	}

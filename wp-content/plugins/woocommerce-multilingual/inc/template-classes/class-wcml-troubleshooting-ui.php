@@ -5,16 +5,9 @@ use WCML\Utilities\AdminUrl;
 
 class WCML_Troubleshooting_UI extends WCML_Templates_Factory {
 
-	/** @var woocommerce_wpml $woocommerce_wpml */
 	private $woocommerce_wpml;
 
-	/**
-	 * WCML_Troubleshooting_UI constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 */
 	public function __construct( $woocommerce_wpml ) {
-		// @todo Cover by tests, required for wcml-3037.
 		parent::__construct();
 
 		$this->woocommerce_wpml = $woocommerce_wpml;
@@ -130,7 +123,6 @@ class WCML_Troubleshooting_UI extends WCML_Templates_Factory {
 
 	public function get_all_products_taxonomies() {
 
-		/** @var stdClass[] $all_products_taxonomies */
 		$all_products_taxonomies = get_taxonomies( [ 'object_type' => [ 'product' ] ], 'objects' );
 		unset(
 			$all_products_taxonomies['product_type'],

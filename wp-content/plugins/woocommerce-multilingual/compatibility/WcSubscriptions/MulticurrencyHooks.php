@@ -14,16 +14,12 @@ use function WPML\FP\tap as tap;
 
 class MulticurrencyHooks implements \IWPML_Action {
 
-	/** @var woocommerce_wpml $woocommerce_wpml */
 	private $woocommerce_wpml;
 
-	/** @var wpdb $wpdb */
 	private $wpdb;
 
-	/** @var bool $newSubscription */
 	private $newSubscription = false;
 
-	/** @var bool $proratingPrice */
 	private $proratingPrice = false;
 
 	public function __construct( woocommerce_wpml $woocommerce_wpml, wpdb $wpdb ) {
@@ -52,23 +48,10 @@ class MulticurrencyHooks implements \IWPML_Action {
 		add_filter( 'wcs_switch_proration_new_price_per_day', tap( [ $this, 'set_prorating_price' ] ) );
 	}
 
-	/**
-	 * Set a flag when we are prorating the price (upgrades/downgrades).
-	 * We do this to skip currency conversion in the sign_up_fee because
-	 * when switching subscription it has already been converted.
-	 */
 	public function set_prorating_price() {
 		$this->proratingPrice = true;
 	}
 
-	/**
-	 * Filter Subscription Sign-up fee cost
-	 *
-	 * @param string     $subscriptionSignUpFee
-	 * @param WC_Product|mixed $product
-	 *
-	 * @return string
-	 */
 	public function subscriptions_product_sign_up_fee_filter( $subscriptionSignUpFee, $product ) {
 		if ( is_object( $product ) && ! $this->proratingPrice ) {
 			$currency = $this->woocommerce_wpml->multi_currency->get_client_currency();
@@ -93,9 +76,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		return $subscriptionSignUpFee;
 	}
 
-	/**
-	 * Force client currency for resubscribe subscription
-	 */
 	public function maybe_force_client_currency_for_subscription() {
 		$subscriptionId = false;
 		$getData         = wpml_collect( $_GET );
@@ -124,12 +104,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param array      $fields
-	 * @param int|string $productId
-	 *
-	 * @return array
-	 */
 	public function set_prices_fields( $fields, $productId ) {
 		if ( $this->isSubscriptionsProduct( $productId ) || $this->newSubscription ) {
 			$fields[] = '_subscription_sign_up_fee';
@@ -138,12 +112,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		return $fields;
 	}
 
-	/**
-	 * @param array      $labels
-	 * @param int|string $productId
-	 *
-	 * @return array
-	 */
 	public function set_labels_for_prices_fields( $labels, $productId ) {
 		if ( $this->isSubscriptionsProduct( $productId ) || $this->newSubscription ) {
 			$labels['_regular_price']            = __( 'Subscription Price', 'woocommerce-multilingual' );
@@ -153,13 +121,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		return $labels;
 	}
 
-	/**
-	 * @param array            $prices
-	 * @param string           $code
-	 * @param int|string|false $variationId
-	 *
-	 * @return array
-	 */
 	public function update_custom_prices_values( $prices, $code, $variationId = false ) {
 		if ( isset( $_POST['_custom_subscription_sign_up_fee'][ $code ] ) ) {
 			$prices['_subscription_sign_up_fee'] = wc_format_decimal( $_POST['_custom_subscription_sign_up_fee'][ $code ] );
@@ -172,11 +133,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		return $prices;
 	}
 
-	/**
-	 * @param int|string $productId
-	 *
-	 * @return void
-	 */
 	public function new_subscription_prices_block( $productId ) {
 		if ( 'new' === $productId ) {
 			$this->newSubscription = true;
@@ -223,11 +179,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param int|string $productId
-	 *
-	 * @return bool
-	 */
 	private function isSubscriptionsProduct( $productId ) {
 		$variationTermTaxonomyIds = $this->wpdb->get_col( "SELECT tt.term_taxonomy_id FROM {$this->wpdb->terms} AS t LEFT JOIN {$this->wpdb->term_taxonomy} AS tt ON t.term_id = tt.term_id WHERE t.slug IN ( 'subscription', 'variable-subscription' ) AND tt.taxonomy = 'product_type'" );
 
@@ -244,12 +195,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		);
 	}
 
-	/**
-	 * @param string                                       $price
-	 * @param WC_Product|WC_Product_Subscription_Variation $product
-	 *
-	 * @return string
-	 */
 	public function woocommerce_subscription_price_from( $price, $product ) {
 		if ( $product instanceof WC_Product_Subscription_Variation ) {
 			$customPricesOn = get_post_meta( $product->get_id(), '_wcml_custom_prices_status', true );

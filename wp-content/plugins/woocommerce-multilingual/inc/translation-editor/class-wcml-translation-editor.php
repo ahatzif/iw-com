@@ -8,11 +8,10 @@ use function WCML\functions\getSetting;
 
 class WCML_Translation_Editor {
 
-	/** @var woocommerce_wpml */
+	const AUTO_SLUG_NONCE = 'wcml_editor_auto_slug';
+
 	private $woocommerce_wpml;
-	/** @var SitePress */
 	private $sitepress;
-	/** @var wpdb */
 	private $wpdb;
 
 	public function __construct( woocommerce_wpml $woocommerce_wpml, $sitepress, wpdb $wpdb ) {
@@ -54,16 +53,8 @@ class WCML_Translation_Editor {
 		add_filter( 'wpml_translation_editor_save_job_data', [ $this, 'set_ctp_as_editor_for_this_product' ] );
 	}
 
-	/**
-	 * @param array $data
-	 *
-	 * @return array
-	 */
 	public function set_ctp_as_editor_for_this_product( $data ) {
 		if ( 'post_product' === $data['job_post_type'] ) {
-			/**
-			 * @param int $job_id
-			 */
 			add_action( 'wpml_save_job_fields_from_post', function ( $job_id ) {
 				wpml_tm_load_old_jobs_editor()->set( $job_id, 'wpml' );
 			} );
@@ -82,10 +73,8 @@ class WCML_Translation_Editor {
 	}
 
 	public function get_translation_job_data_for_editor( $job_data ) {
-		/** @var TranslationManagement $iclTranslationManagement */
 		global $iclTranslationManagement;
 
-		// See if it's a WooCommerce product.
 		$job = $iclTranslationManagement->get_translation_job( $job_data['job_id'] );
 		if ( $job && Hooks::isProduct( $job ) ) {
 			$job_data['job_type'] = 'wc_product';
@@ -98,7 +87,6 @@ class WCML_Translation_Editor {
 	public function preselect_product_type_in_admin_screen() {
 		global $pagenow;
 
-		/* phpcs:ignore WordPress.VIP.SuperGlobalInputUsage.AccessDetected */
 		if ( 'post-new.php' === $pagenow && isset( $_GET['post_type'], $_GET['trid'] ) && $_GET['post_type'] === 'product' ) {
 			$translations = $this->sitepress->get_element_translations( (int) $_GET['trid'], 'post_product_type' );
 			foreach ( $translations as $translation ) {
@@ -122,13 +110,6 @@ class WCML_Translation_Editor {
 		}
 	}
 
-	/**
-	 * Avoids the post translation links on the product post type.
-	 *
-	 * @param string $output
-	 *
-	 * @return string
-	 */
 	public function hide_post_translation_links( $output ) {
 		global $post;
 
@@ -147,9 +128,7 @@ class WCML_Translation_Editor {
 	}
 
 	public function create_product_translation_package( $product_id, $trid, $language, $status ) {
-		/** @var TranslationManagement $iclTranslationManagement */
 		global $iclTranslationManagement;
-		// create translation package.
 		$translation_id = $this->wpdb->get_var(
 			$this->wpdb->prepare(
 				"
@@ -246,9 +225,6 @@ class WCML_Translation_Editor {
 		return $new_columns;
 	}
 
-	/**
-	 * @param int $loop Position in the loop.
-	 */
 	public function lock_variable_fields( $loop ) {
 		$product_id = false;
 
@@ -298,13 +274,6 @@ class WCML_Translation_Editor {
 		}
 	}
 
-	/**
-	 * Forces the translation editor to be used for products when enabled in WCML.
-	 *
-	 * @param int $use_tm_editor
-	 *
-	 * @return int
-	 */
 	public function force_woocommerce_native_editor( $use_tm_editor ) {
 
 		if ( function_exists( 'get_current_screen' ) ) {
@@ -323,11 +292,6 @@ class WCML_Translation_Editor {
 		return $use_tm_editor;
 	}
 
-	/**
-	 * @param int $use_tm_editor
-	 *
-	 * @return int
-	 */
 	public function force_woocommerce_native_editor_for_wcml_products_screen( $use_tm_editor ) {
 
 		if ( function_exists( 'get_current_screen' ) ) {
@@ -342,9 +306,6 @@ class WCML_Translation_Editor {
 
 
 
-	/**
-	 * Removes the translation editor links when the WooCommerce native products editor is used in WCML
-	 */
 	public function force_remove_wpml_translation_editor_links() {
 		global $wpml_tm_status_display_filter;
 
@@ -363,6 +324,10 @@ class WCML_Translation_Editor {
 	public function auto_generate_slug() {
 		global $wpdb;
 
+		if ( ! check_ajax_referer( self::AUTO_SLUG_NONCE, 'wcml_nonce', false ) ) {
+			wp_send_json_error( 'Invalid nonce' );
+		}
+
 		$title = filter_input( INPUT_POST, 'title' );
 
 		$post_name = urldecode( sanitize_title( $title ) );
@@ -380,7 +345,6 @@ class WCML_Translation_Editor {
 		if ( $post_id ) {
 			$slug = wp_unique_post_slug( $post_name, $post_id, 'publish', 'product', 0 );
 		} else {
-			// handle the special case when the post for this slug has not been created yet.
 			$lang_sql = "
                 SELECT t.language_code
                 FROM {$wpdb->prefix}icl_translations t
@@ -414,19 +378,10 @@ class WCML_Translation_Editor {
 			}
 		}
 
-		echo json_encode( [ 'slug' => $slug ] );
-		exit;
+		wp_send_json( [ 'slug' => $slug ] );
 
 	}
 
-	/**
-	 * Don't show Page builders Translation editor warning for products
-	 *
-	 * @param bool $display
-	 * @param int  $post_id
-	 *
-	 * @return bool
-	 */
 	public function show_page_builders_translation_editor_warning( $display, $post_id ) {
 
 		if ( 'product' === get_post_type( $post_id ) ) {

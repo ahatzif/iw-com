@@ -2,25 +2,14 @@
 
 class WCML_WC_Product_Bundles_Items {
 
-	/**
-	 * @param int $product_id
-	 *
-	 * @return array
-	 */
 	public function get_items( $product_id ) {
 		$product_bundle = new WC_Product_Bundle( $product_id );
 
 		return $product_bundle->get_bundled_items();
 	}
 
-	/**
-	 * @param WC_Bundled_Item $bundled_item
-	 *
-	 * @return array
-	 */
 	public function get_item_data( $bundled_item ) {
 		$item_data = $bundled_item->get_data();
-		// #wcml-1927 - Insufficient Stock issue
 		if ( $item_data['max_stock'] === null ) {
 			$item_data['max_stock'] = '';
 		}
@@ -41,27 +30,14 @@ class WCML_WC_Product_Bundles_Items {
 		$item_2_data->save();
 	}
 
-	/**
-	 * @param int $item_id
-	 *
-	 * @return WC_Bundled_Item_Data
-	 */
 	public function get_item_data_object( $item_id ) {
 		return new WC_Bundled_Item_Data( $item_id );
 	}
 
-	/**
-	 * @param WC_Bundled_Item_Data $bundled_item_data
-	 * @param string               $key
-	 * @param mixed                $value
-	 */
 	public function update_item_meta( $bundled_item_data, $key, $value ) {
 		$bundled_item_data->update_meta( $key, $value );
 	}
 
-	/**
-	 * @param WC_Bundled_Item_Data $bundled_item_data
-	 */
 	public function save_item_meta( $bundled_item_data ) {
 		$bundled_item_data->save();
 	}

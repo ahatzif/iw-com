@@ -49,7 +49,6 @@ class WCML_Checkout_Field_Editor implements \IWPML_Action {
 				continue;
 			}
 
-			// Translate label
 			if ( ! empty( $field['label'] ) ) {
 				do_action(
 					'wpml_register_string',
@@ -60,7 +59,6 @@ class WCML_Checkout_Field_Editor implements \IWPML_Action {
 					$this->package->kind
 				);
 			}
-			// Translate placeholder
 			if ( ! empty( $field['placeholder'] ) ) {
 				do_action(
 					'wpml_register_string',
@@ -71,7 +69,6 @@ class WCML_Checkout_Field_Editor implements \IWPML_Action {
 					$this->package->kind
 				);
 			}
-			// Translate options
 			if ( ! empty( $field['options'] ) ) {
 				$i = 1;
 				foreach ( $field['options'] as $option ) {
@@ -97,7 +94,6 @@ class WCML_Checkout_Field_Editor implements \IWPML_Action {
 				continue;
 			}
 
-			// Translate label
 			if ( ! empty( $field['label'] ) ) {
 				$field['label'] = apply_filters(
 					'wpml_translate_string',
@@ -106,7 +102,6 @@ class WCML_Checkout_Field_Editor implements \IWPML_Action {
 					$this->package
 				);
 			}
-			// Translate placeholder
 			if ( ! empty( $field['placeholder'] ) ) {
 				$field['placeholder'] = apply_filters(
 					'wpml_translate_string',
@@ -115,7 +110,6 @@ class WCML_Checkout_Field_Editor implements \IWPML_Action {
 					$this->package
 				);
 			}
-			// Translate options
 			if ( ! empty( $field['options'] ) ) {
 				$i = 1;
 				foreach ( $field['options'] as $k => $option ) {

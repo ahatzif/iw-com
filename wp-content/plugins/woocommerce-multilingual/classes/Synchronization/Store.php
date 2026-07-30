@@ -19,30 +19,18 @@ class Store {
 	const COMPONENT_VARIATION_TAXONOMIES  = 'variationTaxonomies';
 	const COMPONENT_VARIATION_META        = 'variationMeta';
 
-	/** @var \woocommerce_wpml */
 	protected $woocommerceWpml;
 
-	/** @var \SitePress */
 	protected $sitepress;
 
-	/** @var \WPML_Post_Translation */
 	protected $postTranslations;
 
-	/** @var \WPML_Term_Translation */
 	protected $termTranslations;
 
-	/** @var \wpdb */
 	protected $wpdb;
 
-	/** @var SyncHash */
 	protected $syncHashManager;
 
-	/**
-	 * @param \woocommerce_wpml      $woocommerceWpml
-	 * @param \SitePress             $sitepress
-	 * @param \wpdb                  $wpdb
-	 * @param SyncHash               $syncHashManager
-	 */
 	public function __construct(
 		\woocommerce_wpml $woocommerceWpml,
 		\SitePress        $sitepress,
@@ -59,13 +47,6 @@ class Store {
 		$this->termTranslations = $wpml_term_translations;
 	}
 
-	/**
-	 * @param string $component
-	 *
-	 * @return \WCML\Synchronization\Component\Synchronizer
-	 *
-	 * @throws \Exception
-	 */
 	public function getComponent( $component ) {
 		switch ( $component ) {
 			case self::COMPONENT_ATTACHMENTS:

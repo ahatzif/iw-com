@@ -1,11 +1,7 @@
 <?php
 
-/**
- * Compatibility class for Variation Swatches and Photos plugin
- */
 class WCML_Variation_Swatches_And_Photos implements \IWPML_Action {
 
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
 
 	public function __construct( woocommerce_wpml $woocommerce_wpml ) {
@@ -16,13 +12,6 @@ class WCML_Variation_Swatches_And_Photos implements \IWPML_Action {
 		add_action( 'wcml_after_sync_product_data', [ $this, 'sync_variation_swatches_and_photos' ], 10, 3 );
 	}
 
-	/**
-	 * Synchronize Variation Swatches and Photos
-	 *
-	 * @param int    $original_product_id Original product ID.
-	 * @param int    $translated_product_id Translated product ID.
-	 * @param string $language
-	 */
 	public function sync_variation_swatches_and_photos( $original_product_id, $translated_product_id, $language ) {
 
 		$swatch_options            = maybe_unserialize( get_post_meta( $original_product_id, '_swatch_type_options', true ) );

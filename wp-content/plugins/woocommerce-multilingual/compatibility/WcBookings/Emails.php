@@ -15,36 +15,16 @@ class Emails implements \IWPML_Action {
 
 	const PRIORITY_BEFORE_EMAIL_TRIGGER = 9;
 
-	/**
-	 * @var \SitePress
-	 */
 	private $sitepress;
 
-	/**
-	 * @var \woocommerce_wpml
-	 */
 	private $woocommerce_wpml;
 
-	/**
-	 * @var \WooCommerce
-	 */
 	private $woocommerce;
 
-	/**
-	 * @var \WPML\Collect\Support\Collection
-	 */
 	private $classes;
 
-	/**
-	 * @var array
-	 */
 	private $initialStates = [];
 
-	/**
-	 * @param \SitePress        $sitepress
-	 * @param \woocommerce_wpml $woocommerce_wpml
-	 * @param \WooCommerce      $woocommerce
-	 */
 	public function __construct( \SitePress $sitepress, \woocommerce_wpml $woocommerce_wpml, \WooCommerce $woocommerce ) {
 		$this->sitepress        = $sitepress;
 		$this->woocommerce_wpml = $woocommerce_wpml;
@@ -58,7 +38,6 @@ class Emails implements \IWPML_Action {
 		add_filter( 'wcml_emails_text_keys_to_translate', [ $this, 'keysToTranslate' ] );
 		add_filter( 'woocommerce_email_get_option', [ $this, 'translateHeadingAndSubject' ], 20, 4 );
 
-		// These actions are hooked to 'trigger' in each WC_Email that WooCommerce Bookings sends.
 		wpml_collect( [
 			'woocommerce_admin_new_booking_notification'              => [ \WC_Email_New_Booking::class ],
 			'woocommerce_booking_pending-confirmation'                => [ \WC_Email_Booking_Pending_Confirmation::class ],
@@ -86,7 +65,6 @@ class Emails implements \IWPML_Action {
 	}
 
 	public function init() {
-		// Set to true if it's an admin email.
 		$this->classes = wpml_collect( [
 			\WC_Email_New_Booking::class             => true,
 			\WC_Email_Booking_Confirmed::class       => false,
@@ -96,11 +74,6 @@ class Emails implements \IWPML_Action {
 		] );
 	}
 
-	/**
-	 * @param array $options
-	 *
-	 * @return array
-	 */
 	public function optionsToTranslate( $options ) {
 		$options[] = 'woocommerce_new_booking_settings';
 		$options[] = 'woocommerce_booking_reminder_settings';
@@ -111,11 +84,6 @@ class Emails implements \IWPML_Action {
 		return $options;
 	}
 
-	/**
-	 * @param array $keys
-	 *
-	 * @return array
-	 */
 	public function keysToTranslate( $keys ) {
 		$keys[] = 'subject_confirmation';
 		$keys[] = 'heading_confirmation';
@@ -123,14 +91,6 @@ class Emails implements \IWPML_Action {
 		return $keys;
 	}
 
-	/**
-	 * @param string    $value
-	 * @param \WC_Email $object
-	 * @param string    $oldValue
-	 * @param string    $key
-	 *
-	 * @return string
-	 */
 	public function translateHeadingAndSubject( $value, $object, $oldValue, $key ) {
 		$class = get_class( $object );
 		$keys  = [
@@ -150,11 +110,6 @@ class Emails implements \IWPML_Action {
 		return $translatedValue ?: $value;
 	}
 
-	/**
-	 * @param array $classes
-	 *
-	 * @return callable( int $bookingId ):void
-	 */
 	public function handle( $classes ) {
 		return function( $bookingId ) use ( $classes ) {
 			wpml_collect( $classes )
@@ -162,10 +117,6 @@ class Emails implements \IWPML_Action {
 		};
 	}
 
-	/**
-	 * @param int    $bookingId
-	 * @param string $class
-	 */
 	public function sendWithoutDuplicates( $bookingId, $class ) {
 		if ( $this->classes->get( $class ) ) {
 			Maybe::fromNullable( $this->getAdminUserLanguage( $class ) )
@@ -188,11 +139,6 @@ class Emails implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param string $class
-	 *
-	 * @return string|null
-	 */
 	private function getAdminUserLanguage( $class ) {
 		return Maybe::fromNullable( $this->getEmailObject( $class ) )
 			->map( Obj::prop( 'recipient' ) )
@@ -202,11 +148,6 @@ class Emails implements \IWPML_Action {
 			->getOrElse( null );
 	}
 
-	/**
-	 * @param string $emailClass
-	 *
-	 * @return \WC_Email|null
-	 */
 	private function getEmailObject( $emailClass ) {
 		return Maybe::of( $emailClass )
 			->map( Obj::path( [ 'emails', Fns::__ ], $this->woocommerce->mailer() ) )

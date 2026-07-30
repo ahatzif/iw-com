@@ -6,7 +6,6 @@ use WPML\FP\Fns;
 
 class BeforeHooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWPML_DIC_Action {
 
-	/** @var  \woocommerce_wpml */
 	private $woocommerce_wpml;
 
 	public function __construct( \woocommerce_wpml $woocommerce_wpml ) {
@@ -24,11 +23,6 @@ class BeforeHooks implements \IWPML_Backend_Action, \IWPML_Frontend_Action, \IWP
 		}
 	}
 
-	/**
-	 * @param array $translatablePostTypes
-	 *
-	 * @return array
-	 */
 	public static function blockProductTranslation( $translatablePostTypes ) {
 		unset( $translatablePostTypes['product'], $translatablePostTypes['product_variation'] );
 		return $translatablePostTypes;

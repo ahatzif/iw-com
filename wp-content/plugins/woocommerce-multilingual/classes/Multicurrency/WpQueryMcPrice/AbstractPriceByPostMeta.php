@@ -10,24 +10,12 @@ abstract class AbstractPriceByPostMeta {
 
 	const WCML_MC_PRICE_ALIAS = 'wcml_mc_price';
 
-	/**
-	 * @var \woocommerce_wpml
-	 */
 	protected $woocommerce_wpml;
 
-	/**
-	 * @var \wpdb
-	 */
 	protected $wpdb;
 
-	/**
-	 * @var mixed
-	 */
 	protected $default_currency;
 
-	/**
-	 * @var string
-	 */
 	protected $client_currency;
 
 	public function __construct( \woocommerce_wpml $woocommerce_wpml, \wpdb $wpdb ) {
@@ -38,11 +26,6 @@ abstract class AbstractPriceByPostMeta {
 		$this->client_currency  = $this->woocommerce_wpml->multi_currency->get_client_currency();
 	}
 
-	/**
-	 * @param string $clausesJoinSQL
-	 *
-	 * @return string
-	 */
 	protected function buildWCMLMultiCurrencyQueryJoin( $clausesJoinSQL ) {
 		if ( false === strpos( $clausesJoinSQL, ' ' . self::WCML_CUSTOM_PRICES_STATUS_ALIAS . ' ' ) ) {
 			$clausesJoinSQL .= "\n LEFT JOIN {$this->wpdb->postmeta} AS " . self::WCML_CUSTOM_PRICES_STATUS_ALIAS . " ON ({$this->wpdb->posts}.ID = " . self::WCML_CUSTOM_PRICES_STATUS_ALIAS . ".post_id) and " . self::WCML_CUSTOM_PRICES_STATUS_ALIAS . ".meta_key = '_wcml_custom_prices_status' ";

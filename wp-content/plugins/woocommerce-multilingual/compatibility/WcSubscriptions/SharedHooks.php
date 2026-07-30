@@ -6,7 +6,6 @@ use WC_Cart;
 
 class SharedHooks implements \IWPML_Action {
 
-	/** @var WC_Cart[]|null $recurring_carts */
 	private $recurring_carts;
 
 	public function add_hooks() {
@@ -20,21 +19,14 @@ class SharedHooks implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param WC_Cart $cart
-	 */
 	public function maybe_backup_recurring_carts( $cart ) {
 		if ( ! empty( $cart->recurring_carts ) ) {
 			$this->recurring_carts = $cart->recurring_carts;
 		}
 	}
 
-	/**
-	 * @param WC_Cart $cart
-	 */
 	public function maybe_restore_recurring_carts( $cart ) {
 		if ( ! empty( $this->recurring_carts ) ) {
-			/* @phpstan-ignore property.notFound */
 			$cart->recurring_carts = $this->recurring_carts;
 			$this->recurring_carts = null;
 		}

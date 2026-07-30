@@ -2,9 +2,6 @@
 
 class WCML_Setup_Notice_UI extends WCML_Templates_Factory {
 
-	/**
-	 * @return array
-	 */
 	public function get_model() {
 
 		$model = [
@@ -31,9 +28,6 @@ class WCML_Setup_Notice_UI extends WCML_Templates_Factory {
 		];
 	}
 
-	/**
-	 * @return string
-	 */
 	public function get_template() {
 		return '/setup/notice.twig';
 	}

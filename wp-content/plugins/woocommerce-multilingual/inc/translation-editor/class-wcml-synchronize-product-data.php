@@ -11,23 +11,11 @@ class WCML_Synchronize_Product_Data {
 
 	const PRIORITY_BEFORE_STOCK_EMAIL_TRIGGER = 9;
 
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
-	/** @var SitePress */
 	private $sitepress;
-	/** @var WPML_Post_Translation */
 	private $post_translations;
-	/** @var wpdb */
 	private $wpdb;
 
-	/**
-	 * WCML_Synchronize_Product_Data constructor.
-	 *
-	 * @param woocommerce_wpml      $woocommerce_wpml
-	 * @param SitePress             $sitepress
-	 * @param WPML_Post_Translation $post_translations
-	 * @param wpdb                  $wpdb
-	 */
 	public function __construct( woocommerce_wpml $woocommerce_wpml, SitePress $sitepress, WPML_Post_Translation $post_translations, wpdb $wpdb ) {
 		$this->woocommerce_wpml  = $woocommerce_wpml;
 		$this->sitepress         = $sitepress;
@@ -50,46 +38,18 @@ class WCML_Synchronize_Product_Data {
 		add_filter( 'future_product', [ $this, 'set_schedule_for_translations' ], 10, 2 );
 	}
 
-	/**
-	 * This function takes care of synchronizing products
-	 *
-	 * @param int               $post_id
-	 * @param WP_Post           $post
-	 * @param bool              $force_valid_context
-	 * @param ?\WP_REST_Request $wpRestRequest
-	 *
-	 * @deprecated Use \WCML\Synchronization\Hooks::synchronizeProductTranslations
-	 */
 	public function synchronize_products( $post_id, $post, $force_valid_context = false, $wpRestRequest = null ) {
 		do_action( \WCML\Synchronization\Hooks::HOOK_SYNCHRONIZE_PRODUCT_TRANSLATIONS, $post, [], [] );
 	}
 
-	/**
-	 * @param int   $original_product_id
-	 * @param int   $tr_product_id
-	 * @param string $lang
-	 *
-	 * @deprecated Use \WCML\Synchronization\Hooks::synchronizeProductTranslations 
-	 */
 	public function sync_product_data( $original_product_id, $tr_product_id, $lang, $duplicate = false ) {
 		do_action( \WCML\Synchronization\Hooks::HOOK_SYNCHRONIZE_PRODUCT_TRANSLATIONS, get_post( $original_product_id ), [ $tr_product_id ], [ $tr_product_id => $lang ] );
 	}
 
-	/**
-	 * @param int   $original_product_id
-	 * @param int   $tr_product_id
-	 * @param string $lang
-	 *
-	 * @todo This will be reviewed in https://onthegosystems.myjetbrains.com/youtrack/issue/wcml-4904 so we can remove the sync legacy calls.
-	 */
 	public function sync_product_taxonomies( $original_product_id, $tr_product_id, $lang ) {
 		do_action( \WCML\Synchronization\Hooks::HOOK_SYNCHRONIZE_PRODUCT_COMPONENT, get_post( $original_product_id ), [ $tr_product_id ], [ $tr_product_id => $lang ], \WCML\Synchronization\Store::COMPONENT_TAXONOMIES );
 	}
 
-	/**
-	 * @param int   $object_id
-	 * @param int[] $tt_ids    An array of term taxonomy IDs.
-	 */
 	public function delete_term_relationships_update_term_count( $object_id, $tt_ids ) {
 
 		if ( get_post_type( $object_id ) === 'product' ) {
@@ -106,19 +66,11 @@ class WCML_Synchronize_Product_Data {
 	}
 
 
-	/**
-	 * @param int[]     $tt_ids    An array of term_taxonomy_id values - NOT term_id values!!!!
-	 * @param string    $language
-	 * @param string    $taxonomy
-	 * @param int|false $tr_product_id
-	 */
 	public function wcml_update_term_count_by_ids( $tt_ids, $language, $taxonomy = '', $tr_product_id = false ) {
 		global $wpml_term_translations;
 		$tt_ids_trans = [];
 
 		foreach ( $tt_ids as $tt_id ) {
-			// Avoid the wpml_object_id filter to escape from the WPML_Term_Translations::maybe_warm_term_id_cache() hell
-			// given that we invalidate the cache at every step on wp_set_post_terms().
 			$tt_id_trans = $wpml_term_translations->element_id_in( $tt_id, $language );
 			if ( $tt_id_trans ) {
 				$tt_ids_trans[] = $tt_id_trans;
@@ -144,32 +96,19 @@ class WCML_Synchronize_Product_Data {
 					count( $tt_ids_trans )
 				)
 			);
-			// Make sure that $t_ids is int[], otherwise wp_set_post_terms will try to insert new terms for non-hierarchical taxonomies.
 			$t_ids = array_unique( array_map( 'intval', $t_ids ) );
 			wp_set_post_terms( $tr_product_id, $t_ids, $taxonomy );
 		}
 	}
 
-	/**
-	 * @param int    $product_id
-	 * @param int    $translated_product_id
-	 * @param string $lang
-	 *
-	 * @deprecated Use \WCML\Synchronization\Component\LinkedProducts::run
-	 */
 	public function sync_linked_products( $product_id, $translated_product_id, $lang ) {
 
 		$this->sync_up_sells_products( $product_id, $translated_product_id, $lang );
 		$this->sync_cross_sells_products( $product_id, $translated_product_id, $lang );
 		$this->sync_grouped_products( $product_id, $translated_product_id, $lang );
 
-		// refresh parent-children transients (e.g. this child goes to private or draft)
 		$translated_product_parent_id = wp_get_post_parent_id( $translated_product_id );
 		if ( $translated_product_parent_id ) {
-			// Those store the list of variations for a variable product
-			// Considering that this is NOT running when syncing variations...
-			// ... when is this running, and what for?
-			// Keeping for backward compatibility, just in case.
 			delete_transient( 'wc_product_children_' . $translated_product_parent_id );
 			delete_transient( '_transient_wc_product_children_ids_' . $translated_product_parent_id );
 		}
@@ -215,12 +154,6 @@ class WCML_Synchronize_Product_Data {
 
 	}
 
-	/**
-	 * @param WC_Product       $product
-	 * @param WC_Product|false $translatedProduct
-	 *
-	 * @deprecated Use \WCML\Synchronization\Hooks::syncProductStock
-	 */
 	public function sync_product_stock( $product, $translatedProduct = false ) {
 		$productId = $product->get_id();
 
@@ -247,11 +180,6 @@ class WCML_Synchronize_Product_Data {
 		do_action( \WCML\Synchronization\Hooks::HOOK_SYNCHRONIZE_PRODUCT_COMPONENT, get_post( $productId ), $translations, $translationsLanguages, \WCML\Synchronization\Store::COMPONENT_STOCK );
 	}
 
-	/**
-	 * @param WC_Product $product
-	 *
-	 * @deprecated Use \WCML\Synchronization\Hooks::syncProductStock
-	 */
 	public function sync_product_stock_hook( $product ) {
 		$productId = $product->get_id();
 		$translations = $this->post_translations->get_element_translations( $productId );
@@ -271,9 +199,6 @@ class WCML_Synchronize_Product_Data {
 		do_action( \WCML\Synchronization\Hooks::HOOK_SYNCHRONIZE_PRODUCT_COMPONENT, get_post( $productId ), $translations, $translationsLanguages, \WCML\Synchronization\Store::COMPONENT_STOCK );
 	}
 
-	/**
-	 * @param int $order_id
-	 */
 	public function sync_product_total_sales( $order_id ) {
 
 		$order = wc_get_order( $order_id );
@@ -290,7 +215,6 @@ class WCML_Synchronize_Product_Data {
 
 			$qty = apply_filters( 'wcml_order_item_quantity', $qty, $order, $item );
 
-			/** @var WC_Product_Data_Store_CPT */
 			$data_store   = WC_Data_Store::load( 'product' );
 			$translations = $this->post_translations->get_element_translations( $product_id );
 			foreach ( $translations as $translation ) {
@@ -314,9 +238,6 @@ class WCML_Synchronize_Product_Data {
 		}
 	}
 
-	/**
-	 * @param int $product_id
-	 */
 	private function wc_taxonomies_recount_after_stock_change( $product_id ) {
 
 		remove_filter( 'get_term', [ $this->sitepress, 'get_term_adjust_id' ], 1 );
@@ -330,13 +251,6 @@ class WCML_Synchronize_Product_Data {
 
 	}
 
-	/**
-	 * @param int    $original_product_id
-	 * @param int    $tr_product_id
-	 * @param string $lang
-	 *
-	 * @deprecated Use \WCML\Synchronization\Component\Post::run
-	 */
 	public function sync_date_and_parent( $original_product_id, $tr_product_id, $lang ) {
 		$tr_parent_id = apply_filters( 'wpml_object_id', wp_get_post_parent_id( $original_product_id ), 'product', false, $lang );
 		$tr_parent_id = is_null( $tr_parent_id ) ? 0 : (int) $tr_parent_id;
@@ -344,7 +258,6 @@ class WCML_Synchronize_Product_Data {
 		if ( wp_get_post_parent_id( $tr_product_id ) !== $tr_parent_id ) {
 			$args['post_parent'] = $tr_parent_id;
 		}
-		// sync product date
 		if ( ! empty( $this->woocommerce_wpml->settings['products_sync_date'] ) ) {
 			$orig_product      = get_post( $original_product_id );
 			$args['post_date'] = $orig_product->post_date;
@@ -369,38 +282,12 @@ class WCML_Synchronize_Product_Data {
 		}
 	}
 
-	/**
-	 * @param int $tr_product_id
-	 *
-	 * @deprecated Use \WCML\Synchronization\Hooks::synchronizeProductTranslation
-	 */
 	public function icl_pro_translation_completed( $tr_product_id ) {}
 
-	/**
-	 * @param int    $master_post_id
-	 * @param string $lang
-	 * @param array  $postarr
-	 * @param int    $id
-	 *
-	 * @deprecated Use \WCML\Synchronization\Hooks::synchronizeProductDuplication
-	 */
 	public function icl_make_duplicate( $master_post_id, $lang, $postarr, $id ) {}
 
-	/**
-	 * @param \WC_Product $product
-	 *
-	 * @deprecated Use Use \WCML\Synchronization\Hooks::synchronizeOnEditSave
-	 */
 	public function woocommerce_product_quick_edit_save( $product ) {}
 
-	/**
-	 * @param int $originalProductId
-	 * @param int $translationId
-	 *
-	 * @since 5.4.2 Split from duplicate_product_post_meta to avoid the expensive condition on changed values.
-	 *
-	 * @deprecated Use \WCML\Synchronization\Component\DownloadableFiles::run
-	 */
 	public function sync_downloadable_files( $originalProductId, $translationId ) {
 		global $iclTranslationManagement;
 		$settingFactory       = new WPML_Custom_Field_Setting_Factory( $iclTranslationManagement );
@@ -413,26 +300,9 @@ class WCML_Synchronize_Product_Data {
 
 		self::syncDeletedCustomFields( $originalProductId, $translationId );
 
-		// Legacy from the duplicate_product_post_meta split, used by compatibility addons.
-		// Keep it, declare the third parameter as legacy and not used
-		// Port callbacks to wcml_after_sync_product_data if possible, I think they do!
 		do_action( 'wcml_after_duplicate_product_post_meta', $originalProductId, $translationId, false );
 	}
 
-	/**
-	 * Duplicate the postmeta of a product into one of its translaitons.
-	 *
-	 * The name here is missleading, since it does more than just duplicating.
-	 * When provided with extra $data, it applies it as the new translation.
-	 *
-	 * Keeping the logic, and $data as optional for backward compatibility.
-	 *
-	 * @param int         $original_product_id
-	 * @param int         $translated_product_id
-	 * @param array|false $data
-	 *
-	 * @todo Deprecate and clone into the WCML_Editor_UI_Product_Job class.
-	 */
 	public function duplicate_product_post_meta( $original_product_id, $translated_product_id, $data = false ) {
 		if ( ! $data ) {
 			$this->sync_downloadable_files( $original_product_id, $translated_product_id );
@@ -571,17 +441,6 @@ class WCML_Synchronize_Product_Data {
 		return str_replace( self::CUSTOM_FIELD_KEY_SEPARATOR, '-', $el );
 	}
 
-	/**
-	 * Inserts an element into an array, nested by keys.
-	 * Input ['a', 'b'] for the keys, an empty array for $array and $x for the value would lead to
-	 * [ 'a' => ['b' => $x ] ] being returned.
-	 *
-	 * @param array $keys indexes ordered from highest to lowest level
-	 * @param array $array array into which the value is to be inserted
-	 * @param mixed $value to be inserted
-	 *
-	 * @return array
-	 */
 	private function insert_under_keys( $keys, $array, $value ) {
 		$array[ $keys[0] ] = count( $keys ) === 1
 			? $value
@@ -594,14 +453,8 @@ class WCML_Synchronize_Product_Data {
 		return $array;
 	}
 
-	/**
-	 * @deprecated See \WCML\Synchronize\Hooks::synchronizeConnectedTranslations
-	 */
 	public function icl_connect_translations_action() {}
 
-	/**
-	 * @deprecated 5.4.2 Use the \WCML\Utilities\SyncHash utility instead.
-	 */
 	public function check_if_product_fields_sync_needed( $original_id, $trnsl_post_id, $fields_group ) {}
 
 	public function sync_product_translations_visibility( $product_id ) {
@@ -635,19 +488,13 @@ class WCML_Synchronize_Product_Data {
 		}
 	}
 
-	/**
-	 * @param int $originalId
-	 * @param int $translationId
-	 */
 	public static function syncDeletedCustomFields( $originalId, $translationId ) {
 		$settingsFactory = wpml_load_core_tm()->settings_factory();
 
-		// $isCopiedField :: string -> bool
 		$isCopiedField = function( $field ) use ( $settingsFactory ) {
 			return WPML_COPY_CUSTOM_FIELD === $settingsFactory->post_meta_setting( $field )->status();
 		};
 
-		// $deleteFieldInTranslation :: string -> void
 		$deleteFieldInTranslation = function( $field ) use ( $translationId ) {
 			delete_post_meta( $translationId, $field );
 		};

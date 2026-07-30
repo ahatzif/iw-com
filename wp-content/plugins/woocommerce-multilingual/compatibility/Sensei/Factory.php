@@ -9,9 +9,6 @@ use function WCML\functions\getSitePress;
 
 class Factory extends ComponentFactory {
 
-	/**
-	 * @inheritDoc
-	 */
 	public function create() {
 		$sitepress = getSitePress();
 

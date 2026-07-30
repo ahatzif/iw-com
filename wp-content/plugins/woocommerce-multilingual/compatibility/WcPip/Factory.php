@@ -7,14 +7,8 @@ use WCML\StandAlone\IStandAloneAction;
 use WCML_Pip;
 use function WCML\functions\isStandAlone;
 
-/**
- * @see https://woocommerce.com/products/print-invoices-packing-lists/
- */
 class Factory extends ComponentFactory implements IStandAloneAction {
 
-	/**
-	 * @inheritDoc
-	 */
 	public function create() {
 		$hooks = [];
 

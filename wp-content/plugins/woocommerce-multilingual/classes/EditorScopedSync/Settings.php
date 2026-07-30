@@ -1,20 +1,4 @@
 <?php
-/**
- * Editor-scoped sync mode — Settings UI section.
- *
- * Integrates into WCML's existing settings page (Twig template `settings-ui.twig`)
- * via the `wcml_settings_before_synchronization` action that the template fires
- * just before the "Products Synchronization" block.
- *
- * Submission piggybacks on WCML's own settings form (`wcml_save_settings` +
- * `wcml_save_settings_nonce`). On `init` priority 11 (after `WCML_Requests::run`),
- * we read our own POST field and persist it via `Mode::set`.
- *
- * Mirrors the static mockup at:
- *   C:/Projects/UI/WCML/Selective updates for variations/New/settings-section.html
- *
- * @package WCML\EditorScopedSync
- */
 
 namespace WCML\EditorScopedSync;
 
@@ -23,12 +7,10 @@ use WPML\PostHog\Event\CaptureEvent;
 
 class Settings implements \IWPML_Backend_Action {
 
-	// After WCML_Requests::run (priority 10), so the nonce is already verified before we persist.
 	const PRIORITY_AFTER_WCML_REQUESTS = 11;
 
 	const FIELD_SAVE_MODE = 'wcml_editor_save_mode';
 
-	/** @var Mode */
 	private $mode;
 
 	public function __construct( Mode $mode ) {
@@ -72,7 +54,6 @@ class Settings implements \IWPML_Backend_Action {
 				new EditorScopedSyncSettingChanged( [ 'mode' => $value ] )
 			);
 		} catch ( \Throwable $e ) {
-			// Do nothing.
 		}
 	}
 

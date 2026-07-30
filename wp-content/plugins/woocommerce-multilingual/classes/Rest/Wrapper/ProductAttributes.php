@@ -7,7 +7,6 @@ use WPML\FP\Obj;
 
 class ProductAttributes extends Handler {
 
-	/** @var WCML_WC_Strings $strings */
 	private $strings;
 
 	public function __construct(
@@ -16,15 +15,6 @@ class ProductAttributes extends Handler {
 		$this->strings = $strings;
 	}
 
-	/**
-	 * Translates attribute name in woocommerce_rest_prepare_product_attribute filter
-	 *
-	 * @param \WP_REST_Response $response
-	 * @param object|\WP_Term   $object
-	 * @param \WP_REST_Request  $request
-	 *
-	 * @return \WP_REST_Response
-	 */
 	public function prepare( $response, $object, $request ) {
 		$langCode = Obj::prop( 'lang', $request->get_params() );
 

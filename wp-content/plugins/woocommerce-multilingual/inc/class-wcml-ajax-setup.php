@@ -2,7 +2,6 @@
 
 class WCML_Ajax_Setup {
 
-	/** @var SitePress $sitepress */
 	private $sitepress;
 
 	public function __construct( SitePress $sitepress ) {
@@ -32,13 +31,6 @@ class WCML_Ajax_Setup {
 		return $woocommerce_params;
 	}
 
-	/**
-	 * Adds a language parameter to the url when different domains for each language are used.
-	 *
-	 * @param string $endpoint
-	 *
-	 * @return string
-	 */
 	public function add_language_to_endpoint( $endpoint ) {
 
 		$is_per_domain = WPML_LANGUAGE_NEGOTIATION_TYPE_DOMAIN === (int) $this->sitepress->get_setting( 'language_negotiation_type' );

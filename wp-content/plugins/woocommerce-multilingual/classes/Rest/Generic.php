@@ -8,9 +8,6 @@ use WPML\API\Sanitize;
 
 class Generic {
 
-	/**
-	 * Prevent WPML redirection when using the default language as a parameter in the url
-	 */
 	public static function preventDefaultLangUrlRedirect() {
 		$exp = explode( '?', $_SERVER['REQUEST_URI'] );
 		if ( ! empty( $exp[1] ) ) {
@@ -22,9 +19,6 @@ class Generic {
 		}
 	}
 
-	/**
-	 * @param \WP_Query $wp_query
-	 */
 	public static function autoAdjustIncludedIds( \WP_Query $wp_query ) {
 		$lang    = Sanitize::string( (string) Obj::prop( 'lang', $_GET ) );
 		$include = $wp_query->get( 'post__in' );
@@ -37,12 +31,6 @@ class Generic {
 		}
 	}
 
-	/**
-	 * We need an unfiltered 'home_url' so that the REST signature matches.
-	 *
-	 * Note that WPML already does this, but fails to recognize a REST
-	 * request when we get a 'relative' home_url.
-	 */
 	public static function removeHomeUrlFilterOnRestAuthentication() {
 		$returnTrue = Fns::always( true );
 

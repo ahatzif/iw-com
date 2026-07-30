@@ -9,7 +9,6 @@ abstract class Export implements \IWPML_Backend_Action, \IWPML_REST_Action, \IWP
 	const COL_LANGUAGE = 'language';
 	const COL_CURRENCY = 'currency';
 
-	/** @var \wpdb $wpdb */
 	protected $wpdb;
 
 	public function __construct( \wpdb $wpdb ) {
@@ -33,38 +32,14 @@ abstract class Export implements \IWPML_Backend_Action, \IWPML_REST_Action, \IWP
 		}
 	}
 
-	/**
-	 * @param string $column
-	 * @param string $title
-	 *
-	 * @return callable(array):array
-	 */
 	private function addColumnTitle( $column, $title ) {
 		return Obj::assoc( $column, $title );
 	}
 
-	/**
-	 * @param string[] $clauses
-	 *
-	 * @return string[]
-	 */
 	abstract public function addJoinClauses( $clauses );
 
-	/**
-	 * @param string[] $clauses
-	 *
-	 * @return string[]
-	 */
 	abstract public function addSelectClauses( $clauses );
 
-	/**
-	 * This filter is required for case when the exported file
-	 * is generated with the action-scheduler (report sent by email).
-	 *
-	 * @param string $column
-	 *
-	 * @return callable(array,array):array
-	 */
 	public function copyProp( $column ) {
 		return function ( $export_item, $item ) use ( $column ) {
 			return Obj::assoc( $column, Obj::prop( $column, $item ), $export_item );

@@ -12,25 +12,15 @@ class ShippingRate implements Translator {
 
 	use StoreInDefaultLanguage;
 
-	/** @var woocommerce_wpml $woocommerce_wpml */
 	private $woocommerce_wpml;
 
-	/** @var wpdb $wpdb */
 	private $wpdb;
 
-	/**
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param wpdb             $wpdb
-	 */
 	public function __construct( woocommerce_wpml $woocommerce_wpml, wpdb $wpdb ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 		$this->wpdb             = $wpdb;
 	}
 
-	/**
-	 * @param \WC_Order_Item $item
-	 * @param string         $targetLanguage
-	 */
 	public function translateItem( $item, $targetLanguage ) {
 		if ( ! $item instanceof \WC_Order_Item_Shipping ) {
 			return;
@@ -78,8 +68,6 @@ class ShippingRate implements Translator {
 			->map( $rateIdToName )
 			->toArray();
 
-		// phpcs:disable WordPress.WP.PreparedSQL.NotPrepared
-		// phpcs:disable Squiz.Strings.DoubleQuoteUsage.NotRequired
 		$rateData = $this->wpdb->get_row( $this->wpdb->prepare(
 			"SELECT s.value as originalRateTitle, st.language as rateTitleLanguage FROM {$this->wpdb->prefix}icl_strings AS s
 				LEFT JOIN {$this->wpdb->prefix}icl_string_translations AS st
@@ -92,7 +80,6 @@ class ShippingRate implements Translator {
 			\WCML_WC_Shipping::STRINGS_CONTEXT,
 			$shippingTitle
 		) );
-		// phpcs:enable
 
 		if ( ! $rateData ) {
 			return;
@@ -100,8 +87,6 @@ class ShippingRate implements Translator {
 
 		$foundRateIdPerValue = array_search( $rateData->originalRateTitle, $ratesLabels, true );
 		if ( false === $foundRateIdPerValue ) {
-			// The order item references a rate that no longer exists in this table rate shipping method.
-			// We can not know the rate ID, so we can not translate.
 			return;
 		}
 

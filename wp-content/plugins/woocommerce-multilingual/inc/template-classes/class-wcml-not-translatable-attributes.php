@@ -1,21 +1,11 @@
 <?php
 
-/**
- * Created by OnTheGo Systems
- */
 class WCML_Not_Translatable_Attributes extends WCML_Templates_Factory {
 
 	private $attr_id;
 	private $woocommerce_wpml;
 
-	/**
-	 * WCML_Not_Translatable_Attributes constructor.
-	 *
-	 * @param int              $attr_id
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 */
 	public function __construct( $attr_id, $woocommerce_wpml ) {
-		// @todo Cover by tests, required for wcml-3037.
 		parent::__construct();
 
 		$this->attr_id          = $attr_id;

@@ -7,9 +7,6 @@ use function WCML\functions\getSitePress;
 
 class SuspendWpmlFiltersFactory {
 
-	/**
-	 * @return \WCML\Utilities\Suspend\Suspend
-	 */
 	public static function create() {
 		$sitepress = getSitePress();
 

@@ -2,21 +2,9 @@
 
 class WCML_wcExporter implements \IWPML_Action {
 
-	/**
-	 * @var SitePress
-	 */
 	private $sitepress;
-	/**
-	 * @var woocommerce_wpml
-	 */
 	private $woocommerce_wpml;
 
-	/**
-	 * WCML_wcExporter constructor.
-	 *
-	 * @param SitePress $sitepress
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 */
 	public function __construct( SitePress $sitepress, woocommerce_wpml $woocommerce_wpml ) {
 		$this->sitepress        = $sitepress;
 		$this->woocommerce_wpml = $woocommerce_wpml;

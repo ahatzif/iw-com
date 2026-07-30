@@ -1,8 +1,5 @@
 <?php
 
-/**
- Class for WooCommerce Advanced Ajax Layered Navigation
- */
 
 class WCML_Ajax_Layered_Nav_Widget implements \IWPML_Action {
 

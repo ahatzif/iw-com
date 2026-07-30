@@ -2,16 +2,10 @@
 
 class WCML_Status_Products_UI extends WCML_Templates_Factory {
 
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
 
-	/** @var SitePress */
 	private $sitepress;
 
-	/**
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress        $sitepress
-	 */
 	public function __construct( $woocommerce_wpml, $sitepress ) {
 		parent::__construct();
 
@@ -19,11 +13,6 @@ class WCML_Status_Products_UI extends WCML_Templates_Factory {
 		$this->sitepress        = $sitepress;
 	}
 
-	/**
-	 * @return array
-	 *
-	 * @throws \Error if WPML is not active, since \WPML\UIPage depends on it.
-	 */
 	public function get_model() {
 		$model = [
 			'products'   => $this->get_untranslated_products(),
@@ -43,7 +32,6 @@ class WCML_Status_Products_UI extends WCML_Templates_Factory {
 
 	}
 
-	/** @return array */
 	private function get_untranslated_products() {
 		$products = [];
 

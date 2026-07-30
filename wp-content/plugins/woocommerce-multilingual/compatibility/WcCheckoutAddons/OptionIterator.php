@@ -4,12 +4,6 @@ namespace WCML\Compatibility\WcCheckoutAddons;
 
 class OptionIterator {
 
-	/**
-	 * @param callable    $handler
-	 * @param array|mixed $optionValue
-	 *
-	 * @return array|mixed
-	 */
 	public static function apply( callable $handler, $optionValue ) {
 		if ( is_array( $optionValue ) ) {
 

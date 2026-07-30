@@ -2,14 +2,8 @@
 
 class WCML_gravityforms implements \IWPML_Action {
 
-	/**
-	 * @var SitePress $sitepress
-	 */
 	private $sitepress;
 
-	/**
-	 * @var woocommerce_wpml
-	 */
 	private $woocommerce_wpml;
 
 	public function __construct( SitePress $sitepress, woocommerce_wpml $woocommerce_wpml ) {
@@ -21,12 +15,7 @@ class WCML_gravityforms implements \IWPML_Action {
 		add_action( 'wcml_after_duplicate_product_post_meta', [ $this, 'sync_gf_data' ], 10, 2 );
 	}
 
-	/**
-	 * @param int $original_product_id
-	 * @param int $trnsl_product_id
-	 */
 	public function sync_gf_data( $original_product_id, $trnsl_product_id ) {
-		// sync only if WCML editor is in use.
 		if ( $this->woocommerce_wpml->is_wpml_prior_4_2() ) {
 			$wcml_settings      = get_option( '_wcml_settings' );
 			$is_using_tm_editor = $wcml_settings['trnsl_interface'];

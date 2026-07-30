@@ -8,11 +8,8 @@ use WPML\FP\Obj;
 
 class WCML_Synchronize_Variations_Data {
 
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
-	/** @var SitePress */
 	private $sitepress;
-	/** @var wpdb */
 	private $wpdb;
 
 	public function __construct( woocommerce_wpml $woocommerce_wpml, $sitepress, wpdb $wpdb ) {
@@ -25,38 +22,16 @@ class WCML_Synchronize_Variations_Data {
 
 		add_action( 'wp_ajax_woocommerce_remove_variations', [ $this, 'remove_translations_for_variations' ], 9 );
 
-		/**
-		 * @deprecated This AJAX call was removed in WPML 3.2 on 2015.
-		 * @todo Remove this action and its public callback.
-	 	 * @see https://git.onthegosystems.com/wpml/sitepress-multilingual-cms/-/commit/f4b9a84211ee789b7f9a0c028a807188f8334e5c
-		 */
 		add_action( 'wp_ajax_wpml_tt_save_term_translation', [ $this, 'update_taxonomy_in_variations' ], 7 );
 
-		/**
-		 * @deprecated This AJAX call was removed in WooCommerce 2.3.0 on 2014.
-		 * @todo Remove this action and its public callback.
-	 	 * @see https://github.com/woocommerce/woocommerce/commit/2c1c9896c5e5cdc8223c2ef253c188520b3e074c
-		 */
 		add_action( 'wp_ajax_woocommerce_remove_variation', [ $this, 'remove_variation_ajax' ], 9 );
 
 	}
 
-	/**
-	 * @param string $bulk_action
-	 * @param array  $data
-	 * @param int    $product_id
-	 *
-	 * @deprecated Use \WCML\Synchronization\Hooks::synchronizeProductVariationsOnBulkEdit
-	 */
 	public function sync_product_variations_on_bulk_edit( $bulk_action, $data, $product_id ) {
 		$this->sync_product_variations_action( $product_id );
 	}
 
-	/**
-	 * @param int $productId
-	 *
-	 * @deprecated Use \WCML\Synchronization\Hooks::synchronizeProductVariationsOnAjax
-	 */
 	public function sync_product_variations_action( $productId ) {
 		$isOriginal = $this->woocommerce_wpml->products->is_original_product( $productId );
 
@@ -66,7 +41,6 @@ class WCML_Synchronize_Variations_Data {
 
 		$trid = $this->sitepress->get_element_trid( $productId, 'post_product' );
 		if ( empty( $trid ) ) {
-			// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
 			$trid = $this->wpdb->get_var(
 				$this->wpdb->prepare(
 					"SELECT trid FROM {$this->wpdb->prefix}icl_translations
@@ -74,7 +48,6 @@ class WCML_Synchronize_Variations_Data {
 					$productId
 				)
 			);
-			// phpcs:enable
 		}
 		if ( empty( $trid ) ) {
 			return;	
@@ -99,16 +72,10 @@ class WCML_Synchronize_Variations_Data {
 		do_action( \WCML\Synchronization\Hooks::HOOK_SYNCHRONIZE_PRODUCT_COMPONENT, $product, $translationsIds, $translationsLanguages, \WCML\Synchronization\Store::COMPONENT_ATTRIBUTES );
 	}
 
-	/**
-	 * @param int $product_id
-	 *
-	 * @deprecated The logic now lives in WCML_Downloadable_Products::saveProductMode and WCML_Custom_Prices::sync_product_variations_custom_prices
-	 */
 	public function sync_product_variations_custom_data( $product_id ) {
 
 		$is_variable_product = $this->woocommerce_wpml->products->is_variable_product( $product_id );
 		if ( $is_variable_product ) {
-			// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
 			$get_all_post_variations = $this->wpdb->get_results(
 				$this->wpdb->prepare(
 					"SELECT * FROM {$this->wpdb->posts}
@@ -119,31 +86,19 @@ class WCML_Synchronize_Variations_Data {
 					$product_id
 				)
 			);
-			// phpcs:enable
 
 			foreach ( $get_all_post_variations as $post_data ) {
 
-				// We need a single mechanism to sync prices in a product and in its variations.
 				if ( (int) $this->woocommerce_wpml->settings['enable_multi_currency'] === WCML_MULTI_CURRENCIES_INDEPENDENT ) {
 					$this->woocommerce_wpml->multi_currency->custom_prices->sync_product_variations_custom_prices( $post_data->ID );
 				}
 
-				// save files option.
 				$this->woocommerce_wpml->downloadable->save_files_option( $post_data->ID );
 
 			}
 		}
 	}
 
-	/**
-	 * @param int    $product_id
-	 * @param int    $tr_product_id
-	 * @param string $lang
-	 * @param array  $args
-	 *
-	 * @todo Still used by the WCML_Editor_UI_Product_Job CTE editor manager
-	 * @todo Still usd by the troubleshooting mechanism, see https://onthegosystems.myjetbrains.com/youtrack/issue/wcml-4904
-	 */
 	public function sync_product_variations( $product_id, $tr_product_id, $lang, $args = [] ) {
 		global $wpml_post_translations;
 
@@ -178,27 +133,24 @@ class WCML_Synchronize_Variations_Data {
 		foreach ( $all_variations as $post_data ) {
 			$original_variation_id    = $post_data->ID;
 			$isNewTranslatedVariation = false;
-			// save files option.
 			$this->woocommerce_wpml->downloadable->save_files_option( $original_variation_id );
 
 			$variation_id = $this->get_variation_id_by_lang( $lang, $original_variation_id );
 
 			if ( ! empty( $variation_id ) ) {
-				// Update variation.
 				$this->wpdb->update(
 					$this->wpdb->posts,
 					[
 						'post_status'       => $post_data->post_status,
 						'post_modified'     => $post_data->post_modified,
 						'post_modified_gmt' => $post_data->post_modified_gmt,
-						'post_parent'       => $tr_product_id, // current post ID.
+						'post_parent'       => $tr_product_id,
 						'menu_order'        => $post_data->menu_order,
 					],
 					[ 'ID' => $variation_id ]
 				);
 				$translation_variations['update'][] = (int) $variation_id;
 			} else {
-				// Add new variation.
 				$replaced_guid = str_replace( $product_id, $tr_product_id, $post_data->guid );
 				$replaced_slug = str_replace( $product_id, $tr_product_id, $post_data->post_name );
 				$variation_id  = wp_insert_post(
@@ -218,7 +170,7 @@ class WCML_Synchronize_Variations_Data {
 						'post_modified'         => $post_data->post_modified,
 						'post_modified_gmt'     => $post_data->post_modified_gmt,
 						'post_content_filtered' => $post_data->post_content_filtered,
-						'post_parent'           => $tr_product_id, // current post ID.
+						'post_parent'           => $tr_product_id,
 						'guid'                  => $replaced_guid,
 						'menu_order'            => $post_data->menu_order,
 						'post_type'             => $post_data->post_type,
@@ -240,10 +192,8 @@ class WCML_Synchronize_Variations_Data {
 			$variationDelayedFields = $this->duplicate_variation_data( $original_variation_id, $variation_id, $args['editor_translations'], $lang, $args['is_troubleshooting'], $isNewTranslatedVariation );
 			$delayedFields = array_merge( $delayedFields, $variationDelayedFields );
 
-			// sync taxonomies.
 			$this->sync_variations_taxonomies( $original_variation_id, $variation_id, $lang, $isNewTranslatedVariation );
 
-			// sync description.
 			if ( $args['is_duplicate'] ) {
 				$delayedFields[] = [
 					'post_id'    => $variation_id,
@@ -260,10 +210,8 @@ class WCML_Synchronize_Variations_Data {
 				];
 			}
 
-			// sync media.
 			$this->woocommerce_wpml->media->sync_variation_thumbnail_id( $original_variation_id, $variation_id, $lang );
 
-			// sync file_paths.
 			$this->woocommerce_wpml->downloadable->sync_files_to_translations( $original_variation_id, $variation_id, $args['editor_translations'] );
 
 			$this->delete_removed_variation_attributes( $product_id, $variation_id );
@@ -276,19 +224,15 @@ class WCML_Synchronize_Variations_Data {
 
 		$this->processDelayedFields( $delayedFields, $translation_variations['update'] );
 
-		// Delete variations that no longer exist.
 		foreach ( $current_variations as $current_post_variation ) {
 			if ( ! in_array( (int) $current_post_variation->ID, $translation_variations['update'] ) ) {
 				wp_delete_post( $current_post_variation->ID, true );
 			}
 		}
 
-		// refresh parent-children transients.
 		delete_transient( 'wc_product_children_' . $tr_product_id );
 		delete_transient( '_transient_wc_product_children_ids_' . $tr_product_id );
 
-		// This is independent of variations translations
-		// Might be managed in the higher level with variations prices and downloadable options.
 		$this->sync_prices_variation_ids( $product_id, $tr_product_id, $lang );
 
 		add_action( 'save_post', [ $wpml_post_translations, 'save_post_actions' ], 100, 2 );
@@ -300,25 +244,10 @@ class WCML_Synchronize_Variations_Data {
 		}
 	}
 
-	/**
-	 * @param string $lang
-	 * @param int    $original_variation_id
-	 *
-	 * @return int|null
-	 */
 	public function get_variation_id_by_lang( $lang, $original_variation_id ) {
 		return $this->sitepress->get_object_id( $original_variation_id, 'product_variation', false, $lang );
 	}
 
-	/**
-	 * @param int    $original_variation_id
-	 * @param int    $tr_variation_id
-	 * @param string $lang
-	 * @param bool   $isNewTranslatedVariation
-	 *
-	 * @deprecated Use \WCML\Synchronization\Component\VariationTaxonomies::run
-	 * @todo Still used by the variation synchronization main method here.
-	 */
 	public function sync_variations_taxonomies( $original_variation_id, $tr_variation_id, $lang, $isNewTranslatedVariation = false ) {
 		global $wpml_term_translations;
 		$returnTrue = Fns::always( true );
@@ -327,16 +256,6 @@ class WCML_Synchronize_Variations_Data {
 
 		$taxonomies       = get_object_taxonomies( 'product_variation' );
 		$taxonomiesToSync = array_values( array_diff( $taxonomies, [ 'translation_priority' ] ) );
-		/**
-		 * Filters the taxonomy objects to synchronize.
-		 *
-		 * @since 5.2.0
-		 *
-		 * @param string[]   $taxonomiesToSync
-		 * @param int|string $original_variation_id
-		 * @param int|string $tr_variation_id
-		 * @param string     $lang
-		 */
 		$taxonomiesToSync = apply_filters( 'wcml_product_variations_taxonomies_to_sync', $taxonomiesToSync, $original_variation_id, $tr_variation_id, $lang );
 		$found      = false;
 		$all_terms  = WPML_Non_Persistent_Cache::get( $original_variation_id, __CLASS__, $found );
@@ -380,8 +299,6 @@ class WCML_Synchronize_Variations_Data {
 			}
 
 			foreach ( $tt_ids as $tt_id ) {
-				// Avoid the wpml_object_id filter to escape from the WPML_Term_Translations::maybe_warm_term_id_cache() hell
-				// given that we invalidate the cache at every step on wp_set_post_terms().
 				$tt_id_trans = $wpml_term_translations->element_id_in( $tt_id, $lang );
 				if ( $tt_id_trans ) {
 					$tt_ids_trans[] = $tt_id_trans;
@@ -390,15 +307,12 @@ class WCML_Synchronize_Variations_Data {
 
 			$tt_ids_trans = array_values( array_unique( array_map( 'intval', $tt_ids_trans ) ) );
 			if ( ! empty( $tt_ids_trans ) ) {
-				// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-				// phpcs:disable Squiz.Strings.DoubleQuoteUsage.NotRequired
 				$term_ids_trans = $this->wpdb->get_col(
 					$this->wpdb->prepare(
 						"SELECT term_id FROM {$this->wpdb->term_taxonomy} WHERE term_taxonomy_id IN (" . DB::prepareIn( $tt_ids_trans, '%d' ) . ") LIMIT %d",
 						count( $tt_ids_trans )
 					)
 				);
-				// phpcs:enable
 			}
 
 			$terms_to_sync = array_merge( $term_ids, $term_ids_trans );
@@ -407,7 +321,6 @@ class WCML_Synchronize_Variations_Data {
 			if ( empty( $terms_to_sync ) ) {
 				continue;
 			}
-			// set the fourth parameter in 'true' because we need to add new terms, instead of replacing all.
 			wp_set_object_terms( $tr_variation_id, $terms_to_sync, $taxonomy, true );
 		}
 
@@ -415,17 +328,7 @@ class WCML_Synchronize_Variations_Data {
 		$filtersSuspend->resume();
 	}
 
-	/**
-	 * @param int    $original_variation_id
-	 * @param int    $variation_id
-	 * @param array  $data
-	 * @param string $lang
-	 * @param bool   $trbl
-	 * @param bool   $deprecatedBool
-	 *
-	 * @return array
-	 */
-	public function duplicate_variation_data( $original_variation_id, $variation_id, $data, $lang, $trbl, $deprecatedBool = false ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+	public function duplicate_variation_data( $original_variation_id, $variation_id, $data, $lang, $trbl, $deprecatedBool = false ) {
 		global $iclTranslationManagement;
 		$settings      = $iclTranslationManagement->settings['custom_fields_translation'];
 		$all_meta      = get_post_custom( $original_variation_id );
@@ -453,13 +356,11 @@ class WCML_Synchronize_Variations_Data {
 				} else {
 					$meta_value = '';
 				}
-				// phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				$delayedFields[] = [
 					'post_id'    => $variation_id,
 					'meta_key'   => $meta_key,
 					'meta_value' => maybe_unserialize( $meta_value ),
 				];
-				// phpcs:enable
 				continue;
 			}
 
@@ -471,24 +372,20 @@ class WCML_Synchronize_Variations_Data {
 				in_array( $meta_key, [ '_sale_price', '_regular_price', '_price' ], true ) &&
 				( $trbl || WCML_MULTI_CURRENCIES_INDEPENDENT === (int) $this->woocommerce_wpml->settings['enable_multi_currency'] )
 			) {
-				// phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				$delayedFields[] = [
 					'post_id'    => $variation_id,
 					'meta_key'   => $meta_key,
 					'meta_value' => $meta_value,
 				];
-				// phpcs:enable
 				continue;
 			}
 
 			if ( (int) Obj::prop( $meta_key, $settings ) === WPML_COPY_CUSTOM_FIELD ) {
-				// phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				$delayedFields[] = [
 					'post_id'    => $variation_id,
 					'meta_key'   => $meta_key,
 					'meta_value' => $meta_value,
 				];
-				// phpcs:enable
 				continue;
 			}
 
@@ -507,14 +404,12 @@ class WCML_Synchronize_Variations_Data {
 
 		$original_product_attr = get_post_meta( $orig_product_id, '_product_attributes', true );
 
-		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
 		$get_all_variation_attributes = $this->wpdb->get_results(
 			$this->wpdb->prepare(
 				"SELECT * FROM {$this->wpdb->postmeta} WHERE post_id = %d AND meta_key LIKE 'attribute_%%' ",
 				$variation_id
 			)
 		);
-		// phpcs:enable
 
 		foreach ( $get_all_variation_attributes as $variation_attribute ) {
 			$attribute_name = substr( $variation_attribute->meta_key, 10 );
@@ -534,7 +429,6 @@ class WCML_Synchronize_Variations_Data {
 			return $temp_product_variations;
 		}
 
-		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
 		$variations = $this->wpdb->get_results(
 			$this->wpdb->prepare(
 				"SELECT * FROM {$this->wpdb->posts}
@@ -544,7 +438,6 @@ class WCML_Synchronize_Variations_Data {
 				$product_id
 			)
 		);
-		// phpcs:enable
 
 		wp_cache_set( $cache_key, $variations, $cache_group );
 
@@ -571,12 +464,6 @@ class WCML_Synchronize_Variations_Data {
 		}
 	}
 
-	/**
-	 * Update taxonomy in variations.
-	 *
-	 * @deprecated This AJAX call was removed in WPML 3.2 on 2015.
-	 * @see https://git.onthegosystems.com/wpml/sitepress-multilingual-cms/-/commit/f4b9a84211ee789b7f9a0c028a807188f8334e5c
-	 */
 	public function update_taxonomy_in_variations() {
 		_doing_it_wrong(
 			'WCML_Synchronize_Variations_Data::update_taxonomy_in_variations',
@@ -585,14 +472,6 @@ class WCML_Synchronize_Variations_Data {
 		);
 	}
 
-	/**
-	 * Remove single variation.
-	 *
-	 * @deprecated This AJAX call was removed in WooCommerce 2.3.0 on 2014.
-	 * @see https://github.com/woocommerce/woocommerce/commit/2c1c9896c5e5cdc8223c2ef253c188520b3e074c
-	 *
-	 * We can add the original nonce validation.
-	 */
 	public function remove_variation_ajax() {
 		check_ajax_referer( 'delete-variation', 'security' );
 
@@ -615,13 +494,6 @@ class WCML_Synchronize_Variations_Data {
 		}
 	}
 
-	/**
-	 * Synchronize prices variation ids for product
-	 *
-	 * @param int    $product_id
-	 * @param int    $tr_product_id
-	 * @param string $language
-	 */
 	public function sync_prices_variation_ids( $product_id, $tr_product_id, $language ) {
 
 		$prices_variation_ids_fields = [
@@ -646,31 +518,20 @@ class WCML_Synchronize_Variations_Data {
 		}
 	}
 
-	/**
-	 * @param array $delayedFields
-	 * @param array $existingVariationTranslations
-	 */
 	private function processDelayedFields( $delayedFields, $existingVariationTranslations ) {
 		if ( empty( $delayedFields ) ) {
 			return;
 		}
 
-		// Get all pairs post_id/meta_key from variation translations already existing.
-		// Group them by variation ID.
-		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
 		$allMetaData = empty( $existingVariationTranslations) ? [] : $this->wpdb->get_results(
 			"SELECT meta_id, post_id, meta_key FROM {$this->wpdb->postmeta} where post_id IN (" . DB::prepareIn( $existingVariationTranslations, '%d' ) . ")",
 			ARRAY_A
 		);
-		// phpcs:enable
 		$metaDataByVariationIds = [];
 		foreach ( $allMetaData as $metaData ) {
 			$metaDataByVariationIds[ $metaData['post_id'] ][ $metaData['meta_id'] ] = $metaData['meta_key'];
 		}
 
-		// Loop over the delated fields to clasify them by the field status:
-		// - if the meta key exists for its variation ID, it is set to update.
-		// - otherwise, it is set to insert.
 		$delayedFieldsActions = [];
 		foreach ( $delayedFields as $delayedFieldData ) {
 			$fieldPostId                                         = $delayedFieldData['post_id'];
@@ -691,50 +552,37 @@ class WCML_Synchronize_Variations_Data {
 			}
 		}
 
-		// Perform delete/insert/update actions.
 		foreach ( $delayedFieldsActions as $delayedFieldMetaKey => $delayedFieldMetaData ) {
-			// Delete all entries that have duplicated values:
-			// all the related meta fields should have unique values.
 			$dataToDelete = Obj::propOr( [], 'delete', $delayedFieldMetaData );
 			if ( ! empty( $dataToDelete ) ) {
 				$metaIdsToDelete = [];
 				foreach ( $dataToDelete as $itemMetaIdsToDelete ) {
 					$metaIdsToDelete = array_merge( $metaIdsToDelete, $itemMetaIdsToDelete );
 				}
-				// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
 				$this->wpdb->query(
 						"DELETE FROM {$this->wpdb->postmeta}
 						WHERE meta_id IN (" . DB::prepareIn( $metaIdsToDelete, '%d' ) . ")"
 				);
-				// phpcs:enable
 			}
 
-			// Insert all post_id/meta_key/meta_value groups at once, per meta_key.
-			// For each meta key, data is made of pairs [ post ID => metaValue ] for easier insertion.
-			// This ensures that the number of values inserted on each batch is, at most, the number of variations.
 			$dataToInsert = Obj::propOr( [], 'insert', $delayedFieldMetaData );
 			if ( ! empty( $dataToInsert )) {
 				$insertValues = [];
 				foreach ( $dataToInsert as $idToInsert => $valueToInsert ) {
 					$insertValues[] = $this->wpdb->prepare( "(%d,%s,%s)", $idToInsert, $delayedFieldMetaKey, $valueToInsert );
 				}
-				// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
 				$this->wpdb->query(
 						"INSERT INTO {$this->wpdb->postmeta}
 						(`post_id`,`meta_key`,`meta_value`)
 						VALUES " . implode( ',', $insertValues )
 				);
-				// phpcs:enable
 			}
 
-			// Update all variations at once.
-			// For each meta key, data is made of pairs [ meta value => list of affected post IDs ] so it is easier to compose IN statements.
 			$dataToUpdate = Obj::propOr( [], 'update', $delayedFieldMetaData );
 			if ( ! empty( $dataToUpdate ) ) {
 				foreach ( $dataToUpdate as $updateMetaValue => $idsToUpdate ) {
 					$idsToUpdate = array_values( array_unique( array_map( 'intval', $idsToUpdate ) ) );
 					if ( ! empty( $idsToUpdate ) ) {
-						// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
 						$this->wpdb->query(
 							$this->wpdb->prepare(
 								"UPDATE {$this->wpdb->postmeta}
@@ -745,7 +593,6 @@ class WCML_Synchronize_Variations_Data {
 								$delayedFieldMetaKey
 							)
 						);
-						// phpcs:enable
 					}
 				}
 			}

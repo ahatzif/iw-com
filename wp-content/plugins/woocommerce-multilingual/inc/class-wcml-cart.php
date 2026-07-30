@@ -3,20 +3,10 @@
 use function WCML\functions\isStandAlone;
 
 class WCML_Cart {
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
-	/** @var SitePress */
 	private $sitepress;
-	/** @var WooCommerce */
 	private $woocommerce;
 
-	/**
-	 * WCML_Cart constructor.
-	 *
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param SitePress        $sitepress
-	 * @param WooCommerce      $woocommerce
-	 */
 	public function __construct( woocommerce_wpml $woocommerce_wpml, \WPML\Core\ISitePress $sitepress, WooCommerce $woocommerce ) {
 		$this->woocommerce_wpml = $woocommerce_wpml;
 		$this->sitepress        = $sitepress;
@@ -52,7 +42,6 @@ class WCML_Cart {
 				);
 			}
 		} else {
-			// cart widget
 			add_action( 'wp_ajax_woocommerce_get_refreshed_fragments', [ $this, 'wcml_refresh_fragments' ], 0 );
 			add_action( 'wp_ajax_woocommerce_add_to_cart', [ $this, 'wcml_refresh_fragments' ], 0 );
 			add_action(
@@ -65,7 +54,6 @@ class WCML_Cart {
 			);
 			add_action( 'wp_ajax_nopriv_woocommerce_add_to_cart', [ $this, 'wcml_refresh_fragments' ], 0 );
 
-			// cart
 			add_action( 'woocommerce_before_checkout_process', [ $this, 'wcml_refresh_cart_total' ] );
 
 			if ( ! isStandAlone() ) {
@@ -134,7 +122,6 @@ class WCML_Cart {
 	}
 
 	public function wcml_removed_cart_items_widget( $args = [] ) {
-		/** @phpstan-ignore-next-line instanceof.alwaysTrue */
 		if ( $this->woocommerce->session instanceof WC_Session ) {
 			$removed_cart_items = new WCML_Removed_Cart_Items_UI( $this->woocommerce_wpml, $this->sitepress, $this->woocommerce );
 			$preview            = $removed_cart_items->get_view();
@@ -166,7 +153,6 @@ class WCML_Cart {
 				}
 				WC()->cart->remove_cart_item( $item_key );
 			}
-			/** @phpstan-ignore-next-line instanceof.alwaysTrue */
 			if ( $this->woocommerce->session instanceof WC_Session ) {
 				$this->woocommerce->session->set( 'wcml_removed_items', serialize( $removed_products ) );
 			}
@@ -184,18 +170,9 @@ class WCML_Cart {
 		$this->woocommerce->session->__unset( 'wcml_switched_type' );
 	}
 
-	/**
-	 * @param $exc
-	 * @param $current_currency
-	 * @param $new_currency
-	 * @param bool $return
-	 *
-	 * @return array|mixed|void
-	 */
 	public function cart_switching_currency( $exc, $current_currency, $new_currency, $return = false ) {
 
 		$cart_for_session = false;
-		/** @phpstan-ignore-next-line instanceof.alwaysTrue */
 		if ( WC()->cart instanceof WC_Cart ) {
 			$cart_for_session = array_filter( WC()->cart->get_cart_contents() );
 		}
@@ -347,12 +324,6 @@ class WCML_Cart {
 		WC()->cart->calculate_totals();
 	}
 
-	/**
-	 * Update cart and cart session when switch language.
-	 *
-	 * @param WC_Cart      $cart
-	 * @param string|false $currency
-	 */
 	public function woocommerce_calculate_totals( $cart, $currency = false ) {
 
 		$current_language = $this->sitepress->get_current_language();
@@ -360,8 +331,6 @@ class WCML_Cart {
 
 		foreach ( $cart->cart_contents as $key => $cart_item ) {
 			$tr_product_id = apply_filters( 'wpml_object_id', $cart_item['product_id'], 'product', false, $current_language );
-			// translate custom attr labels in cart object.
-			// translate custom attr value in cart object.
 			$tr_variation_id = null;
 			if ( isset( $cart_item['variation'] ) && is_array( $cart_item['variation'] ) ) {
 				$tr_variation_id = apply_filters( 'wpml_object_id', $cart_item['variation_id'], 'product_variation', false, $current_language );
@@ -423,11 +392,6 @@ class WCML_Cart {
 		$this->woocommerce->session->cart = $cart->cart_contents;
 	}
 
-	/**
-	 * @param array $cart_item
-	 *
-	 * @return string
-	 */
 	public function get_data_cart_hash( $cart_item ) {
 
 		$data_hash = '';
@@ -442,12 +406,6 @@ class WCML_Cart {
 		return $data_hash;
 	}
 
-	/**
-	 * @param array      $item_data
-	 * @param WC_Product $product Product object
-	 *
-	 * @return array
-	 */
 	public function validate_cart_item_data( array $item_data, $product ) {
 
 		if ( $item_data['attributes'] ) {
@@ -521,11 +479,6 @@ class WCML_Cart {
 		return $attr_translation;
 	}
 
-	/**
-	 * @param string $attr_key
-	 *
-	 * @return string
-	 */
 	protected function remove_attribute_prefix( $attr_key ) {
 		$taxonomy = $attr_key;
 
@@ -548,7 +501,6 @@ class WCML_Cart {
 		);
 	}
 
-	// get cart_item_data from existing cart array ( from session )
 	public function get_cart_item_data_from_cart( $cart_contents ) {
 		unset( $cart_contents['product_id'] );
 		unset( $cart_contents['variation_id'] );
@@ -565,7 +517,6 @@ class WCML_Cart {
 		return apply_filters( 'wcml_filter_cart_item_data', $cart_contents );
 	}
 
-	// refresh cart total to return correct price from WC object
 	public function wcml_refresh_cart_total() {
 		WC()->cart->calculate_totals();
 	}
@@ -607,7 +558,6 @@ class WCML_Cart {
 	public function filter_paypal_args( $args ) {
 		$args['lc'] = $this->sitepress->get_current_language();
 
-		// filter URL when default permalinks uses
 		$wpml_settings = $this->sitepress->get_settings();
 		if ( $wpml_settings['language_negotiation_type'] == 3 ) {
 			$args['notify_url'] = str_replace( '%2F&', '&', $args['notify_url'] );
@@ -653,12 +603,6 @@ class WCML_Cart {
 		}
 	}
 
-	/**
-	 * @param string $permalink
-	 * @param array  $cart_item
-	 *
-	 * @return string
-	 */
 	public function cart_item_permalink( $permalink, $cart_item ) {
 
 		if ( ! $this->sitepress->get_setting( 'auto_adjust_ids' ) ) {
@@ -668,11 +612,6 @@ class WCML_Cart {
 		return $permalink;
 	}
 
-	/**
-	 * @param string $currency
-	 *
-	 * @return float
-	 */
 	public function convert_cart_total_to_currency( $currency ) {
 		$total          = WC()->cart->get_total( 'raw' );
 		$total_default  = $this->woocommerce_wpml->multi_currency->prices->unconvert_price_amount( $total );
@@ -681,11 +620,6 @@ class WCML_Cart {
 		return $total_currency;
 	}
 
-	/**
-	 * @param string $currency
-	 *
-	 * @return string
-	 */
 	public function format_converted_cart_total_in_currency( $currency ) {
 		return $this->woocommerce_wpml->multi_currency->prices->format_price_in_currency( $this->convert_cart_total_to_currency( $currency ), $currency );
 	}
@@ -696,11 +630,6 @@ class WCML_Cart {
 		return $this->woocommerce_wpml->multi_currency->prices->convert_price_amount( $shipping_amount_in_default_currency, $currency );
 	}
 
-	/**
-	 * @param WC_Product $product
-	 *
-	 * @return WC_Product
-	 */
 	public function adjust_cart_item_product_name( $product ) {
 
 		$product_id = $product->get_id();
@@ -714,24 +643,13 @@ class WCML_Cart {
 		return $product;
 	}
 
-	/**
-	 * @param string $cart_hash_key
-	 *
-	 * @return string
-	 */
 	public function add_language_to_cart_hash_key( $cart_hash_key ) {
 		return $cart_hash_key . '-' . $this->sitepress->get_current_language();
 	}
 
-	/**
-	 * @param int[] $productIds
-	 *
-	 * @return int[]
-	 */
 	public function convert_crosssell_ids( $productIds ) {
 		$returnOriginal = $this->sitepress->is_display_as_translated_post_type( 'product' );
 
-		// $convertId :: int -> int|null
 		$convertId = function( $id ) use ( $returnOriginal ) {
 			return $this->sitepress->get_object_id( $id, 'product', $returnOriginal );
 		};

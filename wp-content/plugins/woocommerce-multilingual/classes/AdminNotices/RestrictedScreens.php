@@ -4,9 +4,6 @@ namespace WCML\AdminNotices;
 
 class RestrictedScreens {
 
-	/**
-	 * @return string[]
-	 */
 	public static function get() {
 		return [
 			'dashboard',

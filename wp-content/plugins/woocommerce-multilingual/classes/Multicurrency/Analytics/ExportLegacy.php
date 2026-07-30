@@ -6,11 +6,6 @@ use WCML\Orders\Helper as OrdersHelper;
 
 class ExportLegacy extends Export {
 
-	/**
-	 * @param string[] $clauses
-	 *
-	 * @return string[]
-	 */
 	public function addJoinClauses( $clauses ) {
 		$clauses[] = PHP_EOL . "LEFT JOIN {$this->wpdb->postmeta} AS wcmllang ON wcmllang.post_id = {$this->wpdb->prefix}wc_order_stats.order_id AND wcmllang.meta_key = '" . \WCML_Orders::KEY_LANGUAGE . "'";
 
@@ -21,11 +16,6 @@ class ExportLegacy extends Export {
 		return $clauses;
 	}
 
-	/**
-	 * @param string[] $clauses
-	 *
-	 * @return string[]
-	 */
 	public function addSelectClauses( $clauses ) {
 		$clauses[] = sprintf( ', wcmllang.meta_value AS %s', self::COL_LANGUAGE );
 

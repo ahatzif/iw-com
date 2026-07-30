@@ -2,22 +2,12 @@
 
 class WCML_Admin_Cookie {
 
-	/** @var string */
 	private $name;
 
-	/**
-	 * WCML_Admin_Cookie constructor.
-	 *
-	 * @param string $name
-	 */
 	public function __construct( $name ) {
 		$this->name = $name;
 	}
 
-	/**
-	 * @param mixed $value
-	 * @param int   $expiration
-	 */
 	public function set_value( $value, $expiration = null ) {
 		if ( null === $expiration ) {
 			$expiration = time() + DAY_IN_SECONDS;
@@ -25,9 +15,6 @@ class WCML_Admin_Cookie {
 		wc_setcookie( $this->name, $value, $expiration );
 	}
 
-	/**
-	 * @return mixed
-	 */
 	public function get_value() {
 		$value = null;
 		if ( isset( $_COOKIE [ $this->name ] ) ) {

@@ -10,11 +10,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		add_filter( 'dynamic_pricing_product_rules', [ $this, 'dynamic_pricing_product_rules' ] );
 	}
 
-	/**
-	 * @param array $modules
-	 *
-	 * @return array
-	 */
 	public function filter_price( $modules ) {
 
 		foreach ( $modules as $mod_key => $module ) {
@@ -42,12 +37,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		return $modules;
 	}
 
-	/**
-	 * @param float  $amount
-	 * @param object $rule
-	 *
-	 * @return float
-	 */
 	public function woocommerce_dynamic_pricing_get_rule_amount( $amount, $rule ) {
 
 		if ( 'price_discount' === $rule['type'] || 'fixed_price' === $rule['type'] ) {
@@ -57,11 +46,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		return $amount;
 	}
 
-	/**
-	 * @param array|mixed $rules
-	 *
-	 * @return array|mixed
-	 */
 	public function dynamic_pricing_product_rules( $rules ) {
 		if ( is_array( $rules ) ) {
 			foreach ( $rules as $r_key => $rule ) {

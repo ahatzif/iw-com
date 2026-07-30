@@ -8,7 +8,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 
 	const PRICE_FILTERS_PRIORITY_AFTER_COMPOSITE = 99;
 
-	/** @var \woocommerce_wpml $woocommerce_wpml */
 	private $woocommerce_wpml;
 
 	public function __construct( \woocommerce_wpml $woocommerce_wpml ) {
@@ -24,14 +23,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param int|string       $productId
-	 * @param string|float|int $productPrice
-	 * @param array            $customPrices
-	 * @param string           $code
-	 *
-	 * @return void
-	 */
 	public function update_composite_custom_prices( $productId, $productPrice, $customPrices, $code ){
 		if( WCML_Compatibility_Helper::get_product_type( $productId ) === 'composite' ) {
 			update_post_meta( $productId, '_bto_base_regular_price' . '_' . $code, $customPrices['_regular_price' ] );
@@ -40,13 +31,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param mixed  $value
-	 * @param int    $objectId
-	 * @param string $metaKey
-	 *
-	 * @return mixed
-	 */
 	public function filter_composite_product_cost( $value, $objectId, $metaKey ) {
 		if ( in_array( $metaKey, [
 			'_bto_base_regular_price',
@@ -98,11 +82,6 @@ class MulticurrencyHooks implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param int|float|string $price
-	 *
-	 * @return int|float|string
-	 */
 	public function apply_rounding_rules( $price ) {
 		if ( $price && is_composite_product() ) {
 			$current_currency = $this->woocommerce_wpml->multi_currency->get_client_currency();

@@ -4,16 +4,9 @@ class WCML_Setup_Attributes_UI extends WCML_Setup_Step {
 
 	const SLUG = 'attributes';
 
-	/** @var woocommerce_wpml */
 	private $woocommerce_wpml;
 
-	/**
-	 * @param woocommerce_wpml $woocommerce_wpml
-	 * @param string           $next_step_url
-	 * @param string           $previous_step_url
-	 */
 	public function __construct( $woocommerce_wpml, $next_step_url, $previous_step_url ) {
-		// @todo Cover by tests, required for wcml-3037.
 		parent::__construct( $next_step_url, $previous_step_url );
 
 		$this->woocommerce_wpml = $woocommerce_wpml;
@@ -41,7 +34,6 @@ class WCML_Setup_Attributes_UI extends WCML_Setup_Step {
 			'strings'      => [
 				'step_id'       => 'attributes_step',
 				'heading'       => __( 'Which product attributes should be translatable?', 'woocommerce-multilingual' ),
-				// @todo: Check UTM tags for wizard.
 				'description_1' => sprintf(
 					/* translators: %1$s and %2$s are opening and closing HTML link tags */
 					esc_html__( 'WPML allows you to %1$stranslate your product attributes%2$s. Some attributes, like the ones based on numbers and codes, can be universal and might not need to be translated.', 'woocommerce-multilingual' ),

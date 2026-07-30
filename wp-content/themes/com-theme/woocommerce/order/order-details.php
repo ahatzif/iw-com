@@ -55,13 +55,13 @@ $is_expired_payment = $order->has_status( [ 'pending', 'failed' ] )
     && empty( $hold_state['is_active'] );
 $status_label = $is_expired_payment
     ? __( 'Η κράτηση έληξε', 'com-theme' )
-    : ( $order->has_status( 'pending' ) ? __( 'Αναμένει πληρωμή', 'com-theme' ) : wc_get_order_status_name( $order->get_status() ) );
+    : ( $order->has_status( 'pending' ) ? __( 'Σε αναμονή πληρωμής', 'com-theme' ) : wc_get_order_status_name( $order->get_status() ) );
 ?>
 
 <section class="woocommerce-order-details account-order-summary">
     <?php do_action( 'woocommerce_order_details_before_order_table', $order ); ?>
 
-    <div class="overflow-hidden rounded-[1.2rem] border border-blue/15 bg-white">
+    <div class="overflow-hidden rounded-[1.2rem] border border-blue/15 bg-white text-blue">
         <div class="px-20 pt-20 md:px-25 md:pt-25">
             <h2 class="m-0 text-[1.1rem] font-bold tracking-[.1em] text-blue-soft"><?= esc_html( com\theme::remove_accents( __( 'Εισιτήρια', 'com-theme' ) ) ) ?></h2>
         </div>

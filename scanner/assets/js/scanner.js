@@ -884,7 +884,9 @@ function renderNotificationsList() {
   if ( ! scannerNotifications.length ) {
     notificationsList.innerHTML = `
       <article class="scanner-history-row scanner-history-row--empty">
-        <span class="scanner-history-icon scanner-history-icon--success"></span>
+        <span class="scanner-history-icon scanner-history-icon--notifications" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.8a6 6 0 1 0-12 0c0 7.2-2.5 7.2-2.5 7.2h17S18 16 18 8.8Z"></path><path d="M9.8 19a2.4 2.4 0 0 0 4.4 0"></path></svg>
+        </span>
         <div>
           <strong>${escapeHtml( t( 'notifications.emptyTitle' ) )}</strong>
           <span>${escapeHtml( t( 'notifications.emptyCopy' ) )}</span>
@@ -2145,7 +2147,7 @@ function renderLocationList( query = '' ) {
       <span class="scanner-location-radio" aria-hidden="true"></span>
       <span>
         <strong>${escapeHtml( building.title )}</strong>
-        <span>${escapeHtml( building.address || t( 'location.noAddress' ) )}</span>
+        ${building.address ? `<span>${escapeHtml( building.address )}</span>` : ''}
       </span>
     </button>
   ` ).join( '' );
@@ -2240,7 +2242,9 @@ function renderScanHistory() {
   if ( ! scanHistory.length ) {
     scanHistoryList.innerHTML = `
       <article class="scanner-history-row scanner-history-row--empty">
-        <span class="scanner-history-icon scanner-history-icon--scan"></span>
+        <span class="scanner-history-icon scanner-history-icon--history" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4.75 9.25a7.6 7.6 0 1 1 1.42 6.84"></path><path d="M4.75 5.25v4h4"></path><path d="M12 8.25v4.2l2.7 1.6"></path></svg>
+        </span>
         <div>
           <strong>${escapeHtml( t( 'history.emptyTitle' ) )}</strong>
           <span>${escapeHtml( t( 'history.emptyCopy' ) )}</span>

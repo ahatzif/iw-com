@@ -40,6 +40,7 @@ export default class extends module {
         });
 
         this.showView('choice', false);
+        this.openFromLocation();
     }
 
     destroy() {
@@ -49,6 +50,40 @@ export default class extends module {
 
     isLoggedIn() {
         return document.body.classList.contains('logged-in');
+    }
+
+    openFromLocation() {
+        if (this.isLoggedIn()) return;
+
+        const params = new URLSearchParams(window.location.search);
+        const resetKey = params.get('reset-password-key');
+        const activationCode = params.get('account-activation-key');
+        const authView = params.get('auth-view');
+
+        if (activationCode && params.get('id')) {
+            this.open('activation');
+            return;
+        }
+
+        if (resetKey && (params.get('id') || params.get('login'))) {
+            this.open('reset');
+            return;
+        }
+
+        if (['login', 'signup', 'forgot'].includes(authView)) {
+            this.open(authView);
+            return;
+        }
+
+        const openModalCookie = document.cookie
+            .split('; ')
+            .find(cookie => cookie.startsWith('open-modal='))
+            ?.split('=')[1];
+
+        if (decodeURIComponent(openModalCookie || '') === 'login-modal') {
+            document.cookie = 'open-modal=; Max-Age=0; path=/; SameSite=Lax';
+            this.open('login');
+        }
     }
 
     onTrigger(event) {
@@ -131,6 +166,7 @@ export default class extends module {
     close() {
         this.el.classList.remove('active');
         this.el.setAttribute('aria-hidden', 'true');
+        this.cleanAuthLocation();
 
         try {
             this.call('start', false, 'Scroll');
@@ -165,6 +201,17 @@ export default class extends module {
 
     getVisibleView() {
         return this.views.find(item => item.dataset.authView === this.currentView);
+    }
+
+    cleanAuthLocation() {
+        const url = new URL(window.location.href);
+        ['reset-password-key', 'account-activation-key', 'id', 'login', 'welcome', 'auth-view'].forEach(param => {
+            url.searchParams.delete(param);
+        });
+
+        if (url.href !== window.location.href) {
+            window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+        }
     }
 
     togglePassword(button) {
@@ -210,6 +257,18 @@ export default class extends module {
                 registrationMessage.textContent = String(data.message);
             }
             this.showView('signup-success');
+            return;
+        }
+
+        if (formName === 'reset') {
+            this.cleanAuthLocation();
+            this.showView('reset-success');
+            return;
+        }
+
+        if (formName === 'activation') {
+            this.cleanAuthLocation();
+            this.showView('activation-success');
         }
     }
 }

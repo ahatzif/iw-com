@@ -44,7 +44,7 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
                 && empty( $hold_state['is_active'] );
             $status_label = $is_expired_payment
                 ? __( 'Η κράτηση έληξε', 'com-theme' )
-                : ( $order->has_status( 'pending' ) ? __( 'Αναμένει πληρωμή', 'com-theme' ) : wc_get_order_status_name( $order->get_status() ) );
+                : ( $order->has_status( 'pending' ) ? __( 'Σε αναμονή πληρωμής', 'com-theme' ) : wc_get_order_status_name( $order->get_status() ) );
             $actions = wc_get_account_orders_actions( $order );
             $pay_action = $actions['pay'] ?? null;
             $view_action = $actions['view'] ?? null;

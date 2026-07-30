@@ -156,7 +156,7 @@ class IW_Custom_Auth_Activation {
             return __( 'Ο λογαριασμός σας δημιουργήθηκε. Συμπληρώστε τον κωδικό που λάβατε με email ή SMS για να τον ενεργοποιήσετε.', 'iw-theme' );
         }
 
-        return __( 'Your account has been created. Please check your inbox for instructions to activate your account', 'iw-theme' );
+        return __( 'Ο λογαριασμός σας δημιουργήθηκε. Ελέγξτε το email σας για οδηγίες ενεργοποίησης του λογαριασμού σας.', 'iw-theme' );
     }
 
     public static function activation_instructions( $method = null ) {

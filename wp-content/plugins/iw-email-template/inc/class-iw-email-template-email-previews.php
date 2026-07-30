@@ -673,8 +673,14 @@ class IW_Email_Template_Email_Previews
         $email->object = $order;
         $email->recipient = $order ? $order->get_billing_email() : get_option('admin_email');
 
+        if ($order && property_exists($email, 'placeholders')) {
+            $email->placeholders['{order_date}'] = wc_format_datetime($order->get_date_created());
+            $email->placeholders['{order_number}'] = $order->get_order_number();
+            $email->placeholders['{customer_name}'] = $order->get_formatted_billing_full_name();
+        }
+
         if (property_exists($email, 'customer_note')) {
-            $email->customer_note = 'This is a preview customer note for design review.';
+            $email->customer_note = 'Αυτή είναι μια δοκιμαστική σημείωση για τον οπτικό έλεγχο του email.';
         }
 
         if (property_exists($email, 'refund')) {

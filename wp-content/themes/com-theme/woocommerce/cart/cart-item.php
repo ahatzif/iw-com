@@ -223,7 +223,7 @@ return;
 endif;
 ?>
 <article
-    class="group cart-item <?= $is_compact ? 'border-b border-dashed border-blue-soft pb-20 last:border-0 last:pb-0' : ( $is_summary ? '' : 'rounded-[1.5rem] bg-white p-20 text-blue md:p-30' ) ?>"
+    class="group cart-item relative <?= $is_compact ? 'border-b border-dashed border-blue-soft pb-20 last:border-0 last:pb-0' : ( $is_summary ? '' : 'rounded-[1.5rem] bg-white p-20 text-blue md:p-30' ) ?>"
     data-cart="item"
     data-cart-item-key="<?= esc_attr( $cart_item_key ) ?>"
     data-product-id="<?= esc_attr( (string) $product_id ) ?>"
@@ -257,44 +257,55 @@ endif;
             <div class="<?= $is_compact ? 'h-[6.5rem] w-[8rem] rounded-[.8rem]' : ( $is_summary ? 'aspect-[360/201]' : 'aspect-[4/3]' ) . ' w-full rounded-[1rem]' ?> bg-ochre-light"></div>
         <?php endif; ?>
 
-        <div class="<?= $is_summary ? 'space-y-20' : 'flex min-w-0 flex-col justify-between gap-15' ?>">
+        <div class="<?= $is_summary ? 'space-y-20' : 'flex min-w-0 flex-col justify-between gap-15' ?> <?= $is_compact ? 'pr-20' : '' ?>">
             <div class="<?= $is_compact ? 'space-y-5' : 'space-y-10' ?>">
                 <?php if ( $is_summary ) : ?>
                     <div class="text-[1.2rem] font-bold text-blue-soft"><?= esc_html__( 'ΕΙΣΙΤΗΡΙΟ', 'com-theme' ) ?></div>
                 <?php endif; ?>
                 <div>
-                <?php if ( $details['location'] ) : ?>
+                <?php if ( $details['location'] && ! $is_compact ) : ?>
                     <div class="text-[1rem] font-normal leading-none tracking-[.3em]"><?= esc_html( com\theme::remove_accents( $details['location'] ) ) ?></div>
                 <?php endif; ?>
                 <?php if ( $details['permalink'] ) : ?>
                     <a
                         href="<?= esc_url( $details['permalink'] ) ?>"
-                        class="<?= $is_compact ? 'line-clamp-2 text-[1.4rem]' : ( $is_summary ? 'text-[1.8rem]' : 'text-[2.4rem] lg:text-[2.8rem]' ) ?> block font-bold leading-none"
+                        class="<?= $is_compact ? 'line-clamp-2 text-[1.3rem]' : ( $is_summary ? 'text-[1.8rem]' : 'text-[2.4rem] lg:text-[2.8rem]' ) ?> block font-bold leading-none"
                     ><?= esc_html( $details['title'] ) ?></a>
                 <?php else : ?>
-                    <div class="<?= $is_compact ? 'line-clamp-2 text-[1.4rem]' : ( $is_summary ? 'text-[1.8rem]' : 'text-[2.4rem] lg:text-[2.8rem]' ) ?> font-bold leading-none"><?= esc_html( $details['title'] ) ?></div>
+                    <div class="<?= $is_compact ? 'line-clamp-2 text-[1.3rem]' : ( $is_summary ? 'text-[1.8rem]' : 'text-[2.4rem] lg:text-[2.8rem]' ) ?> font-bold leading-none"><?= esc_html( $details['title'] ) ?></div>
                 <?php endif; ?>
                 </div>
 
 
 
-                <?php if ( $date_time || $ticket_groups ) : ?>
-                    <div class="flex gap-10 <?= $is_compact ? 'text-[1.1rem] font-normal' : 'text-[1.4rem]' ?>">
-                        <?php if ( $date_time ) : ?>
-                        <div><?= esc_html( $date_time ) ?></div>
-                        <?php endif; ?>
-                        <?php if ( $ticket_groups ) : ?>
-                        <div>
-                            <?= esc_html( $ticket_count_display ) ?>
-                            <?php if ( ! $is_compact ) : ?> →<?php endif; ?>
+                <?php if ( $date_time || $ticket_groups || $is_compact ) : ?>
+                    <div class="flex items-center gap-10 <?= $is_compact ? 'text-[1.1rem] font-normal' : 'text-[1.4rem]' ?>">
+                        <div class="flex min-w-0 gap-10">
+                            <?php if ( $date_time ) : ?>
+                                <div><?= esc_html( $date_time ) ?></div>
+                            <?php endif; ?>
+                            <?php if ( $ticket_groups ) : ?>
+                                <div>
+                                    <?= esc_html( $ticket_count_display ) ?>
+                                    <?php if ( ! $is_compact ) : ?> →<?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                            <?php if ( $is_compact ) : ?>
+                                <div
+                                    class="shrink-0"
+                                    <?php if ( $is_mini ) : ?>
+                                        data-module-price-html
+                                        data-key="<?= esc_attr( $product_id . '_' . $variation_id ) ?>"
+                                    <?php endif; ?>
+                                ><?= wp_kses_post( $line_price ) ?></div>
+                            <?php endif; ?>
                         </div>
-                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
 
                 <?php if ( ( $is_mini || $is_checkout_summary ) && $hold_expires_timestamp ) : ?>
                     <div
-                        class="flex items-center gap-5 text-[1.1rem] leading-none"
+                        class="flex items-center gap-5 text-[1.1rem] font-normal leading-none"
                         data-module-timer
                         data-start="<?= esc_attr( (string) ( $hold->created_at ?? '' ) ) ?>"
                         data-end="<?= esc_attr( (string) ( $hold->expires_at ?? '' ) ) ?>"
@@ -308,7 +319,7 @@ endif;
                         <?php endif; ?>
                     >
                         <span><?= esc_html( com\theme::remove_accents( __( 'Χρόνος κράτησης:', 'com-theme' ) ) ) ?></span>
-                        <span class="font-bold" data-timer="display"></span>
+                        <span data-timer="display"></span>
                     </div>
                 <?php endif; ?>
             </div>
@@ -321,47 +332,43 @@ endif;
                     </div>
                 <?php endforeach; ?>
             </div>
-
-
-
-            <?php if ( ! $is_summary ) : ?>
-                <div class="flex items-center justify-between gap-15 mt-20 ">
-                    <?php if ( $is_checkout_summary ) : ?>
-                        <a
-                            href="<?= esc_url( wc_get_cart_remove_url( $cart_item_key ) ) ?>"
-                            class="text-[1.2rem] font-normal leading-none opacity-60 transition-opacity hover:opacity-100"
-                            aria-label="<?= esc_attr( sprintf( __( 'Αφαίρεση %s από το καλάθι', 'com-theme' ), $details['title'] ) ) ?>"
-                        ><?= esc_html__( 'Αφαίρεση', 'com-theme' ) ?></a>
-                    <?php else : ?>
-                        <div
-                            class="group product-quantity"
-                            data-module-product-quantity
-                            data-cart-item-key="<?= esc_attr( $cart_item_key ) ?>"
-                        >
-                            <input
-                                type="hidden"
-                                value="1"
-                                min="0"
-                                max="1"
-                                data-product-quantity="input"
-                            >
-                            <button
-                                type="button"
-                                class="cursor-pointer text-[1.2rem] font-normal leading-none opacity-60 transition-opacity hover:opacity-100 md:mt-auto group-[.product-quantity.loading]:pointer-events-none group-[.product-quantity.loading]:opacity-40"
-                                data-product-quantity="change"
-                                data-direction="-1"
-                            ><?= esc_html__( 'Αφαίρεση', 'com-theme' ) ?></button>
-                        </div>
-                    <?php endif; ?>
-                    <div
-                        class="<?= $is_compact ? 'text-[1.4rem]' : 'text-[1.8rem]' ?> shrink-0 font-bold"
-                        <?php if ( ! $is_checkout_summary ) : ?>
-                            data-module-price-html
-                            data-key="<?= esc_attr( $product_id . '_' . $variation_id ) ?>"
-                        <?php endif; ?>
-                    ><?= wp_kses_post( $line_price ) ?></div>
-                </div>
-            <?php endif; ?>
         </div>
     </div>
+
+    <?php if ( $is_compact ) : ?>
+        <div
+            class="<?= $is_mini ? 'group product-quantity' : '' ?> absolute right-0 top-0"
+            <?php if ( $is_mini ) : ?>
+                data-module-product-quantity
+                data-cart-item-key="<?= esc_attr( $cart_item_key ) ?>"
+            <?php endif; ?>
+        >
+            <?php if ( $is_mini ) : ?>
+                <input
+                    type="hidden"
+                    value="1"
+                    min="0"
+                    max="1"
+                    data-product-quantity="input"
+                >
+                <button
+                    type="button"
+                    class="flex size-20 cursor-pointer items-center justify-center rounded-full border border-blue opacity-60 transition hover:bg-blue hover:text-white hover:opacity-100 group-[.product-quantity.loading]:pointer-events-none group-[.product-quantity.loading]:opacity-40"
+                    data-product-quantity="change"
+                    data-direction="-1"
+                    aria-label="<?= esc_attr( sprintf( __( 'Αφαίρεση %s από το καλάθι', 'com-theme' ), $details['title'] ) ) ?>"
+                >
+                    <svg class="size-10 fill-current" aria-hidden="true"><use xlink:href="#icon-trash"></use></svg>
+                </button>
+            <?php else : ?>
+                <a
+                    href="<?= esc_url( wc_get_cart_remove_url( $cart_item_key ) ) ?>"
+                    class="flex size-20 items-center justify-center rounded-full border border-blue opacity-60 transition hover:bg-blue hover:text-white hover:opacity-100"
+                    aria-label="<?= esc_attr( sprintf( __( 'Αφαίρεση %s από το καλάθι', 'com-theme' ), $details['title'] ) ) ?>"
+                >
+                    <svg class="size-10 fill-current" aria-hidden="true"><use xlink:href="#icon-trash"></use></svg>
+                </a>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
 </article>

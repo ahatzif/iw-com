@@ -113,7 +113,7 @@ class IW_Email_Template{
             $tbody = $dom->createElement( 'tbody' );
             $tr = $dom->createElement( 'tr' );
             $td = $dom->createElement( 'td' );
-            $td->setAttribute( 'align', 'center' );
+            $td->setAttribute( 'align', 'left' );
             $td->setAttribute( 'style', 'padding:0;' );
 
             $table->appendChild( $tbody );
@@ -270,3 +270,64 @@ register_deactivation_hook( __FILE__, function (){
 add_action( 'after_setup_theme', function(){
     register_nav_menu( 'iw-email-template', "Email template footer" );
 });
+
+add_filter( 'gettext_woocommerce', function( $translation, $text ) {
+    $email_strings = [
+        'Hi %s,'
+            => 'Γεια σας %s,',
+        'Hi,'
+            => 'Γεια σας,',
+        "Unfortunately, we couldn't complete your order due to an issue with your payment method."
+            => 'Δυστυχώς, η παραγγελία σας δεν ολοκληρώθηκε λόγω προβλήματος με τη μέθοδο πληρωμής.',
+        "If you'd like to continue with your purchase, please return to %s and try a different method of payment."
+            => 'Αν θέλετε να συνεχίσετε την αγορά σας, επιστρέψτε στο %s και δοκιμάστε διαφορετική μέθοδο πληρωμής.',
+        'Your order details are as follows:'
+            => 'Τα στοιχεία της παραγγελίας σας είναι τα εξής:',
+        'Your order from %s has been partially refunded.'
+            => 'Έχει πραγματοποιηθεί μερική επιστροφή χρημάτων για την παραγγελία σας από το %s.',
+        'Your order from %s has been refunded.'
+            => 'Έχει πραγματοποιηθεί επιστροφή χρημάτων για την παραγγελία σας από το %s.',
+        'Here’s a reminder of what you’ve ordered:'
+            => 'Ακολουθεί μια υπενθύμιση της παραγγελίας σας:',
+        'Time of payment:'
+            => 'Ώρα πληρωμής:',
+    ];
+
+    return $email_strings[ $text ] ?? $translation;
+}, 10, 2 );
+
+function iw_email_template_translate_stripe_email_string( $translation, $text ) {
+    $email_strings = [
+        'Payment authorization needed for renewal of {site_title} order {order_number}'
+            => 'Απαιτείται επιβεβαίωση πληρωμής για την ανανέωση της παραγγελίας #{order_number}',
+        'Payment authorization needed for renewal of order {order_number}'
+            => 'Απαιτείται επιβεβαίωση πληρωμής για την παραγγελία #{order_number}',
+        'Payment authorization needed for pre-order {order_number}'
+            => 'Απαιτείται επιβεβαίωση πληρωμής για την προπαραγγελία #{order_number}',
+        '[{site_title}]: Refund failed for #{order_number}'
+            => 'Πρόβλημα επιστροφής χρημάτων για την παραγγελία #{order_number}',
+        'Refund failed'
+            => 'Η επιστροφή χρημάτων δεν ολοκληρώθηκε',
+        'The automatic payment to renew your subscription with %1$s has failed. To reactivate the subscription, please login and authorize the renewal from your account page: %2$s'
+            => 'Η αυτόματη πληρωμή για την ανανέωσή σας στο %1$s δεν ολοκληρώθηκε. Συνδεθείτε στον λογαριασμό σας και επιβεβαιώστε την πληρωμή: %2$s',
+        'Authorize the payment &raquo;'
+            => 'Επιβεβαίωση πληρωμής »',
+        'Your pre-order is now available, but payment cannot be completed automatically. %1$s'
+            => 'Η προπαραγγελία σας είναι διαθέσιμη, αλλά η πληρωμή δεν μπορεί να ολοκληρωθεί αυτόματα. %1$s',
+        'Authorize the payment now &raquo;'
+            => 'Επιβεβαίωση πληρωμής τώρα »',
+        'The refund for order %1$s has failed. Reason:  %2$s.'
+            => 'Η επιστροφή χρημάτων για την παραγγελία #%1$s δεν ολοκληρώθηκε. Αιτία: %2$s.',
+        'The order details are as follows:'
+            => 'Τα στοιχεία της παραγγελίας είναι τα εξής:',
+        'Unknown reason'
+            => 'Άγνωστη αιτία',
+        'Unknown reason.'
+            => 'Άγνωστη αιτία.',
+    ];
+
+    return $email_strings[ $text ] ?? $translation;
+}
+
+add_filter( 'gettext_woocommerce-gateway-stripe', 'iw_email_template_translate_stripe_email_string', 10, 2 );
+add_filter( 'gettext_with_context_woocommerce-gateway-stripe', 'iw_email_template_translate_stripe_email_string', 10, 2 );

@@ -307,7 +307,7 @@ if( function_exists('acf_add_local_field_group') ):
                     'name' => 'iw_custom_auth_email_user_activation_subject',
                     'type' => 'text',
                     'required' => 1,
-                    'default_value' => 'Your [Company Name here] Account Activvation'
+                    'default_value' => 'Ενεργοποιήστε τον λογαριασμό σας'
                 ),
                 array(
                     'key' => 'field_63ea78fedd31fb_13',
@@ -316,24 +316,11 @@ if( function_exists('acf_add_local_field_group') ):
                     'type' => 'wysiwyg',
                     'instructions' => '[First Name] will be replaced with user\'s name and [Account Activation Link] with the actual link for the user to activate account',
                     'default_value' => '
-                        Dear [First Name],
-                        
-                        We are thrilled to welcome you to [Company Name], and we are excited to have you on board. As a new member of our community, we wanted to extend our warmest welcome and introduce you to our platform.
-                        
-                        At [Company Name], we believe in [core value or mission statement], and we are committed to providing you with [benefit or value proposition]. We believe that by doing so, we can help you achieve [desired outcome or goal].
-                        
-                        To get started, we recommend that you [action step, such as complete your profile or explore our features]. 
-                        
-                        <a href="[Account Activation Link]" class="btn">ACTIVATE ACCOUNT</a>.
-                        [Account Activation Code]
-                        
-                        You can also find helpful resources on our [support center or knowledge base], or you can reach out to our [customer support or community forum] if you have any questions or concerns.
-                        
-                        Thank you for choosing [Company Name]. We look forward to supporting you on your journey.
-                        
-                        Best regards,
-                        
-                        [Company Name] Team
+                        <h2>Καλώς ήρθατε, [First Name]!</h2>
+                        <p>Ο λογαριασμός σας στον Δήμο Ιεράς Πόλης Μεσολογγίου δημιουργήθηκε με επιτυχία.</p>
+                        <p>Για να ολοκληρώσετε την εγγραφή σας, πατήστε το παρακάτω κουμπί:</p>
+                        <p><a href="[Account Activation Link]" class="btn">ΕΝΕΡΓΟΠΟΙΗΣΗ ΛΟΓΑΡΙΑΣΜΟΥ</a></p>
+                        <p>Αν δεν δημιουργήσατε εσείς αυτόν τον λογαριασμό, μπορείτε να αγνοήσετε το μήνυμα.</p>
                     ',
 
                 ),
@@ -390,7 +377,7 @@ if( function_exists('acf_add_local_field_group') ):
                     'name' => 'iw_custom_auth_email_password_reset_subject',
                     'type' => 'text',
                     'required' => 1,
-                    'default_value' => 'Password Reset Request for Your [Company Name here] Account'
+                    'default_value' => 'Επαναφορά κωδικού πρόσβασης'
                 ),
                 array(
                     'key' => 'field_63ea78fedd31fa_12',
@@ -399,21 +386,12 @@ if( function_exists('acf_add_local_field_group') ):
                     'type' => 'wysiwyg',
                     'instructions' => '[First Name] will be replaced with user\'s name and [Password Reset Link] with the actual link for the user to reset password',
                     'default_value' => '
-                        Dear [First Name],
-
-                        We have received a request to reset your password for your [Company Name here] account. If you did not request this, please disregard this message.
-                        
-                        To reset your password, please click on the following link: 
-                        
-                        <a href="[Password Reset Link]" class="btn">RESET PASSWORD</a>. 
-                        
-                        You will be prompted to create a new password. If you have any issues resetting your password or if you did not request this change, please contact our customer support team immediately.
-                        
-                        Thank you for choosing [Company Name here]. We take the security of your account very seriously and we appreciate your cooperation in keeping your information safe.
-                        
-                        Best regards,
-                        
-                        [Company Name here] Team
+                        <h2>Επαναφορά κωδικού πρόσβασης</h2>
+                        <p>Γεια σας [First Name],</p>
+                        <p>Λάβαμε αίτημα για αλλαγή του κωδικού πρόσβασης του λογαριασμού σας.</p>
+                        <p><a href="[Password Reset Link]" class="btn">ΟΡΙΣΜΟΣ ΝΕΟΥ ΚΩΔΙΚΟΥ</a></p>
+                        <p>Ο σύνδεσμος είναι προσωπικός και μπορεί να χρησιμοποιηθεί μόνο για την επαναφορά του κωδικού σας.</p>
+                        <p>Αν δεν ζητήσατε εσείς την αλλαγή, αγνοήστε αυτό το μήνυμα· ο κωδικός σας δεν θα αλλάξει.</p>
                     ',
 
                 )

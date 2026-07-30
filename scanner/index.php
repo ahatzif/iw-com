@@ -154,6 +154,8 @@ function iw_scanner_get_buildings(): array {
 			[
 				'per_page' => $per_page,
 				'page'     => $page,
+				'orderby'  => 'menu_order',
+				'order'    => 'asc',
 				'_embed'   => 1,
 			]
 		);
@@ -505,16 +507,10 @@ $scanner_shell_class = implode( ' ', $scanner_shell_classes );
                                                 </div>
                                             </div>
                                             <div class="scanner-camera-placeholder-actions space-y-5 flex flex-col items-center">
-                                                <div class="text-[14px] text-[var(--scanner-muted)] text-center leading-[1.2]">Κάντε κλικ για να επαληθεύσετε<br/> εισιτήριο ή κάρτα μέλους</div>
+                                                <div class="text-[14px] text-[var(--scanner-muted)] text-center leading-[1.2]" data-i18n="scan.instructions">Κάντε κλικ για να επαληθεύσετε εισιτήριο</div>
                                                 <div class="scanner-scan-action-row">
                                                     <button id="scanBtn" class="scanner-primary-button w-auto">
                                                         <span data-i18n="scan.start"><?php esc_html_e( 'Start scan', 'iw-theme' ); ?></span>
-                                                    </button>
-                                                    <button class="scanner-secondary-button scanner-manual-search-trigger" type="button" data-manual-search-open aria-label="<?php esc_attr_e( 'Search member', 'iw-theme' ); ?>" data-i18n-aria-label="manualSearch.open">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                            <circle cx="11" cy="11" r="7"></circle>
-                                                            <path d="m20 20-4-4"></path>
-                                                        </svg>
                                                     </button>
                                                 </div>
                                             </div>
@@ -546,7 +542,9 @@ $scanner_shell_class = implode( ' ', $scanner_shell_classes );
 									</div>
 									<div class="scanner-history-list" data-scan-history-list>
 										<article class="scanner-history-row scanner-history-row--empty">
-											<span class="scanner-history-icon scanner-history-icon--scan"></span>
+											<span class="scanner-history-icon scanner-history-icon--history" aria-hidden="true">
+												<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4.75 9.25a7.6 7.6 0 1 1 1.42 6.84"></path><path d="M4.75 5.25v4h4"></path><path d="M12 8.25v4.2l2.7 1.6"></path></svg>
+											</span>
 											<div>
 												<strong data-i18n="history.emptyTitle"><?php esc_html_e( 'No scans yet', 'iw-theme' ); ?></strong>
 												<span data-i18n="history.emptyCopy"><?php esc_html_e( 'Completed validations will appear here.', 'iw-theme' ); ?></span>

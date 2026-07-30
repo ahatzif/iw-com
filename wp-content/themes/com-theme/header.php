@@ -12,8 +12,7 @@ $page_text_class = com_theme_page_text_class();
 $barba_namespace = $config['barba_namespace'] ?? ( is_page() ? get_post_field( 'post_name', get_queried_object_id() ) : 'page' );
 $sprite_path = get_theme_file_path( '/assets/images/sprite/sprite.svg' );
 $account_url = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : com_theme_page_url( 'my-account' );
-$tickets_url = function_exists( 'wc_get_account_endpoint_url' ) ? wc_get_account_endpoint_url( 'tickets' ) : $account_url;
-$logout_url = function_exists( 'wc_logout_url' ) ? wc_logout_url( home_url( '/' ) ) : wp_logout_url( home_url( '/' ) );
+$account_menu_items = function_exists( 'wc_get_account_menu_items' ) ? wc_get_account_menu_items() : [];
 $header_menu_items = com_theme_header_menu_items();
 $language_items = com_theme_language_switcher_items();
 $barba_prevent_pages = [];
@@ -155,16 +154,19 @@ if ( function_exists( 'wc_get_cart_url' ) && function_exists( 'wc_get_checkout_u
                             aria-hidden="true"
                             aria-label="<?= esc_attr__( 'Λογαριασμός χρήστη', 'com-theme' ) ?>"
                         >
-                            <div class="overflow-hidden rounded-[1.5rem] bg-white  text-blue shadow-[0_0_2.4rem_rgba(0,0,0,.12)] space-y-20 p-20 md:p-30">
-                                <a href="<?= esc_url( $tickets_url ) ?>" role="menuitem" class="block rounded-[.8rem] text-[1.5rem] font-normal transition-colors hover:underline focus-visible:outline-none">
-                                    <?= esc_html__( 'Τα εισιτήριά μου', 'com-theme' ) ?>
-                                </a>
-                                <a href="<?= esc_url( $account_url ) ?>" role="menuitem" class="block rounded-[.8rem] text-[1.5rem] font-normal transition-colors hover:underline focus-visible:outline-none">
-                                    <?= esc_html__( 'Ο λογαριασμός μου', 'com-theme' ) ?>
-                                </a>
-                                <a href="<?= esc_url( $logout_url ) ?>" data-barba-prevent role="menuitem" class="block rounded-[.8rem] text-[1.5rem] font-normal transition-colors hover:underline focus-visible:outline-none">
-                                    <?= esc_html__( 'Αποσύνδεση', 'com-theme' ) ?>
-                                </a>
+                            <div class="space-y-8 overflow-hidden rounded-[1.5rem] bg-white p-20 text-blue shadow-[0_0_2.4rem_rgba(0,0,0,.12)]">
+                                <?php foreach ( $account_menu_items as $endpoint => $label ) :
+                                    $is_logout = $endpoint === 'customer-logout';
+                                ?>
+                                    <a
+                                        href="<?= esc_url( wc_get_account_endpoint_url( $endpoint ) ) ?>"
+                                        role="menuitem"
+                                        class="block rounded-[.8rem] py-5 text-[1.3rem] font-normal leading-[1.25] transition-colors hover:underline focus-visible:outline-none"
+                                        <?= $is_logout ? 'data-barba-prevent' : '' ?>
+                                    >
+                                        <?= esc_html( $label ) ?>
+                                    </a>
+                                <?php endforeach; ?>
                             </div>
                         </div>
                     </div>

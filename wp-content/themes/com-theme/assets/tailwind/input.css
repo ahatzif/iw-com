@@ -1282,10 +1282,19 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
     @apply rounded-[1rem] bg-ochre-light p-20 text-[1.4rem] not-italic leading-[1.5];
 }
 
-.account-page__content .account-order-addresses address {
+.account-page__content .account-order-addresses address,
+.woocommerce-order-details.account-order-summary .account-order-addresses address {
     border: 0;
     border-radius: 0;
     padding: 0;
+}
+
+.order-email-verification__input {
+    @apply block min-h-[5.4rem] w-full rounded-[.8rem] border border-blue/25 bg-white px-20 text-[1.6rem] text-blue outline-none transition-colors;
+}
+
+.order-email-verification__input:focus {
+    @apply border-blue;
 }
 
 @media (max-width: 767px) {

@@ -26,12 +26,9 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
     <section>
         <div class="mb-20 flex items-end justify-between gap-20">
             <div>
-                <p class="mb-5 text-[1rem] font-medium tracking-[.16em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Έτοιμα για χρήση', 'com-theme' ) ) ) ?></p>
-                <h3 class="m-0 text-[2.2rem] font-bold"><?= esc_html__( 'Ενεργά εισιτήρια', 'com-theme' ) ?></h3>
+                <p class="mb-5 text-[1rem] font-medium tracking-[.16em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Ενεργά Εισιτήρια', 'com-theme' ) ) ) ?></p>
             </div>
-            <?php if ( $active_items ) : ?>
-                <span class="flex min-w-30 items-center justify-center rounded-full bg-blue px-10 py-6 text-[1.1rem] font-bold text-white"><?= esc_html( (string) count( $active_items ) ) ?></span>
-            <?php endif; ?>
+
         </div>
 
         <?php if ( $active_items ) : ?>
@@ -69,8 +66,7 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
     <?php if ( $past_items ) : ?>
         <section class="border-t border-dashed border-blue/25 pt-40" id="account-past-tickets">
             <div class="mb-20">
-                <p class="mb-5 text-[1rem] font-medium tracking-[.16em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Ιστορικό', 'com-theme' ) ) ) ?></p>
-                <h3 class="m-0 text-[2.2rem] font-bold"><?= esc_html__( 'Προηγούμενα εισιτήρια', 'com-theme' ) ?></h3>
+                <p class="mb-5 text-[1rem] font-medium tracking-[.16em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Προηγούμενα εισιτήρια', 'com-theme' ) ) ) ?></p>
             </div>
 
             <div class="space-y-15">

@@ -113,6 +113,10 @@ class IW_Ticketing
     }
 
     public static function remove_accents( string $text ): string {
+        if ( class_exists( '\com\theme' ) && method_exists( '\com\theme', 'remove_accents' ) ) {
+            return (string) \com\theme::remove_accents( $text );
+        }
+
         if ( class_exists( 'IW_Theme' ) && method_exists( 'IW_Theme', 'remove_accents' ) ) {
             return (string) IW_Theme::remove_accents( $text );
         }

@@ -1052,6 +1052,97 @@ function com_theme_redirect_saved_payment_endpoints(): void {
 }
 add_action( 'template_redirect', 'com_theme_redirect_saved_payment_endpoints', 20 );
 
+/**
+ * Cardlink stores a one-use technical success message on the order and turns
+ * it into a WooCommerce notice on the thank-you page. The customer-facing
+ * order confirmation already communicates success, so consume only positive
+ * gateway messages while preserving payment errors.
+ */
+function com_theme_suppress_successful_cardlink_order_message(): void {
+    if ( ! function_exists( 'is_order_received_page' ) || ! is_order_received_page() ) {
+        return;
+    }
+
+    $order_id = absint( get_query_var( 'order-received' ) );
+    $order = $order_id ? wc_get_order( $order_id ) : null;
+
+    if (
+        ! $order
+        || ! in_array(
+            $order->get_payment_method(),
+            [
+                'cardlink_payment_gateway_woocommerce',
+                'cardlink_payment_gateway_woocommerce_iris',
+            ],
+            true
+        )
+    ) {
+        return;
+    }
+
+    $message_data = $order->get_meta( '_cardlink_message', true );
+
+    if ( ! is_array( $message_data ) || ( $message_data['message_type'] ?? '' ) !== 'success' ) {
+        return;
+    }
+
+    $order->delete_meta_data( '_cardlink_message' );
+    $order->save_meta_data();
+}
+add_action( 'wp', 'com_theme_suppress_successful_cardlink_order_message', 9 );
+
+/**
+ * Continue successful, signed-in checkouts in the customer's order screen.
+ *
+ * The order-received endpoint must render first so WooCommerce can empty the
+ * cart and run the gateway/thank-you hooks. Redirecting from
+ * woocommerce_get_checkout_order_received_url would skip that lifecycle.
+ */
+function com_theme_continue_checkout_to_account_order( int $order_id ): void {
+    if ( ! is_user_logged_in() ) {
+        return;
+    }
+
+    $order = wc_get_order( $order_id );
+
+    if (
+        ! $order
+        || $order->get_customer_id() !== get_current_user_id()
+        || ! $order->has_status( [ 'processing', 'completed', 'on-hold' ] )
+    ) {
+        return;
+    }
+
+    $view_order_url = $order->get_view_order_url();
+
+    if ( ! $view_order_url ) {
+        return;
+    }
+    ?>
+    <script>
+        window.location.replace(<?= wp_json_encode( $view_order_url ) ?>);
+    </script>
+    <noscript>
+        <meta http-equiv="refresh" content="0;url=<?= esc_url( $view_order_url ) ?>">
+        <p>
+            <a href="<?= esc_url( $view_order_url ) ?>">
+                <?= esc_html__( 'Προβολή της αγοράς σας', 'com-theme' ) ?>
+            </a>
+        </p>
+    </noscript>
+    <?php
+}
+add_action( 'woocommerce_thankyou', 'com_theme_continue_checkout_to_account_order', 99 );
+
+/**
+ * Tickets are date-specific products and must not expose WooCommerce's generic
+ * "Order again" action.
+ */
+function com_theme_remove_order_again_action(): void {
+    remove_action( 'woocommerce_order_details_after_order_table', 'woocommerce_order_again_button' );
+}
+add_action( 'wp_loaded', 'com_theme_remove_order_again_action', 20 );
+
 function com_theme_account_current_endpoint(): string {
     if ( function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( 'view-order' ) ) {
         return 'orders';

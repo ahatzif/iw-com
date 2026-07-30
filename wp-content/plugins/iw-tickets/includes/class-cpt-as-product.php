@@ -33,6 +33,9 @@ class CPT_As_Product {
         add_action('woocommerce_before_calculate_totals', [$this, 'set_cart_item_price_on_totals'], 10, 1);
         add_filter('woocommerce_get_item_data', [$this, 'render_cart_item_meta'], 10, 2);
         add_filter('woocommerce_cart_item_permalink', [$this, 'override_cart_item_permalink'], 10, 3);
+        add_filter('woocommerce_order_item_name', [$this, 'override_order_item_name'], 10, 3);
+        add_filter('woocommerce_order_item_thumbnail', [$this, 'hide_virtual_order_item_thumbnail'], 10, 2);
+        add_filter('woocommerce_order_item_get_formatted_meta_data', [$this, 'format_virtual_order_item_meta'], 10, 2);
 
         add_action( 'woocommerce_add_to_cart', [$this, 'maybe_create_ticket_hold'], 10, 6 );
         add_action( 'woocommerce_cart_item_removed', [$this, 'maybe_release_ticket_hold'], 10, 2 );
@@ -272,6 +275,57 @@ class CPT_As_Product {
             return '';
         }
         return $permalink;
+    }
+
+    /**
+     * Use the real event/content title instead of the hidden virtual product name.
+     */
+    public function override_order_item_name( $name, $item, $is_visible ) {
+        if ( ! $item instanceof WC_Order_Item_Product ) {
+            return $name;
+        }
+
+        $title = (string) $item->get_meta( 'iw_title', true );
+        return $title !== '' ? esc_html( $title ) : $name;
+    }
+
+    /**
+     * Virtual products do not have a meaningful product thumbnail in order emails.
+     */
+    public function hide_virtual_order_item_thumbnail( $thumbnail, $item ) {
+        if ( $item instanceof WC_Order_Item_Product && (string) $item->get_meta( 'iw_item_type', true ) !== '' ) {
+            return '';
+        }
+
+        return $thumbnail;
+    }
+
+    /**
+     * Hide technical ticket payloads and expose only useful, human-readable details.
+     */
+    public function format_virtual_order_item_meta( $formatted_meta, $item ) {
+        if ( ! $item instanceof WC_Order_Item_Product || (string) $item->get_meta( 'iw_item_type', true ) === '' ) {
+            return $formatted_meta;
+        }
+
+        $visible_labels = [
+            'tickets_day'   => __( 'Ημερομηνία', 'iw-theme' ),
+            'tickets_time'  => __( 'Ώρα', 'iw-theme' ),
+            'tickets_total' => __( 'Εισιτήρια', 'iw-theme' ),
+        ];
+
+        foreach ( $formatted_meta as $meta_id => $meta ) {
+            $key = isset( $meta->key ) ? (string) $meta->key : '';
+
+            if ( isset( $visible_labels[ $key ] ) ) {
+                $formatted_meta[ $meta_id ]->display_key = $visible_labels[ $key ];
+                continue;
+            }
+
+            unset( $formatted_meta[ $meta_id ] );
+        }
+
+        return $formatted_meta;
     }
 
     public function attach_virtual_item_meta_to_order_item( $item, $cart_item_key, $values, $order ): void

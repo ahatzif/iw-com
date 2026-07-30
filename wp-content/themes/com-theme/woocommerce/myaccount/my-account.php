@@ -52,7 +52,7 @@ $content_classes = 'rounded-[1.5rem] bg-white p-20 md:p-40 lg:p-60';
                         <?= esc_html( $label ) ?>
                         <?php $count = com_theme_account_endpoint_count( $endpoint ); ?>
                         <?php if ( $count > 0 ) : ?>
-                            <span class="flex min-w-20 items-center justify-center rounded-full bg-current/10 px-5 py-2 text-[1rem]"><?= esc_html( (string) $count ) ?></span>
+                            <span class="flex size-[2.4rem] shrink-0 items-center justify-center rounded-full bg-blue text-[1rem] text-white"><?= esc_html( (string) $count ) ?></span>
                         <?php endif; ?>
                     </a>
                 </li>
@@ -76,7 +76,7 @@ $content_classes = 'rounded-[1.5rem] bg-white p-20 md:p-40 lg:p-60';
                             <span><?= esc_html( $label ) ?></span>
                             <?php $count = com_theme_account_endpoint_count( $endpoint ); ?>
                             <?php if ( $count > 0 ) : ?>
-                                <span class="flex min-w-[2.4rem] items-center justify-center rounded-full border border-current px-6 py-3 text-[1rem]"><?= esc_html( (string) $count ) ?></span>
+                                <span class="flex size-[3.2rem] shrink-0 items-center justify-center rounded-full bg-blue text-[1rem] text-white"><?= esc_html( (string) $count ) ?></span>
                             <?php else : ?>
                                 <span class="opacity-0 transition-opacity group-[.is-active]:opacity-100" aria-hidden="true">→</span>
                             <?php endif; ?>

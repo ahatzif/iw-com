@@ -161,7 +161,7 @@ add_action('wp_ajax_nopriv_iw-auth-register', function () {
 
 
 
-        $key = wp_hash_password(wp_generate_password(20, false));
+        $key = (string) wp_rand( 100000, 999999 );
         $activation_link = add_query_arg(array('account-activation-key' => $key, 'id' => $userId), home_url( '/' ) );
         add_user_meta($userId, 'has_to_be_activated', $key, true);
 
@@ -205,7 +205,11 @@ add_action('wp_ajax_nopriv_iw-auth-register', function () {
         }
 
 
-        IW_Form_Validator::maybe_update_user_card($userId);
+        // A membership card belongs to the legacy/member registration flow.
+        // Standard account registration does not submit this field.
+        if ( ! empty( $request['member-card'] ) ) {
+            IW_Form_Validator::maybe_update_user_card( $userId );
+        }
         if( ! empty( $birthday ) ){
             if ( preg_match( '/^\d{2}\/\d{2}\/\d{4}$/', $birthday ) ) {
                 $birthday = DateTime::createFromFormat('d/m/Y', $birthday);

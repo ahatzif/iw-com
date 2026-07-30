@@ -12,7 +12,6 @@ export default class extends module {
         this.currentEndpoint = this.getEndpointClass(this.el);
         this.onWishlistUpdated = this.onWishlistUpdated.bind(this);
         window.addEventListener('iw:wishlist-updated', this.onWishlistUpdated);
-
     }
     linkClick(e) {
 

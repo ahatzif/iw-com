@@ -39,11 +39,11 @@ $count_color_classes = $is_light_header
                 <span><?= esc_html__( 'ΤΟ ΚΑΛΑΘΙ ΜΟΥ', 'com-theme' ) ?></span>
                 <button
                     type="button"
-                    class="flex size-30 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-blue/10"
+                    class="flex size-30 cursor-pointer items-center justify-center rounded-full opacity-70 transition hover:bg-blue/10 hover:opacity-100"
                     data-cart-button="close"
                     aria-label="<?= esc_attr__( 'Κλείσιμο', 'com-theme' ) ?>"
                 >
-                    <svg class="size-15 fill-current" aria-hidden="true"><use xlink:href="#icon-close-thin"></use></svg>
+                    <svg class="size-15 fill-current" aria-hidden="true"><use xlink:href="#icon-close-modal"></use></svg>
                 </button>
             </div>
 

@@ -1504,6 +1504,19 @@
     height: 2px;
   }
 
+  .scanner-history-row .scanner-history-icon--history,
+  .scanner-history-row .scanner-history-icon--notifications {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .scanner-history-row .scanner-history-icon--history svg,
+  .scanner-history-row .scanner-history-icon--notifications svg {
+    width: 24px;
+    height: 24px;
+  }
+
   .scanner-history-row .scanner-history-icon--warning::before {
     top: 11px;
     left: 20px;

@@ -11,6 +11,17 @@ $google_login_available = defined( 'NSL_PATH_FILE' );
 $google_login_url = $google_login_available
     ? add_query_arg( 'loginSocial', 'google', wp_login_url( $account_url ) )
     : '';
+$reset_password_key = isset( $_GET['reset-password-key'] )
+    ? sanitize_text_field( wp_unslash( $_GET['reset-password-key'] ) )
+    : '';
+$reset_password_user_id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
+$reset_password_login = isset( $_GET['login'] )
+    ? sanitize_user( wp_unslash( $_GET['login'] ), true )
+    : '';
+$activation_code = isset( $_GET['account-activation-key'] )
+    ? sanitize_text_field( wp_unslash( $_GET['account-activation-key'] ) )
+    : '';
+$activation_user_id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
 ?>
 <div
     id="com-auth-modal"
@@ -148,6 +159,111 @@ $google_login_url = $google_login_available
             <button type="button" data-auth-modal-action="show" data-auth-view-target="login" class="mt-30 flex min-h-[5.8rem] w-full items-center justify-center rounded-[.8rem] border border-blue bg-blue px-25 text-center text-[1.6rem] font-bold text-white transition-colors hover:bg-white hover:text-blue">Επιστροφή στη σύνδεση</button>
         </section>
 
+        <section data-auth-view="reset" class="hidden p-30 pt-[8rem] sm:p-60" aria-hidden="true" aria-labelledby="auth-reset-title">
+            <h2 id="auth-reset-title" class="pr-40 text-[3rem] font-bold leading-[1.15]">ΔΗΜΙΟΥΡΓΙΑ ΝΕΟΥ ΚΩΔΙΚΟΥ</h2>
+            <p class="mt-20 text-[1.6rem] leading-[1.5]">Συμπληρώστε τον νέο κωδικό που θέλετε να χρησιμοποιείτε για τον λογαριασμό σας.</p>
+
+            <form data-module-form data-auth-form="reset" data-request-error="<?= esc_attr__( 'Η αλλαγή κωδικού δεν ολοκληρώθηκε. Παρακαλούμε ζητήστε νέο σύνδεσμο επαναφοράς.', 'com-theme' ) ?>" action="<?= esc_url( $ajax_url ) ?>" method="post" novalidate class="group mt-40">
+                <input type="hidden" name="action" value="iw-auth-reset-password">
+                <input type="hidden" name="key" value="<?= esc_attr( $reset_password_key ) ?>">
+                <?php if ( $reset_password_user_id ) : ?>
+                    <input type="hidden" name="id" value="<?= esc_attr( $reset_password_user_id ) ?>">
+                <?php else : ?>
+                    <input type="hidden" name="login" value="<?= esc_attr( $reset_password_login ) ?>">
+                <?php endif; ?>
+
+                <div class="grid gap-25">
+                    <label data-module-validate data-rules="required|min:8|lowercase|special" class="group/field <?= $auth_label_classes ?>">
+                        ΝΕΟΣ ΚΩΔΙΚΟΣ*
+                        <span data-auth-password-field class="relative block">
+                            <input data-validate="target" type="password" name="user_password" autocomplete="new-password" class="<?= $auth_input_classes ?> pr-60">
+                            <button type="button" data-auth-modal-action="password" class="absolute right-20 top-1/2 flex size-30 -translate-y-1/2 items-center justify-center" aria-label="<?= esc_attr__( 'Εμφάνιση κωδικού', 'com-theme' ) ?>" aria-pressed="false">
+                                <svg class="h-[1.6rem] w-[1.8rem] fill-current" aria-hidden="true">
+                                    <use xlink:href="#icon-show-password"></use>
+                                </svg>
+                            </button>
+                        </span>
+                        <span data-validate="message" class="hidden text-[1.2rem] text-red-700 group-[.error]/field:block">&nbsp;</span>
+                    </label>
+
+                    <label data-module-validate data-rules="required|match:user_password" class="group/field <?= $auth_label_classes ?>">
+                        ΕΠΙΒΕΒΑΙΩΣΗ ΝΕΟΥ ΚΩΔΙΚΟΥ*
+                        <span data-auth-password-field class="relative block">
+                            <input data-validate="target" type="password" name="user_password_confirm" autocomplete="new-password" class="<?= $auth_input_classes ?> pr-60">
+                            <button type="button" data-auth-modal-action="password" class="absolute right-20 top-1/2 flex size-30 -translate-y-1/2 items-center justify-center" aria-label="<?= esc_attr__( 'Εμφάνιση κωδικού', 'com-theme' ) ?>" aria-pressed="false">
+                                <svg class="h-[1.6rem] w-[1.8rem] fill-current" aria-hidden="true">
+                                    <use xlink:href="#icon-show-password"></use>
+                                </svg>
+                            </button>
+                        </span>
+                        <span data-validate="message" class="hidden text-[1.2rem] text-red-700 group-[.error]/field:block">&nbsp;</span>
+                    </label>
+                </div>
+
+                <p class="mt-10 text-[1.2rem] leading-[1.4]">Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες, ένα πεζό γράμμα και έναν ειδικό χαρακτήρα.</p>
+                <p data-form="error-message" class="mt-20 hidden text-[1.4rem] leading-[1.4] text-red-700 group-[.error]:block" role="status" aria-live="polite"></p>
+
+                <div class="mt-30 flex flex-wrap items-center justify-between gap-20">
+                    <button type="button" data-auth-modal-action="show" data-auth-view-target="login" class="text-[1.4rem] underline underline-offset-4">Επιστροφή</button>
+                    <?php get_template_part( 'templates/parts/com-button', null, [
+                        'tag'        => 'button',
+                        'type'       => 'submit',
+                        'label'      => __( 'Αλλαγή κωδικού', 'com-theme' ),
+                        'variant'    => 'blue',
+                        'loading'    => true,
+                        'classes'    => 'min-w-[18rem] font-bold',
+                        'attributes' => [ 'data-auth-submit' => true ],
+                    ] ); ?>
+                </div>
+            </form>
+        </section>
+
+        <section data-auth-view="reset-success" class="hidden p-30 pt-[8rem] text-center sm:p-60" aria-hidden="true" aria-labelledby="auth-reset-success-title">
+            <span class="mx-auto flex size-60 items-center justify-center rounded-full bg-blue text-[3rem] text-white" aria-hidden="true">✓</span>
+            <h2 id="auth-reset-success-title" class="mt-30 text-[3rem] font-bold leading-[1.15]">Ο ΚΩΔΙΚΟΣ ΑΛΛΑΞΕ</h2>
+            <p class="mt-15 text-[1.6rem] leading-[1.5]">Μπορείτε τώρα να συνδεθείτε χρησιμοποιώντας τον νέο σας κωδικό.</p>
+            <button type="button" data-auth-modal-action="show" data-auth-view-target="login" class="mt-30 flex min-h-[5.8rem] w-full items-center justify-center rounded-[.8rem] border border-blue bg-blue px-25 text-center text-[1.6rem] font-bold text-white transition-colors hover:bg-white hover:text-blue">Σύνδεση</button>
+        </section>
+
+        <section data-auth-view="activation" class="hidden p-30 pt-[8rem] sm:p-60" aria-hidden="true" aria-labelledby="auth-activation-title">
+            <h2 id="auth-activation-title" class="pr-40 text-[3rem] font-bold leading-[1.15]">ΕΝΕΡΓΟΠΟΙΗΣΗ ΛΟΓΑΡΙΑΣΜΟΥ</h2>
+            <p class="mt-20 text-[1.6rem] leading-[1.5]">Ο κωδικός ενεργοποίησης έχει συμπληρωθεί αυτόματα. Πατήστε «Ενεργοποίηση» για να ολοκληρώσετε την εγγραφή σας.</p>
+
+            <form data-module-form data-auth-form="activation" data-request-error="<?= esc_attr__( 'Η ενεργοποίηση δεν ολοκληρώθηκε. Παρακαλούμε ελέγξτε τον σύνδεσμο του email.', 'com-theme' ) ?>" action="<?= esc_url( $ajax_url ) ?>" method="post" novalidate class="group mt-40">
+                <input type="hidden" name="action" value="iw-auth-account-activation">
+                <?php if ( $activation_user_id ) : ?>
+                    <input type="hidden" name="id" value="<?= esc_attr( $activation_user_id ) ?>">
+                <?php endif; ?>
+
+                <label data-module-validate data-rules="required" class="group/field <?= $auth_label_classes ?>">
+                    ΚΩΔΙΚΟΣ ΕΝΕΡΓΟΠΟΙΗΣΗΣ*
+                    <input data-validate="target" type="text" name="activation_code" value="<?= esc_attr( $activation_code ) ?>" autocomplete="one-time-code" inputmode="numeric" class="<?= $auth_input_classes ?>">
+                    <span data-validate="message" class="hidden text-[1.2rem] text-red-700 group-[.error]/field:block">&nbsp;</span>
+                </label>
+
+                <p data-form="error-message" class="mt-20 hidden text-[1.4rem] leading-[1.4] text-red-700 group-[.error]:block" role="status" aria-live="polite"></p>
+
+                <div class="mt-30 flex justify-end">
+                    <?php get_template_part( 'templates/parts/com-button', null, [
+                        'tag'        => 'button',
+                        'type'       => 'submit',
+                        'label'      => __( 'Ενεργοποίηση', 'com-theme' ),
+                        'variant'    => 'blue',
+                        'loading'    => true,
+                        'classes'    => 'min-w-[18rem] font-bold',
+                        'attributes' => [ 'data-auth-submit' => true ],
+                    ] ); ?>
+                </div>
+            </form>
+        </section>
+
+        <section data-auth-view="activation-success" class="hidden p-30 pt-[8rem] text-center sm:p-60" aria-hidden="true" aria-labelledby="auth-activation-success-title">
+            <span class="mx-auto flex size-60 items-center justify-center rounded-full bg-blue text-[3rem] text-white" aria-hidden="true">✓</span>
+            <h2 id="auth-activation-success-title" class="mt-30 text-[3rem] font-bold leading-[1.15]">Ο ΛΟΓΑΡΙΑΣΜΟΣ ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ</h2>
+            <p class="mt-15 text-[1.6rem] leading-[1.5]">Μπορείτε τώρα να συνδεθείτε στον λογαριασμό σας.</p>
+            <button type="button" data-auth-modal-action="show" data-auth-view-target="login" class="mt-30 flex min-h-[5.8rem] w-full items-center justify-center rounded-[.8rem] border border-blue bg-blue px-25 text-center text-[1.6rem] font-bold text-white transition-colors hover:bg-white hover:text-blue">Σύνδεση</button>
+        </section>
+
         <section data-auth-view="signup" class="hidden p-30 pt-[8rem] sm:p-60" aria-hidden="true" aria-labelledby="auth-signup-title">
             <div class="grid <?= $google_login_available ? 'lg:grid-cols-[minmax(0,1fr)_30rem] lg:gap-60' : '' ?>">
                 <div class="min-w-0">
@@ -212,20 +328,20 @@ $google_login_url = $google_login_available
                         <p class="mt-10 text-[1.2rem] leading-[1.4]">Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες, ένα πεζό γράμμα και έναν ειδικό χαρακτήρα.</p>
 
                         <div class="mt-30 grid gap-15">
-                            <label class="flex cursor-pointer items-start gap-12 text-[1.4rem] leading-[1.4]">
+                            <label class="flex cursor-pointer items-start gap-10 text-[1.4rem] leading-[1.4]">
                                 <span class="relative mt-[.1rem] block size-20 shrink-0">
                                     <input type="checkbox" name="newsletter" class="peer size-full rounded-[.3rem] border border-blue bg-white checked:bg-blue">
-                                    <svg class="pointer-events-none absolute inset-[.45rem] fill-white opacity-0 peer-checked:opacity-100" aria-hidden="true">
+                                    <svg class="pointer-events-none absolute left-1/2 top-1/2 h-[.9rem] w-[1.1rem] -translate-x-1/2 -translate-y-1/2 fill-white opacity-0 peer-checked:opacity-100" aria-hidden="true">
                                         <use xlink:href="#icon-checkbox-small"></use>
                                     </svg>
                                 </span>
                                 Εγγραφή στο newsletter
                             </label>
 
-                            <label data-module-validate data-rules="required" class="group/field flex cursor-pointer items-start gap-12 text-[1.4rem] leading-[1.4]">
+                            <label data-module-validate data-rules="required" class="group/field flex cursor-pointer items-start gap-10 text-[1.4rem] leading-[1.4]">
                                 <span class="relative mt-[.1rem] block size-20 shrink-0">
                                     <input data-validate="target" type="checkbox" name="terms" class="peer size-full rounded-[.3rem] border border-blue bg-white checked:bg-blue">
-                                    <svg class="pointer-events-none absolute inset-[.45rem] fill-white opacity-0 peer-checked:opacity-100" aria-hidden="true">
+                                    <svg class="pointer-events-none absolute left-1/2 top-1/2 h-[.9rem] w-[1.1rem] -translate-x-1/2 -translate-y-1/2 fill-white opacity-0 peer-checked:opacity-100" aria-hidden="true">
                                         <use xlink:href="#icon-checkbox-small"></use>
                                     </svg>
                                 </span>
@@ -266,10 +382,8 @@ $google_login_url = $google_login_available
         </section>
 
         <section data-auth-view="signup-success" class="hidden p-30 pt-[8rem] text-center sm:p-60" aria-hidden="true" aria-labelledby="auth-signup-success-title">
-            <span class="mx-auto flex size-60 items-center justify-center rounded-full bg-blue text-[3rem] text-white" aria-hidden="true">✓</span>
             <h2 id="auth-signup-success-title" class="mt-30 text-[3rem] font-bold leading-[1.15]">ΕΛΕΓΞΤΕ ΤΟ EMAIL ΣΑΣ</h2>
-            <p data-auth-registration-message class="mt-15 text-[1.6rem] leading-[1.5]">Στείλαμε οδηγίες ενεργοποίησης στο <strong data-auth-registration-email></strong>.</p>
-            <button type="button" data-auth-modal-action="show" data-auth-view-target="login" class="mt-30 flex min-h-[5.8rem] w-full items-center justify-center rounded-[.8rem] border border-blue bg-blue px-25 text-center text-[1.6rem] font-bold text-white transition-colors hover:bg-white hover:text-blue">Επιστροφή στη σύνδεση</button>
+            <p data-auth-registration-message class="mt-15 text-[1.6rem] leading-[1.5]">Ο λογαριασμός σας δημιουργήθηκε. Ελέγξτε το email σας για οδηγίες ενεργοποίησης του λογαριασμού σας.</p>
         </section>
     </div>
 </div>

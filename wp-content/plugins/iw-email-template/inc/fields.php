@@ -105,6 +105,21 @@ if( function_exists('acf_add_local_field_group') ):
                     'append' => '',
                 ),
                 array(
+                    'key' => 'field_iw_email_footer_disclaimer',
+                    'label' => 'Footer Disclaimer',
+                    'name' => 'iw_email_template_disclaimer',
+                    'aria-label' => '',
+                    'type' => 'textarea',
+                    'instructions' => 'Briefly explain why the recipient received the email.',
+                    'required' => 0,
+                    'wrapper' => array(
+                        'width' => '100%',
+                    ),
+                    'default_value' => 'Λάβατε αυτό το μήνυμα επειδή έχετε λογαριασμό, πραγματοποιήσατε συναλλαγή ή ζητήσατε ενημέρωση από τον Δήμο Ιεράς Πόλης Μεσολογγίου. Πρόκειται για αυτοματοποιημένο μήνυμα· παρακαλούμε μην απαντήσετε.',
+                    'rows' => 3,
+                    'new_lines' => 'br',
+                ),
+                array(
                     'key' => 'field_iw_email_test_recipient',
                     'label' => 'Test Email Recipient',
                     'name' => 'iw_email_test_recipient',

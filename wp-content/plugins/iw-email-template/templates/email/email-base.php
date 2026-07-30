@@ -48,7 +48,7 @@ $cover = apply_filters( 'iw_email_template_cover', $cover );
             text-decoration:none;
         }
         body{
-            background: #F7F7F7;
+            background: #EBE6D6;
         }
         body,#bodyTable,#bodyCell{
             height:100%;
@@ -120,16 +120,18 @@ $cover = apply_filters( 'iw_email_template_cover', $cover );
             table-layout:fixed !important;
         }
         body,#bodyTable{
-            background-color:#F7F7F7;
+            background-color:#EBE6D6;
         }
         #bodyCell{
             border-top:0;
         }
         .templateContainer{
             border:0;
+            border-radius:24px;
+            overflow:hidden;
         }
         h1{
-            color:#202020;
+            color:#173276;
             font-family:Arial;
             font-size:26px;
             font-style:normal;
@@ -139,7 +141,7 @@ $cover = apply_filters( 'iw_email_template_cover', $cover );
             text-align:left;
         }
         h2{
-            color:#202020;
+            color:#173276;
             font-family:Arial;
             font-size:22px;
             font-style:normal;
@@ -149,7 +151,7 @@ $cover = apply_filters( 'iw_email_template_cover', $cover );
             text-align:left;
         }
         h3{
-            color:#202020;
+            color:#173276;
             font-family:Arial;
             font-size:20px;
             font-style:normal;
@@ -159,7 +161,7 @@ $cover = apply_filters( 'iw_email_template_cover', $cover );
             text-align:left;
         }
         h4{
-            color:#202020;
+            color:#173276;
             font-family:Arial;
             font-size:18px;
             font-style:normal;
@@ -203,14 +205,14 @@ $cover = apply_filters( 'iw_email_template_cover', $cover );
             padding-bottom:0;
         }
         #templateHeader .mcnTextContent,#templateHeader .mcnTextContent p{
-            color:#202020;
+            color:#173276;
             font-family:Arial;
             font-size:16px;
             line-height:150%;
             text-align:left;
         }
         #templateHeader .mcnTextContent a,#templateHeader .mcnTextContent p a{
-            color:#007C89;
+            color:#173276;
             font-weight:normal;
             text-decoration:underline;
         }
@@ -225,14 +227,14 @@ $cover = apply_filters( 'iw_email_template_cover', $cover );
             padding-bottom:9px;
         }
         #templateBody .mcnTextContent,#templateBody .mcnTextContent p{
-            color:#202020;
+            color:#173276;
             font-family:Arial;
             font-size:16px;
             line-height:150%;
             text-align:left;
         }
         #templateBody .mcnTextContent a,#templateBody .mcnTextContent p a{
-            color:#007C89;
+            color:#173276;
             font-weight:normal;
             text-decoration:underline;
         }
@@ -248,13 +250,14 @@ $cover = apply_filters( 'iw_email_template_cover', $cover );
             padding-bottom:9px;
         }
         #templateFooter .mcnTextContent,#templateFooter .mcnTextContent p{
-            color:#656565;
+            color:#173276;
             font-family:Arial;
             font-size:12px;
             line-height:150%;
+            text-align:left;
         }
         #templateFooter .mcnTextContent a,#templateFooter .mcnTextContent p a{
-            color:#656565;
+            color:#173276;
             font-weight:normal;
             text-decoration:underline;
         }
@@ -406,7 +409,7 @@ $cover = apply_filters( 'iw_email_template_cover', $cover );
             }
 
         }</style><script async="" src="https://edge.fullstory.com/s/fs.js" crossorigin="anonymous"></script></head>
-<body style="height: 100%;margin: 0;padding: 0;width: 100%;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;background-color: #FFF;">
+<body style="height:100%;margin:0;padding:0;width:100%;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;background-color:#EBE6D6;">
 
 <!--[if !gte mso 9]>
 <span class="mcnPreviewText" style="display:none; font-size:0px; line-height:0px; max-height:0px; max-width:0px; opacity:0; overflow:hidden; visibility:hidden; mso-hide:all;"><?php if(!empty($subject)){
@@ -415,7 +418,7 @@ echo $subject;
 <!--<![endif]-->
 
 <center>
-    <table align="center" border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="bodyTable" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;height: 100%;margin: 0;padding: 0;width: 100%;background-color: #FFF;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="bodyTable" bgcolor="#EBE6D6" style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;height:100%;margin:0;padding:0;width:100%;background-color:#EBE6D6;">
         <tbody><tr>
             <td align="center" valign="top" id="bodyCell" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;height: 100%;margin: 0;padding: 80px 10px;width: 100%;border-top: 0;">
                 <!-- BEGIN TEMPLATE // -->
@@ -424,20 +427,20 @@ echo $subject;
                     <tr>
                         <td align="center" valign="top" width="600" style="width:600px;">
                 <![endif]-->
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" class="templateContainer" style="border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;border: 0;max-width: 600px !important;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#FFFFFF" class="templateContainer" style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;border:0;max-width:600px !important;background-color:#FFFFFF;border-radius:24px;overflow:hidden;">
                     <tbody>
                     <?php if(  ! empty( $logo ) ) { ?>
                     <tr>
-                        <td valign="top" id="templateHeader" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;padding-top: 0;background:#F7F7F7 none no-repeat center/cover;mso-line-height-rule: exactly;border-top: 0;border-bottom: 0;padding-bottom: 0;"><table border="0" cellpadding="0" cellspacing="0" width="100%" class="mcnImageBlock" >
+                        <td valign="top" id="templateHeader" bgcolor="#FFFFFF" style="min-width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;padding-top:0;background:#FFFFFF none no-repeat center/cover;mso-line-height-rule:exactly;border-top:0;border-bottom:0;padding-bottom:0;border-radius:24px 24px 0 0;"><table border="0" cellpadding="0" cellspacing="0" width="100%" class="mcnImageBlock" >
                                 <tbody class="mcnImageBlockOuter">
                                 <tr>
-                                    <td valign="top" style="padding: 50px 50px 60px 50px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnImageBlockInner">
+                                    <td valign="top" style="padding:36px 50px 32px 50px;mso-line-height-rule:exactly;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;" class="mcnImageBlockInner">
                                         <table align="left" width="100%" border="0" cellpadding="0" cellspacing="0" class="mcnImageContentContainer" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
                                             <tbody><tr>
-                                                <td class="mcnImageContent" valign="top" style="text-align: center;padding-top: 0;padding-bottom: 0;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                                                <td class="mcnImageContent" valign="top" style="text-align:left;padding-top:0;padding-bottom:0;mso-line-height-rule:exactly;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;">
 
 
-                                                    <a href="<?php echo home_url( '/' );?>"><img align="center" alt="" src="<?php echo esc_attr( $logo ); ?>" width="160" style="max-width: 160px;padding-bottom: 0;display: inline !important;vertical-align: bottom;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" class="mcnImage"></a>
+                                                    <a href="<?php echo esc_url( home_url( '/' ) );?>"><img align="left" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" src="<?php echo esc_url( $logo ); ?>" width="159" style="max-width:159px;padding-bottom:0;display:block !important;vertical-align:bottom;border:0;height:auto;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" class="mcnImage"></a>
 
 
                                                 </td>
@@ -451,7 +454,7 @@ echo $subject;
                     <?php } ?>
                     <?php if(  ! empty( $cover ) ) { ?>
                         <tr>
-                            <td valign="top"  style="background:#F7F7F7 none no-repeat center/cover;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;background-color: #F7F7F7;background-image: none;background-repeat: no-repeat;background-position: center;background-size: cover;border-top: 0;border-bottom: 0;padding-bottom: 0;"><table border="0" cellpadding="0" cellspacing="0" width="100%" class="mcnImageBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                            <td valign="top" bgcolor="#FFFFFF" style="background:#FFFFFF none no-repeat center/cover;mso-line-height-rule:exactly;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;background-color:#FFFFFF;background-image:none;background-repeat:no-repeat;background-position:center;background-size:cover;border-top:0;border-bottom:0;padding:0 30px;"><table border="0" cellpadding="0" cellspacing="0" width="100%" class="mcnImageBlock" style="min-width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;">
                                     <tbody class="mcnImageBlockOuter">
                                     <tr>
                                         <td valign="top" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" class="mcnImageBlockInner">
@@ -460,7 +463,7 @@ echo $subject;
                                                     <td class="mcnImageContent" valign="top" style="padding-top: 0;padding-bottom: 30px;text-align: left;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
 
 
-                                                        <a href="<?php echo home_url( '/' );?>"><img align="center" alt="" src="<?php echo esc_attr( $cover ); ?>" width="600" style="max-width: 100%;padding-bottom: 0;display: inline !important;vertical-align: bottom;border: 0;height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;" class="mcnImage"></a>
+                                                        <a href="<?php echo esc_url( home_url( '/' ) );?>"><img align="center" alt="" src="<?php echo esc_url( $cover ); ?>" width="540" style="max-width:100%;padding-bottom:0;display:inline-block !important;vertical-align:bottom;border:0;border-radius:16px;height:auto;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" class="mcnImage"></a>
 
 
                                                     </td>
@@ -473,7 +476,7 @@ echo $subject;
                         </tr>
                     <?php } ?>
                     <tr>
-                        <td valign="top" id="templateBody" style="background:#F7F7F7 none no-repeat center/cover;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;background-color: #F7F7F7;background-image: none;background-repeat: no-repeat;background-position: center;background-size: cover;border-top: 0;;padding-bottom: 60px;">
+                        <td valign="top" id="templateBody" bgcolor="#FFFFFF" style="background:#FFFFFF none no-repeat center/cover;mso-line-height-rule:exactly;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;background-color:#FFFFFF;background-image:none;background-repeat:no-repeat;background-position:center;background-size:cover;border-top:0;padding-bottom:32px;<?php echo empty( $logo ) ? 'border-radius:24px 24px 0 0;' : ''; ?>">
                             <table border="0" cellpadding="0" cellspacing="0" width="100%" class="mcnTextBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
                                 <tbody class="mcnTextBlockOuter">
                                 <tr>
@@ -489,14 +492,14 @@ echo $subject;
                                         <table align="left" border="0" cellpadding="0" cellspacing="0" style="max-width: 100%;min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" width="100%" class="mcnTextContentContainer">
                                             <tbody><tr>
 
-                                                <td valign="top" class="mcnTextContent" style="padding-top: 0;padding-right: 50px;padding-left: 50px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;word-break: break-word;font-family: Arial;font-size: 14px;line-height: 150%;text-align: left;color: #000;">
+                                                <td valign="top" class="mcnTextContent" style="padding-top:<?php echo empty( $logo ) ? '50px' : '0'; ?>;padding-right:50px;padding-left:50px;mso-line-height-rule:exactly;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;word-break:break-word;font-family:Arial,sans-serif;font-size:14px;line-height:150%;text-align:left;color:#173276;">
                                                     <?php if( ! empty( $body ) ) { ?>
                                                     <?php //$body = strip_tags( $body, '<p><a><br><strong><span><h1><h2><h3><table><tr><td>'); ?>
                                                     <?php //$body = str_replace( "<a ", '<a style="color: #7fd8d5 !important;"', $body); ?>
-                                                    <?php $body = str_replace( "<h1", '<h1 style="text-align: left;display: block;margin-bottom: 20px;padding: 0;color: #202020;font-family: Arial;font-size: 24px;font-style: normal;font-weight: normal;line-height: 116%;letter-spacing: normal;" ', $body); ?>
-                                                    <?php $body = str_replace( "<h2", '<h2 style="text-align: left;display: block;margin-bottom: 20px;padding: 0;color: #202020;font-family: Arial;font-size: 22px;font-style: normal;font-weight: normal;line-height: 125%;letter-spacing: normal;" ', $body); ?>
-                                                    <?php $body = str_replace( "<h3", '<h3 style="text-align: left;display: block;margin-bottom: 20px;padding: 0;color: #202020;font-family: Arial;font-size: 18px;font-style: normal;font-weight: bold;line-height: 125%;letter-spacing: normal;" ', $body); ?>
-                                                    <?php $body = str_replace( '<p', '<p style="text-align: left; margin-bottom: 20px;padding: 0;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;color: #000;font-family: Arial;font-size: 16px;line-height: 137.5%;"', $body) ?>
+                                                    <?php $body = str_replace( "<h1", '<h1 style="text-align:left;display:block;margin-bottom:20px;padding:0;color:#173276;font-family:Arial;font-size:24px;font-style:normal;font-weight:normal;line-height:116%;letter-spacing:normal;" ', $body); ?>
+                                                    <?php $body = str_replace( "<h2", '<h2 style="text-align:left;display:block;margin-bottom:20px;padding:0;color:#173276;font-family:Arial;font-size:22px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:normal;" ', $body); ?>
+                                                    <?php $body = str_replace( "<h3", '<h3 style="text-align:left;display:block;margin-bottom:20px;padding:0;color:#173276;font-family:Arial;font-size:18px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:normal;" ', $body); ?>
+                                                    <?php $body = str_replace( '<p', '<p style="text-align:left;margin-bottom:20px;padding:0;mso-line-height-rule:exactly;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;color:#173276;font-family:Arial;font-size:16px;line-height:137.5%;"', $body) ?>
                                                     <?php echo $body; ?>
                                                     <?php } ?>
                                                 </td>
@@ -517,11 +520,26 @@ echo $subject;
                     </tr>
 
 
-                    <?php $copyrightText = get_field( 'iw_email_template_copyright_text', 'option' ); ?>
-                    <?php $legalMenu = get_field( 'iw_email_template_legal_menu', 'options' ); ?>
-                    <?php if( ! empty( $legalMenu ) || ! empty( $copyrightText ) ) { ?>
+                    <?php
+                    $copyrightText = get_field( 'iw_email_template_copyright_text', 'option' );
+                    $legalMenu = get_field( 'iw_email_template_legal_menu', 'options' );
+                    $disclaimer = get_field( 'iw_email_template_disclaimer', 'option' );
+
+                    if ( empty( $legalMenu ) ) {
+                        $legalMenu = wp_get_nav_menu_object( 'email-footer' );
+                    }
+
+                    if ( empty( $copyrightText ) ) {
+                        $copyrightText = '© Copyright Messolonghi %s. All Rights Reserved.';
+                    }
+
+                    if ( empty( $disclaimer ) ) {
+                        $disclaimer = 'Λάβατε αυτό το μήνυμα επειδή έχετε λογαριασμό, πραγματοποιήσατε συναλλαγή ή ζητήσατε ενημέρωση από τον Δήμο Ιεράς Πόλης Μεσολογγίου. Πρόκειται για αυτοματοποιημένο μήνυμα· παρακαλούμε μην απαντήσετε.';
+                    }
+                    ?>
+                    <?php if( ! empty( $legalMenu ) || ! empty( $copyrightText ) || ! empty( $disclaimer ) ) { ?>
                     <tr>
-                        <td valign="top" id="templateFooter" style="border-bottom-left-radius: 10px;border-bottom-right-radius: 10px;background:#F5F5F5 none no-repeat center/cover;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;background-color: #F5F5F5;background-image: none;background-repeat: no-repeat;background-position: center;background-size: cover;border-top: 0;border-top: 1px solid #f1f1f1;padding-top: 40px;padding-bottom: 40px;"><table border="0" cellpadding="0" cellspacing="0" width="100%" class="mcnTextBlock" style="min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
+                        <td valign="top" id="templateFooter" bgcolor="#FFFFFF" style="border-radius:0 0 24px 24px;background:#FFFFFF none no-repeat center/cover;mso-line-height-rule:exactly;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;background-color:#FFFFFF;background-image:none;background-repeat:no-repeat;background-position:center;background-size:cover;border-top:0;padding:0 50px 32px 50px;"><table border="0" cellpadding="0" cellspacing="0" width="100%" class="mcnTextBlock" style="min-width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;">
                                 <tbody class="mcnTextBlockOuter">
                                 <tr>
                                     <td valign="top" class="mcnTextBlockInner" style="mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
@@ -533,33 +551,29 @@ echo $subject;
                                         <!--[if mso]>
                                         <td valign="top" width="600" style="width:600px;">
                                         <![endif]-->
-                                        <table align="left" border="0" cellpadding="0" cellspacing="0" style="max-width: 100%;min-width: 100%;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;" width="100%" class="mcnTextContentContainer">
-                                            <tbody><tr>
-
-                                                <td valign="top" class="mcnTextContent" style="padding-top: 0;padding-right: 40px;padding-left: 40px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;word-break: break-word;font-family: Helvetica;font-size: 12px;line-height: 150%;text-align: left;color: #999999;">
-
-                                                    <?php
-
-                                                    if(  ! empty( $legalMenu ) ) {
-                                                        $menu_items = wp_get_nav_menu_items( $legalMenu->slug );
-                                                        foreach ( $menu_items as $key => $item ) {
-                                                            ?>
-                                                            <a href="<?php echo $item->url; ?>" style="font-weight: bold !important;text-decoration: none;color: #222222 !important;" title="<?php echo $item->title; ?>">
-                                                                <?php echo $item->title; ?>
-                                                            </a>
-                                                            <?php if( $key !== count( $menu_items ) - 1) {?>&nbsp;&nbsp;<span style="font-weight: bold;color: #222222 !important; ">·</span>&nbsp;&nbsp;<?php } ?>
-
-                                                        <?php } ?> <br/><?php } ?>
-
-                                                    <?php
-
-                                                    $copyrightText = str_replace( '<a', '<a style="font-weight: bold !important;text-decoration: none;color: #777777 !important;" ', $copyrightText );
-
-                                                    printf( $copyrightText, date('Y' ) );
-                                                    ?>
+                                        <table align="left" border="0" cellpadding="0" cellspacing="0" style="max-width:100%;min-width:100%;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;" width="100%" class="mcnTextContentContainer">
+                                            <tbody>
+                                            <tr>
+                                                <td valign="top" style="padding:0 0 20px 0;mso-line-height-rule:exactly;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;word-break:break-word;font-family:Arial,sans-serif;font-size:12px;line-height:150%;text-align:left;color:#173276;">
+                                                    <?php echo wp_kses_post( nl2br( (string) $disclaimer ) ); ?>
                                                 </td>
                                             </tr>
-                                            </tbody></table>
+                                            <tr>
+                                                <td valign="top" style="padding:0;mso-line-height-rule:exactly;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;font-family:Arial,sans-serif;font-size:11px;line-height:150%;text-align:left;color:#173276;white-space:nowrap;">
+                                                    <?php
+                                                    $menu_reference = is_object( $legalMenu ) && ! empty( $legalMenu->ID )
+                                                        ? (int) $legalMenu->ID
+                                                        : $legalMenu;
+                                                    $menu_items = ! empty( $menu_reference ) ? wp_get_nav_menu_items( $menu_reference ) : [];
+                                                    foreach ( (array) $menu_items as $key => $item ) {
+                                                        ?>
+                                                        <a href="<?php echo esc_url( $item->url ); ?>" target="_blank" style="font-weight:400 !important;text-decoration:underline;color:#173276 !important;" title="<?php echo esc_attr( $item->title ); ?>"><?php echo esc_html( $item->title ); ?></a><?php if ( $key !== count( $menu_items ) - 1 ) { ?><span style="display:inline-block;color:#173276;">&nbsp;&nbsp;·&nbsp;&nbsp;</span><?php } ?>
+                                                    <?php } ?>
+                                                    <?php if ( ! empty( $menu_items ) && ! empty( $copyrightText ) ) { ?>&nbsp;&nbsp;&nbsp;<?php } ?><?php echo esc_html( wp_strip_all_tags( sprintf( (string) $copyrightText, date( 'Y' ) ) ) ); ?>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
                                         <!--[if mso]>
                                         </td>
                                         <![endif]-->

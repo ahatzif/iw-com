@@ -13,7 +13,7 @@ class IW_Ticket_PDF_Service {
 
     const REST_NS   = 'iw/v1';
     const REST_BASE = 'tickets/public-pdf';
-    const PDF_TEMPLATE_VERSION = 'v8';
+    const PDF_TEMPLATE_VERSION = 'v10';
 
     protected static $email_images_dirname = 'email-images';
 
@@ -165,12 +165,8 @@ class IW_Ticket_PDF_Service {
             $title   = $post_id > 0 ? get_the_title( $post_id ) : __( 'Ticket', 'iw-theme' );
 
             $post_type = $post_id > 0 ? get_post_type( $post_id ) : '';
-            $tag_html  = self::build_post_type_tag_html( $post_id );
             $permalink = $post_id > 0 ? get_permalink( $post_id ) : '';
-            $tag_palette = ( $post_id > 0 && $post_type !== '' )
-                ? self::get_email_post_type_tag_palette( $post_id, $post_type )
-                : [];
-            $icon_color = (string) ( $tag_palette['background'] ?? '#31312F' );
+            $icon_color = '#173276';
 
 
             $building_data  = self::get_ticket_post_building_data( $post_id );
@@ -182,7 +178,6 @@ class IW_Ticket_PDF_Service {
 
             $slot_label = self::format_slot_label( (string) $group['slot_start'] );
             $location_icon_html = self::build_email_icon_img_html( 'location', $icon_color, __( 'Location', 'iw-theme' ) );
-            $calendar_icon_html = self::build_email_icon_img_html( 'calendar', $icon_color, __( 'Calendar', 'iw-theme' ) );
             $calendar_links_html = self::build_email_calendar_links_html(
                 $post_id,
                 (string) $group['slot_start'],
@@ -204,7 +199,7 @@ class IW_Ticket_PDF_Service {
                         '<img src="%s" alt="%s" style="display:block;width:100%%;height:auto;border:0;margin:0;%s">',
                         esc_url( $image_url ),
                         esc_attr( $title ),
-                        $has_email_hero ? 'border-radius:20px 20px 0 0;' : 'border-radius:20px;'
+                        $has_email_hero ? 'border-radius:16px 16px 0 0;' : 'border-radius:16px;'
                     );
 
                     if ( $permalink !== '' ) {
@@ -256,70 +251,52 @@ class IW_Ticket_PDF_Service {
                     $ticket_actions .= self::build_wallet_button_html( 'google', $google_wallet_url );
                 }
 
-                $ticket_card_margin = ( $index + 1 ) === count( $group['tickets'] )
-                    ? '0 0 10px 0'
-                    : '0';
-
-                if ( $index > 0 ) {
-                    $ticket_rows .= '
-                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;margin:0;">
-                    <tr>
-                        <td style="padding:0 20px;">
-                            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;margin:0;">
-                                <tr>
-                                    <td style="border-top:1px dashed #CECDBC;font-size:0;line-height:0;padding:0;">&nbsp;</td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>';
-                }
+                $ticket_card_margin = $index > 0 ? '12px 0 0 0' : '0';
+                $ticket_buttons = $ticket_actions . self::build_download_pdf_button_html( $pdf_url );
 
                 $ticket_rows .= sprintf(
                     '
-                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%%" style="border-collapse:separate;background:#FFFFFF;border-radius:20px;margin:%s;padding:34px 30px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%%" bgcolor="#F7F5EE" style="border-collapse:separate;background-color:#F7F5EE;border:1px solid #EBE6D6;border-radius:16px;margin:%s;">
                         <tr>
-                            <td valign="top" style="padding:0;">
-                                <div style="font-size:12px;line-height:1.1;font-weight:700;color:#31312F;margin:0 0 10px 0;">%s</div>
-                                <div style="font-size:12px;line-height:1.1;color:#31312F;margin:0 0 7px 0;">%s: <strong>%s</strong></div>
-                                <div style="font-size:12px;line-height:1.1;color:#31312F;margin:0 0 7px 0;">%s: <strong>%s</strong></div>
-                                <div style="font-size:12px;line-height:1.1;color:#31312F;margin:0 0 7px 0;">%s:<strong>%s</strong></div>
+                            <td valign="top" style="padding:28px 20px 28px 28px;color:#173276;">
+                                <div style="font-size:14px;line-height:1.2;font-weight:700;color:#173276;margin:0 0 18px 0;">%s %d</div>
+                                <div style="font-size:13px;line-height:1.35;color:#173276;margin:0 0 8px 0;">%s: <strong>%s</strong></div>
+                                <div style="font-size:13px;line-height:1.35;color:#173276;margin:0 0 8px 0;">%s: <strong>%s</strong></div>
+                                <div style="font-size:13px;line-height:1.35;color:#173276;margin:0;">%s: <strong>%s</strong></div>
+                                %s
                             </td>
-                            <td valign="top" align="right" style="width:140px;padding:0 0 0 20px;">%s</td>
-                            <td valign="top" style="width:110px;padding:0 0 0 10px;">%s<div style="margin-top:5px;">%s</div></td>
+                            <td valign="middle" align="right" style="width:104px;padding:28px 28px 28px 10px;">%s</td>
                         </tr>
                     </table>',
                     esc_attr( $ticket_card_margin ),
                     esc_html__( 'ΕΙΣΙΤΗΡΙΟ', 'iw-theme' ),
+                    $index + 1,
                     esc_html__( 'ΟΝΟΜ/ΜΟ', 'iw-theme' ),
                     esc_html( IW_Ticketing::remove_accents( $name ) ),
                     esc_html__( 'ΚΑΤΗΓΟΡΙΑ', 'iw-theme' ),
                     esc_html( IW_Ticketing::remove_accents( $price_label !== '' ? $price_label : '-' ) ),
                     esc_html__( 'ΤΙΜΗ', 'iw-theme' ),
                     wp_kses_post( $price_html ),
-                    $qr_data_uri !== '' ? '<img src="' . esc_attr( $qr_data_uri ) . '" width="111" height="111" alt="QR" style="display:block;width:111px;margin:0;">' : '',
-                    $ticket_actions,
-                    self::build_download_pdf_button_html( $pdf_url )
+                    $ticket_buttons !== '' ? '<div style="margin-top:18px;">' . $ticket_buttons . '</div>' : '',
+                    $qr_data_uri !== '' ? '<img src="' . esc_attr( $qr_data_uri ) . '" width="96" height="96" alt="QR" style="display:block;width:96px;height:96px;margin:0;">' : ''
                 );
             }
 
             $event_card_margin = $image_html !== '' ? '0' : '60px 0 0 0';
-            $event_card_radius = $has_email_hero ? '0 0 20px 20px' : '20px';
-            $event_card_padding = $has_email_hero ? '0 30px 34px 30px' : '34px 30px';
+            $event_card_radius = $has_email_hero ? '0 0 16px 16px' : '16px';
+            $event_card_padding = $has_email_hero ? '28px 30px 30px 30px' : '30px';
 
             $list_items[] = sprintf(
                 '
                 %s
-                <table role="presentation" cellpadding="0" cellspacing="0" width="100%%" style="border-collapse:separate;background:#FFFFFF;border-radius:%s;margin:%s;padding:%s;">
+                <table role="presentation" cellpadding="0" cellspacing="0" width="100%%" bgcolor="#F7F5EE" style="border-collapse:separate;background-color:#F7F5EE;border-radius:%s;margin:%s;padding:%s;">
                     <tr>
                         <td>
-                            <div style="font-size: 25px;margin-bottom: 10px;">%s</div>
+                            <div style="font-size:18px;line-height:1.25;color:#173276;margin:0 0 14px 0;">%s</div>
 
-                            %s
-                              <table>
-                                <tr valign="top">
-                                    <td style="width: 50%%;padding:0 20px 0 0;">%s</td>
-                                    <td style="width: 50%%;padding:0 20px 0 0;">%s</td>
+                              <table role="presentation" cellpadding="0" cellspacing="0" width="100%%" style="border-collapse:collapse;margin:18px 0 0 0;">
+                                <tr>
+                                    <td style="padding:0;">%s%s</td>
                                 </tr>
                             </table>
                             %s
@@ -328,10 +305,10 @@ class IW_Ticket_PDF_Service {
                 </table>
                 <table role="presentation" cellpadding="0" cellspacing="0" width="100%%" style="border-collapse:collapse;margin:0;">
                     <tr>
-                        <td style="padding:0 20px;">
+                        <td style="padding:0;">
                             <table role="presentation" cellpadding="0" cellspacing="0" width="100%%" style="border-collapse:collapse;margin:0;">
                                 <tr>
-                                    <td style="border-top:1px dashed #CECDBC;font-size:0;line-height:0;padding:0;">&nbsp;</td>
+                                    <td height="12" style="height:12px;font-size:0;line-height:0;padding:0;">&nbsp;</td>
                                 </tr>
                             </table>
                         </td>
@@ -344,22 +321,20 @@ class IW_Ticket_PDF_Service {
                 esc_attr( $event_card_padding ),
 
                 $permalink !== ''
-                    ? '<a href="' . esc_url( $permalink ) . '" target="_blank" style="color:#31312F;text-decoration:none;font-weight: 300 !important;">' . str_replace( 'class="font-bold"', 'style="font-weight:bold"', $title ) . '</a>'
+                    ? '<a href="' . esc_url( $permalink ) . '" target="_blank" style="color:#173276;text-decoration:none;font-weight:400 !important;">' . str_replace( 'class="font-bold"', 'style="font-weight:bold"', $title ) . '</a>'
                     : esc_html( $title ),
-                $tag_html,
-
                 $building_title !== ''
-                    ? '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0;"><tr><td valign="top" style="width:16px;padding:0 5px 0 0;">' . $location_icon_html . '</td><td valign="top" style="padding:0;"><div style="font-size:12px;line-height:1.2;color:#31312F;margin:0 0 0 0;">' . str_replace( 'class="font-bold"', 'style="font-weight:bold"', $building_title ) .
+                    ? '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 10px 0;"><tr><td valign="top" style="width:16px;padding:0 7px 0 0;">' . $location_icon_html . '</td><td valign="top" style="padding:0;"><div style="font-size:13px;line-height:1.3;color:#173276;margin:0;">' . str_replace( 'class="font-bold"', 'style="font-weight:bold"', $building_title ) .
 
                      ( $address_url !== ''
-                        ? ' - ' . $address_title . ' - <a href="' . esc_url( $address_url ) . '" target="_blank" style="color:#31312F;text-decoration:underline;font-weight: normal;;">' . esc_html__( 'Χάρτης', 'iw-theme' ) . '</a>'
+                        ? ' - ' . $address_title . ' - <a href="' . esc_url( $address_url ) . '" target="_blank" style="color:#173276;text-decoration:underline;font-weight:normal;">' . esc_html__( 'Χάρτης', 'iw-theme' ) . '</a>'
                         : '' ) .
 
                     '</div></td></tr></table>'
                     : '',
 
                 $slot_label !== ''
-                    ? '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0;"><tr><td valign="top" style="width:16px;padding:0 5px 0 0;">' . $calendar_icon_html . '</td><td valign="top" style="padding:0;"><div style="font-size:12px;line-height:1.2;color:#31312F;margin:0 0 0 0;">' . ( $slot_label ) . '</div></td></tr></table>'
+                    ? '<div style="font-size:13px;line-height:1.3;color:#173276;margin:0;">' . $slot_label . '</div>'
                     : '',
                 $calendar_links_html,
                 $ticket_rows
@@ -379,8 +354,8 @@ class IW_Ticket_PDF_Service {
             );
             $message .= ob_get_clean();
         } else {
-            $message .= '<h2 style="margin:0 0 28px 0;font-size:35px;line-height:115%;font-weight:bold;color:#31312F;">' . esc_html__( 'Τα εισιτήριά σας είναι έτοιμα', 'iw-theme' ) . '</h2>';
-            $message .= '<p style="font-size:24px;line-height:130%;color:#31312F;margin:0 0 18px 0;">' . esc_html__( 'Σας ευχαριστούμε για την αγορά σας. Θα βρείτε τα εισιτήριά σας συνημμένα σε αυτό το email. Μπορείτε επίσης να κατεβάσετε κάθε εισιτήριο ή να το προσθέσετε στο wallet σας από τις παρακάτω ασφαλείς συνδέσεις.', 'iw-theme' ) . '</p>';
+            $message .= '<h2 style="margin:0 0 28px 0;font-size:35px;line-height:115%;font-weight:bold;color:#173276;">' . esc_html__( 'Τα εισιτήριά σας είναι έτοιμα', 'iw-theme' ) . '</h2>';
+            $message .= '<p style="font-size:24px;line-height:130%;color:#173276;margin:0 0 18px 0;">' . esc_html__( 'Σας ευχαριστούμε για την αγορά σας. Θα βρείτε τα εισιτήριά σας συνημμένα σε αυτό το email. Μπορείτε επίσης να κατεβάσετε κάθε εισιτήριο ή να το προσθέσετε στο wallet σας από τις παρακάτω ασφαλείς συνδέσεις.', 'iw-theme' ) . '</p>';
         }
         $order_url = '';
 
@@ -389,7 +364,7 @@ class IW_Ticket_PDF_Service {
         }
 
         if ( $order_url !== '' ) {
-            $message .= '<a target="_blank" href="' . esc_url( $order_url ) . '" class="btn">' . IW_Ticketing::remove_accents(__( 'Πληροφορίες Παραγγελίας', 'iw-theme' ) ). '</a>';
+            $message .= '<a target="_blank" href="' . esc_url( $order_url ) . '" class="btn">' . IW_Ticketing::remove_accents(__( 'Παραγγελία', 'iw-theme' ) ). '</a>';
 
         }
         $message .= implode( '', $list_items );
@@ -761,13 +736,10 @@ class IW_Ticket_PDF_Service {
             return '';
         }
 
-        $width        = 520;
-        $height       = 210;
-        $image_height = 210;
-        $white_top    = 170;
-        $radius       = 20;
-        $bg_color     = '#F3F3E9';
-        $card_color   = '#FFFFFF';
+        $width              = 520;
+        $height             = 210;
+        $radius             = 16;
+        $email_hero_version = 'v2';
 
         $cache_dir = trailingslashit( $upload['basedir'] ) . self::$email_images_dirname;
         if ( ! wp_mkdir_p( $cache_dir ) ) {
@@ -776,12 +748,11 @@ class IW_Ticket_PDF_Service {
 
         $mtime = (int) filemtime( $source_path );
         $filename = sprintf(
-            'ticket-email-hero-' . self::PDF_TEMPLATE_VERSION . '-%d-%d-%dx%d-%d-%d.png',
+            'ticket-email-hero-' . $email_hero_version . '-' . self::PDF_TEMPLATE_VERSION . '-%d-%d-%dx%d-%d.png',
             $attachment_id,
             $mtime,
             $width,
             $height,
-            $white_top,
             $radius
         );
         $cache_path = trailingslashit( $cache_dir ) . $filename;
@@ -796,48 +767,30 @@ class IW_Ticket_PDF_Service {
                 $source->autoOrient();
             }
             $source->setIteratorIndex( 0 );
-            $source->cropThumbnailImage( $width, $image_height );
+            $source->cropThumbnailImage( $width, $height );
             $source->setImagePage( 0, 0, 0, 0 );
             $source->setImageFormat( 'png' );
 
             $rounded_source = new Imagick();
-            $rounded_source->newImage( $width, $image_height, new ImagickPixel( 'transparent' ), 'png' );
+            $rounded_source->newImage( $width, $height, new ImagickPixel( 'transparent' ), 'png' );
             $rounded_source->compositeImage( $source, Imagick::COMPOSITE_OVER, 0, 0 );
             $rounded_source->setImageAlphaChannel( Imagick::ALPHACHANNEL_ACTIVATE );
 
             $mask = new Imagick();
-            $mask->newImage( $width, $image_height, new ImagickPixel( '#000000' ), 'png' );
+            $mask->newImage( $width, $height, new ImagickPixel( '#000000' ), 'png' );
             $mask_draw = new ImagickDraw();
             $mask_draw->setFillColor( new ImagickPixel( '#FFFFFF' ) );
-            $mask_draw->roundRectangle( 0, 0, $width - 1, $image_height + $radius, $radius, $radius );
+            // Extend the rounded rectangle below the canvas so only the top
+            // corners are rounded. The bottom edge must meet the event card
+            // without the white "notches" produced by the previous overlay.
+            $mask_draw->roundRectangle( 0, 0, $width - 1, $height + $radius, $radius, $radius );
             $mask->drawImage( $mask_draw );
 
             $rounded_source->compositeImage( $mask, Imagick::COMPOSITE_COPYOPACITY, 0, 0 );
 
             $hero = new Imagick();
-            $hero->newImage( $width, $height, new ImagickPixel( $bg_color ), 'png' );
+            $hero->newImage( $width, $height, new ImagickPixel( '#FFFFFF' ), 'png' );
             $hero->compositeImage( $rounded_source, Imagick::COMPOSITE_OVER, 0, 0 );
-
-            $corner_draw = new ImagickDraw();
-            $corner_draw->setFillColor( new ImagickPixel( $bg_color ) );
-            $corner_draw->pathStart();
-            $corner_draw->pathMoveToAbsolute( 0, 0 );
-            $corner_draw->pathLineToAbsolute( $radius, 0 );
-            $corner_draw->pathCurveToQuadraticBezierAbsolute( 0, 0, 0, $radius );
-            $corner_draw->pathLineToAbsolute( 0, 0 );
-            $corner_draw->pathClose();
-            $corner_draw->pathMoveToAbsolute( $width - 1, 0 );
-            $corner_draw->pathLineToAbsolute( $width - $radius - 1, 0 );
-            $corner_draw->pathCurveToQuadraticBezierAbsolute( $width - 1, 0, $width - 1, $radius );
-            $corner_draw->pathLineToAbsolute( $width - 1, 0 );
-            $corner_draw->pathClose();
-            $corner_draw->pathFinish();
-            $hero->drawImage( $corner_draw );
-
-            $card_draw = new ImagickDraw();
-            $card_draw->setFillColor( new ImagickPixel( $card_color ) );
-            $card_draw->roundRectangle( 0, $white_top, $width - 1, $height + $radius, $radius, $radius );
-            $hero->drawImage( $card_draw );
             $hero->setImageFormat( 'png' );
             $hero->writeImage( $cache_path );
 
@@ -1592,14 +1545,14 @@ class IW_Ticket_PDF_Service {
             $options = new QROptions(
                 [
                     'eccLevel'      => QRCode::ECC_H,
-                    'addQuietzone'  => false,
-                    'quietzoneSize' => 0,
+                    'addQuietzone'  => true,
+                    'quietzoneSize' => 4,
                 ]
             );
 
             $matrix = ( new QRCode( $options ) )->getMatrix( $value );
             $matrix_size = $matrix->size();
-            $logo_space = max( 7, (int) floor( $matrix_size * 0.20 ) );
+            $logo_space = max( 7, (int) floor( $matrix_size * 0.21 ) );
             $matrix->setLogoSpace( $logo_space, $logo_space );
 
             $module_size = 8;
@@ -1613,7 +1566,7 @@ class IW_Ticket_PDF_Service {
             imagesavealpha( $image, true );
 
             $white = imagecolorallocate( $image, 255, 255, 255 );
-            $dark = imagecolorallocate( $image, 49, 49, 47 );
+            $dark = imagecolorallocate( $image, 23, 50, 118 );
             imagefill( $image, 0, 0, $white );
 
             $matrix_data = $matrix->matrix( true );
@@ -1631,17 +1584,17 @@ class IW_Ticket_PDF_Service {
                         $top,
                         $left + $module_size - 1,
                         $top + $module_size - 1,
-                        2,
+                        0,
                         $dark
                     );
                 }
             }
 
-            $logo_diameter = (int) round( $image_size * 0.34 );
+            $logo_diameter = (int) round( $image_size * 0.24 );
             $logo_center = (int) floor( $image_size / 2 );
             imagefilledellipse( $image, $logo_center, $logo_center, $logo_diameter, $logo_diameter, $white );
 
-            self::place_qr_logo_image( $image, (int) round( $logo_diameter * 0.82 ) );
+            self::place_qr_logo_image( $image, (int) round( $logo_diameter * 0.86 ) );
 
             ob_start();
             imagepng( $image );
@@ -1713,7 +1666,8 @@ class IW_Ticket_PDF_Service {
             return $configured_path;
         }
 
-        return '';
+        $bundled_path = dirname( __FILE__, 2 ) . '/assets/images/mesolongi-qr-logo.svg';
+        return file_exists( $bundled_path ) && is_readable( $bundled_path ) ? $bundled_path : '';
     }
 
     protected static function build_email_calendar_links_html( int $post_id, string $slot_start, string $slot_end = '' ): string {
@@ -1740,7 +1694,7 @@ class IW_Ticket_PDF_Service {
             }
 
             $anchors[] = sprintf(
-                '<a href="%s" target="_blank" style="color:#31312F;text-decoration:underline !important;font-weight: normal !important;">%s</a>',
+                '<a href="%s" target="_blank" style="color:#173276;text-decoration:underline !important;font-weight:normal !important;">%s</a>',
                 esc_url( (string) $links[ $key ] ),
                 esc_html( $label )
             );
@@ -1750,8 +1704,8 @@ class IW_Ticket_PDF_Service {
             return '';
         }
 
-        return '<div style="font-size:12px;line-height:1.2;color:#31312F;margin:20px 0 0 0;padding-left: 21px;">' . esc_html__( 'Προσθήκη στο ημερολόγιο:', 'iw-theme' ) . '<br/>'
-                . implode( '<span style="display:inline-block;color:#CECDBC;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>', $anchors )
+        return '<div style="font-size:13px;line-height:1.3;color:#173276;margin:16px 0 0 0;padding:0;">' . esc_html__( 'Προσθήκη στο ημερολόγιο:', 'iw-theme' ) . '<br/>'
+                . implode( '<span style="display:inline-block;color:#8185BE;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>', $anchors )
             . '</div>';
     }
 
@@ -1764,8 +1718,7 @@ class IW_Ticket_PDF_Service {
         try {
             $dt = new DateTimeImmutable( $slot_start, wp_timezone() );
 
-            return wp_date( 'd/m/Y', $dt->getTimestamp(), wp_timezone() ) . '<br/>' .
-
+            return wp_date( 'd/m/Y', $dt->getTimestamp(), wp_timezone() ) . ' &middot; ' .
                 wp_date( 'H:i', $dt->getTimestamp(), wp_timezone() );
         } catch ( Throwable $e ) {
             return $slot_start;
@@ -1869,12 +1822,8 @@ class IW_Ticket_PDF_Service {
             );
         }
 
-        $palette = self::get_email_post_type_tag_palette( $post_id, $post_type );
-
         return sprintf(
-            '<div style="margin:0 0 25px 0;"><span style="display:inline-block;background:%s;color:%s;padding:4px 8px;border-radius:6px;font-size:10px;line-height:1.3;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">%s</span></div>',
-            esc_attr( $palette['background'] ),
-            esc_attr( $palette['color'] ),
+            '<div style="margin:0 0 16px 0;"><span style="display:inline-block;background:#EBE6D6;color:#173276;padding:5px 9px;border-radius:6px;font-size:10px;line-height:1.3;font-weight:700;letter-spacing:0.05em;">%s</span></div>',
             esc_html( IW_Ticketing::remove_accents( $title ) )
         );
     }

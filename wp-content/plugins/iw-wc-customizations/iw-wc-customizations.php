@@ -786,6 +786,30 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }, 0, 1 );
 
+        // POS emails register their own Woo header/footer callbacks dynamically.
+        // Remove those too so they use the shared IW branded email shell.
+        add_action( 'woocommerce_pos_email_header', function () {
+            if ( ! function_exists( 'WC' ) || ! WC()->mailer() ) return;
+            foreach ( WC()->mailer()->get_emails() as $email ) {
+                if ( $email instanceof WC_Email_Customer_POS_Completed_Order || $email instanceof WC_Email_Customer_POS_Refunded_Order ) {
+                    remove_action( 'woocommerce_pos_email_header', [ $email, 'email_header' ], 10 );
+                }
+            }
+        }, 0 );
+
+        add_action( 'woocommerce_pos_email_footer', function () {
+            if ( ! function_exists( 'WC' ) || ! WC()->mailer() ) return;
+            foreach ( WC()->mailer()->get_emails() as $email ) {
+                if ( $email instanceof WC_Email_Customer_POS_Completed_Order || $email instanceof WC_Email_Customer_POS_Refunded_Order ) {
+                    remove_action( 'woocommerce_pos_email_footer', [ $email, 'email_footer' ], 10 );
+                }
+            }
+        }, 0 );
+
+        add_filter( 'woocommerce_order_get_payment_method_title', function ( $title ) {
+            return 'Credit card via Cardlink' === $title ? __( 'Πληρωμή με κάρτα', 'iw-theme' ) : $title;
+        } );
+
         // dont require shipping address for virtual_products
 
         add_filter( 'wcsg_require_shipping_address_for_virtual_products', '__return_false' );

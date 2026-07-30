@@ -2519,8 +2519,8 @@ class IW_Cashier_Ticketing {
                 ? esc_html__( 'Δημιουργήσαμε έναν λογαριασμό για αυτό το email. Πατήστε το κουμπί παρακάτω για να ορίσετε τον κωδικό σας.', 'iw-theme' )
                 : esc_html__( 'Υπάρχει ήδη λογαριασμός για αυτό το email. Πατήστε το κουμπί παρακάτω για να ορίσετε νέο κωδικό.', 'iw-theme' )
             ) . '</p>';
-            $message  .= '<p><a href="' . esc_url( $setup_url ) . '" style="display:inline-block;padding:14px 22px;background:#31312F;color:#FFFFFF;text-decoration:none;border-radius:999px;">' . esc_html__( 'Ορισμός κωδικού', 'iw-theme' ) . '</a></p>';
-            $message  .= '<p style="color:#666;font-size:13px;">' . esc_html__( 'Αν δεν ζητήσατε αυτή την εγγραφή, μπορείτε να αγνοήσετε αυτό το email.', 'iw-theme' ) . '</p>';
+            $message  .= '<p><a href="' . esc_url( $setup_url ) . '" class="btn" style="display:inline-block;padding:14px 22px;background:#173276;color:#FFFFFF;text-decoration:none;border-radius:10px;">' . esc_html__( 'Ορισμός κωδικού', 'iw-theme' ) . '</a></p>';
+            $message  .= '<p style="color:#173276;font-size:13px;">' . esc_html__( 'Αν δεν ζητήσατε αυτή την εγγραφή, μπορείτε να αγνοήσετε αυτό το email.', 'iw-theme' ) . '</p>';
             $wrapped_message = $mailer ? $mailer->wrap_message( $subject, $message ) : $message;
 
             $sent = $mailer

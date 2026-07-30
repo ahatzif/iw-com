@@ -17,7 +17,7 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
 ?>
 
 <?php if ( $has_orders ) : ?>
-    <div class="space-y-15">
+    <div class="space-y-25">
         <?php foreach ( $customer_orders->orders as $customer_order ) :
             $order = wc_get_order( $customer_order );
             if ( ! $order ) {
@@ -25,78 +25,88 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
             }
 
             $items = $order->get_items();
-            $first_item = $items ? reset( $items ) : null;
-            $content_id = $first_item ? absint( $first_item->get_meta( 'tickets_for_id', true ) ) : 0;
-            $product = $first_item && is_callable( [ $first_item, 'get_product' ] ) ? $first_item->get_product() : null;
-            $is_all_museums_ticket = $content_id ? com_theme_is_all_museums_ticket( $content_id ) : false;
-            $image_id = $content_id ? com_theme_museum_image_id( $content_id ) : ( $product ? absint( $product->get_image_id() ) : 0 );
-            $item_count = $order->get_item_count() - $order->get_item_count_refunded();
+            $ticket_count = 0;
+
+            foreach ( $items as $item ) {
+                $quantity = max( 1, (int) $item->get_meta( 'tickets_total', true ) );
+                $ticket_count += $quantity;
+            }
+
+            if ( $ticket_count <= 0 ) {
+                $ticket_count = max( 0, $order->get_item_count() - $order->get_item_count_refunded() );
+            }
+
+            $hold_state = class_exists( 'CPT_As_Product' ) && method_exists( 'CPT_As_Product', 'get_order_ticket_hold_state' )
+                ? CPT_As_Product::get_order_ticket_hold_state( $order )
+                : [ 'has_ticket_items' => false, 'is_active' => true ];
+            $is_expired_payment = $order->has_status( [ 'pending', 'failed' ] )
+                && ! empty( $hold_state['has_ticket_items'] )
+                && empty( $hold_state['is_active'] );
+            $status_label = $is_expired_payment
+                ? __( 'Η κράτηση έληξε', 'com-theme' )
+                : ( $order->has_status( 'pending' ) ? __( 'Αναμένει πληρωμή', 'com-theme' ) : wc_get_order_status_name( $order->get_status() ) );
             $actions = wc_get_account_orders_actions( $order );
+            $pay_action = $actions['pay'] ?? null;
+            $view_action = $actions['view'] ?? null;
+            $status_is_positive = $order->has_status( [ 'processing', 'completed' ] );
+            $status_text_class = $status_is_positive ? 'text-validated' : 'text-limited';
+            $date_label = mb_strtoupper(
+                com\theme::remove_accents( wc_format_datetime( $order->get_date_created(), 'l, j F · H:i' ) ),
+                'UTF-8'
+            );
+            $status_label_upper = mb_strtoupper( com\theme::remove_accents( $status_label ), 'UTF-8' );
+            $ticket_count_label = mb_strtoupper(
+                com\theme::remove_accents(
+                    sprintf( _n( '%d εισιτήριο', '%d εισιτήρια', $ticket_count, 'com-theme' ), $ticket_count )
+                ),
+                'UTF-8'
+            );
         ?>
-            <article class="overflow-hidden rounded-[1.2rem] border border-blue/15">
-                <div class="grid gap-20 p-20 sm:grid-cols-[12rem_1fr] md:p-25">
-                    <div class="relative aspect-[4/3] overflow-hidden rounded-[.8rem] bg-ochre-light">
-                        <?php if ( $is_all_museums_ticket ) : ?>
-                            <?php get_template_part( 'templates/parts/all-museums-art', null, [
-                                'label_classes' => 'absolute left-[1.4rem] top-[1.5rem] text-[2.6rem] font-light leading-[.895] text-ochre-light',
-                            ] ); ?>
-                        <?php elseif ( $image_id ) : ?>
-                            <?php get_template_part( 'templates/parts/image', null, [
-                                'id'       => $image_id,
-                                'size'     => 'medium',
-                                'classes'  => 'size-full object-cover',
-                                'parallax' => false,
-                            ] ); ?>
-                        <?php else : ?>
-                            <div class="flex size-full items-center justify-center text-blue/25">
-                                <svg class="size-40 fill-current" aria-hidden="true"><use xlink:href="#icon-com-ticket"></use></svg>
-                            </div>
+            <article class="relative overflow-hidden rounded-[1.2rem] border border-blue/15 bg-white">
+                <div class="grid min-h-[17rem] md:grid-cols-[minmax(0,1fr)_14rem] lg:grid-cols-[minmax(0,1fr)_17rem]">
+                    <div class="flex min-w-0 flex-col px-20 py-25 md:px-25 lg:px-35 lg:py-30">
+
+
+                        <h2 class="text-[2rem] font-bold leading-none">
+                            #<?= esc_html( $order->get_order_number() ) ?>
+                        </h2>
+
+                        <p class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-4 text-[.9rem] leading-[1.45]">
+                            <span><?= esc_html( $date_label ) ?></span>
+                            <span aria-hidden="true">·</span>
+                            <span><?= esc_html( $ticket_count_label ) ?></span>
+                            <strong class="font-bold"><?= wp_kses_post( $order->get_formatted_order_total() ) ?></strong>
+                        </p>
+                        <p class="mt-5  flex flex-wrap items-center gap-x-8 gap-y-4 text-[.9rem] font-medium leading-[1.3] tracking-[.22em]">
+                            <span class="<?= esc_attr( $status_text_class ) ?>"><?= esc_html( $status_label_upper ) ?></span>
+                        </p>
+
+                        <?php if ( $view_action ) : ?>
+                            <a
+                                href="<?= esc_url( $view_action['url'] ) ?>"
+                                data-barba-prevent
+                                data-account-pages="link"
+                                class="mt-25 inline-flex w-fit text-[1.05rem] font-medium text-blue-soft transition-colors hover:text-blue md:mt-auto"
+                            >
+                                <?= esc_html__( 'Περισσότερα →', 'com-theme' ) ?>
+                            </a>
                         <?php endif; ?>
                     </div>
 
-                    <div class="min-w-0">
-                        <div class="flex flex-col gap-15 border-b border-dashed border-blue/25 pb-20 sm:flex-row sm:items-start sm:justify-between">
-                            <div>
-                                <p class="mb-8 text-[1rem] tracking-[.12em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Αριθμός αγοράς', 'com-theme' ) ) ) ?></p>
-                                <a href="<?= esc_url( $order->get_view_order_url() ) ?>" data-barba-prevent data-account-pages="link" class="text-[2rem] font-bold underline decoration-blue/30 underline-offset-4">
-                                    #<?= esc_html( $order->get_order_number() ) ?>
-                                </a>
-                            </div>
-                            <span class="self-start rounded-full bg-ochre px-15 py-8 text-[1.2rem] font-bold"><?= esc_html( wc_get_order_status_name( $order->get_status() ) ) ?></span>
-                        </div>
-
-                        <dl class="mt-20 grid grid-cols-2 gap-x-20 gap-y-15 text-[1.3rem] lg:grid-cols-4">
-                            <div>
-                                <dt class="text-[1rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Ημερομηνία', 'com-theme' ) ) ) ?></dt>
-                                <dd class="m-0 mt-5 font-bold"><?= esc_html( wc_format_datetime( $order->get_date_created(), 'd/m/Y' ) ) ?></dd>
-                            </div>
-                            <div>
-                                <dt class="text-[1rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Είδη', 'com-theme' ) ) ) ?></dt>
-                                <dd class="m-0 mt-5 font-bold"><?= esc_html( (string) $item_count ) ?></dd>
-                            </div>
-                            <div>
-                                <dt class="text-[1rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Σύνολο', 'com-theme' ) ) ) ?></dt>
-                                <dd class="m-0 mt-5 font-bold"><?= wp_kses_post( $order->get_formatted_order_total() ) ?></dd>
-                            </div>
-                            <div>
-                                <dt class="text-[1rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Πληρωμή', 'com-theme' ) ) ) ?></dt>
-                                <dd class="m-0 mt-5 font-bold"><?= esc_html( $order->get_payment_method_title() ?: '—' ) ?></dd>
-                            </div>
-                        </dl>
-                    </div>
-                </div>
-
-                <?php if ( $actions ) : ?>
-                    <footer class="flex flex-wrap justify-end gap-10 border-t border-blue/15 bg-ochre-light px-20 py-15 md:px-25">
-                        <?php foreach ( $actions as $key => $action ) : ?>
+                    <footer class="flex min-h-[12rem] flex-col justify-between px-20 py-25 md:min-h-0 md:px-25 lg:px-30 lg:py-30">
+                        <?php if ( $pay_action ) : ?>
                             <a
-                                href="<?= esc_url( $action['url'] ) ?>"
-                                class="inline-flex min-h-40 items-center justify-center rounded-[.6rem] border border-blue px-15 text-[1.2rem] font-bold transition-colors hover:bg-blue hover:text-white"
-                                <?= $key === 'view' ? 'data-barba-prevent data-account-pages="link"' : 'data-barba-prevent' ?>
-                            ><?= esc_html( $action['name'] ) ?></a>
-                        <?php endforeach; ?>
+                                href="<?= esc_url( $pay_action['url'] ) ?>"
+                                data-barba-prevent
+                                class="inline-flex min-h-40 w-fit items-center self-end rounded-[.6rem] border border-blue px-20 text-[1.2rem] transition-colors hover:bg-blue hover:text-white"
+                            >
+                                <span><?= esc_html( $pay_action['name'] ) ?></span>
+                            </a>
+                        <?php else : ?>
+                            <span aria-hidden="true"></span>
+                        <?php endif; ?>
                     </footer>
-                <?php endif; ?>
+                </div>
             </article>
         <?php endforeach; ?>
     </div>
@@ -112,11 +122,10 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
         </nav>
     <?php endif; ?>
 <?php else : ?>
-    <div class="rounded-[1.2rem] bg-ochre-light p-25 md:p-40">
-        <svg class="mb-25 h-[3.2rem] w-[3.8rem] fill-blue" aria-hidden="true"><use xlink:href="#icon-com-ticket"></use></svg>
-        <h3 class="m-0 text-[2.2rem] font-bold"><?= esc_html__( 'Δεν υπάρχουν αγορές ακόμη', 'com-theme' ) ?></h3>
-        <p class="mb-25 mt-10 max-w-[48rem] text-[1.5rem] leading-[1.45]"><?= esc_html__( 'Μόλις ολοκληρώσετε μια αγορά, θα εμφανιστεί εδώ μαζί με την κατάστασή της.', 'com-theme' ) ?></p>
-        <a href="<?= esc_url( com_theme_page_url( 'buy-tickets' ) ) ?>" class="inline-flex min-h-50 items-center justify-center rounded-[.8rem] bg-blue px-25 text-[1.4rem] text-white"><?= esc_html__( 'Αγορά εισιτηρίων', 'com-theme' ) ?> →</a>
+    <div class="flex flex-wrap items-center gap-15 rounded-[1.2rem] bg-blue p-20 text-white md:px-25">
+        <svg class="h-[2.6rem] w-[3.1rem] shrink-0" aria-hidden="true"><use xlink:href="#icon-com-ticket-light"></use></svg>
+        <h3 class="m-0 min-w-0 flex-1 text-[1.6rem] font-bold"><?= esc_html__( 'Δεν έχετε κάνει ακόμα κάποια αγορά', 'com-theme' ) ?></h3>
+        <a href="<?= esc_url( com_theme_page_url( 'buy-tickets' ) ) ?>" class="inline-flex min-h-40 items-center justify-center rounded-[.6rem] border border-white px-15 text-[1.2rem] font-bold text-white"><?= esc_html__( 'Αγορά εισιτηρίων', 'com-theme' ) ?> →</a>
     </div>
 <?php endif; ?>
 

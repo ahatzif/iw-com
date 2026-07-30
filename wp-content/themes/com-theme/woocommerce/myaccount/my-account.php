@@ -12,6 +12,7 @@ remove_action( 'woocommerce_account_content', 'woocommerce_output_all_notices', 
 $current_user = wp_get_current_user();
 $current_endpoint = com_theme_account_current_endpoint();
 $menu_items = wc_get_account_menu_items();
+$content_classes = 'rounded-[1.5rem] bg-white p-20 md:p-40 lg:p-60';
 ?>
 
 <main
@@ -86,7 +87,7 @@ $menu_items = wc_get_account_menu_items();
         </nav>
 
         <section
-            class="account-page__content min-w-0 rounded-[1.5rem] bg-white p-20 text-blue md:p-40 lg:p-60"
+            class="account-page__content min-w-0 text-blue <?= esc_attr( $content_classes ) ?>"
             data-account-pages="content"
             aria-live="polite"
         >

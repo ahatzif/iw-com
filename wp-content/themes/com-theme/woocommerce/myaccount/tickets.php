@@ -45,13 +45,23 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
                 <?php endforeach; ?>
             </div>
         <?php else : ?>
-            <div class="rounded-[1.2rem] bg-ochre-light p-25 md:p-35">
-                <svg class="mb-20 h-[3.2rem] w-[3.8rem] fill-blue" aria-hidden="true"><use xlink:href="#icon-com-ticket"></use></svg>
-                <h4 class="m-0 text-[2rem] font-bold"><?= esc_html__( 'Δεν έχετε ενεργά εισιτήρια', 'com-theme' ) ?></h4>
-                <p class="mb-25 mt-10 max-w-[48rem] text-[1.5rem] leading-[1.45]"><?= esc_html__( 'Επιλέξτε το μουσείο που θέλετε να επισκεφθείτε και τα εισιτήριά σας θα εμφανιστούν εδώ.', 'com-theme' ) ?></p>
-                <a href="<?= esc_url( com_theme_page_url( 'buy-tickets' ) ) ?>" class="inline-flex min-h-50 items-center rounded-[.8rem] bg-blue px-25 text-[1.4rem] font-bold text-white">
-                    <?= esc_html__( 'Αγορά εισιτηρίων', 'com-theme' ) ?> →
-                </a>
+            <div class="min-h-[18rem] rounded-[1.2rem] border border-blue/15 bg-white p-20 text-blue md:p-25">
+                <div class="flex items-start justify-between gap-20">
+                    <div class="flex items-center gap-10 text-blue-soft">
+                        <svg class="h-[2.2rem] w-[2.6rem] shrink-0" aria-hidden="true"><use xlink:href="#icon-com-ticket"></use></svg>
+                        <h4 class="m-0 text-[1.1rem] font-bold tracking-[.1em]"><?= esc_html( com\theme::remove_accents( __( 'Ενεργά εισιτήρια', 'com-theme' ) ) ) ?></h4>
+                    </div>
+                </div>
+                <p class="mb-0 mt-20 text-[1.3rem] font-normal leading-[1.5]"><?= esc_html__( 'Δεν έχουν εκδοθεί ακόμα εισιτήρια', 'com-theme' ) ?></p>
+            </div>
+            <div class="mt-15 flex justify-end">
+                <?php get_template_part( 'templates/parts/com-button', null, [
+                    'href'    => com_theme_page_url( 'buy-tickets' ),
+                    'label'   => __( 'Εισιτήρια', 'com-theme' ),
+                    'variant' => 'blue-outline',
+                    'size'    => 'small',
+                    'icon'    => 'com-ticket-button',
+                ] ); ?>
             </div>
         <?php endif; ?>
     </section>

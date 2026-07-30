@@ -726,6 +726,10 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
     display: none !important;
 }
 
+.com-checkout aside .blockUI {
+    display: none !important;
+}
+
 .com-checkout .woocommerce-checkout #payment {
     border-radius: 0;
     background: transparent;
@@ -1268,14 +1272,20 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
     @apply mb-35;
 }
 
-.account-page__content .woocommerce-order-details h2,
+.account-page__content .woocommerce-order-details:not(.account-order-summary) h2,
 .account-page__content .woocommerce-customer-details h2,
 .account-page__content .woocommerce-column__title {
     @apply mb-20 text-[2rem] font-bold;
 }
 
-.account-page__content .woocommerce-customer-details address {
+.account-page__content .woocommerce-customer-details:not(.account-order-addresses) address {
     @apply rounded-[1rem] bg-ochre-light p-20 text-[1.4rem] not-italic leading-[1.5];
+}
+
+.account-page__content .account-order-addresses address {
+    border: 0;
+    border-radius: 0;
+    padding: 0;
 }
 
 @media (max-width: 767px) {

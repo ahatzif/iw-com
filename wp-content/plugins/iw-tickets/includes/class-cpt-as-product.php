@@ -41,9 +41,12 @@ class CPT_As_Product {
         add_action( 'woocommerce_before_cart_display', [$this, 'remove_expired_ticket_items_from_cart'] );
         add_action( 'woocommerce_checkout_create_order', [$this, 'attach_hold_token_to_order'], 10, 2 );
         add_action( 'woocommerce_checkout_create_order_line_item', [ $this, 'attach_virtual_item_meta_to_order_item' ], 10, 4 );
+        add_action( 'woocommerce_checkout_order_created', [$this, 'rotate_hold_token_after_order_created'], 20 );
         add_action( 'woocommerce_payment_complete', [$this, 'consume_holds_on_payment_complete'] );
         add_action( 'woocommerce_order_status_cancelled', [$this, 'release_holds_on_order_cancelled'] );
         add_action( 'woocommerce_order_status_failed', [$this, 'release_holds_on_order_cancelled'] );
+        add_filter( 'woocommerce_order_needs_payment', [__CLASS__, 'filter_order_needs_payment'], 20, 3 );
+        add_filter( 'woocommerce_my_account_my_orders_actions', [__CLASS__, 'filter_account_order_actions'], 20, 2 );
     }
 
 
@@ -603,8 +606,153 @@ class CPT_As_Product {
     public function attach_hold_token_to_order( $order, $data ) {
         $token = self::get_hold_token();
         if ( $token !== '' ) {
+            $this->refresh_checkout_holds( $token );
             $order->update_meta_data( '_iw_ticket_hold_token', $token );
         }
+    }
+
+    /**
+     * Give a valid cart hold one fresh payment window at checkout submission.
+     * The extension is capped by the slot's latest-booking boundary and cannot
+     * revive an already expired hold.
+     */
+    private function refresh_checkout_holds( string $token ): void {
+        if ( ! function_exists( 'WC' ) || ! WC()->cart || ! class_exists( 'IW_Tickets_DB' ) ) {
+            return;
+        }
+
+        foreach ( WC()->cart->get_cart() as $cart_item ) {
+            if ( ( $cart_item['iw_item_type'] ?? '' ) !== 'tickets' ) {
+                continue;
+            }
+
+            $channel = (string) ( $cart_item['tickets_channel'] ?? 'online' );
+            if ( in_array( $channel, [ 'onsite', 'cashier' ], true ) ) {
+                continue;
+            }
+
+            $post_id = (int) ( $cart_item['tickets_for_id'] ?? 0 );
+            $date = (string) ( $cart_item['tickets_day'] ?? '' );
+            $time = (string) ( $cart_item['tickets_time'] ?? '' );
+            if ( $post_id <= 0 || $date === '' || $time === '' ) {
+                continue;
+            }
+
+            $ttl = (int) apply_filters(
+                'iw_tickets_hold_ttl_minutes',
+                class_exists( 'IW_Ticketing' ) ? IW_Ticketing::get_slot_hold_minutes() : 15,
+                $post_id
+            );
+            $ttl = max( 1, $ttl );
+
+            $latest_offset_minutes = $this->get_latest_booking_offset_minutes( $post_id );
+            if ( $latest_offset_minutes > 0 ) {
+                $cutoff_ts = $this->get_ticket_slot_cutoff_timestamp( $post_id, $date, $time, wp_timezone() );
+                if ( $cutoff_ts ) {
+                    $remaining_minutes = (int) floor(
+                        ( $cutoff_ts - ( $latest_offset_minutes * 60 ) - current_datetime()->getTimestamp() ) / 60
+                    );
+                    if ( $remaining_minutes <= 0 ) {
+                        continue;
+                    }
+                    $ttl = min( $ttl, $remaining_minutes );
+                }
+            }
+
+            IW_Tickets_DB::refresh_hold_ttl( $token, $post_id, $date, $time, $ttl );
+        }
+    }
+
+    /**
+     * A checkout token belongs to one order only. Rotating it prevents a later
+     * order in the same browser session from sharing or consuming its holds.
+     */
+    public function rotate_hold_token_after_order_created( $order ): void {
+        if ( ! $order instanceof WC_Order || ! function_exists( 'WC' ) || ! WC()->session ) {
+            return;
+        }
+
+        $order_token = (string) $order->get_meta( '_iw_ticket_hold_token' );
+        $session_token = self::get_existing_hold_token();
+        if ( $order_token !== '' && hash_equals( $order_token, $session_token ) ) {
+            WC()->session->__unset( 'iw_ticket_hold_token' );
+        }
+    }
+
+    public static function get_order_ticket_hold_state( $order ): array {
+        $state = [
+            'has_ticket_items' => false,
+            'is_active'        => true,
+            'expires_at'       => '',
+        ];
+
+        if ( ! $order instanceof WC_Order || ! class_exists( 'IW_Tickets_DB' ) ) {
+            return $state;
+        }
+
+        $active_expiries = [];
+        foreach ( $order->get_items() as $item_id => $item ) {
+            if ( (int) $item->get_meta( 'tickets_for_id', true ) <= 0 ) {
+                continue;
+            }
+
+            $channel = (string) $item->get_meta( 'tickets_channel', true );
+            if ( in_array( $channel, [ 'onsite', 'cashier' ], true ) ) {
+                continue;
+            }
+
+            $state['has_ticket_items'] = true;
+            $expires_at = IW_Tickets_DB::get_order_item_active_hold_expires_at( (int) $item_id );
+            if ( $expires_at === '' ) {
+                $state['is_active'] = false;
+                continue;
+            }
+            $active_expiries[] = $expires_at;
+        }
+
+        if ( $state['has_ticket_items'] && $active_expiries ) {
+            sort( $active_expiries );
+            $state['expires_at'] = $active_expiries[0];
+        }
+
+        return $state;
+    }
+
+    public static function filter_order_needs_payment( bool $needs_payment, $order, array $valid_statuses ): bool {
+        if ( ! $needs_payment || ! $order instanceof WC_Order ) {
+            return $needs_payment;
+        }
+
+        $state = self::get_order_ticket_hold_state( $order );
+        if ( ! empty( $state['has_ticket_items'] ) && empty( $state['is_active'] ) ) {
+            $is_expired_order_pay_view = function_exists( 'is_wc_endpoint_url' )
+                && is_wc_endpoint_url( 'order-pay' )
+                && strtoupper( (string) ( $_SERVER['REQUEST_METHOD'] ?? 'GET' ) ) === 'GET'
+                && isset( $_GET['pay_for_order'] );
+
+            // Let the theme render its safe, form-less "reservation expired"
+            // state for a direct/stale payment URL. POST requests remain blocked.
+            if ( $is_expired_order_pay_view ) {
+                return true;
+            }
+
+            return false;
+        }
+
+        return $needs_payment;
+    }
+
+    public static function filter_account_order_actions( array $actions, $order ): array {
+        if ( ! isset( $actions['pay'] ) || ! $order instanceof WC_Order ) {
+            return $actions;
+        }
+
+        $state = self::get_order_ticket_hold_state( $order );
+        if ( ! empty( $state['has_ticket_items'] ) && empty( $state['is_active'] ) ) {
+            unset( $actions['pay'] );
+        }
+
+        return $actions;
     }
 
     public function consume_holds_on_payment_complete( $order_id ) {
@@ -613,10 +761,33 @@ class CPT_As_Product {
         $order = wc_get_order( $order_id );
         if ( ! $order ) return;
 
-        $token = (string) $order->get_meta('_iw_ticket_hold_token');
-        if ( $token === '' ) return;
+        $ticket_item_ids = [];
+        foreach ( $order->get_items() as $item_id => $item ) {
+            if ( (int) $item->get_meta( 'tickets_for_id', true ) <= 0 ) {
+                continue;
+            }
+            $channel = (string) $item->get_meta( 'tickets_channel', true );
+            if ( in_array( $channel, [ 'onsite', 'cashier' ], true ) ) {
+                continue;
+            }
+            $ticket_item_ids[] = (int) $item_id;
+        }
 
-        IW_Tickets_DB::consume_holds_to_booked( $token );
+        foreach ( $ticket_item_ids as $item_id ) {
+            if ( ! IW_Tickets_DB::order_item_has_active_holds( $item_id ) ) {
+                $order->update_meta_data( '_iw_ticket_payment_hold_expired', 'yes' );
+                $order->save();
+                $order->update_status(
+                    'on-hold',
+                    __( 'Η πληρωμή καταγράφηκε αφού είχε λήξει η κράτηση εισιτηρίων. Δεν εκδόθηκαν εισιτήρια· απαιτείται έλεγχος διαθεσιμότητας και επιστροφή ή χειροκίνητη διευθέτηση.', 'iw-theme' )
+                );
+                return;
+            }
+        }
+
+        foreach ( $ticket_item_ids as $item_id ) {
+            IW_Tickets_DB::consume_order_item_holds_to_booked( (int) $item_id );
+        }
     }
 
     public function release_holds_on_order_cancelled( $order_id ) {

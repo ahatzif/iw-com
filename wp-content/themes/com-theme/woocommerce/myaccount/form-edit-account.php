@@ -11,7 +11,7 @@ do_action( 'woocommerce_before_edit_account_form' );
 
 get_template_part( 'woocommerce/myaccount/page-title', null, [
     'eyebrow'     => __( 'Προφίλ και ασφάλεια', 'com-theme' ),
-    'title'       => __( 'Στοιχεία σύνδεσης', 'com-theme' ),
+    'title'       => __( 'Λογαριασμός', 'com-theme' ),
     'description' => __( 'Ενημερώστε τα βασικά στοιχεία του λογαριασμού ή αλλάξτε τον κωδικό πρόσβασής σας.', 'com-theme' ),
 ] );
 ?>
@@ -74,3 +74,5 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
 </form>
 
 <?php do_action( 'woocommerce_after_edit_account_form' ); ?>
+
+<?php get_template_part( 'woocommerce/myaccount/account-delete' ); ?>

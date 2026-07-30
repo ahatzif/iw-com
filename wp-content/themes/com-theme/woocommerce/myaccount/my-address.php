@@ -12,14 +12,15 @@ $get_addresses = [
     'billing' => __( 'Διεύθυνση χρέωσης', 'com-theme' ),
 ];
 
-if ( ! wc_ship_to_billing_address_only() && wc_shipping_enabled() ) {
-    $get_addresses['shipping'] = __( 'Διεύθυνση αποστολής', 'com-theme' );
-}
+// Temporarily hidden: purchases currently contain digital tickets only.
+// if ( ! wc_ship_to_billing_address_only() && wc_shipping_enabled() ) {
+//     $get_addresses['shipping'] = __( 'Διεύθυνση αποστολής', 'com-theme' );
+// }
 
 $get_addresses = apply_filters( 'woocommerce_my_account_get_addresses', $get_addresses, $customer_id );
 
 get_template_part( 'woocommerce/myaccount/page-title', null, [
-    'eyebrow'     => __( 'Στοιχεία αποστολής', 'com-theme' ),
+    'eyebrow'     => __( 'Στοιχεία χρέωσης', 'com-theme' ),
     'title'       => __( 'Διευθύνσεις', 'com-theme' ),
     'description' => __( 'Οι διευθύνσεις αυτές χρησιμοποιούνται αυτόματα κατά την ολοκλήρωση της αγοράς.', 'com-theme' ),
 ] );

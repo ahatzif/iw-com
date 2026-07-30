@@ -1018,11 +1018,11 @@ add_filter( 'woocommerce_get_privacy_policy_text', static function ( string $tex
  */
 function com_theme_account_menu_items( array $items ): array {
     $menu = [
-        'dashboard'       => __( 'Τα στοιχεία μου', 'com-theme' ),
+        'dashboard'       => __( 'Επισκόπηση', 'com-theme' ),
         'tickets'         => __( 'Τα εισιτήριά μου', 'com-theme' ),
         'orders'          => __( 'Οι αγορές μου', 'com-theme' ),
         'edit-address'    => __( 'Διευθύνσεις', 'com-theme' ),
-        'edit-account'    => __( 'Στοιχεία σύνδεσης', 'com-theme' ),
+        'edit-account'    => __( 'Λογαριασμός', 'com-theme' ),
         'customer-logout' => __( 'Αποσύνδεση', 'com-theme' ),
     ];
 

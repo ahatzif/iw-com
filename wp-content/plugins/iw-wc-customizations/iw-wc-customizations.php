@@ -321,6 +321,163 @@ class IW_WC_Customizations {
         }
     }
 
+    /**
+     * Validate and persist billing fields when an existing unpaid order is
+     * edited from WooCommerce's order-pay endpoint.
+     */
+    public static function update_order_billing_before_payment( $order ) {
+        if (
+            ! $order instanceof WC_Order
+            || empty( $_POST['iw_order_pay_billing'] )
+            || ! function_exists( 'WC' )
+            || ! WC()->checkout()
+        ) {
+            return;
+        }
+
+        $field_keys = [
+            'billing_first_name',
+            'billing_last_name',
+            'billing_country',
+            'billing_state',
+            'billing_address_1',
+            'billing_postcode',
+            'billing_city',
+            'billing_phone',
+            'billing_email',
+            'billing_receipt_type',
+            'billing_tax_number',
+            'billing_company_name',
+            'billing_company_profession',
+            'billing_tax_office',
+        ];
+        $checkout_fields = WC()->checkout()->get_checkout_fields( 'billing' );
+        $data = [];
+
+        foreach ( $field_keys as $field_key ) {
+            $value = self::get_posted_value( $_POST, $field_key, '' );
+            if ( $field_key === 'billing_email' ) {
+                $value = sanitize_email( $value );
+            } elseif ( $field_key === 'billing_phone' && function_exists( 'wc_sanitize_phone_number' ) ) {
+                $value = wc_sanitize_phone_number( $value );
+            } else {
+                $value = wc_clean( $value );
+            }
+            $data[ $field_key ] = $value;
+
+            $field = $checkout_fields[ $field_key ] ?? [];
+            if ( ! empty( $field['required'] ) && $value === '' ) {
+                wc_add_notice(
+                    sprintf(
+                        /* translators: %s: billing field label */
+                        __( 'Το πεδίο «%s» είναι υποχρεωτικό.', 'iw-theme' ),
+                        $field['label'] ?? $field_key
+                    ),
+                    'error',
+                    [ 'id' => $field_key ]
+                );
+            }
+        }
+
+        if ( $data['billing_email'] !== '' && ! is_email( $data['billing_email'] ) ) {
+            wc_add_notice( __( 'Παρακαλούμε εισαγάγετε μια έγκυρη διεύθυνση email.', 'iw-theme' ), 'error', [ 'id' => 'billing_email' ] );
+        }
+
+        $receipt_type = self::get_receipt_type_from_data( $data );
+        $country = self::get_billing_country_from_data( $data );
+
+        if ( $receipt_type === 'invoice' ) {
+            $tax_number = self::get_posted_value( $data, 'billing_tax_number' );
+
+            if ( $country === 'GR' ) {
+                if ( $tax_number === '' ) {
+                    wc_add_notice( __( 'Το ΑΦΜ είναι υποχρεωτικό για τιμολόγιο Ελλάδας.', 'iw-theme' ), 'error' );
+                } elseif ( class_exists( 'IW_Taxisnet_Integration' ) && ! IW_Taxisnet_Integration::validate_afm( $tax_number ) ) {
+                    wc_add_notice( __( 'Το ΑΦΜ δεν είναι έγκυρο.', 'iw-theme' ), 'error' );
+                } elseif ( empty( self::get_verified_aade_data( $tax_number ) ) ) {
+                    wc_add_notice( __( 'Παρακαλούμε επαληθεύστε το ΑΦΜ από την ΑΑΔΕ πριν συνεχίσετε.', 'iw-theme' ), 'error' );
+                }
+            } elseif ( self::is_eu_vat_country( $country ) ) {
+                if ( $tax_number === '' ) {
+                    wc_add_notice( __( 'Το VAT number είναι υποχρεωτικό για τιμολόγιο εντός Ευρωπαϊκής Ένωσης.', 'iw-theme' ), 'error' );
+                } elseif ( empty( self::get_verified_vies_data( $country, $tax_number ) ) ) {
+                    wc_add_notice( __( 'Παρακαλούμε επαληθεύστε το VAT number από το VIES πριν συνεχίσετε.', 'iw-theme' ), 'error' );
+                }
+            }
+
+            foreach ( self::get_required_invoice_fields( $country ) as $field_key ) {
+                if ( self::get_posted_value( $data, $field_key ) === '' ) {
+                    $label = $checkout_fields[ $field_key ]['label'] ?? ( self::get_custom_fields()[ $field_key ]['label'] ?? $field_key );
+                    wc_add_notice( sprintf( __( 'Το πεδίο «%s» είναι υποχρεωτικό.', 'iw-theme' ), $label ), 'error', [ 'id' => $field_key ] );
+                }
+            }
+        }
+
+        if ( wc_notice_count( 'error' ) > 0 ) {
+            return;
+        }
+
+        $data = self::get_normalized_invoice_data( $data );
+        $address = [];
+        foreach ( [
+            'first_name',
+            'last_name',
+            'country',
+            'state',
+            'address_1',
+            'postcode',
+            'city',
+            'phone',
+            'email',
+        ] as $address_key ) {
+            $address[ $address_key ] = $data[ 'billing_' . $address_key ] ?? '';
+        }
+        $order->set_address( $address, 'billing' );
+
+        foreach ( self::get_custom_fields() as $field_key => $field ) {
+            $order->update_meta_data( '_' . $field_key, self::get_posted_value( $data, $field_key ) );
+        }
+
+        if ( $receipt_type !== 'invoice' ) {
+            foreach ( [
+                '_billing_tax_validation_source',
+                '_billing_aade_verified_at',
+                '_billing_aade_snapshot',
+                '_billing_vies_verified_at',
+                '_billing_vies_request_identifier',
+                '_billing_vies_snapshot',
+            ] as $meta_key ) {
+                $order->delete_meta_data( $meta_key );
+            }
+        } elseif ( $country === 'GR' ) {
+            $verified = self::get_verified_aade_data( self::get_posted_value( $data, 'billing_tax_number' ) );
+            $order->update_meta_data( '_billing_tax_validation_source', 'aade' );
+            $order->update_meta_data( '_billing_aade_verified_at', $verified['verified_at'] ?? current_time( 'mysql' ) );
+            $order->update_meta_data( '_billing_aade_snapshot', $verified );
+        } elseif ( self::is_eu_vat_country( $country ) ) {
+            $verified = self::get_verified_vies_data( $country, self::get_posted_value( $data, 'billing_tax_number' ) );
+            $order->update_meta_data( '_billing_tax_validation_source', 'vies' );
+            $order->update_meta_data( '_billing_vies_verified_at', $verified['verified_at'] ?? current_time( 'mysql' ) );
+            $order->update_meta_data( '_billing_vies_request_identifier', $verified['request_identifier'] ?? '' );
+            $order->update_meta_data( '_billing_vies_snapshot', $verified );
+        } else {
+            $order->update_meta_data( '_billing_tax_validation_source', 'manual_non_eu' );
+        }
+
+        $order->save();
+
+        if ( WC()->customer ) {
+            foreach ( $address as $address_key => $value ) {
+                $setter = 'set_billing_' . $address_key;
+                if ( is_callable( [ WC()->customer, $setter ] ) ) {
+                    WC()->customer->{$setter}( $value );
+                }
+            }
+            WC()->customer->save();
+        }
+        self::update_fields( $data );
+    }
+
 
     public function __construct() {
 
@@ -328,6 +485,8 @@ class IW_WC_Customizations {
         add_filter( 'woocommerce_checkout_get_value', function( $value, $field_name ){
             return ($field_name === 'billing_receipt_type' && empty( $value ) ) ? 'receipt' : $value;
         }, 10, 2 );
+
+        add_action( 'woocommerce_before_pay_action', [ __CLASS__, 'update_order_billing_before_payment' ], 5 );
 
 
         add_filter('woocommerce_billing_fields', function ($fields) {

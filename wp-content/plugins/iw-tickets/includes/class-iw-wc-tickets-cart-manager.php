@@ -1129,6 +1129,13 @@ class IW_WC_Tickets_Cart_Manager{
         $order = wc_get_order( $order_id );
         if ( ! $order ) return;
 
+        // A captured payment that arrived after the ticket holds expired is
+        // deliberately left on hold for operational review. Never issue
+        // unreserved tickets in that edge case.
+        if ( $order->get_meta( '_iw_ticket_payment_hold_expired', true ) === 'yes' ) {
+            return;
+        }
+
         // Avoid issuing on failed/cancelled/refunded orders.
         $status = $order->get_status();
         if ( in_array( $status, [ 'failed', 'cancelled', 'refunded' ], true ) ) {

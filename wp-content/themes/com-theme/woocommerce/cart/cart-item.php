@@ -247,8 +247,9 @@ endif;
                         'id'       => $details['image_id'],
                         'size'     => $is_compact ? 'thumbnail' : 'large',
                         'classes'  => '!w-full !h-full object-cover',
-                        'lazy'     => ! $is_mini,
+                        'lazy'     => ! $is_mini && ! $is_checkout_summary,
                         'parallax' => false,
+                        'attrs'    => $is_checkout_summary ? 'loading="eager" fetchpriority="high"' : '',
                     ] ); ?>
                 <?php endif; ?>
             </a>

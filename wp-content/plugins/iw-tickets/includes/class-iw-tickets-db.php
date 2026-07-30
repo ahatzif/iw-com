@@ -368,6 +368,48 @@ class IW_Tickets_DB
     }
 
     /**
+     * Extend one still-active cart hold without reviving an expired row.
+     */
+    public static function refresh_hold_ttl( string $token, int $post_id, string $date, string $time, int $ttl_minutes ): bool {
+        $token = trim( $token );
+        if ( $token === '' || $post_id <= 0 || $date === '' || $time === '' ) {
+            return false;
+        }
+
+        if ( preg_match( '/^\d{2}:\d{2}$/', $time ) ) {
+            $time .= ':00';
+        }
+
+        $ttl_minutes = max( 1, min( 1440, $ttl_minutes ) );
+        $now_ts = (int) current_time( 'timestamp' );
+        $now = date( 'Y-m-d H:i:s', $now_ts );
+        $expires_at = date( 'Y-m-d H:i:s', $now_ts + ( $ttl_minutes * 60 ) );
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'iw_ticket_slot_holds';
+
+        $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE {$table}
+                 SET expires_at = %s, updated_at = CURRENT_TIMESTAMP
+                 WHERE token = %s
+                   AND post_id = %d
+                   AND slot_date = %s
+                   AND slot_time = %s
+                   AND expires_at > %s",
+                $expires_at,
+                $token,
+                $post_id,
+                $date,
+                $time,
+                $now
+            )
+        );
+
+        return $wpdb->rows_affected > 0;
+    }
+
+    /**
     * Convert normal cart holds (15min) into reservation holds.
     * Expiration becomes: slot_datetime - confirmation_days_before.
     * Used when a user chooses "reserve" instead of immediate payment.
@@ -553,6 +595,26 @@ class IW_Tickets_DB
         return (int) $count > 0;
     }
 
+    public static function get_order_item_active_hold_expires_at( int $order_item_id ): string {
+        $order_item_id = (int) $order_item_id;
+        if ( $order_item_id <= 0 ) {
+            return '';
+        }
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'iw_ticket_slot_holds';
+
+        return (string) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT MIN(expires_at)
+                 FROM {$table}
+                 WHERE order_item_id = %d AND expires_at > %s",
+                $order_item_id,
+                current_time( 'mysql' )
+            )
+        );
+    }
+
     /**
      * Convert the active reservation holds of one Woo order item into booked inventory.
      * Used when a teacher confirms one reserved learning-program item from My Account.
@@ -681,7 +743,23 @@ class IW_Tickets_DB
 
         if ( class_exists( 'IW_Ticketing' ) && method_exists( 'IW_Ticketing', 'reconcile_reservation_order_status' ) && function_exists( 'wc_get_order' ) ) {
             foreach ( array_keys( $orders_to_reconcile ) as $order_id ) {
-                IW_Ticketing::reconcile_reservation_order_status( wc_get_order( (int) $order_id ) );
+                $order = wc_get_order( (int) $order_id );
+                IW_Ticketing::reconcile_reservation_order_status( $order );
+
+                if (
+                    $order
+                    && $order->has_status( [ 'pending', 'failed' ] )
+                    && class_exists( 'CPT_As_Product' )
+                    && method_exists( 'CPT_As_Product', 'get_order_ticket_hold_state' )
+                ) {
+                    $state = CPT_As_Product::get_order_ticket_hold_state( $order );
+                    if ( ! empty( $state['has_ticket_items'] ) && empty( $state['is_active'] ) ) {
+                        $order->update_status(
+                            'cancelled',
+                            __( 'Η παραγγελία ακυρώθηκε αυτόματα επειδή έληξε ο χρόνος κράτησης των εισιτηρίων.', 'iw-theme' )
+                        );
+                    }
+                }
             }
         }
 

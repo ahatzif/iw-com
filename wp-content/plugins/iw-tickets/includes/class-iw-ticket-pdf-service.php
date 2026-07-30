@@ -1545,8 +1545,8 @@ class IW_Ticket_PDF_Service {
             $options = new QROptions(
                 [
                     'eccLevel'      => QRCode::ECC_H,
-                    'addQuietzone'  => true,
-                    'quietzoneSize' => 4,
+                    'addQuietzone'  => false,
+                    'quietzoneSize' => 0,
                 ]
             );
 

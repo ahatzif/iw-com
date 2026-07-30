@@ -89,59 +89,70 @@ $tickets = (array) ( $ticket_bundle['tickets'] ?? [] );
             $price_label = trim( $category_parts[1] ?? $category_parts[0] );
             $reference = $ticket_uuid !== '' ? strtoupper( substr( $ticket_uuid, -8 ) ) : sprintf( '%02d', $index + 1 );
         ?>
-            <article class="relative overflow-hidden rounded-[1.2rem] border border-blue/15 bg-white">
-                <div class="border-b border-dashed border-blue/25 px-20 py-15 md:px-25">
-                    <div class="flex items-center justify-between gap-20">
-                        <span class="text-[1.1rem] font-bold tracking-[.14em] text-blue-soft"><?= esc_html( com\theme::remove_accents( sprintf( __( 'Εισιτήριο %d', 'com-theme' ), $index + 1 ) ) ) ?></span>
-                        <span class="text-[1rem] text-blue/50">#<?= esc_html( $reference ) ?></span>
-                    </div>
-                </div>
+            <article class="relative flex flex-col overflow-hidden rounded-[1.5rem] border border-blue/15 bg-white md:flex-row">
+                <div class="grid min-w-0 flex-1 gap-25 p-20 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:p-30 md:pr-0">
+                    <div>
+                        <div class="mb-20 space-y-6">
+                            <p class="m-0 text-[1.1rem] font-bold tracking-[.14em] text-blue"><?= esc_html( com\theme::remove_accents( sprintf( __( 'Εισιτήριο %d', 'com-theme' ), $index + 1 ) ) ) ?></p>
+                            <p class="m-0 text-[.9rem] tracking-[.08em] text-blue/45"><?= esc_html( com\theme::remove_accents( __( 'Κωδικός', 'com-theme' ) ) ) ?> #<?= esc_html( $reference ) ?></p>
+                        </div>
 
-                <div class="grid gap-25 p-20 md:grid-cols-[1fr_auto] md:items-center md:p-25">
-                    <dl class="grid gap-x-30 gap-y-20 sm:grid-cols-2">
-                        <div>
-                            <dt class="text-[.9rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Ονοματεπώνυμο', 'com-theme' ) ) ) ?></dt>
-                            <dd class="m-0 mt-5 text-[1.6rem] font-bold"><?= esc_html( ( $ticket->attendee_name ?? '' ) ?: '—' ) ?></dd>
+                        <dl class="space-y-10 text-[1.3rem] leading-[1.25]">
+                        <div class="flex flex-wrap items-baseline gap-x-6">
+                            <dt class="text-blue/65"><?= esc_html( com\theme::remove_accents( __( 'Όνομ/μο:', 'com-theme' ) ) ) ?></dt>
+                            <dd class="m-0 font-bold"><?= esc_html( ( $ticket->attendee_name ?? '' ) ?: '—' ) ?></dd>
                         </div>
-                        <div>
-                            <dt class="text-[.9rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Κατηγορία', 'com-theme' ) ) ) ?></dt>
-                            <dd class="m-0 mt-5 text-[1.6rem] font-bold"><?= esc_html( $price_label ?: '—' ) ?></dd>
+                        <div class="flex flex-wrap items-baseline gap-x-6">
+                            <dt class="text-blue/65"><?= esc_html( com\theme::remove_accents( __( 'Κατηγορία:', 'com-theme' ) ) ) ?></dt>
+                            <dd class="m-0 font-bold"><?= esc_html( $price_label ?: '—' ) ?></dd>
                         </div>
-                        <div>
-                            <dt class="text-[.9rem] tracking-[.1em] text-blue/50"><?= esc_html( com\theme::remove_accents( __( 'Τιμή', 'com-theme' ) ) ) ?></dt>
-                            <dd class="m-0 mt-5 text-[1.6rem] font-bold"><?= wp_kses_post( wc_price( isset( $ticket->unit_price ) ? $ticket->unit_price : 0 ) ) ?></dd>
+                        <div class="flex flex-wrap items-baseline gap-x-6">
+                            <dt class="text-blue/65"><?= esc_html( com\theme::remove_accents( __( 'Τιμή:', 'com-theme' ) ) ) ?></dt>
+                            <dd class="m-0 font-bold"><?= wp_kses_post( wc_price( isset( $ticket->unit_price ) ? $ticket->unit_price : 0 ) ) ?></dd>
                         </div>
-                    </dl>
+                        </dl>
+                    </div>
 
                     <?php if ( ! $is_reservation ) : ?>
-                        <div class="flex flex-col items-center gap-15 sm:flex-row md:flex-col">
-                            <?php if ( $qr_data_uri ) : ?>
-                                <div class="rounded-[.8rem] border border-blue/15 bg-white p-8">
-                                    <img src="<?= esc_attr( $qr_data_uri ) ?>" width="128" height="128" alt="<?= esc_attr__( 'QR εισιτηρίου', 'com-theme' ) ?>" class="size-[12.8rem]">
-                                </div>
+                        <div class="grid min-w-[10rem] gap-5">
+                            <?php if ( $download_apple_pass_url ) : ?>
+                                <a href="<?= esc_url( $download_apple_pass_url ) ?>" target="_blank" rel="noopener" data-barba-prevent class="flex items-center justify-center transition-opacity hover:opacity-75">
+                                    <img src="<?= esc_url( get_theme_file_uri( '/assets/images/svg/add-to-apple-wallet.svg' ) ) ?>" alt="<?= esc_attr__( 'Προσθήκη στο Apple Wallet', 'com-theme' ) ?>" class="w-auto max-w-full" style="height: 3rem;">
+                                </a>
                             <?php endif; ?>
-
-                            <div class="flex flex-wrap justify-center gap-8">
-                                <?php if ( $download_apple_pass_url ) : ?>
-                                    <a href="<?= esc_url( $download_apple_pass_url ) ?>" target="_blank" rel="noopener" data-barba-prevent>
-                                        <img src="<?= esc_url( get_theme_file_uri( '/assets/images/svg/add-to-apple-wallet.svg' ) ) ?>" alt="<?= esc_attr__( 'Προσθήκη στο Apple Wallet', 'com-theme' ) ?>" class="h-35 w-auto">
-                                    </a>
-                                <?php endif; ?>
-                                <?php if ( $download_google_pass_url ) : ?>
-                                    <a href="<?= esc_url( $download_google_pass_url ) ?>" target="_blank" rel="noopener" data-barba-prevent>
-                                        <img src="<?= esc_url( get_theme_file_uri( '/assets/images/svg/add-to-google-wallet.svg' ) ) ?>" alt="<?= esc_attr__( 'Προσθήκη στο Google Wallet', 'com-theme' ) ?>" class="h-35 w-auto">
-                                    </a>
-                                <?php endif; ?>
-                                <?php if ( $download_ticket_pdf_url ) : ?>
-                                    <a href="<?= esc_url( $download_ticket_pdf_url ) ?>" data-barba-prevent class="inline-flex h-35 items-center gap-8 rounded-[.5rem] border border-blue px-12 text-[1.1rem] font-bold">
-                                        <svg class="size-15 fill-current" aria-hidden="true"><use xlink:href="#icon-download"></use></svg>
-                                        PDF
-                                    </a>
-                                <?php endif; ?>
-                            </div>
+                            <?php if ( $download_google_pass_url ) : ?>
+                                <a href="<?= esc_url( $download_google_pass_url ) ?>" target="_blank" rel="noopener" data-barba-prevent class="flex items-center justify-center transition-opacity hover:opacity-75">
+                                    <img src="<?= esc_url( get_theme_file_uri( '/assets/images/svg/add-to-google-wallet.svg' ) ) ?>" alt="<?= esc_attr__( 'Προσθήκη στο Google Wallet', 'com-theme' ) ?>" class="w-auto max-w-full" style="height: 3rem;">
+                                </a>
+                            <?php endif; ?>
+                            <?php if ( $download_ticket_pdf_url ) : ?>
+                                <a href="<?= esc_url( $download_ticket_pdf_url ) ?>" data-barba-prevent class="flex items-center justify-center transition-opacity hover:opacity-75">
+                                    <img src="<?= esc_url( get_theme_file_uri( '/assets/images/svg/download-pdf-file.svg' ) ) ?>" alt="<?= esc_attr__( 'Λήψη εισιτηρίου σε PDF', 'com-theme' ) ?>" class="w-auto max-w-full" style="height: 3rem;">
+                                </a>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </div>
+
+                <?php if ( ! $is_reservation && $qr_data_uri ) : ?>
+                    <div class="relative hidden w-[4.4rem] shrink-0 self-stretch md:block" aria-hidden="true">
+                        <span class="absolute bottom-[1.8rem] left-1/2 top-[1.8rem] border-l border-dashed border-blue/15"></span>
+
+                        <svg class="absolute left-0 top-[-.1rem] z-20 h-[2rem] w-full overflow-visible text-blue/15" viewBox="0 0 44 20" preserveAspectRatio="none">
+                            <rect x="0" y="0" width="44" height="3" fill="white"></rect>
+                            <path d="M0 1.5H3A19 18 0 0 0 41 1.5H44" fill="none" stroke="currentColor" stroke-width="1" stroke-linejoin="round"></path>
+                        </svg>
+
+                        <svg class="absolute bottom-[-.1rem] left-0 z-20 h-[2rem] w-full overflow-visible text-blue/15" viewBox="0 0 44 20" preserveAspectRatio="none">
+                            <rect x="0" y="17" width="44" height="3" fill="white"></rect>
+                            <path d="M0 18.5H3A19 18 0 0 1 41 18.5H44" fill="none" stroke="currentColor" stroke-width="1" stroke-linejoin="round"></path>
+                        </svg>
+                    </div>
+
+                    <div class="flex items-center justify-center border-t border-dashed border-blue/15 p-20 md:w-[16rem] md:border-0 md:pl-0 md:pr-20">
+                        <img src="<?= esc_attr( $qr_data_uri ) ?>" width="100" height="100" alt="<?= esc_attr__( 'QR εισιτηρίου', 'com-theme' ) ?>" class="size-[10rem] shrink-0">
+                    </div>
+                <?php endif; ?>
             </article>
         <?php endforeach; ?>
     </div>

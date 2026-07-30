@@ -2405,9 +2405,9 @@ input[type="number"]::-webkit-inner-spin-button,
   height: 1.9rem;
 }
 
-.size-\[12\.8rem\] {
-  width: 12.8rem;
-  height: 12.8rem;
+.size-\[10rem\] {
+  width: 10rem;
+  height: 10rem;
 }
 
 .size-\[2\.1rem\] {
@@ -3074,6 +3074,10 @@ input[type="number"]::-webkit-inner-spin-button,
   min-width: 2rem;
 }
 
+.min-w-\[10rem\] {
+  min-width: 10rem;
+}
+
 .min-w-\[16rem\] {
   min-width: 16rem;
 }
@@ -3500,6 +3504,10 @@ input[type="number"]::-webkit-inner-spin-button,
   align-items: center;
 }
 
+.items-baseline {
+  align-items: baseline;
+}
+
 .items-stretch {
   align-items: stretch;
 }
@@ -3613,6 +3621,11 @@ input[type="number"]::-webkit-inner-spin-button,
 .gap-x-5 {
   -moz-column-gap: 0.5rem;
        column-gap: 0.5rem;
+}
+
+.gap-x-6 {
+  -moz-column-gap: 1.5rem;
+       column-gap: 1.5rem;
 }
 
 .gap-x-8 {
@@ -3745,6 +3758,12 @@ input[type="number"]::-webkit-inner-spin-button,
   --tw-space-y-reverse: 0;
   margin-top: calc(5rem * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(5rem * var(--tw-space-y-reverse));
+}
+
+.space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(1.5rem * var(--tw-space-y-reverse));
 }
 
 .space-y-8 > :not([hidden]) ~ :not([hidden]) {
@@ -4373,10 +4392,6 @@ input[type="number"]::-webkit-inner-spin-button,
   padding: 3rem;
 }
 
-.p-8 {
-  padding: 2rem;
-}
-
 .-py-10 {
   padding-top: -1rem;
   padding-bottom: -1rem;
@@ -4415,11 +4430,6 @@ input[type="number"]::-webkit-inner-spin-button,
 .px-1\/24 {
   padding-left: calc(var(--vw)*1/24);
   padding-right: calc(var(--vw)*1/24);
-}
-
-.px-12 {
-  padding-left: 3rem;
-  padding-right: 3rem;
 }
 
 .px-15 {
@@ -5447,6 +5457,10 @@ input[type="number"]::-webkit-inner-spin-button,
 
 .text-blue\/40 {
   color: rgb(23 50 118 / 0.4);
+}
+
+.text-blue\/45 {
+  color: rgb(23 50 118 / 0.45);
 }
 
 .text-blue\/50 {
@@ -8659,6 +8673,10 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
     opacity: 0.7;
   }
 
+  .hover\:opacity-75:hover {
+    opacity: 0.75;
+  }
+
   .hover\:opacity-80:hover {
     opacity: 0.8;
   }
@@ -10143,6 +10161,10 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
     width: 15.9rem;
   }
 
+  .md\:w-\[16rem\] {
+    width: 16rem;
+  }
+
   .md\:w-\[2\.6rem\] {
     width: 2.6rem;
   }
@@ -10218,10 +10240,6 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
     grid-template-columns: 14rem 1fr;
   }
 
-  .md\:grid-cols-\[1fr_auto\] {
-    grid-template-columns: 1fr auto;
-  }
-
   .md\:grid-cols-\[20rem_1fr\] {
     grid-template-columns: 20rem 1fr;
   }
@@ -10232,6 +10250,10 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
 
   .md\:grid-cols-\[minmax\(0\2c 1fr\)_14rem\] {
     grid-template-columns: minmax(0,1fr) 14rem;
+  }
+
+  .md\:grid-cols-\[minmax\(0\2c 1fr\)_auto\] {
+    grid-template-columns: minmax(0,1fr) auto;
   }
 
   .md\:flex-row {
@@ -10674,6 +10696,10 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
 
   .md\:pr-2\/24 {
     padding-right: calc(var(--vw)*2/24);
+  }
+
+  .md\:pr-20 {
+    padding-right: 2rem;
   }
 
   .md\:pr-40 {

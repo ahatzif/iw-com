@@ -56,8 +56,6 @@ $is_expired_payment = $order->has_status( [ 'pending', 'failed' ] )
 $status_label = $is_expired_payment
     ? __( 'Η κράτηση έληξε', 'com-theme' )
     : ( $order->has_status( 'pending' ) ? __( 'Αναμένει πληρωμή', 'com-theme' ) : wc_get_order_status_name( $order->get_status() ) );
-$status_is_positive = $order->has_status( [ 'processing', 'completed' ] );
-$status_class = $status_is_positive ? 'text-validated' : 'text-limited';
 ?>
 
 <section class="woocommerce-order-details account-order-summary">
@@ -65,9 +63,8 @@ $status_class = $status_is_positive ? 'text-validated' : 'text-limited';
 
     <div class="overflow-hidden rounded-[1.2rem] border border-blue/15 bg-white">
         <div class="px-20 pt-20 md:px-25 md:pt-25">
-            <h3 class="m-0 text-[1.1rem] font-bold tracking-[.1em] text-blue-soft"><?= esc_html( com\theme::remove_accents( __( 'Εισιτήρια', 'com-theme' ) ) ) ?></h3>
+            <h2 class="m-0 text-[1.1rem] font-bold tracking-[.1em] text-blue-soft"><?= esc_html( com\theme::remove_accents( __( 'Εισιτήρια', 'com-theme' ) ) ) ?></h2>
         </div>
-
         <div>
             <?php do_action( 'woocommerce_order_details_before_order_table_items', $order ); ?>
 
@@ -174,7 +171,7 @@ $status_class = $status_is_positive ? 'text-validated' : 'text-limited';
                 </div>
 
                 <div class="mt-15 border-t border-blue/15 pt-15">
-                    <dt class="text-[1.3rem] font-bold <?= esc_attr( $status_class ) ?>"><?= esc_html( $status_label ) ?></dt>
+                    <dt class="text-[1.3rem] font-bold"><?= esc_html( $status_label ) ?></dt>
                     <?php if ( $is_expired_payment ) : ?>
                         <dd class="m-0 mt-8 text-[1.05rem] leading-[1.4] text-blue/55"><?= esc_html__( 'Τα εισιτήρια αποδεσμεύτηκαν. Ξεκινήστε νέα αγορά για να ελέγξετε ξανά τη διαθεσιμότητα.', 'com-theme' ) ?></dd>
                     <?php endif; ?>

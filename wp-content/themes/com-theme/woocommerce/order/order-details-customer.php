@@ -11,7 +11,7 @@ defined( 'ABSPATH' ) || exit;
 $show_shipping = ! wc_ship_to_billing_address_only() && $order->needs_shipping_address();
 ?>
 
-<section class="woocommerce-customer-details account-order-addresses">
+<section class="woocommerce-customer-details account-order-addresses mt-20">
     <div class="grid gap-15<?= $show_shipping ? ' sm:grid-cols-2' : '' ?>">
         <article class="min-h-[18rem] rounded-[1.2rem] border border-blue/15 p-20<?= $show_shipping ? '' : ' sm:col-span-2' ?> md:p-25">
             <div class="mb-20 flex items-start gap-10 text-blue-soft">

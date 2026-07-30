@@ -21,7 +21,7 @@ if ( $title_args['title'] === '' ) {
         <?php endif; ?>
         <h2 class="m-0 text-[2.8rem] font-bold leading-[1.1] md:text-[3.6rem]"><?= esc_html( $title_args['title'] ) ?></h2>
         <?php if ( $title_args['description'] !== '' ) : ?>
-            <p class="mb-0 mt-15 max-w-[62rem] text-[1.5rem] leading-[1.45] text-blue/70 md:text-[1.6rem]"><?= wp_kses_post( $title_args['description'] ) ?></p>
+            <p class="mb-0 mt-15 max-w-[62rem] text-[1.5rem] leading-[1.45] text-blue md:text-[1.6rem]"><?= wp_kses_post( $title_args['description'] ) ?></p>
         <?php endif; ?>
     </header>
 <?php endif; ?>

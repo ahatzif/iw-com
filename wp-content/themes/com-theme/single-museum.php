@@ -16,16 +16,14 @@ while ( have_posts() ) :
 	$hero_image_id = com_theme_museum_image_id( $museum_id, 'hero_image' );
 	$hero_background_id = com_theme_attachment_id( get_field( 'hero_background', $museum_id ) );
 	$gallery_image_id = com_theme_attachment_id( get_field( 'gallery_image', $museum_id ) ) ?: $hero_image_id;
-	$ticket_link = get_field( 'ticket_link', $museum_id );
-	$ticket_url = com_theme_museum_ticket_url( $museum_id, $ticket_link );
-	$ticket_label = ! empty( $ticket_link['title'] ) ? $ticket_link['title'] : __( 'Εισιτήρια', 'com-theme' );
-	$ticket_target = $ticket_link['target'] ?? '';
-	$address = (string) get_field( 'address', $museum_id );
-	$map_url = (string) get_field( 'map_url', $museum_id );
-	$opening_hours = (string) get_field( 'opening_hours', $museum_id );
-	$phone = (string) get_field( 'phone', $museum_id );
-	$email = (string) get_field( 'email', $museum_id );
-	$price = (string) get_field( 'ticket_price_text', $museum_id );
+	$ticket_url = com_theme_museum_ticket_url( $museum_id );
+	$ticket_label = __( 'Εισιτήρια', 'com-theme' );
+	$address = (string) com_theme_field_value( 'address', $museum_id, '' );
+	$map_url = (string) com_theme_field_value( 'map_url', $museum_id, '' );
+	$opening_hours = (string) com_theme_field_value( 'opening_hours', $museum_id, '' );
+	$phone = (string) com_theme_field_value( 'phone', $museum_id, '' );
+	$email = (string) com_theme_field_value( 'email', $museum_id, '' );
+	$price = (string) com_theme_field_value( 'ticket_price_text', $museum_id, '' );
 	$features = get_field( 'features', $museum_id );
 	$related_museums = get_field( 'related_museums', $museum_id );
 	$content = trim( (string) get_post_field( 'post_content', $museum_id ) );
@@ -79,7 +77,6 @@ while ( have_posts() ) :
 								'variant' => 'blue-outline',
 								'size'    => 'small',
 								'icon'    => 'com-ticket-button',
-								'target'  => $ticket_target,
 							] );
 							?>
 							<a href="#museum-details" class="text-[1.6rem] leading-[normal]" data-module-scroll-to-anchor data-selector="#museum-details"><?php esc_html_e( 'Περισσότερα ↓', 'com-theme' ); ?></a>
@@ -237,7 +234,7 @@ while ( have_posts() ) :
 									get_template_part( 'templates/parts/related-museum-card', null, [
 										'museum' => [
 											'id'       => $related_id,
-											'place'    => get_field( 'place_label', $related_id ) ?: com_theme_museum_location_label( $related_id ),
+											'place'    => com_theme_field_value( 'place_label', $related_id, '' ) ?: com_theme_museum_location_label( $related_id ),
 											'title'    => get_the_title( $related_id ),
 											'url'      => get_permalink( $related_id ),
 											'image_id' => com_theme_museum_image_id( $related_id ),

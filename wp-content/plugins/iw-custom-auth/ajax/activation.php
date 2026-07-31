@@ -3,6 +3,8 @@
  * USER ACTIVATION
  */
 add_action('wp_ajax_nopriv_iw-auth-account-activation', function () {
+    iw_custom_auth_switch_request_language();
+
     if ((isset($_POST['login_email']) || isset($_POST['id'])) && isset($_POST['activation_code'])) {
         $user = IW_Custom_Auth_Activation::get_pending_user_from_request( $_POST );
 
@@ -37,6 +39,8 @@ add_action('wp_ajax_nopriv_iw-auth-account-activation', function () {
 });
 
 add_action('wp_ajax_nopriv_iw-auth-resend-activation', function () {
+    iw_custom_auth_switch_request_language();
+
     if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( $_POST['security'], 'iw-auth-activation' ) ) {
         wp_send_json_error( [ 'message' => __( 'Invalid request.', 'iw-theme' ) ], 403 );
     }

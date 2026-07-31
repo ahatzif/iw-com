@@ -7,6 +7,7 @@
 
 
 add_action( 'wp_ajax_nopriv_iw-auth-reset-password', function(){
+    iw_custom_auth_switch_request_language();
 
     $error = false;
 

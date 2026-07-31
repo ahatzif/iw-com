@@ -15,6 +15,8 @@ add_action('wp_ajax_nopriv_iw-auth-register-check-mail', function () {
         wp_send_json_error( [ 'message' => __('Invalid request.', 'iw-theme') ], 403);
     }
 
+    iw_custom_auth_switch_request_language();
+
     $email = isset( $_POST['user_email'] ) ? sanitize_email( wp_unslash( $_POST['user_email'] ) ) : '';
     if (empty($email) || !is_email($email)) {
         wp_send_json_error([ 'message' => __('Email not valid.', 'iw-theme'), 'errors'  => ['user_email' => __('Το email δεν είναι έγκυρο', 'iw-theme')]], 400);
@@ -34,6 +36,8 @@ add_action('wp_ajax_nopriv_iw-auth-register', function () {
     if ( ! wp_verify_nonce( $security, 'iw-auth-register' ) ) {
         wp_send_json_error( [ 'message' => __( 'Invalid request.', 'iw-theme' ) ], 403 );
     }
+
+    $request_language = iw_custom_auth_switch_request_language();
 
     $request = wp_unslash( $_POST );
     $user_email = isset( $request['user_email'] ) ? sanitize_email( $request['user_email'] ) : '';
@@ -159,6 +163,14 @@ add_action('wp_ajax_nopriv_iw-auth-register', function () {
             wp_send_json_error(['message' => $error, 'errors' => $errors ], 400);
         }
 
+        if ( $request_language ) {
+            update_user_meta( $userId, 'iw_registration_language', $request_language );
+            wp_update_user( [
+                'ID'     => $userId,
+                'locale' => $request_language,
+            ] );
+        }
+
 
 
         $key = (string) wp_rand( 100000, 999999 );
@@ -183,9 +195,13 @@ add_action('wp_ajax_nopriv_iw-auth-register', function () {
                 $subject = acf_get_field('iw_custom_auth_email_user_activation_subject', 'option')['default_value'];
             }
 
+            $subject = iw_custom_auth_email_string( 'account-activation-subject', $subject );
+
             if (empty($message = get_field('iw_custom_auth_email_user_activation_text', 'option'))) {
                 $message = acf_get_field('iw_custom_auth_email_user_activation_text', 'option')['default_value'];
             }
+
+            $message = iw_custom_auth_email_string( 'account-activation-body', $message );
 
             $message = str_replace('[First Name]', $userData['first_name'], $message);
             $message = str_replace( '[Account Activation Link]', $activation_link, $message);

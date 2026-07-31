@@ -104,13 +104,13 @@ add_action( 'wp_enqueue_scripts', function() {
         'acceptPolicy' => __( 'Παρακαλούμε αποδεχτείτε την πολιτική απορρήτου', 'com-theme' ),
         'maxFiles' => __( 'Max files is', 'com-theme' ),
         'minFiles' => __( 'Min files is', 'com-theme' ),
-        'min'       => __( 'Το πεδίο πρέπει να περιέχει τουλάχιστον {x} χαρακτήρες' ),
+        'min'       => __( 'Το πεδίο πρέπει να περιέχει τουλάχιστον {x} χαρακτήρες', 'com-theme' ),
         'url'     => __( "Η διεύθυνση δεν είναι έγκυρη", "com-theme"),
-        'password'  => __( 'The password is invalid' ),
-        'uppercase' => __( 'Το πεδίο δεν περιέχει κεφαλαίο χαρακτήρα' ),
-        'lowercase' => __( 'Το πεδίο δεν περιέχει πεζό χαρακτήρα' ),
-        'number'    => __( 'Το πεδίο δεν περιέχει αριθμό' ),
-        'special'   => __( 'Το πεδίο δεν περιέχει ειδικό χαρακτήρο' ),
+        'password'  => __( 'The password is invalid', 'com-theme' ),
+        'uppercase' => __( 'Το πεδίο δεν περιέχει κεφαλαίο χαρακτήρα', 'com-theme' ),
+        'lowercase' => __( 'Το πεδίο δεν περιέχει πεζό χαρακτήρα', 'com-theme' ),
+        'number'    => __( 'Το πεδίο δεν περιέχει αριθμό', 'com-theme' ),
+        'special'   => __( 'Το πεδίο δεν περιέχει ειδικό χαρακτήρο', 'com-theme' ),
         'match'     => __( 'Οι κωδικοί δεν ταιριάζουν.', 'com-theme' ),
         'phone'     => __( 'Συμπληρώστε έναν έγκυρο αριθμό τηλεφώνου.', 'com-theme' ),
     ]);
@@ -174,6 +174,8 @@ EOD;
 
 
 add_action('admin_menu', function() {
+    remove_menu_page( 'edit.php' );
+    remove_menu_page( 'edit.php?post_type=product' );
     remove_menu_page( 'edit-comments.php' );
     add_menu_page('Patterns', 'Block Patterns', 'manage_options', 'edit.php?post_type=wp_block', '', 'dashicons-admin-generic', 30);
 });

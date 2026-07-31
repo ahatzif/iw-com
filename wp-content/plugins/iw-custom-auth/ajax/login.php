@@ -3,6 +3,8 @@
  * USER LOGIN
  */
 add_action( 'wp_ajax_nopriv_iw-auth-login', function(){
+    iw_custom_auth_switch_request_language();
+
     if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
         wp_send_json_error( [ 'message' => __( 'Invalid request.', 'iw-theme' ) ], 405 );
     }

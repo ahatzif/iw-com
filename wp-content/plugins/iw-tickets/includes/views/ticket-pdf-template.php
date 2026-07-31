@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             background: #fff;
             font-size: 14px;
             line-height: 1.25;
-            color: #31312F;
+            color: #173276;
         }
         .page {
             width: 186mm;
@@ -26,24 +26,34 @@ if ( ! defined( 'ABSPATH' ) ) {
         .top {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
             margin-bottom: 5mm;
         }
         .top td {
             vertical-align: middle;
+            height: 46mm;
             padding: 0 2.5mm;
+        }
+        .brand-cell {
+            width: 66%;
         }
         .qr-wrap {
             width: 34%;
         }
         .brand {
+            height: 46mm;
+            line-height: 46mm;
             font-size: 0;
-            line-height: 1;
+            white-space: nowrap;
         }
         .brand-logo {
-            width: 86mm;
-            max-width: 100%;
+            width: 80mm;
+            max-width: none;
             height: auto;
-            display: block;
+            display: inline-block;
+            vertical-align: middle;
+            position: relative;
+            top: 4.5mm;
         }
         .brand-fallback {
             font-size: 26px;
@@ -54,7 +64,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         .ticket-number {
             font-size: 11px;
             margin-top: 5mm;
-            color: #808080;
+            color: #173276;
         }
         .qr-box {
             width: 35mm;
@@ -73,7 +83,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             text-align: right;
             margin-top: 3mm;
             font-size: 10px;
-            color: #808080;
+            color: #173276;
         }
         .swatches {
             width: 100%;
@@ -227,7 +237,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <div class="page">
     <table class="top">
         <tr>
-            <td>
+            <td class="brand-cell">
                 <div class="brand">
                     <?php if ( ! empty( $logo_data_uri ) ) : ?>
                         <img class="brand-logo" src="<?php echo esc_attr( $logo_data_uri ); ?>" alt="<?php echo esc_attr( $brand_name ?? get_bloginfo( 'name' ) ); ?>">

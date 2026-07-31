@@ -21,6 +21,7 @@ add_action( 'init', function () {
 		],
 		'public'        => true,
 		'show_in_rest'  => true,
+		'map_meta_cap'  => true,
 		'menu_icon'     => 'dashicons-building',
 		'menu_position' => 20,
 		'supports'      => [ 'title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'page-attributes' ],

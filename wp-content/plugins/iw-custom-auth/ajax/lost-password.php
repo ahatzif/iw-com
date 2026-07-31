@@ -16,6 +16,8 @@ add_action( 'wp_ajax_nopriv_iw-auth-lost-password', function(){
         wp_send_json_error( [ 'message' => __( 'Invalid request.', 'iw-theme' ) ], 403 );
     }
 
+    iw_custom_auth_switch_request_language();
+
     $user_email = isset( $_POST['user_email'] ) ? sanitize_email( wp_unslash( $_POST['user_email'] ) ) : '';
     if ( ! is_email( $user_email ) ) {
         wp_send_json_error( [ 'message' => __( 'Please enter a valid email address.', 'iw-theme' ) ], 400 );
@@ -43,9 +45,13 @@ add_action( 'wp_ajax_nopriv_iw-auth-lost-password', function(){
             $subject = acf_get_field('iw_custom_auth_email_password_reset_subject', 'option')['default_value'];
         }
 
+        $subject = iw_custom_auth_email_string( 'password-reset-subject', $subject );
+
         if( empty( $message = get_field( 'iw_custom_auth_email_password_reset_text', 'option' ) )   ){
             $message = acf_get_field('iw_custom_auth_email_password_reset_text', 'option')['default_value'];
         }
+
+        $message = iw_custom_auth_email_string( 'password-reset-body', $message );
 
         $message = str_replace( '[First Name]', $user->first_name, $message );
         $message = str_replace( '[Password Reset Link]', $url, $message);

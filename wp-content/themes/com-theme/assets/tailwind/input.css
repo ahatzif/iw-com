@@ -188,21 +188,6 @@
 body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 duration-[500ms]; }
 
 /* 404 concepts */
-@keyframes com-404-card-drift {
-    0%, 100% { transform: translate3d(0, 0, 0) rotate(1.5deg); }
-    50% { transform: translate3d(0, -0.8rem, 0) rotate(0.6deg); }
-}
-
-@keyframes com-404-sign-nudge {
-    0%, 100% { transform: rotate(-5deg) translateX(0); }
-    50% { transform: rotate(-3deg) translateX(-0.6rem); }
-}
-
-@keyframes com-404-dot-wander {
-    0%, 100% { transform: translateX(0); opacity: .35; }
-    50% { transform: translateX(-5rem); opacity: 1; }
-}
-
 .com-404__history-number {
     -webkit-text-stroke: 1px rgba(235, 230, 214, .65);
     text-stroke: 1px rgba(235, 230, 214, .65);
@@ -216,26 +201,7 @@ body:not(.is-mobile) .zoom-img-cont { @apply group-[.zoom-img:hover]:scale-110 d
     transform: scale(1.035);
 }
 
-.com-404__playful-card {
-    animation: com-404-card-drift 6s ease-in-out infinite;
-    transform-origin: 50% 55%;
-}
-
-.com-404__road-sign {
-    animation: com-404-sign-nudge 4s ease-in-out infinite;
-}
-
-.com-404__wandering-dot {
-    animation: com-404-dot-wander 5s ease-in-out infinite;
-}
-
 @media (prefers-reduced-motion: reduce) {
-    .com-404__playful-card,
-    .com-404__road-sign,
-    .com-404__wandering-dot {
-        animation: none;
-    }
-
     .com-404__history-image img {
         transition: none;
     }

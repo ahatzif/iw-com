@@ -197,18 +197,6 @@
       "return_format": "array"
     },
     {
-      "key": "field_com_museums_list_all_ticket",
-      "label": "Ticket link",
-      "name": "all_card_ticket_link",
-      "type": "link",
-      "wrapper": {
-        "width": "40",
-        "class": "",
-        "id": ""
-      },
-      "return_format": "array"
-    },
-    {
       "key": "field_com_museums_list_all_ticket_post",
       "label": "Ticket post",
       "name": "all_card_ticket_post",

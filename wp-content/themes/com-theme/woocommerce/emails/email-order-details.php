@@ -24,10 +24,22 @@ $upper = static function ( string $text ): string {
         ? mb_strtoupper( $text, 'UTF-8' )
         : strtoupper( $text );
 };
+$email_label = static function ( string $name, string $text ): string {
+    return function_exists( 'iw_email_template_translate_string' )
+        ? iw_email_template_translate_string( 'woo-' . $name, $text, 'el' )
+        : $text;
+};
+$payment_method_title = (string) $order->get_payment_method_title();
+if ( $payment_method_title !== '' ) {
+    $payment_method_title = $email_label(
+        'payment-method-' . sanitize_key( (string) $order->get_payment_method() ),
+        $payment_method_title
+    );
+}
 ?>
 
 <div style="margin:4px 0 30px 0;color:<?php echo esc_attr( $blue ); ?>;">
-    <p style="margin:0 0 18px 0;color:<?php echo esc_attr( $blue ); ?>;font-size:12px;line-height:1.4;font-weight:700;letter-spacing:.12em;white-space:nowrap;"><?php echo esc_html( $upper( __( 'Παραγγελία', 'iw-theme' ) ) ); ?> <?php if ( $order_url ) : ?><a href="<?php echo esc_url( $order_url ); ?>" style="color:<?php echo esc_attr( $blue ); ?>;text-decoration:none;">#<?php echo esc_html( $order->get_order_number() ); ?></a><?php else : ?>#<?php echo esc_html( $order->get_order_number() ); ?><?php endif; ?> · <?php echo esc_html( wc_format_datetime( $order->get_date_created(), 'd/m/Y' ) ); ?></p>
+    <p style="margin:0 0 18px 0;color:<?php echo esc_attr( $blue ); ?>;font-size:12px;line-height:1.4;font-weight:700;letter-spacing:.12em;white-space:nowrap;"><?php echo esc_html( $upper( $email_label( 'order', 'Παραγγελία' ) ) ); ?> <?php if ( $order_url ) : ?><a href="<?php echo esc_url( $order_url ); ?>" style="color:<?php echo esc_attr( $blue ); ?>;text-decoration:none;">#<?php echo esc_html( $order->get_order_number() ); ?></a><?php else : ?>#<?php echo esc_html( $order->get_order_number() ); ?><?php endif; ?> · <?php echo esc_html( wc_format_datetime( $order->get_date_created(), 'd/m/Y' ) ); ?></p>
 
     <?php foreach ( $order->get_items() as $item_id => $item ) :
         if ( ! apply_filters( 'woocommerce_order_item_visible', true, $item ) ) {
@@ -55,7 +67,7 @@ $upper = static function ( string $text ): string {
             $details[] = sprintf(
                 '%d %s',
                 $tickets,
-                $upper( 1 === $tickets ? __( 'Εισιτήριο', 'iw-theme' ) : __( 'Εισιτήρια', 'iw-theme' ) )
+                $upper( 1 === $tickets ? $email_label( 'ticket-singular', 'Εισιτήριο' ) : $email_label( 'ticket-plural', 'Εισιτήρια' ) )
             );
         } elseif ( $quantity > 0 ) {
             $details[] = sprintf( '%d ×', $quantity );
@@ -95,7 +107,7 @@ $upper = static function ( string $text ): string {
 
     <div style="margin:22px 0 14px 0;padding:22px 24px;border:1px solid <?php echo esc_attr( $border ); ?>;border-radius:14px;">
         <div style="margin:0 0 15px 0;color:<?php echo esc_attr( $blue_soft ); ?>;font-size:12px;line-height:1.4;font-weight:700;letter-spacing:.12em;">
-            <?php echo esc_html( $upper( __( 'Σύνοψη αγοράς', 'iw-theme' ) ) ); ?>
+            <?php echo esc_html( $upper( $email_label( 'purchase-summary', 'Σύνοψη αγοράς' ) ) ); ?>
         </div>
         <?php
         $summary_count = count( $summary_totals );
@@ -119,10 +131,10 @@ $upper = static function ( string $text ): string {
 
     <div style="margin:0 0 22px 0;padding:22px 24px;border:1px solid <?php echo esc_attr( $border ); ?>;border-radius:14px;">
         <div style="margin:0 0 15px 0;color:<?php echo esc_attr( $blue_soft ); ?>;font-size:12px;line-height:1.4;font-weight:700;letter-spacing:.12em;">
-            <?php echo esc_html( $upper( __( 'Στοιχεία αγοράς', 'iw-theme' ) ) ); ?>
+            <?php echo esc_html( $upper( $email_label( 'purchase-details', 'Στοιχεία αγοράς' ) ) ); ?>
         </div>
         <div style="color:<?php echo esc_attr( $blue ); ?>;font-size:14px;line-height:1.55;">
-            <?php echo esc_html( $order->get_payment_method_title() ?: __( 'Δεν έχει οριστεί μέθοδος πληρωμής', 'iw-theme' ) ); ?><br>
+            <?php echo esc_html( $payment_method_title ?: $email_label( 'payment-method-missing', 'Δεν έχει οριστεί μέθοδος πληρωμής' ) ); ?><br>
             <?php echo esc_html( wc_format_datetime( $order->get_date_created(), 'd/m/Y · H:i' ) ); ?>
         </div>
         <div style="margin-top:15px;padding-top:15px;border-top:1px solid <?php echo esc_attr( $border ); ?>;color:<?php echo esc_attr( $blue ); ?>;font-size:14px;line-height:1.4;font-weight:700;">
@@ -132,7 +144,7 @@ $upper = static function ( string $text ): string {
 
     <?php if ( $order->get_customer_note() ) : ?>
         <div style="margin:0 0 22px 0;padding:20px 24px;background:<?php echo esc_attr( $card_bg ); ?>;border-radius:14px;color:<?php echo esc_attr( $blue ); ?>;font-size:14px;line-height:1.55;">
-            <strong><?php esc_html_e( 'Σημείωση', 'iw-theme' ); ?></strong><br>
+            <strong><?php echo esc_html( $email_label( 'note', 'Σημείωση' ) ); ?></strong><br>
             <?php echo wp_kses( nl2br( wc_wptexturize_order_note( $order->get_customer_note() ) ), [ 'br' => [] ] ); ?>
         </div>
     <?php endif; ?>

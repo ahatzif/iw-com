@@ -13,7 +13,7 @@ class IW_Ticket_PDF_Service {
 
     const REST_NS   = 'iw/v1';
     const REST_BASE = 'tickets/public-pdf';
-    const PDF_TEMPLATE_VERSION = 'v10';
+    const PDF_TEMPLATE_VERSION = 'v12';
 
     protected static $email_images_dirname = 'email-images';
 
@@ -1303,6 +1303,23 @@ class IW_Ticket_PDF_Service {
 
         if ( $logo_path !== '' && file_exists( $logo_path ) && is_readable( $logo_path ) ) {
             return self::file_to_data_uri( $logo_path );
+        }
+
+        $upload = wp_upload_dir();
+        $email_logo_path = isset( $upload['basedir'] )
+            ? trailingslashit( (string) $upload['basedir'] ) . '2026/07/com-email-logo.png'
+            : '';
+
+        if ( $email_logo_path !== '' && file_exists( $email_logo_path ) && is_readable( $email_logo_path ) ) {
+            return self::file_to_data_uri( $email_logo_path );
+        }
+
+        $theme_logo_path = function_exists( 'get_theme_file_path' )
+            ? get_theme_file_path( '/assets/images/svg/com-header-logo.svg' )
+            : '';
+
+        if ( $theme_logo_path !== '' && file_exists( $theme_logo_path ) && is_readable( $theme_logo_path ) ) {
+            return self::file_to_data_uri( $theme_logo_path );
         }
 
         return '';

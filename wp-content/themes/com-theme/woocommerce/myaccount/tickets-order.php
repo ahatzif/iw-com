@@ -11,22 +11,36 @@ if ( empty( $order_item_id ) ) {
     return;
 }
 
+$embedded = ! empty( $embedded );
 $is_reservation = false;
-$ticket_bundle = class_exists( 'IW_Ticketing' ) ? IW_Ticketing::get_order_tickets( $order_item_id ) : [];
+$verified_order = $verified_order ?? null;
+$ticket_bundle = [];
+
+if ( class_exists( 'IW_Ticketing' ) ) {
+    $ticket_bundle = $embedded
+        && $verified_order instanceof WC_Order
+        && method_exists( 'IW_Ticketing', 'get_order_tickets_for_verified_order' )
+            ? IW_Ticketing::get_order_tickets_for_verified_order( $verified_order, $order_item_id )
+            : IW_Ticketing::get_order_tickets( $order_item_id );
+}
 
 if ( empty( $ticket_bundle ) && class_exists( 'IW_Ticketing' ) ) {
     $ticket_bundle = IW_Ticketing::get_reservation_order_tickets( $order_item_id );
     $is_reservation = true;
 }
 
-get_template_part( 'woocommerce/myaccount/page-title', null, [
-    'eyebrow'     => __( 'Είσοδος στο μουσείο', 'com-theme' ),
-    'title'       => __( 'Τα εισιτήριά σας', 'com-theme' ),
-    'description' => __( 'Έχετε διαθέσιμο το QR κάθε εισιτηρίου, καθώς και επιλογές Wallet ή PDF.', 'com-theme' ),
-] );
+if ( ! $embedded ) {
+    get_template_part( 'woocommerce/myaccount/page-title', null, [
+        'eyebrow'     => __( 'Είσοδος στο μουσείο', 'com-theme' ),
+        'title'       => __( 'Τα εισιτήριά σας', 'com-theme' ),
+        'description' => __( 'Έχετε διαθέσιμο το QR κάθε εισιτηρίου, καθώς και επιλογές Wallet ή PDF.', 'com-theme' ),
+    ] );
+}
 ?>
 
-<a href="<?= esc_url( wc_get_account_endpoint_url( 'tickets' ) ) ?>" data-barba-prevent data-account-pages="link" class="mb-30 inline-flex text-[1.3rem] underline underline-offset-4">← <?= esc_html__( 'Πίσω στα εισιτήρια', 'com-theme' ) ?></a>
+<?php if ( ! $embedded ) : ?>
+    <a href="<?= esc_url( wc_get_account_endpoint_url( 'tickets' ) ) ?>" data-barba-prevent data-account-pages="link" class="mb-30 inline-flex text-[1.3rem] underline underline-offset-4">← <?= esc_html__( 'Πίσω στα εισιτήρια', 'com-theme' ) ?></a>
+<?php endif; ?>
 
 <?php if ( empty( $ticket_bundle ) ) : ?>
     <div class="rounded-[1.2rem] bg-ochre-light p-25 text-[1.5rem]"><?= esc_html__( 'Δεν ήταν δυνατή η φόρτωση αυτών των εισιτηρίων.', 'com-theme' ) ?></div>
@@ -36,7 +50,7 @@ get_template_part( 'woocommerce/myaccount/page-title', null, [
 <?php
 $order_data = $ticket_bundle['order'] ?? [];
 
-if ( $order_data ) {
+if ( $order_data && ! $embedded ) {
     wc_get_template( 'global/account-ticket-card.php', [
         'order'  => $order_data,
         'status' => 'active',
@@ -149,7 +163,7 @@ $tickets = (array) ( $ticket_bundle['tickets'] ?? [] );
                         </svg>
                     </div>
 
-                    <div class="flex items-center justify-center border-t border-dashed border-blue/15 p-20 md:w-[16rem] md:border-0 md:pl-0 md:pr-20">
+                    <div class="flex items-center justify-center border-t border-dashed border-blue/15 p-20 md:w-[16rem] md:justify-start md:border-0 md:pl-0 md:pr-20">
                         <img src="<?= esc_attr( $qr_data_uri ) ?>" width="100" height="100" alt="<?= esc_attr__( 'QR εισιτηρίου', 'com-theme' ) ?>" class="size-[10rem] shrink-0">
                     </div>
                 <?php endif; ?>

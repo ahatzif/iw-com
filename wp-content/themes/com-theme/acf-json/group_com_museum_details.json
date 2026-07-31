@@ -88,23 +88,6 @@
             "preview_size": "medium"
         },
         {
-            "key": "field_com_museum_ticket_link",
-            "label": "Ticket Link",
-            "name": "ticket_link",
-            "aria-label": "",
-            "type": "link",
-            "instructions": "",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "50",
-                "class": "",
-                "id": ""
-            },
-            "width": "50",
-            "return_format": "array"
-        },
-        {
             "key": "field_com_museum_hero_tab",
             "label": "Hero",
             "name": "",

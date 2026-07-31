@@ -7,6 +7,13 @@
 
 $logo = apply_filters( 'iw_email_template_logo', $logo );
 $cover = apply_filters( 'iw_email_template_cover', $cover );
+$email_language = apply_filters( 'wpml_current_language', null );
+$email_home_url = apply_filters( 'wpml_home_url', home_url( '/' ), $email_language );
+$email_site_name = get_bloginfo( 'name' );
+
+if ( function_exists( 'iw_email_template_translate_string' ) ) {
+    $email_site_name = iw_email_template_translate_string( 'site-name', $email_site_name, 'el' );
+}
 
 ?>
 
@@ -440,7 +447,7 @@ echo $subject;
                                                 <td class="mcnImageContent" valign="top" style="text-align:left;padding-top:0;padding-bottom:0;mso-line-height-rule:exactly;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;">
 
 
-                                                    <a href="<?php echo esc_url( home_url( '/' ) );?>"><img align="left" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" src="<?php echo esc_url( $logo ); ?>" width="159" style="max-width:159px;padding-bottom:0;display:block !important;vertical-align:bottom;border:0;height:auto;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" class="mcnImage"></a>
+                                                    <a href="<?php echo esc_url( $email_home_url );?>"><img align="left" alt="<?php echo esc_attr( $email_site_name ); ?>" src="<?php echo esc_url( $logo ); ?>" width="159" style="max-width:159px;padding-bottom:0;display:block !important;vertical-align:bottom;border:0;height:auto;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" class="mcnImage"></a>
 
 
                                                 </td>
@@ -463,7 +470,7 @@ echo $subject;
                                                     <td class="mcnImageContent" valign="top" style="padding-top: 0;padding-bottom: 30px;text-align: left;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;">
 
 
-                                                        <a href="<?php echo esc_url( home_url( '/' ) );?>"><img align="center" alt="" src="<?php echo esc_url( $cover ); ?>" width="540" style="max-width:100%;padding-bottom:0;display:inline-block !important;vertical-align:bottom;border:0;border-radius:16px;height:auto;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" class="mcnImage"></a>
+                                                        <a href="<?php echo esc_url( $email_home_url );?>"><img align="center" alt="" src="<?php echo esc_url( $cover ); ?>" width="540" style="max-width:100%;padding-bottom:0;display:inline-block !important;vertical-align:bottom;border:0;border-radius:16px;height:auto;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" class="mcnImage"></a>
 
 
                                                     </td>
@@ -536,6 +543,11 @@ echo $subject;
                     if ( empty( $disclaimer ) ) {
                         $disclaimer = 'Λάβατε αυτό το μήνυμα επειδή έχετε λογαριασμό, πραγματοποιήσατε συναλλαγή ή ζητήσατε ενημέρωση από τον Δήμο Ιεράς Πόλης Μεσολογγίου. Πρόκειται για αυτοματοποιημένο μήνυμα· παρακαλούμε μην απαντήσετε.';
                     }
+
+                    if ( function_exists( 'iw_email_template_translate_string' ) ) {
+                        $copyrightText = iw_email_template_translate_string( 'footer-copyright', $copyrightText, 'en' );
+                        $disclaimer = iw_email_template_translate_string( 'footer-disclaimer', $disclaimer, 'el' );
+                    }
                     ?>
                     <?php if( ! empty( $legalMenu ) || ! empty( $copyrightText ) || ! empty( $disclaimer ) ) { ?>
                     <tr>
@@ -566,8 +578,16 @@ echo $subject;
                                                         : $legalMenu;
                                                     $menu_items = ! empty( $menu_reference ) ? wp_get_nav_menu_items( $menu_reference ) : [];
                                                     foreach ( (array) $menu_items as $key => $item ) {
+                                                        $item_title = (string) $item->title;
+                                                        if ( function_exists( 'iw_email_template_translate_string' ) ) {
+                                                            $item_title = iw_email_template_translate_string(
+                                                                'legal-menu-item-' . (int) $item->ID,
+                                                                $item_title,
+                                                                'el'
+                                                            );
+                                                        }
                                                         ?>
-                                                        <a href="<?php echo esc_url( $item->url ); ?>" target="_blank" style="font-weight:400 !important;text-decoration:underline;color:#173276 !important;" title="<?php echo esc_attr( $item->title ); ?>"><?php echo esc_html( $item->title ); ?></a><?php if ( $key !== count( $menu_items ) - 1 ) { ?><span style="display:inline-block;color:#173276;">&nbsp;&nbsp;·&nbsp;&nbsp;</span><?php } ?>
+                                                        <a href="<?php echo esc_url( $item->url ); ?>" target="_blank" style="font-weight:400 !important;text-decoration:underline;color:#173276 !important;" title="<?php echo esc_attr( $item_title ); ?>"><?php echo esc_html( $item_title ); ?></a><?php if ( $key !== count( $menu_items ) - 1 ) { ?><span style="display:inline-block;color:#173276;">&nbsp;&nbsp;·&nbsp;&nbsp;</span><?php } ?>
                                                     <?php } ?>
                                                     <?php if ( ! empty( $menu_items ) && ! empty( $copyrightText ) ) { ?>&nbsp;&nbsp;&nbsp;<?php } ?><?php echo esc_html( wp_strip_all_tags( sprintf( (string) $copyrightText, date( 'Y' ) ) ) ); ?>
                                                 </td>

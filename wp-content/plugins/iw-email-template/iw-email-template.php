@@ -14,6 +14,26 @@
 require_once 'inc/fields.php';
 require_once __DIR__ . '/inc/class-iw-email-template-email-previews.php';
 
+function iw_email_template_translate_string( $name, $value, $source_language = 'el' ) {
+    $value = (string) $value;
+
+    do_action(
+        'wpml_register_single_string',
+        'IW Email Template',
+        sanitize_key( $name ),
+        $value,
+        false,
+        $source_language
+    );
+
+    return (string) apply_filters(
+        'wpml_translate_single_string',
+        $value,
+        'IW Email Template',
+        sanitize_key( $name )
+    );
+}
+
 class IW_Email_Template{
 
     private $requiredPlugins = [
@@ -272,6 +292,10 @@ add_action( 'after_setup_theme', function(){
 });
 
 add_filter( 'gettext_woocommerce', function( $translation, $text ) {
+    if ( 'el' !== apply_filters( 'wpml_current_language', null ) ) {
+        return $translation;
+    }
+
     $email_strings = [
         'Hi %s,'
             => 'Γεια σας %s,',
@@ -297,6 +321,10 @@ add_filter( 'gettext_woocommerce', function( $translation, $text ) {
 }, 10, 2 );
 
 function iw_email_template_translate_stripe_email_string( $translation, $text ) {
+    if ( 'el' !== apply_filters( 'wpml_current_language', null ) ) {
+        return $translation;
+    }
+
     $email_strings = [
         'Payment authorization needed for renewal of {site_title} order {order_number}'
             => 'Απαιτείται επιβεβαίωση πληρωμής για την ανανέωση της παραγγελίας #{order_number}',

@@ -100,7 +100,9 @@ Class Register_Member_Card_CPT{
                 'query_var'             => false,
                 'menu_position'         => null,
                 'menu_icon'             => 'dashicons-money',
-                'show_in_menu'          => 'iw-members-analytics',
+                // Keep templates available to wallet/member-card internals without
+                // exposing the unused editor in the WordPress admin menu.
+                'show_in_menu'          => false,
                 'show_in_rest'          => true,
                 'rest_base'             => 'member-card',
                 'rest_controller_class' => 'WP_REST_Posts_Controller',

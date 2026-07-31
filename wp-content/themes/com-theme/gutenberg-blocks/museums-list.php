@@ -33,7 +33,7 @@ $all_card = [
 	'title'       => get_field( 'all_card_title' ) ?: ( $all_card_ticket_id ? get_the_title( $all_card_ticket_id ) : __( 'Επίσκεψη σε όλα τα μουσεία', 'com-theme' ) ),
 	'description' => get_field( 'all_card_text' ) ?: ( $all_card_ticket_id ? get_the_excerpt( $all_card_ticket_id ) : '' ),
 	'url'         => $all_card_more_url ?: com_theme_option_page_url( 'tickets_page', 'tickets' ),
-	'ticket_url'  => com_theme_all_museums_ticket_url( get_field( 'all_card_ticket_link' ), $all_card_ticket_post ),
+	'ticket_url'  => com_theme_all_museums_ticket_url( $all_card_ticket_post ),
 	'price'       => com_theme_all_museums_ticket_price_text( $all_card_ticket_id, get_field( 'all_card_price' ) ?: __( '3€ - 6€', 'com-theme' ) ),
 ];
 
@@ -74,8 +74,7 @@ $more_label = get_field( 'more_label' ) ?: __( 'Περισσότερα →', 'co
 					continue;
 					}
 
-					$museum_ticket_link = get_field( 'ticket_link', $museum_id );
-					$museum_ticket_url = com_theme_museum_ticket_url( $museum_id, $museum_ticket_link );
+					$museum_ticket_url = com_theme_museum_ticket_url( $museum_id );
 					$museum_data = [
 					'is_all'      => false,
 					'id'          => $museum_id,

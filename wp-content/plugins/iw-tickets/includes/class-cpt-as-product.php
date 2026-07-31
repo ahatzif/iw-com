@@ -285,6 +285,25 @@ class CPT_As_Product {
             return $name;
         }
 
+        $content_id = absint( $item->get_meta( 'tickets_for_id', true ) );
+        if ( ! $content_id ) {
+            $content_id = absint( $item->get_meta( 'cpt_id', true ) );
+        }
+
+        if ( $content_id && has_filter( 'wpml_object_id' ) ) {
+            $post_type = get_post_type( $content_id );
+            $translated_id = $post_type
+                ? absint( apply_filters( 'wpml_object_id', $content_id, $post_type, true ) )
+                : 0;
+
+            if ( $translated_id ) {
+                $translated_title = get_the_title( $translated_id );
+                if ( $translated_title !== '' ) {
+                    return esc_html( $translated_title );
+                }
+            }
+        }
+
         $title = (string) $item->get_meta( 'iw_title', true );
         return $title !== '' ? esc_html( $title ) : $name;
     }

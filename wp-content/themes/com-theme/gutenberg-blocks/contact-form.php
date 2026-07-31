@@ -40,7 +40,7 @@
                     <?php } ?>
 
                     <div class="text-12 leading-[1.3333333333]">
-                        <?php $privacyLink = get_field( 'privacy_policy_page', 'options' ); ?>
+                        <?php $privacyLink = com_theme_page_url( 'privacy-policy' ); ?>
                         <?php echo sprintf( __('Asset Interiors will use the information you provide on this form to get in touch with you. We will treat your information with confidentiality and will not share it with others. For more information, visit our our <a href="%s" class="underline">Privacy Policy</a> page. By clicking below, you agree that we may process your information in accordance with these terms.', 'com-theme'), $privacyLink ); ?>
                     </div>
 

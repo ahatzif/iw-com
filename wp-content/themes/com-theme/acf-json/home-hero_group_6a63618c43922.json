@@ -68,25 +68,13 @@
       "placeholder": ""
     },
     {
-      "key": "field_com_home_hero_primary_link",
-      "label": "Primary link",
-      "name": "primary_link",
-      "type": "link",
-      "wrapper": {
-        "width": "50",
-        "class": "",
-        "id": ""
-      },
-      "return_format": "array"
-    },
-    {
       "key": "field_com_home_hero_secondary_link",
       "label": "Secondary link",
       "name": "secondary_link",
       "type": "link",
       "instructions": "Use #museums to scroll to the museum list.",
       "wrapper": {
-        "width": "50",
+        "width": "100",
         "class": "",
         "id": ""
       },

@@ -643,24 +643,24 @@ add_action(
 add_action(
 	'admin_menu',
 	static function () {
-		add_menu_page(
+		add_submenu_page(
+			'iw-ticketing-options',
 			__( 'Scanner Operators', 'iw-scanner' ),
 			__( 'Scanner', 'iw-scanner' ),
 			'manage_options',
 			'iw-scanner-operators',
-			'iw_scanner_render_admin_page',
-			'dashicons-visibility',
-			58
+			'iw_scanner_render_admin_page'
 		);
 
 		add_submenu_page(
-			'iw-scanner-operators',
+			'iw-ticketing-options',
 			__( 'Scanner Notifications', 'iw-scanner' ),
-			__( 'News', 'iw-scanner' ),
+			__( 'Scanner News', 'iw-scanner' ),
 			'manage_options',
 			'edit.php?post_type=' . IW_SCANNER_NOTIFICATION_POST_TYPE
 		);
-	}
+	},
+	100
 );
 
 add_action(

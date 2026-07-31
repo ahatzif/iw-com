@@ -22,14 +22,19 @@ $upper = static function ( string $text ): string {
         ? mb_strtoupper( $text, 'UTF-8' )
         : strtoupper( $text );
 };
+$email_label = static function ( string $name, string $text ): string {
+    return function_exists( 'iw_email_template_translate_string' )
+        ? iw_email_template_translate_string( 'woo-' . $name, $text, 'el' )
+        : $text;
+};
 ?>
 
 <div style="margin:0 0 22px 0;padding:22px 24px;border:1px solid <?php echo esc_attr( $border ); ?>;border-radius:14px;color:<?php echo esc_attr( $blue ); ?>;">
     <div style="margin:0 0 16px 0;color:<?php echo esc_attr( $blue_soft ); ?>;font-size:12px;line-height:1.4;font-weight:700;letter-spacing:.12em;">
-        <?php echo esc_html( $upper( __( 'Διεύθυνση χρέωσης', 'woocommerce' ) ) ); ?>
+        <?php echo esc_html( $upper( $email_label( 'billing-address', 'Διεύθυνση χρέωσης' ) ) ); ?>
     </div>
     <div style="font-size:14px;line-height:1.55;font-style:normal;">
-        <?php echo wp_kses_post( $billing_address ?: esc_html__( 'Μη διαθέσιμη', 'iw-theme' ) ); ?>
+        <?php echo wp_kses_post( $billing_address ?: esc_html( $email_label( 'not-available', 'Μη διαθέσιμη' ) ) ); ?>
     </div>
     <?php if ( $order->get_billing_email() || $order->get_billing_phone() ) : ?>
         <div style="margin-top:16px;padding-top:16px;border-top:1px solid <?php echo esc_attr( $border ); ?>;font-size:14px;line-height:1.65;">
@@ -39,7 +44,7 @@ $upper = static function ( string $text ): string {
                 $contact_rows[] = sprintf(
                     '<span style="color:%1$s;">%2$s</span>&nbsp;<a href="mailto:%3$s" style="color:%4$s;text-decoration:none;">%5$s</a>',
                     esc_attr( $blue_soft ),
-                    esc_html__( 'Email:', 'iw-theme' ),
+                    esc_html( $email_label( 'email', 'Email:' ) ),
                     esc_attr( $order->get_billing_email() ),
                     esc_attr( $blue ),
                     esc_html( $order->get_billing_email() )
@@ -49,7 +54,7 @@ $upper = static function ( string $text ): string {
                 $contact_rows[] = sprintf(
                     '<span style="color:%1$s;">%2$s</span>&nbsp;%3$s',
                     esc_attr( $blue_soft ),
-                    esc_html__( 'Τηλέφωνο:', 'iw-theme' ),
+                    esc_html( $email_label( 'phone', 'Τηλέφωνο:' ) ),
                     wc_make_phone_clickable( $order->get_billing_phone() )
                 );
             }
@@ -63,7 +68,7 @@ $upper = static function ( string $text ): string {
 <?php if ( ! wc_ship_to_billing_address_only() && $order->needs_shipping_address() && $shipping_address ) : ?>
     <div style="margin:0 0 22px 0;padding:22px 24px;border:1px solid <?php echo esc_attr( $border ); ?>;border-radius:14px;color:<?php echo esc_attr( $blue ); ?>;">
         <div style="margin:0 0 16px 0;color:<?php echo esc_attr( $blue_soft ); ?>;font-size:12px;line-height:1.4;font-weight:700;letter-spacing:.12em;">
-            <?php echo esc_html( $upper( __( 'Διεύθυνση αποστολής', 'woocommerce' ) ) ); ?>
+            <?php echo esc_html( $upper( $email_label( 'shipping-address', 'Διεύθυνση αποστολής' ) ) ); ?>
         </div>
         <div style="font-size:14px;line-height:1.55;font-style:normal;">
             <?php echo wp_kses_post( $shipping_address ); ?>

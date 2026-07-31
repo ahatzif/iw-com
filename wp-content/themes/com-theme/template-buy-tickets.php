@@ -207,7 +207,15 @@ $ticket_config = [
                         </div>
 
                         <div class="mt-30 grid grid-cols-7 gap-x-5 gap-y-20 sm:gap-x-15 sm:gap-y-30" data-ticket-calendar>
-                            <?php foreach ( [ 'ΔΕΥ', 'ΤΡΙ', 'ΤΕΤ', 'ΠΕΜ', 'ΠΑΡ', 'ΣΑΒ', 'ΚΥΡ' ] as $weekday ) : ?>
+                            <?php foreach ( [
+                                __( 'ΔΕΥ', 'com-theme' ),
+                                __( 'ΤΡΙ', 'com-theme' ),
+                                __( 'ΤΕΤ', 'com-theme' ),
+                                __( 'ΠΕΜ', 'com-theme' ),
+                                __( 'ΠΑΡ', 'com-theme' ),
+                                __( 'ΣΑΒ', 'com-theme' ),
+                                __( 'ΚΥΡ', 'com-theme' ),
+                            ] as $weekday ) : ?>
                                 <span class="flex h-20 items-center justify-center text-[1.2rem] sm:text-[1.6rem]"><?php echo esc_html( $weekday ); ?></span>
                             <?php endforeach; ?>
                         </div>

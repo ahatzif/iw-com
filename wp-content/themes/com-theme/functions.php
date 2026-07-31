@@ -1,16 +1,93 @@
 <?php
 require_once 'inc/theme.php';
 
+function com_theme_translated_site_option( $value, string $name ) {
+    if ( ! is_string( $value ) || $value === '' ) {
+        return $value;
+    }
+
+    return apply_filters( 'wpml_translate_single_string', $value, 'COM Site Identity', $name );
+}
+
+add_filter( 'option_blogname', static fn ( $value ) => com_theme_translated_site_option( $value, 'blogname' ) );
+add_filter( 'option_blogdescription', static fn ( $value ) => com_theme_translated_site_option( $value, 'blogdescription' ) );
+
 function com_theme_option( string $name, $default = null ) {
     if ( function_exists( 'get_field' ) ) {
         $value = get_field( $name, 'option' );
 
         if ( $value !== null && $value !== false && $value !== '' ) {
+            if ( is_string( $value ) ) {
+                $translated = apply_filters( 'wpml_translate_single_string', $value, 'COM Theme Settings', $name );
+                return $translated !== $value ? $translated : translate( $value, 'com-theme' );
+            }
+
             return $value;
         }
     }
 
+    if ( is_string( $default ) ) {
+        return apply_filters( 'wpml_translate_single_string', $default, 'COM Theme Settings', $name );
+    }
+
     return $default;
+}
+
+add_filter( 'acf/prepare_field', static function ( $field ) {
+    if ( ! is_array( $field ) || ! is_admin() || 'en' !== apply_filters( 'wpml_current_language', null ) ) {
+        return $field;
+    }
+
+    $labels = [
+        'field_661945a409511'                 => '404 Page',
+        '404_background'                     => 'Main Image',
+        '404_overlay'                        => 'Image Overlay',
+        '404_title'                          => 'Title',
+        '404_button_text'                    => 'Primary Button Text',
+        '404_description'                    => 'Description',
+        '404_button_url'                     => 'Primary Button URL',
+        '404_secondary_button_text'          => 'Secondary Button Text',
+        '404_secondary_button_url'           => 'Secondary Button URL',
+        '404_image_alt'                      => 'Image Alternative Text',
+        '404_edition_text'                   => 'Anniversary Years',
+        '404_anniversary_text'               => 'Anniversary Label',
+        '404_error_text'                     => 'Error Label',
+        '404_image_badge'                    => 'Image Badge',
+        '404_image_caption'                  => 'Image Caption',
+        '404_image_mark'                     => 'Image Year Mark',
+        '404_image_location'                 => 'Image Location',
+        '404_image_coordinates'              => 'Image Coordinates',
+        '404_timeline_left_year'             => 'Timeline Left Heading',
+        '404_timeline_left_text'             => 'Timeline Left Text',
+        '404_timeline_center_year'           => 'Timeline Center Heading',
+        '404_timeline_center_text'           => 'Timeline Center Text',
+        '404_timeline_right_year'            => 'Timeline Right Heading',
+        '404_timeline_right_text'            => 'Timeline Right Text',
+    ];
+    $instructions = [
+        '404_button_url'           => 'Leave empty to link to the homepage.',
+        '404_secondary_button_url' => 'Leave empty to link to the museums section on the homepage.',
+        '404_image_alt'            => 'Describe the image for screen-reader users. Leave empty only if it is decorative.',
+    ];
+    $identifier = (string) ( $field['name'] ?: $field['key'] );
+
+    if ( isset( $labels[ $identifier ] ) ) {
+        $field['label'] = $labels[ $identifier ];
+    }
+    if ( isset( $instructions[ $identifier ] ) ) {
+        $field['instructions'] = $instructions[ $identifier ];
+    }
+
+    return $field;
+} );
+
+function com_theme_menu_item_title( WP_Post $item, string $location ): string {
+    return (string) apply_filters(
+        'wpml_translate_single_string',
+        (string) $item->title,
+        'COM Theme Menus',
+        $location . '-item-' . $item->ID
+    );
 }
 
 function com_theme_field_value( string $name, $context = null, $default = null ) {
@@ -23,6 +100,38 @@ function com_theme_field_value( string $name, $context = null, $default = null )
     }
 
     $value = get_field( $name, $context );
+
+    if ( is_string( $value ) && $value !== '' ) {
+        $post_id = is_numeric( $context ) ? (int) $context : get_queried_object_id();
+
+        if ( $post_id && get_post_type( $post_id ) === 'museum' ) {
+            $source_id = $post_id;
+            global $wpdb;
+            $translations_table = $wpdb->prefix . 'icl_translations';
+            if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $translations_table ) ) === $translations_table ) {
+                $source_id = (int) $wpdb->get_var(
+                    $wpdb->prepare(
+                        "SELECT source.element_id
+                         FROM {$translations_table} current
+                         JOIN {$translations_table} source
+                           ON source.trid = current.trid
+                          AND source.element_type = current.element_type
+                          AND source.language_code = 'el'
+                         WHERE current.element_id = %d
+                           AND current.element_type = 'post_museum'
+                         LIMIT 1",
+                        $post_id
+                    )
+                ) ?: $post_id;
+            }
+            $value = apply_filters(
+                'wpml_translate_single_string',
+                $value,
+                'COM Museum Fields',
+                'museum-' . $source_id . '-' . $name
+            );
+        }
+    }
 
     return ( $value !== null && $value !== false && $value !== '' ) ? $value : $default;
 }
@@ -167,6 +276,7 @@ function com_theme_page_url( string $slug, string $fallback = '' ): string {
         'terms'              => 'terms_page',
         'tickets'            => 'tickets_page',
         'buy-tickets'        => 'buy_tickets_page',
+        'search'             => 'search_page',
         'cookie-declaration' => 'cookies_policy_page',
         'cookies'            => 'cookies_policy_page',
     ];
@@ -311,27 +421,10 @@ if ( ! function_exists( 'get_tickets_permalink' ) ) {
     }
 }
 
-function com_theme_museum_ticket_url( int $museum_id, $manual_link = null ): string {
-    $ticket_url = function_exists( 'get_tickets_permalink' )
+function com_theme_museum_ticket_url( int $museum_id ): string {
+    return function_exists( 'get_tickets_permalink' )
         ? (string) get_tickets_permalink( $museum_id )
         : '';
-
-    if ( $ticket_url !== '' ) {
-        return $ticket_url;
-    }
-
-    $manual_url = com_theme_link_url( $manual_link );
-    $generic_url = com_theme_option_page_url( 'buy_tickets_page', 'buy-tickets' );
-
-    if (
-        $manual_url !== ''
-        && $generic_url !== ''
-        && untrailingslashit( $manual_url ) === untrailingslashit( $generic_url )
-    ) {
-        return '';
-    }
-
-    return $manual_url;
 }
 
 function com_theme_truthy_value( $value ): bool {
@@ -437,28 +530,12 @@ function com_theme_all_museums_ticket_post_id( $candidate = null ): int {
     return 0;
 }
 
-function com_theme_all_museums_ticket_url( $manual_link = null, $ticket_post = null ): string {
+function com_theme_all_museums_ticket_url( $ticket_post = null ): string {
     $ticket_id = com_theme_all_museums_ticket_post_id( $ticket_post );
-    $ticket_url = ( $ticket_id && function_exists( 'get_tickets_permalink' ) )
+
+    return ( $ticket_id && function_exists( 'get_tickets_permalink' ) )
         ? (string) get_tickets_permalink( $ticket_id )
         : '';
-
-    if ( $ticket_url !== '' ) {
-        return $ticket_url;
-    }
-
-    $manual_url = com_theme_link_url( $manual_link );
-    $generic_url = com_theme_option_page_url( 'buy_tickets_page', 'buy-tickets' );
-
-    if (
-        $manual_url !== ''
-        && $generic_url !== ''
-        && untrailingslashit( $manual_url ) === untrailingslashit( $generic_url )
-    ) {
-        return '';
-    }
-
-    return $manual_url;
 }
 
 function com_theme_all_museums_ticket_price_text( int $ticket_id, string $fallback = '' ): string {
@@ -560,13 +637,16 @@ function com_theme_all_museums_default_location_label(): string {
 }
 
 function com_theme_all_museums_slider_items( int $exclude_id = 0 ): array {
+    $current_language = (string) apply_filters( 'wpml_current_language', '' );
     $museum_ids = get_posts( [
         'post_type'              => 'museum',
         'post_status'            => 'publish',
         'posts_per_page'         => -1,
         'orderby'                => [ 'menu_order' => 'ASC', 'title' => 'ASC' ],
         'fields'                 => 'ids',
+        'lang'                   => apply_filters( 'wpml_current_language', null ),
         'no_found_rows'          => true,
+        'suppress_filters'       => false,
         'update_post_meta_cache' => false,
         'update_post_term_cache' => false,
     ] );
@@ -575,8 +655,17 @@ function com_theme_all_museums_slider_items( int $exclude_id = 0 ): array {
 
     foreach ( $museum_ids as $museum_id ) {
         $museum_id = (int) $museum_id;
+        $museum_language = (string) apply_filters( 'wpml_element_language_code', '', [
+            'element_id'   => $museum_id,
+            'element_type' => 'post_museum',
+        ] );
 
-        if ( ! $museum_id || $museum_id === $exclude_id || com_theme_is_all_museums_ticket( $museum_id ) ) {
+        if (
+            ! $museum_id
+            || ( $current_language && $museum_language && $museum_language !== $current_language )
+            || $museum_id === $exclude_id
+            || com_theme_is_all_museums_ticket( $museum_id )
+        ) {
             continue;
         }
 
@@ -712,7 +801,7 @@ function com_theme_header_menu_items(): array {
 
     return array_map( static function ( WP_Post $item ): array {
         return [
-            'title'  => $item->title,
+            'title'  => com_theme_menu_item_title( $item, 'main' ),
             'url'    => com_theme_menu_item_url( $item ),
             'icon'   => com_theme_menu_item_icon( $item ),
             'target' => $item->target,
@@ -742,7 +831,7 @@ function com_theme_footer_menu_items(): array {
 
     return array_map( static function ( WP_Post $item ): array {
         return [
-            'title'  => $item->title,
+            'title'  => com_theme_menu_item_title( $item, 'footer' ),
             'url'    => com_theme_menu_item_url( $item ),
             'target' => $item->target,
         ];

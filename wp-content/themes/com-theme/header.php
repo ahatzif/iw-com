@@ -15,6 +15,7 @@ $account_url = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalin
 $account_menu_items = function_exists( 'wc_get_account_menu_items' ) ? wc_get_account_menu_items() : [];
 $header_menu_items = com_theme_header_menu_items();
 $language_items = com_theme_language_switcher_items();
+$museums_url = trailingslashit( home_url( '/' ) ) . '#museums';
 $barba_prevent_pages = [];
 
 if ( function_exists( 'wc_get_cart_url' ) && function_exists( 'wc_get_checkout_url' ) ) {
@@ -69,7 +70,7 @@ if ( function_exists( 'wc_get_cart_url' ) && function_exists( 'wc_get_checkout_u
                 }
 
                 if ( $is_ticket_item ) {
-                    $item['url'] = home_url( '/#museums' );
+                    $item['url'] = $museums_url;
                 }
 
                 $fragment = wp_parse_url( $item['url'], PHP_URL_FRAGMENT );

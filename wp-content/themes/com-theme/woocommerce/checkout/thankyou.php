@@ -76,6 +76,50 @@ defined( 'ABSPATH' ) || exit;
                 <section class="rounded-[1.5rem] bg-white p-20 text-blue md:p-40 lg:p-60">
                     <?php do_action( 'woocommerce_thankyou_' . $order->get_payment_method(), $order->get_id() ); ?>
                     <?php do_action( 'woocommerce_thankyou', $order->get_id() ); ?>
+
+                    <?php
+                    $ticket_item_ids = [];
+
+                    foreach ( $order->get_items( 'line_item' ) as $item_id => $item ) {
+                        $item_type  = (string) $item->get_meta( 'iw_item_type', true );
+                        $content_id = absint( $item->get_meta( 'tickets_for_id', true ) );
+
+                        if ( $item_type === 'tickets' || $content_id > 0 ) {
+                            $ticket_item_ids[] = absint( $item_id );
+                        }
+                    }
+                    ?>
+
+                    <?php if ( $ticket_item_ids ) : ?>
+                        <section class="mt-50 border-t border-dashed border-blue/20 pt-50" aria-labelledby="guest-order-tickets-title">
+                            <header class="mb-30">
+                                <p class="mb-10 text-[1rem] font-medium tracking-[.16em] text-blue/50">
+                                    <?= esc_html( com\theme::remove_accents( __( 'Είσοδος στο μουσείο', 'com-theme' ) ) ) ?>
+                                </p>
+                                <h2 id="guest-order-tickets-title" class="m-0 text-[2.4rem] font-bold leading-[1.15]">
+                                    <?= esc_html__( 'Τα εισιτήριά σας', 'com-theme' ) ?>
+                                </h2>
+                                <p class="mb-0 mt-10 text-[1.4rem] leading-[1.5] text-blue/65">
+                                    <?= esc_html__( 'Έχετε διαθέσιμο το QR κάθε εισιτηρίου, καθώς και επιλογές Wallet ή PDF.', 'com-theme' ) ?>
+                                </p>
+                            </header>
+
+                            <div class="space-y-30">
+                                <?php foreach ( $ticket_item_ids as $ticket_item_id ) : ?>
+                                    <?php
+                                    wc_get_template(
+                                        'myaccount/tickets-order.php',
+                                        [
+                                            'order_item_id' => $ticket_item_id,
+                                            'embedded'      => true,
+                                            'verified_order' => $order,
+                                        ]
+                                    );
+                                    ?>
+                                <?php endforeach; ?>
+                            </div>
+                        </section>
+                    <?php endif; ?>
                 </section>
             </div>
         </main>

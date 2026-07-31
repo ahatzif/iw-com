@@ -1216,6 +1216,58 @@ class IW_Ticketing
 
     }
 
+    /**
+     * Return an order item's issued tickets after the caller has verified that
+     * the current request may view the supplied order.
+     *
+     * This is used by WooCommerce's guest thank-you page only after the native
+     * order-key/session or email-verification check has succeeded.
+     *
+     * @param WC_Order $order         Verified WooCommerce order.
+     * @param int      $order_item_id Order item belonging to the order.
+     * @return array
+     */
+    public static function get_order_tickets_for_verified_order( $order, $order_item_id ){
+        global $wpdb;
+
+        $order_item_id = (int) $order_item_id;
+
+        if ( ! $order instanceof WC_Order || $order_item_id <= 0 || ! $order->get_item( $order_item_id ) ) {
+            return [];
+        }
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT t.* FROM {$wpdb->prefix}iw_tickets t WHERE t.order_id = %d AND t.order_item_id = %d ORDER BY t.slot_start ASC, t.id ASC",
+                $order->get_id(),
+                $order_item_id
+            )
+        );
+
+        if ( ! $rows ) {
+            return [];
+        }
+
+        $row     = $rows[0];
+        $post_id = isset( $row->post_id ) ? (int) $row->post_id : 0;
+        $post    = $post_id ? get_post( $post_id ) : null;
+        $tz      = new DateTimeZone( wp_timezone_string() );
+        $start   = new DateTimeImmutable( (string) $row->slot_start, $tz );
+        $end     = ! empty( $row->slot_end ) ? new DateTimeImmutable( (string) $row->slot_end, $tz ) : null;
+
+        return [
+            'order' => [
+                'order_id'      => (int) $row->order_id,
+                'order_item_id' => $order_item_id,
+                'post'          => $post,
+                'slot_start'    => $start,
+                'slot_end'      => $end,
+                'tickets_count' => count( $rows ),
+            ],
+            'tickets' => $rows,
+        ];
+    }
+
     public static function get_reservation_orders( $per_page = 1000, $paged = 1 ) {
         global $wpdb;
 

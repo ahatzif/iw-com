@@ -46,16 +46,12 @@ foreach ( (array) $museums as $museum ) {
 	];
 }
 
-$primary_link = get_field( 'primary_link' );
+$primary_link = [
+	'url'    => com_theme_option_page_url( 'buy_tickets_page', 'buy-tickets' ),
+	'title'  => __( 'Αγορά εισιτηρίων →', 'com-theme' ),
+	'target' => '',
+];
 $secondary_link = get_field( 'secondary_link' );
-
-if ( empty( $primary_link['url'] ) ) {
-	$primary_link = [
-		'url'    => com_theme_option_page_url( 'buy_tickets_page', 'buy-tickets' ),
-		'title'  => __( 'Αγορά εισιτηρίων →', 'com-theme' ),
-		'target' => '',
-	];
-}
 
 if ( empty( $secondary_link['url'] ) ) {
 	$secondary_link = [

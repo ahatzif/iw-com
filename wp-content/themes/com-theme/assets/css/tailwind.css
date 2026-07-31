@@ -7283,6 +7283,10 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
   }
 }
 
+#cookie-consent-banner .left-side p{
+  margin-bottom: 1rem;
+}
+
 #blackOverlay{
   pointer-events: none;
   -webkit-mask-image: radial-gradient(circle at 50% 50%,

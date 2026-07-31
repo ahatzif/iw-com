@@ -904,6 +904,10 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
     mask-repeat: no-repeat;
 }
 
+#cookies-preferences-popup .cookie-consent-btn, .cookie-consent-btn{
+    border-radius: .5rem !important;
+}
+
 
 .tax-number-validated > span:not(.company-preview){
     display: none;

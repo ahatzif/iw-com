@@ -48,11 +48,11 @@ export default class extends module {
     }
 
     removeClassNames(){
-        [...document.querySelectorAll('[class^="CookieDeclaration"]')].forEach( el => el.className = '' );
+        [...this.el.querySelectorAll('[class^="CookieDeclaration"]')].forEach( el => el.className = '' );
     }
 
     createHeaders(){
-        [...document.querySelectorAll('[class^="CookieDeclarationTypeHeader"]')].forEach( el => {
+        [...this.el.querySelectorAll('[class^="CookieDeclarationTypeHeader"]')].forEach( el => {
             el.className = '';
             let h2 = document.createElement("h2");
             while (el.firstChild) h2.appendChild(el.firstChild);
@@ -61,12 +61,12 @@ export default class extends module {
     }
 
     wrapTables(){
-        [...document.querySelectorAll('table')].forEach( (table,key) => {
+        [...this.el.querySelectorAll('table')].forEach( (table,key) => {
             table.outerHTML = '<div data-module-overflow-scroll  class="swiper" id="ckt-' + key + '" ><div class="swiper-wrapper">' + table.outerHTML + '</div></div>';
 
         } );
         setTimeout( () => {
-            [...document.querySelectorAll('table')].forEach( (table,key) => {
+            [...this.el.querySelectorAll('table')].forEach( (table,key) => {
                 table.classList.add( 'swiper-slide');
                 table.style.minWidth = '700px';
                 new Swiper( '#ckt-' + key , { slidesPerView: 'auto', freeMode: true, freeModeSticky: false, });

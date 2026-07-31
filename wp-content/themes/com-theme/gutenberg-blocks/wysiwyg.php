@@ -65,21 +65,7 @@ $has_scroll_sidebar = (bool) get_field( 'has_scroll_sidebar' );
 $sidebar_title = trim( (string) get_field( 'scroll_sidebar_title' ) );
 $sidebar_title = $sidebar_title !== '' ? $sidebar_title : __( 'ΠΕΡΙΕΧΟΜΕΝΑ', 'com-theme' );
 $section_classes = trim( com_theme_block_wrapper_classes( 'mx-auto w-full px-1/12 md:px-1/24 lg:px-2/24' ) . ' ' . com_theme_block_style_classes() );
-$content_classes = trim(
-    get_prose() . ' ' .
-    'min-w-0 text-current ' .
-    '[&_strong]:font-bold [&_b]:font-bold [&_em]:italic [&_i]:italic [&_u]:underline [&_mark]:bg-current/10 [&_mark]:text-current ' .
-    '[&_ol]:my-30 [&_ol]:list-decimal [&_ol]:pl-[1.4em] [&_ol]:[list-style-position:outside] [&_ol_li]:pl-[.35em] [&_ol_li]:marker:font-medium ' .
-    '[&_ul_ul]:my-10 [&_ol_ol]:my-10 [&_ul_ol]:my-10 [&_ol_ul]:my-10 ' .
-    '[&_table]:my-30 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse [&_table]:text-[1.2rem] sm:[&_table]:text-[1.4rem] ' .
-    '[&_thead]:border-b [&_thead]:border-current [&_th]:break-words [&_th]:p-10 [&_th]:text-left [&_th]:font-bold [&_th]:align-bottom sm:[&_th]:p-15 ' .
-    '[&_td]:break-words [&_td]:border-b [&_td]:border-current/30 [&_td]:p-10 [&_td]:align-top sm:[&_td]:p-15 ' .
-    '[&_caption]:caption-bottom [&_caption]:pt-10 [&_caption]:text-[1.2rem] [&_caption]:leading-[1.4] [&_caption]:opacity-60 ' .
-    '[&_blockquote]:my-40 [&_blockquote]:border-l-2 [&_blockquote]:border-current [&_blockquote]:pl-25 [&_blockquote]:text-[2rem] [&_blockquote]:leading-[1.4] [&_blockquote_p]:my-0 ' .
-    '[&_hr]:my-50 [&_hr]:border-current/30 ' .
-    '[&_figure]:my-40 [&_figure_img]:w-full [&_figcaption]:mt-10 [&_figcaption]:text-[1.2rem] [&_figcaption]:leading-[1.4] [&_figcaption]:opacity-60 ' .
-    '[&_img]:h-auto [&_img]:max-w-full [&_code]:rounded-[.2em] [&_code]:bg-current/10 [&_code]:px-[.25em] [&_code]:py-[.05em] [&_pre]:my-30 [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre]:bg-blue [&_pre]:p-20 [&_pre]:text-[1.3rem] [&_pre]:leading-[1.5] [&_pre]:text-ochre [&_pre_code]:bg-transparent [&_pre_code]:p-0'
-);
+$content_classes = com_theme_legal_content_classes();
 
 [ $content, $toc_items ] = $has_scroll_sidebar ? com_theme_prepare_wysiwyg_toc( $text ) : [ $text, [] ];
 ?>

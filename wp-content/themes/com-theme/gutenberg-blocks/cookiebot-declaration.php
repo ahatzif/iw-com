@@ -1,10 +1,17 @@
-<?php // Title: Cookiebot Declaration ?>
-<section class="<?php echo esc_attr( com_theme_block_style_classes() ); ?>">
-<div class="<?php echo esc_attr( com_theme_block_wrapper_classes() ); ?>">
-    <div class="mx-1/12 md:mx-2/12 md:w-8/12 <?php echo get_prose(); ?>">
-        <div data-module-cookie-declaration <?php if( defined( 'ICL_LANGUAGE_CODE') ) {
-            echo 'data-culture="' . ICL_LANGUAGE_CODE . '"';
-        } ?>></div>
+<?php // Title: Cookiebot Declaration
+
+$section_classes = trim( com_theme_block_wrapper_classes( 'mx-auto w-full px-1/12 md:px-1/24 lg:px-2/24' ) . ' ' . com_theme_block_style_classes() );
+$culture = defined( 'ICL_LANGUAGE_CODE' ) ? strtoupper( (string) ICL_LANGUAGE_CODE ) : '';
+?>
+<section class="<?= esc_attr( $section_classes ) ?>">
+    <div class="grid min-w-0 lg:grid-cols-12">
+        <div class="min-w-0 lg:col-span-8 lg:col-start-5">
+            <div
+                class="<?= esc_attr( com_theme_legal_content_classes() ) ?>"
+                data-module-cookie-declaration
+                data-wysiwyg
+                <?php if ( $culture !== '' ) : ?>data-culture="<?= esc_attr( $culture ) ?>"<?php endif; ?>
+            ></div>
+        </div>
     </div>
-</div>
 </section>

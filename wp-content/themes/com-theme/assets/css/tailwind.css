@@ -7260,6 +7260,7 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
 @media screen and (min-width: 1024px) {
   #cookie-consent-banner {
     width: 410px;
+    border-radius: 1rem;
   }
 }
 
@@ -7267,7 +7268,6 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
   #cookie-consent-banner {
     bottom: 1rem !important;
     width: 100% !important;
-    border-top-left-radius: 0rem;
   }
 
   #cookie-consent-banner .right-side {

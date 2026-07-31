@@ -5,6 +5,7 @@ export { default as PageLoading } from './page-loading';
 export { default as LayoutGrid } from './layout-grid';
 export { default as Scroll } from './scroll';
 export { default as ScrollToAnchor } from './scroll-to-anchor';
+export { default as CookieDeclaration } from './cookie-declaration';
 export { default as LegalSidebar } from './legal-sidebar';
 export { default as PageHeader } from './page-header';
 export { default as EmblaCarousel } from './embla-carousel';

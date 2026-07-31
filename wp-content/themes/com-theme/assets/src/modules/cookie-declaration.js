@@ -13,7 +13,12 @@ export default class extends module {
         let cookiebotIsNotLoaded = typeof window.CookieConsent === "undefined";
         let cookieDeclarationNotLoaded = typeof window.CookieDeclaration === 'undefined';
 
-        if( cookiebotIsNotLoaded || cookieDeclarationNotLoaded ) this.checkLater();
+        if( cookiebotIsNotLoaded ) {
+            this.checkLater();
+            return;
+        }
+
+        if( cookieDeclarationNotLoaded ) this.checkLater();
         if( cookieDeclarationNotLoaded ) this.createScript();
         else this.onDeclarationLoad();
     }

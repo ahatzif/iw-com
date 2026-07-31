@@ -885,6 +885,12 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
         left: unset;
     }
 }
+@media screen and (max-width: 500px) {
+    .cookie-consent-btn{
+        margin-left: 0;
+    }
+}
+
 
 #cookie-consent-banner .left-side p{
     margin-bottom: 1rem;

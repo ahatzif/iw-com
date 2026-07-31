@@ -52,6 +52,7 @@
     --scanner-header-button-bg: #173276;
     --scanner-header-button-fg: #fff;
     --scanner-header-button-border: rgb(23 50 118 / 20%);
+    --scanner-primary-button-fg: #fff;
     --scanner-shadow: 0 28px 80px rgb(6 22 64 / 24%);
     --scanner-nav-bg: rgb(255 255 255 / 94%);
     --scanner-app-nav-height: 88px;
@@ -80,6 +81,7 @@
     --scanner-header-button-bg: #294789;
     --scanner-header-button-fg: #fff;
     --scanner-header-button-border: rgb(255 255 255 / 7%);
+    --scanner-primary-button-fg: #173276;
     --scanner-shadow: 0 30px 90px rgb(0 0 0 / 36%);
     --scanner-nav-bg: rgb(23 50 118 / 96%);
   }
@@ -770,7 +772,7 @@
     border: 0;
     border-radius: 9999px;
     background: var(--scanner-brand);
-    color: #fff;
+    color: var(--scanner-primary-button-fg);
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;

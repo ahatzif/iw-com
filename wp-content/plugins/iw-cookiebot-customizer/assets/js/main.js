@@ -10,12 +10,39 @@ class CustomCookieConsent {
                 CookieConsent.renew();
             }
         } );
+
+        // Autoptimize may defer this file until after CookiebotOnDialogInit has
+        // already fired. Initialise from the existing Cookiebot dialog as a
+        // fallback, while keeping the event-driven path for the normal case.
+        if ( !this.tryInitDialog() ) {
+            this.dialogInitAttempts = 0;
+            this.dialogInitInterval = setInterval( () => {
+                this.dialogInitAttempts++;
+                if ( this.tryInitDialog() || this.dialogInitAttempts >= 100 ) {
+                    clearInterval( this.dialogInitInterval );
+                }
+            }, 100 );
+        }
+    }
+
+    tryInitDialog() {
+        if ( this.dialogInited ) return true;
+        if (
+            typeof CookieConsent === 'undefined' ||
+            !CookieConsent.dialog ||
+            !document.body ||
+            !document.getElementById( 'CybotCookiebotDialog' )
+        ) return false;
+
+        this.onDialogInit();
+        return true;
     }
 
 
 
 
     onDialogInit(){
+        if ( this.dialogInitInterval ) clearInterval( this.dialogInitInterval );
         if( ! this.dialogInited ){
             this.initDialog();
             this.dialogInited = true;

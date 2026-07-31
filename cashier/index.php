@@ -143,6 +143,7 @@ function iw_cashier_get_buildings(): array {
                 'per_page' => $per_page,
                 'page'     => $page,
                 '_embed'   => 1,
+                'lang'     => 'el',
             ]
         );
 
@@ -163,8 +164,23 @@ function iw_cashier_get_buildings(): array {
     return array_values(
         array_filter(
             array_map(
-                static function ( array $building ): array {
+                static function ( array $building ) use ( $location_post_type ): array {
                     $building_id = (int) ( $building['id'] ?? 0 );
+                    $language    = $building_id
+                        ? (string) apply_filters(
+                            'wpml_element_language_code',
+                            '',
+                            [
+                                'element_id'   => $building_id,
+                                'element_type' => 'post_' . $location_post_type,
+                            ]
+                        )
+                        : '';
+
+                    if ( $language !== '' && $language !== 'el' ) {
+                        return [];
+                    }
+
                     $address     = $building_id ? iw_cashier_get_building_address_data( $building_id ) : [];
 
                     return [

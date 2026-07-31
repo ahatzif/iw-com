@@ -781,7 +781,7 @@ a:focus-visible {
   min-height: 680px;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 30px;
+  border-radius: 0;
   background: var(--cashier-surface);
   box-shadow: var(--cashier-shadow);
 }
@@ -4650,7 +4650,7 @@ a:focus-visible {
     width: min(100%, 430px);
     height: min(860px, calc(100dvh - 32px));
     min-height: 620px;
-    border-radius: 36px;
+    border-radius: 0;
   }
 
   .cashier-app-shell {

@@ -7273,7 +7273,7 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
   }
 }
 
-@media screen and (min-width: 1024px) {
+@media screen and (min-width: 768px) {
   #cookie-consent-banner {
     width: 410px;
     border-radius: 1rem;

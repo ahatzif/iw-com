@@ -41,6 +41,14 @@ add_action( 'wp_ajax_nopriv_iw-auth-login', function(){
             }
         }
 
+        $requested_redirect = isset( $_POST['redirect_to'] )
+            ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) )
+            : '';
+
+        if ( $requested_redirect !== '' ) {
+            $redirect_to = wp_validate_redirect( $requested_redirect, $redirect_to );
+        }
+
         $redirect_to = apply_filters( 'iw_custom_auth_login_redirect', $redirect_to, $user );
 
         wp_send_json_success( [ 'redirect' => wp_validate_redirect( $redirect_to, home_url( '/' ) ) ] );

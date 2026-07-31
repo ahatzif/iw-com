@@ -24,10 +24,16 @@ $activation_code = isset( $_GET['account-activation-key'] )
     ? sanitize_text_field( wp_unslash( $_GET['account-activation-key'] ) )
     : '';
 $activation_user_id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
+$auto_open_checkout_choice = ! is_user_logged_in()
+    && function_exists( 'is_checkout' )
+    && is_checkout()
+    && ( ! function_exists( 'is_order_received_page' ) || ! is_order_received_page() )
+    && ( ! function_exists( 'is_wc_endpoint_url' ) || ! is_wc_endpoint_url( 'order-pay' ) );
 ?>
 <div
     id="com-auth-modal"
     data-module-auth-modal
+    data-auto-open-choice="<?= $auto_open_checkout_choice ? 'true' : 'false' ?>"
     data-account-url="<?= esc_url( $account_url ) ?>"
     data-show-password-label="<?= esc_attr__( 'Εμφάνιση κωδικού', 'com-theme' ) ?>"
     data-hide-password-label="<?= esc_attr__( 'Απόκρυψη κωδικού', 'com-theme' ) ?>"
@@ -71,6 +77,9 @@ $activation_user_id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
                 <input type="hidden" name="action" value="iw-auth-login">
                 <input type="hidden" name="lang" value="<?= esc_attr( $auth_language ) ?>">
                 <input type="hidden" name="security" value="<?= esc_attr( wp_create_nonce( 'iw-auth-login' ) ) ?>">
+                <?php if ( $auto_open_checkout_choice && function_exists( 'wc_get_checkout_url' ) ) : ?>
+                    <input type="hidden" name="redirect_to" value="<?= esc_url( wc_get_checkout_url() ) ?>">
+                <?php endif; ?>
                 <div class="grid gap-25">
                     <label data-module-validate data-rules="required|email" class="group/field <?= $auth_label_classes ?>">
                         EMAIL*
@@ -391,6 +400,9 @@ $activation_user_id = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
         <section data-auth-view="signup-success" class="hidden p-30 pt-[8rem] text-center sm:p-60" aria-hidden="true" aria-labelledby="auth-signup-success-title">
             <h2 id="auth-signup-success-title" class="mt-30 text-[3rem] font-bold leading-[1.15]"><?php esc_html_e( 'ΕΛΕΓΞΤΕ ΤΟ EMAIL ΣΑΣ', 'com-theme' ); ?></h2>
             <p data-auth-registration-message class="mt-15 text-[1.6rem] leading-[1.5]"><?php esc_html_e( 'Ο λογαριασμός σας δημιουργήθηκε. Ελέγξτε το email σας για οδηγίες ενεργοποίησης του λογαριασμού σας.', 'com-theme' ); ?></p>
+            <?php if ( $auto_open_checkout_choice ) : ?>
+                <button type="button" data-auth-modal-action="close" class="mt-30 flex min-h-[5.8rem] w-full items-center justify-center rounded-[.8rem] border border-blue bg-blue px-25 text-center text-[1.6rem] font-bold text-white transition-colors hover:bg-white hover:text-blue"><?php esc_html_e( 'Συνέχεια στην αγορά ως επισκέπτης', 'com-theme' ); ?></button>
+            <?php endif; ?>
         </section>
     </div>
 </div>

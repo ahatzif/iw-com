@@ -40,7 +40,11 @@ export default class extends module {
         });
 
         this.showView('choice', false);
-        this.openFromLocation();
+        const openedFromLocation = this.openFromLocation();
+
+        if (!openedFromLocation && this.el.dataset.autoOpenChoice === 'true') {
+            this.open('choice');
+        }
     }
 
     destroy() {
@@ -53,7 +57,7 @@ export default class extends module {
     }
 
     openFromLocation() {
-        if (this.isLoggedIn()) return;
+        if (this.isLoggedIn()) return false;
 
         const params = new URLSearchParams(window.location.search);
         const resetKey = params.get('reset-password-key');
@@ -62,17 +66,17 @@ export default class extends module {
 
         if (activationCode && params.get('id')) {
             this.open('activation');
-            return;
+            return true;
         }
 
         if (resetKey && (params.get('id') || params.get('login'))) {
             this.open('reset');
-            return;
+            return true;
         }
 
         if (['login', 'signup', 'forgot'].includes(authView)) {
             this.open(authView);
-            return;
+            return true;
         }
 
         const openModalCookie = document.cookie
@@ -83,7 +87,10 @@ export default class extends module {
         if (decodeURIComponent(openModalCookie || '') === 'login-modal') {
             document.cookie = 'open-modal=; Max-Age=0; path=/; SameSite=Lax';
             this.open('login');
+            return true;
         }
+
+        return false;
     }
 
     onTrigger(event) {

@@ -30,6 +30,10 @@ wp-content/webp-express/config
 # Dependencies and build output
 node_modules/
 vendor/
+!scanner/assets/vendor/
+scanner/assets/vendor/*
+!scanner/assets/vendor/qr-scanner.min.js
+!scanner/assets/vendor/qr-scanner-worker.min.js
 dist/
 build/
 

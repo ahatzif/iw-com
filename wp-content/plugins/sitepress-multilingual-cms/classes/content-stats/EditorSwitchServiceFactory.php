@@ -6,7 +6,6 @@ use WPML\Core\Component\ReportContentStats\Application\Service\EditorSwitchServi
 
 class EditorSwitchServiceFactory {
 
-	/** @var EditorSwitchService|null */
 	private static $instance = null;
 
 
@@ -19,9 +18,6 @@ class EditorSwitchServiceFactory {
 	}
 
 
-	/**
-	 * @return EditorSwitchService
-	 */
 	private static function createNewInstance(): EditorSwitchService {
 		global $wpml_dic;
 

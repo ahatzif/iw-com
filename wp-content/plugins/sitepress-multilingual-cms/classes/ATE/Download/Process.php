@@ -18,13 +18,10 @@ use function WPML\FP\pipe;
 use WPML\TM\Jobs\JobLog;
 
 class Process {
-	/** @var Consumer $consumer */
 	private $consumer;
 
-	/** @var WPML_TM_ATE_API $ateApi */
 	private $ateApi;
 
-	/** @var OrphanPostCleaner */
 	private $orphanPostCleaner;
 
 	public function __construct( Consumer $consumer, WPML_TM_ATE_API $ateApi, OrphanPostCleaner $orphanPostCleaner ) {
@@ -33,11 +30,6 @@ class Process {
 		$this->orphanPostCleaner = $orphanPostCleaner;
 	}
 
-	/**
-	 * @param array $jobs
-	 *
-	 * @return Collection
-	 */
 	public function run( $jobs ) {
 		JobLog::maybeInitRequest();
 		JobLog::createNewGroup(
@@ -117,11 +109,6 @@ class Process {
 		return $jobs;
 	}
 
-	/**
-	 * When post is translated into multiple language after first translated post save any other request could set up
-	 * cache with some translations missing yet. It needs to be flushed after all translations are completed to clear
-	 * potentially stale cache from some other request.
-	 */
 	private function flushElementTranslationsCacheAfterDownloadedJobs( Collection $jobs ) {
 		if ( ! $jobs->count() || ! defined( 'WPML_ELEMENT_TRANSLATIONS_CACHE_GROUP' ) ) {
 			return;
@@ -135,16 +122,6 @@ class Process {
 		$this->deleteFrontEndElementTranslationsCache( $jobs );
 	}
 
-	/**
-	 * Deletes the front-end (guest context) element_translations cache key for every downloaded element.
-	 *
-	 * The group flush above relies on the group key registry, which can lose track of a key written by a
-	 * concurrent request (a read-modify-write race on the registry). Deleting by the exact computed key
-	 * bypasses the registry, so a stale value written concurrently while translations were still partial is
-	 * removed even in that case. The next front-end read repopulates it from the now-complete database.
-	 *
-	 * @param Collection $jobs
-	 */
 	private function deleteFrontEndElementTranslationsCache( Collection $jobs ) {
 		global $sitepress;
 
@@ -173,22 +150,11 @@ class Process {
 		}
 	}
 
-	/**
-	 * Deletes the guest-context (no capabilities) cache key variants of an element's translations.
-	 *
-	 * Guest capabilities (false/false) are used because the affected key is the one a front-end or
-	 * unprivileged concurrent request writes. The generic variant is the one rendered by the language
-	 * switcher; the others are removed defensively and are cheap no-ops when absent.
-	 *
-	 * @param int    $trid
-	 * @param string $elementType
-	 */
 	private function deleteGuestElementTranslationsCacheVariants( $trid, $elementType ) {
-		// Each entry is [ skip_empty, all_statuses, skip_recursions ].
 		$variants = [
-			[ false, false, false ], // generic / front-end language switcher
-			[ true, false, false ],  // skip_empty (admin translation links)
-			[ false, true, false ],  // all_statuses
+			[ false, false, false ],
+			[ true, false, false ],
+			[ false, true, false ],
 		];
 
 		foreach ( $variants as $variant ) {
@@ -212,10 +178,6 @@ class Process {
 		}
 	}
 
-	/**
-	 * @param Exception $e
-	 * @param Job|null  $job
-	 */
 	private function logException( Exception $e, $job = null ) {
 		$entry              = new Entry();
 		$entry->description = $e->getMessage();
@@ -242,10 +204,6 @@ class Process {
 		wpml_tm_ate_ams_log( $entry, $avoidDuplication );
 	}
 
-	/**
-	 * @param Error    $e
-	 * @param Job|null $job
-	 */
 	private function logError( Error $e, $job = null ) {
 		$entry              = new Entry();
 		$entry->description = sprintf( '%s %s:%s', $e->getMessage(), $e->getFile(), $e->getLine() );
@@ -262,12 +220,6 @@ class Process {
 		wpml_tm_ate_ams_log( $entry, true );
 	}
 
-	/**
-	 * Create job's error
-	 *
-	 * @param Entry     $entry The job to cancel.
-	 * @param Throwable $error Error vfor value.
-	 */
 	private function createJobError( $entry, $error ) {
 		$jobId     = Obj::prop( 'wpmlJobId', $entry );
 		$ateJobId  = Obj::prop( 'ateJobId', $entry );
@@ -279,12 +231,6 @@ class Process {
 	}
 
 
-	/**
-	 * Converts an error or exception to an array.
-	 *
-	 * @param Throwable $error
-	 * @return array|null
-	 */
 	private function convertErrorToArray( $error ) {
 		$trace      = $error->getTrace();
 		$stackTrace = [];

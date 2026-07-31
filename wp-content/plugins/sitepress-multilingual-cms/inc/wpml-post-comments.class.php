@@ -2,9 +2,6 @@
 
 class WPML_Post_Comments extends WPML_WPDB_User {
 
-	/**
-	 * @param wpdb $wpdb
-	 */
 	public function __construct( &$wpdb ) {
 		parent::__construct( $wpdb );
 		$this->hooks();
@@ -92,9 +89,6 @@ class WPML_Post_Comments extends WPML_WPDB_User {
 		}
 	}
 
-	/**
-	 * @param string $hook
-	 */
 	public function enqueue_scripts( $hook ) {
 		wp_register_script( 'wpml-orphan-comments', ICL_PLUGIN_URL . '/res/js/orphan-comments.js', array( 'jquery' ), ICL_SITEPRESS_SCRIPT_VERSION, true );
 		if ( WPML_PLUGIN_FOLDER . '/menu/troubleshooting.php' === $hook ) {
@@ -146,11 +140,6 @@ class WPML_Post_Comments extends WPML_WPDB_User {
 		<?php
 	}
 
-	/**
-	 * @param int $how_many
-	 *
-	 * @return false|int
-	 */
 	public function delete_orphans( $how_many ) {
 		$wpdb    = $this->wpdb;
 		$results = $this->get_orphan_comments( false, $how_many );
@@ -159,7 +148,6 @@ class WPML_Post_Comments extends WPML_WPDB_User {
 		if ( $comment_ids ) {
 			$comment_ids_placeholders = implode( ', ', array_fill( 0, count( $comment_ids ), '%d' ) );
 			$post_ids          = $this->get_post_ids_from_comments_ids( $comment_ids );
-			// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic IN() placeholders are built from a fixed '%d' pattern and values are passed via prepare().
 			$deleted_comments += $wpdb->query(
 				$wpdb->prepare(
 					"DELETE FROM {$wpdb->comments} WHERE comment_ID IN ( {$comment_ids_placeholders} )",
@@ -192,7 +180,6 @@ class WPML_Post_Comments extends WPML_WPDB_User {
 					array_merge( $comment_ids, array( 'comment' ) )
 				)
 			);
-			// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
 			foreach ( $update_arg_set as $update_args ) {
 				do_action( 'wpml_translation_update', array_merge( $update_args, array( 'type' => 'after_delete' ) ) );
@@ -204,20 +191,12 @@ class WPML_Post_Comments extends WPML_WPDB_User {
 		return $deleted_comments;
 	}
 
-	/**
-	 * @param array<int> $post_ids
-	 */
 	private function update_comments_count( $post_ids ) {
 		foreach ( $post_ids as $post_id ) {
 			wp_update_comment_count( $post_id );
 		}
 	}
 
-	/**
-	 * @param string|array|int $comment_ids
-	 *
-	 * @return mixed
-	 */
 	private function get_post_ids_from_comments_ids( $comment_ids ) {
 		$wpdb = $this->wpdb;
 
@@ -228,14 +207,12 @@ class WPML_Post_Comments extends WPML_WPDB_User {
 		$comment_ids = array_map( 'intval', $comment_ids );
 		$comment_ids_placeholders = implode( ', ', array_fill( 0, count( $comment_ids ), '%d' ) );
 
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Dynamic IN() placeholders are built from a fixed '%d' pattern and values are passed via prepare().
 		return $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT DISTINCT comment_post_ID FROM {$wpdb->comments} WHERE comment_ID IN ( {$comment_ids_placeholders} )",
 				$comment_ids
 			)
 		);
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 	}
 }
 

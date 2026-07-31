@@ -27,9 +27,6 @@ class Ajax extends WPML_Request {
 		return $this->cookieLanguage->getAjaxCookieName( $this->is_admin_action_from_referer() );
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function is_admin_action_from_referer() {
 		$adminSlug = basename( trim( admin_url(), '/' ) );
 

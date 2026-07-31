@@ -20,9 +20,6 @@ abstract class WPML_Hierarchy_Sync extends WPML_WPDB_User {
 	protected $elements_table;
 	protected $lang_info_table;
 
-	/**
-	 * @param wpdb $wpdb
-	 */
 	public function __construct( &$wpdb ) {
 		parent::__construct( $wpdb );
 		$this->lang_info_table = $wpdb->prefix . 'icl_translations';
@@ -73,10 +70,6 @@ abstract class WPML_Hierarchy_Sync extends WPML_WPDB_User {
 		return $results;
 	}
 
-	/**
-	 * @param string|array $element_types
-	 * @param bool         $ref_lang_code
-	 */
 	public function sync_element_hierarchy( $element_types, $ref_lang_code = false, $element_id = null ) {
 		$hierarchical_element_types = wpml_collect( $element_types )->filter( [ $this, 'is_hierarchical' ] );
 
@@ -91,11 +84,6 @@ abstract class WPML_Hierarchy_Sync extends WPML_WPDB_User {
 		}
 	}
 
-	/**
-	 * @param string $element_type
-	 *
-	 * @return mixed
-	 */
 	abstract public function is_hierarchical( $element_type );
 
 	private function update_hierarchy_for_element( $row ) {
@@ -144,9 +132,6 @@ abstract class WPML_Hierarchy_Sync extends WPML_WPDB_User {
 					} else {
 						$parent_must_empty = true;
 					}
-					/**
-					 * Check if the parent of the original post has a translation in the language of the target post or if the parent must be set to 0
-					 */
 					$is_valid = $parent_has_translation_in_target_language || $parent_must_empty;
 				}
 			}

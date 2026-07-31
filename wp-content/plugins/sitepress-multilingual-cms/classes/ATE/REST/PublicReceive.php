@@ -16,9 +16,6 @@ use function WPML\Container\make;
 use function WPML\FP\curryN;
 use function WPML\FP\pipe;
 
-/**
- * @author OnTheGo Systems
- */
 class PublicReceive extends \WPML_TM_ATE_Required_Rest_Base {
 
 	const CODE_LOCKED = 423;
@@ -54,20 +51,9 @@ class PublicReceive extends \WPML_TM_ATE_Required_Rest_Base {
 		return [];
 	}
 
-	/**
-	 * @param \WP_REST_Request $request
-	 *
-	 * @return true|\WP_Error
-	 */
 	public function receive_ate_job( \WP_REST_Request $request ) {
 		$wpmlJobId = $request->get_param( 'wpmlJobId' );
 
-		// Open the JobLog envelope before any work runs. Without this the
-		// downstream `applyTranslation` → save_translation chain silently
-		// no-ops on every JobLog::add() call, leaving zero trace of the
-		// webhook in joblog files. Reusing GROUP_ID_DOWNLOAD_JOBS so polled
-		// download and pushed webhook both surface under "translation
-		// receive" in the UI.
 		JobLog::maybeInitRequest();
 		JobLog::createNewGroup(
 			JobLog::GROUP_ID_DOWNLOAD_JOBS,
@@ -117,13 +103,6 @@ class PublicReceive extends \WPML_TM_ATE_Required_Rest_Base {
 				[ 'rid' => $wpmlJobId, 'http_status' => $isOk ? self::CODE_OK : self::CODE_UNPROCESSABLE_ENTITY ]
 			);
 
-			// Specifically flag the "superseded" failure mode — ATE pushed
-			// back a translation for a wpml_job_id that no longer exists
-			// in icl_translate_job because a newer job replaced it. This
-			// is the credit-runaway signal: the work was paid for but
-			// will never be delivered. Cross-reference with the original
-			// ate_job_bound event (now carrying trid + target_lang) to
-			// reconstruct what was lost.
 			if ( ! $isOk ) {
 				$wpmlJob = Jobs::get( $wpmlJobId );
 				if ( ! $wpmlJob ) {
@@ -142,11 +121,6 @@ class PublicReceive extends \WPML_TM_ATE_Required_Rest_Base {
 		}
 	}
 
-	/**
-	 * @param int $wpml_job_id
-	 *
-	 * @return string
-	 */
 	public static function get_receive_ate_job_url( $wpml_job_id ) {
 		return self::get_url( self::ENDPOINT_JOBS_RECEIVE . $wpml_job_id );
 	}

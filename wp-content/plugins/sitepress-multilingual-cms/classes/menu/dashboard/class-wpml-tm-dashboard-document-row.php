@@ -6,7 +6,6 @@ use WPML\TM\API\Jobs;
 
 class WPML_TM_Dashboard_Document_Row {
 
-	/** @var stdClass $data */
 	private $data;
 	private $post_types;
 	private $active_languages;
@@ -14,9 +13,7 @@ class WPML_TM_Dashboard_Document_Row {
 	private $note_text;
 	private $note_icon_class;
 	private $post_statuses;
-	/** @var SitePress $sitepress */
 	private $sitepress;
-	/** @var WPML_TM_Translatable_Element_Provider $translatable_element_provider */
 	private $translatable_element_provider;
 
 	public function __construct(
@@ -155,7 +152,7 @@ class WPML_TM_Dashboard_Document_Row {
 							data-wpml-original-lang-code="<?php echo $documentOriginalLangCode ?>"
 							value="<?php echo esc_attr( $value ); ?>"
 							name="<?php echo esc_attr( $name ); ?>"
-							<?php /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
+							<?php  
 							echo $checked; ?> />
 					</div>
 					<?php
@@ -167,7 +164,7 @@ class WPML_TM_Dashboard_Document_Row {
 						data-wpml-original-lang-code="<?php echo $documentOriginalLangCode ?>"
 						value="<?php echo esc_attr( $value ); ?>"
 						name="<?php echo esc_attr( $name ); ?>"
-						<?php /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
+						<?php  
 						echo $checked; ?> />
 					<?php
 				}
@@ -378,7 +375,6 @@ class WPML_TM_Dashboard_Document_Row {
 
 	private function get_date() {
 		if ( ! $this->is_external_type() ) {
-			/** @var WP_Post $post */
 			$post = get_post( $this->data->ID );
 			$date = get_post_time( 'U', false, $post );
 		} else {

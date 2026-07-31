@@ -21,14 +21,6 @@ class RegisterStrings extends \WPML_Page_Builders_Register_Strings {
 		}
 	}
 
-	/**
-	 * @param WPML_PB_String $pbString
-	 * @param string         $node_id
-	 * @param mixed          $element
-	 * @param array          $package
-	 *
-	 * @return WPML_PB_String
-	 */
 	protected function filter_string_to_register( WPML_PB_String $pbString, $node_id, $element, $package ) {
 		if ( isset( $element['image'] ) ) {
 			$pbString->set_title( Groups::appendImageIdToGroupLabel( $pbString->get_title(), (int) $element['image'] ) );

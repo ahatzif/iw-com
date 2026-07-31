@@ -11,9 +11,6 @@ class QueryHooks implements \IWPML_REST_Action {
 		add_action( 'pre_get_posts', [ $this, 'handleComponentQuery' ] );
 	}
 
-	/**
-	 * @param \WP_Query $query
-	 */
 	public function handleComponentQuery( $query ) {
 		if ( ! $this->isComponentRestQuery( $query ) ) {
 			return;
@@ -22,11 +19,6 @@ class QueryHooks implements \IWPML_REST_Action {
 		$query->query_vars['suppress_filters'] = false;
 	}
 
-	/**
-	 * @param \WP_Query $query
-	 *
-	 * @return bool
-	 */
 	private function isComponentRestQuery( $query ) {
 		if ( ( $query->query_vars['post_type'] ?? null ) !== self::POST_TYPE ) {
 			return false;

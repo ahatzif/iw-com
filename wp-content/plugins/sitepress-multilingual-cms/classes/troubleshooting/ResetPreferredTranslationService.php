@@ -20,7 +20,7 @@ class ResetPreferredTranslationService implements \IWPML_Backend_Action {
 		$resetButton  = sprintf( __( 'Reset & Fetch', 'wpml-translation-manager' ) );
 
 		$html = '<div class="icl_cyan_box" id="wpml_tm_reset_preferred_translation_service_btn">' .
-		        wp_nonce_field( self::ACTION_ID, 'wpml_tm_reset_preferred_translation_service_nonce', true, false ) . // <-- This seams to be never used.
+		        wp_nonce_field( self::ACTION_ID, 'wpml_tm_reset_preferred_translation_service_nonce', true, false ) .
 		        '<h3>' . $resetTitle . '</h3>
 				<p>' . $resetMessage . '</p>
 				<a class="button-primary" href="#">' . $resetButton . '</a><span class="spinner"></span>

@@ -2,40 +2,16 @@
 
 use WPML\FP\Obj;
 
-/**
- * Class WPML_Elementor_Module_With_Items
- */
 abstract class WPML_Elementor_Module_With_Items implements IWPML_Page_Builders_Module {
 
-	/**
-	 * @param string $field
-	 *
-	 * @return string
-	 */
 	abstract protected function get_title( $field );
 
-	/** @return array */
 	abstract protected function get_fields();
 
-	/**
-	 * @param string $field
-	 *
-	 * @return string mixed
-	 */
 	abstract protected function get_editor_type( $field );
 
-	/**
-	 * @return string
-	 */
 	abstract public function get_items_field();
 
-	/**
-	 * @param string|int       $node_id
-	 * @param array            $element
-	 * @param WPML_PB_String[] $strings
-	 *
-	 * @return WPML_PB_String[]
-	 */
 	public function get( $node_id, $element, $strings ) {
 		$activeRepeater = $this->get_active_repeater( $element );
 
@@ -83,13 +59,6 @@ abstract class WPML_Elementor_Module_With_Items implements IWPML_Page_Builders_M
 		return $strings;
 	}
 
-	/**
-	 * @param int|string     $node_id
-	 * @param mixed          $element
-	 * @param WPML_PB_String $pbString
-	 *
-	 * @return mixed
-	 */
 	public function update( $node_id, $element, WPML_PB_String $pbString ) {
 		$activeRepeater = $this->get_active_repeater( $element );
 
@@ -137,36 +106,11 @@ abstract class WPML_Elementor_Module_With_Items implements IWPML_Page_Builders_M
 		return [ null, null ];
 	}
 
-	/**
-	 * @param string $nodeId
-	 * @param array  $item
-	 * @param array  $element
-	 * @param string $field
-	 * @param string $key
-	 *
-	 * @return string
-	 */
 	private function get_string_name( $nodeId, $item, $element, $field = '', $key = '' ) {
 		$widgetType = Obj::prop( 'widgetType', $element );
 		$itemId     = Obj::prop( '_id', $item );
 		$name       = $widgetType . '-' . $field . '-' . $nodeId . '-' . $itemId;
 
-		/**
-		 * Filter a package string name.
-		 *
-		 * Could be used for repeater or nested fields with the same key.
-		 *
-		 * @since 2.0.5
-		 *
-		 * @param string $name
-		 * @param array  $args {
-		 *     @type string $nodeId  Elementor node id.
-		 *     @type array  $item    The item that is being registered.
-		 *     @type array  $element The element that is being processed and registered.
-		 *     @type string $field   Optional. The item field that is being registered.
-		 *     @type string $key     Optional. The item field sub-key that is being registered.
-		 * }
-		 */
 		return apply_filters(
 			'wpml_pb_elementor_register_string_name_' . $widgetType,
 			$name,
@@ -180,29 +124,13 @@ abstract class WPML_Elementor_Module_With_Items implements IWPML_Page_Builders_M
 		);
 	}
 
-	/**
-	 * @param array $element
-	 *
-	 * @return mixed
-	 */
 	public function get_items( $element ) {
 		return $element[ WPML_Elementor_Translatable_Nodes::SETTINGS_FIELD ][ $this->get_items_field() ];
 	}
 
-	/**
-	 * Elementor-evaluated repeater items, aligned by index with the raw items
-	 * (Elementor preserves order and nulls inactive inner controls per item).
-	 *
-	 * @param array $element
-	 *
-	 * @return array|false|null false: do not gate (fail open); null: repeater
-	 *                          control is inactive (gate every item); array:
-	 *                          per-item active settings.
-	 */
 	private function get_active_repeater( $element ) {
 		$itemsField = $this->get_items_field();
 
-		// Nested repeaters are not gated to avoid mis-aligning sub-items.
 		if ( false !== strpos( $itemsField, self::FIELD_SEPARATOR ) ) {
 			return false;
 		}
@@ -218,23 +146,12 @@ abstract class WPML_Elementor_Module_With_Items implements IWPML_Page_Builders_M
 		return is_array( $items ) || null === $items ? $items : false;
 	}
 
-	/**
-	 * @param array|null $activeItem
-	 * @param string     $field
-	 *
-	 * @return bool
-	 */
 	private function is_repeater_field_inactive( $activeItem, $field ) {
 		return is_array( $activeItem )
 			&& array_key_exists( $field, $activeItem )
 			&& null === $activeItem[ $field ];
 	}
 
-	/**
-	 * @param string $key
-	 *
-	 * @return array
-	 */
 	public function get_field_path( $key ) {
 		$path = $this->get_items_field();
 		if ( strpos( $path, self::FIELD_SEPARATOR ) ) {

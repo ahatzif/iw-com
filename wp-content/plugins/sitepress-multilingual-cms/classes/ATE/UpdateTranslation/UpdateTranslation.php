@@ -94,9 +94,6 @@ class UpdateTranslation implements IHandler {
 		             ->map( $applyWithoutChanges )
 		             ->map( Fns::always( 'applied-without-changes' ) );
 	}
-	/**
-	 * @param int $jobId
-	 */
 	public function maybeSetNeedsReviewStatus( $jobId ) {
 		$job = Jobs::get( $jobId );
 		if ( ReviewStatus::doesJobNeedReview( $job ) ) {

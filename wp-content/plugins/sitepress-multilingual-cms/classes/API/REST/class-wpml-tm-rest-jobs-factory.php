@@ -3,9 +3,6 @@
 use WPML\TM\Jobs\Utils\ElementLinkFactory;
 
 class WPML_TM_REST_Jobs_Factory extends WPML_REST_Factory_Loader {
-	/**
-	 * @return WPML_TM_REST_Jobs
-	 */
 	public function create() {
 		global $sitepress, $wpdb;
 

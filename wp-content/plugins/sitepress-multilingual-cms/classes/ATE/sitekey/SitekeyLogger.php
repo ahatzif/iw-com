@@ -8,7 +8,6 @@ use WPML\TM\ATE\Log\EventsTypes;
 
 class SitekeyLogger {
 
-	/** @var SitekeyProvider */
 	private $sitekeyProvider;
 
 	public function __construct( SitekeyProvider $sitekeyProvider ) {

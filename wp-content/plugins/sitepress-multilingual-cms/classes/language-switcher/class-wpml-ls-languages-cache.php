@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: bruce
- * Date: 17/10/17
- * Time: 5:18 PM
- */
 
 class WPML_LS_Languages_Cache {
 
@@ -40,10 +34,6 @@ class WPML_LS_Languages_Cache {
 		$this->cache->set( $this->cache_key, $ls_languages );
 	}
 
-	/**
-	 * Clear comment cache groups to prevent comment hashes from affecting language switcher URLs.
-	 * This ensures that get_permalink() calls in get_ls_languages() don't include comment anchors.
-	 */
 	private function clear_comment_cache() {
 		if ( function_exists( 'wp_cache_delete' ) ) {
 			wp_cache_delete( 'last_changed', 'comment' );

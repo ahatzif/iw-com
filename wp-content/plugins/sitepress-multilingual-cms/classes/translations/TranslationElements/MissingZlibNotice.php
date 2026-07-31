@@ -2,26 +2,14 @@
 
 namespace WPML\Translation\TranslationElements;
 
-/**
- * Displays an error notice in the Classic Translation Editor when
- * compressed translation data cannot be decompressed due to missing zlib extension.
- */
 class MissingZlibNotice {
 
-	/**
-	 * Check if notice should be displayed and hook it in.
-	 *
-	 * @param int $job_id The translation job ID.
-	 */
 	public static function maybeAddNotice( $job_id ) {
 		if ( CompressionTracker::shouldShowMissingZlibError( $job_id ) ) {
 			add_action( 'wpml_tm_editor_messages', [ __CLASS__, 'displayNotice' ] );
 		}
 	}
 
-	/**
-	 * Display the error notice.
-	 */
 	public static function displayNotice() {
 		$main_message = esc_html__(
 			'This translation job contains compressed data but the PHP zlib extension is not available on this server.',

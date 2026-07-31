@@ -5,13 +5,8 @@ class WPML_Translation_Batch extends WPML_Abstract_Job_Collection {
 	private $name = false;
 	private $id   = false;
 	private $url  = false;
-	/** @var WPML_Translation_Job[] $job_objects  */
 	private $job_objects = array();
 
-	/**
-	 * @param wpdb $wpdb
-	 * @param int  $batch_id
-	 */
 	public function __construct( &$wpdb, $batch_id = 0 ) {
 		parent::__construct( $wpdb );
 		$this->id   = $batch_id > 0 ? $batch_id : $this->retrieve_generic_batch_id();
@@ -71,14 +66,10 @@ class WPML_Translation_Batch extends WPML_Abstract_Job_Collection {
 		);
 	}
 
-	// todo: [WPML 3.2.1] This method and other similar methods can likely be removed
 	public function get_last_update() {
 		return TranslationManagement::get_batch_last_update( $this->id );
 	}
 
-	/**
-	 * @param WPML_Translation_Job $job
-	 */
 	public function add_job( $job ) {
 		$this->job_objects[ $job->get_id() ] = $job;
 	}

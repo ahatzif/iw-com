@@ -4,30 +4,18 @@ class WPML_TM_Overdue_Jobs_Report {
 
 	const OVERDUE_JOBS_REPORT_TEMPLATE = 'notification/overdue-jobs-report.twig';
 
-	/** @var  WPML_Translation_Jobs_Collection $jobs_collection */
 	private $jobs_collection;
 
-	/** @var WPML_TM_Email_Notification_View $email_view */
 	private $email_view;
 
-	/** @var bool $has_active_remote_service */
 	private $has_active_remote_service;
 
-	/** @var array $notification_settings */
 	private $notification_settings;
 
 	private $sitepress;
 
 	private $tp_jobs;
 
-	/**
-	 * @param WPML_Translation_Jobs_Collection $jobs_collection
-	 * @param WPML_TM_Email_Notification_View  $email_view
-	 * @param bool                             $has_active_remote_service
-	 * @param array                            $notification_settings
-	 * @param SitePress                        $sitepress
-	 * @param WPML_TP_Jobs_Collection|null     $tp_jobs
-	 */
 	public function __construct(
 		WPML_Translation_Jobs_Collection $jobs_collection,
 		WPML_TM_Email_Notification_View $email_view,
@@ -57,7 +45,6 @@ class WPML_TM_Overdue_Jobs_Report {
 		}
 	}
 
-	/** @return array */
 	private function get_overdue_jobs_by_manager_id() {
 		$args = array(
 			'overdue'       => true,
@@ -88,10 +75,6 @@ class WPML_TM_Overdue_Jobs_Report {
 		return $jobs_by_manager_id;
 	}
 
-	/**
-	 * @param string $manager_id
-	 * @param array  $jobs
-	 */
 	private function send_email( $manager_id, array $jobs ) {
 		$manager = get_user_by( 'id', $manager_id );
 

@@ -1,21 +1,10 @@
 <?php
-// phpcs:disable Squiz.Commenting.FunctionComment.ParamCommentFullStop,WordPress.PHP.YodaConditions.NotYoda,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.WP.I18n.MissingTranslatorsComment
 
 
 namespace WPML\TM\Jobs\Log;
 
 use WPML\TM\Jobs\JobLog;
 
-/**
- * "By post / page" tab renderer.
- *
- * The shell is server-rendered (picker container + empty content slot);
- * once the operator selects a post, the JS calls back into
- * Hooks::handleAjaxEntityTimeline() which returns a fully-rendered HTML
- * fragment for the content area. That keeps the wiring simple — no JSON
- * → DOM construction on the JS side — and lets future grouping changes
- * happen entirely in PHP.
- */
 class EntityTimelineView {
 
 	public function renderPage() {
@@ -50,20 +39,6 @@ class EntityTimelineView {
 		<?php
 	}
 
-	/**
-	 * Server-rendered timeline fragment returned via AJAX after the
-	 * operator picks a post.
-	 *
-	 * @param array $payload {
-	 *     'state' => array,        // current DB state for the picked post
-	 *     'events' => array<int,array>, // chronologically-sorted events
-	 *     'event_total' => int,    // total matched (may exceed events count if truncated)
-	 *     'truncated' => bool,
-	 *     'request_count' => int,
-	 * }
-	 *
-	 * @return string
-	 */
 	public function renderTimeline( array $payload ) {
 		ob_start();
 
@@ -202,11 +177,6 @@ class EntityTimelineView {
 		$logUid  = (string) ( $event['__logUid'] ?? '' );
 		$type    = (string) ( $event['type'] ?? '' );
 
-		// Pick a display label per event type. Real log events (`type=log`)
-		// carry their event id (`ate_job_bound`, `save_translation_*` …)
-		// in the `id` field. Envelope rows (request_started/finished,
-		// group_started/finished) don't have an id — synthesise something
-		// useful so the timeline row isn't blank.
 		$isEnvelope = false;
 		switch ( $type ) {
 			case 'log':
@@ -284,19 +254,6 @@ class EntityTimelineView {
 		return floor( $s / 3600 ) . 'h';
 	}
 
-	/**
-	 * Text-mode export of the same payload renderTimeline() produces as
-	 * HTML. Streamed directly to stdout by the AJAX download handler so
-	 * memory is bounded regardless of timeline length.
-	 *
-	 * The intent is parity with the per-request export: an operator
-	 * forwarding an incident report should be able to attach either file
-	 * without further explanation.
-	 *
-	 * @param array $payload Same shape as renderTimeline().
-	 *
-	 * @return void Output written directly via echo.
-	 */
 	public function streamTimelineText( array $payload ) {
 		$state        = isset( $payload['state'] ) && is_array( $payload['state'] ) ? $payload['state'] : [];
 		$events       = isset( $payload['events'] ) && is_array( $payload['events'] ) ? $payload['events'] : [];
@@ -323,7 +280,6 @@ class EntityTimelineView {
 		echo "##########################################\n\n";
 		flush();
 
-		// State block.
 		echo "CURRENT STATE\n";
 		echo "==========================================\n";
 		if ( $modified !== '' ) {
@@ -363,7 +319,6 @@ class EntityTimelineView {
 		echo "\n";
 		flush();
 
-		// Timeline.
 		echo "==========================================\n";
 		echo 'TIMELINE — ' . $eventTotal . ' events across ' . $requestCount . ' requests';
 		if ( $truncated ) {
@@ -394,8 +349,6 @@ class EntityTimelineView {
 				}
 			}
 
-			// Flush every request boundary so reverse-proxy timeouts don't
-			// stall the stream on long timelines.
 			if ( $reqTag !== $lastReq ) {
 				flush();
 				$lastReq = $reqTag;
@@ -407,13 +360,6 @@ class EntityTimelineView {
 		echo "========================================\n";
 	}
 
-	/**
-	 * Mirror of renderEventRow's per-type label logic, in plain text.
-	 *
-	 * @param array $event
-	 *
-	 * @return string
-	 */
 	private static function eventLabel( array $event ) {
 		$type = (string) ( $event['type'] ?? '' );
 		switch ( $type ) {

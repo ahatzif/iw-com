@@ -18,7 +18,6 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 	private $post_statuses;
 	private $selected_languages;
 	private $source_language;
-	/** @var \WPML_TM_Translation_Priorities */
 	private $translation_priorities;
 	private $dashboard_title_sort_link;
 	private $dashboard_date_sort_link;
@@ -26,9 +25,6 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 	private $selected_posts = array();
 	private $translation_filter;
 	private $found_documents;
-	/**
-	 * @var \Mockery\MockInterface
-	 */
 	private $admin_sections;
 
 	public function __construct() {
@@ -62,15 +58,11 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 		}
 	}
 
-	/**
-	 * It builds all the sections.
-	 */
 	protected function build_tab_items($embeddedRenderCallback=null) {
 		$this->tab_items = array();
 
 		$this->build_dashboard_item( $embeddedRenderCallback );
 
-		/** @var \WPML_TM_Admin_Sections $admin_sections */
 		foreach ( $this->admin_sections->get_tab_items() as $slug => $tab_item ) {
 
 			$this->tab_items[ $slug ] = $tab_item;
@@ -82,9 +74,6 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 		$this->reorder_items();
 	}
 
-	/**
-	 * It reorders all items based on their `order` key as well as the order (index) they were added.
-	 */
 	private function reorder_items() {
 		$order_of_sections = array();
 		$tab_items         = $this->tab_items;
@@ -109,7 +98,6 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 	}
 
 	public function build_content_dashboard() {
-		/** @var SitePress $sitepress */
 		global $sitepress;
 		$this->active_languages   = $sitepress->get_active_languages();
 		$this->translatable_types = apply_filters( 'wpml_tm_dashboard_translatable_types', $sitepress->get_translatable_documents() );
@@ -125,9 +113,6 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 		$this->build_content_dashboard_results();
 	}
 
-	/**
-	 * Used only by unit tests at the moment
-	 */
 	private function build_dashboard_data() {
 		$this->build_dashboard_filter_arguments();
 		$this->build_dashboard_documents();
@@ -164,7 +149,7 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 		}
 
 		if ( ! isset( $this->translation_filter['tstatus'] ) ) {
-			$this->translation_filter['tstatus'] = isset( $_GET['tstatus'] ) ? $_GET['tstatus'] : -1; // -1 == All documents
+			$this->translation_filter['tstatus'] = isset( $_GET['tstatus'] ) ? $_GET['tstatus'] : -1;
 		}
 
 		if ( ! isset( $this->translation_filter['sort_by'] ) || ! $this->translation_filter['sort_by'] ) {
@@ -174,7 +159,7 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 			$this->translation_filter['sort_order'] = 'DESC';
 		}
 		if ( ! isset( $this->translation_filter['type'] ) ) {
-			$this->translation_filter['type'] = ''; // All Types.
+			$this->translation_filter['type'] = '';
 		}
 		$sort_order_next                 = $this->translation_filter['sort_order'] == 'ASC' ? 'DESC' : 'ASC';
         $nonce                           = wp_create_nonce( 'sort' );
@@ -191,12 +176,6 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 		$this->post_statuses          = apply_filters( 'wpml_tm_dashboard_post_statuses', $this->post_statuses );
 		$this->translation_priorities = new WPML_TM_Translation_Priorities();
 
-		// Get the document types that we can translate
-		/**
-		 * attachments are excluded
-		 *
-		 * @since 2.6.0
-		 */
 		add_filter( 'wpml_tm_dashboard_translatable_types', array( $this, 'exclude_attachments' ) );
 		$this->post_types = $sitepress->get_translatable_documents();
 		$this->post_types = apply_filters( 'wpml_tm_dashboard_translatable_types', $this->post_types );
@@ -237,9 +216,6 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 		$this->found_documents                = $dashboard_data['found_documents'];
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function there_are_hidden_posts() {
 		return -1 === $this->found_documents;
 	}
@@ -260,7 +236,6 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 	}
 
 	private function build_content_dashboard_remote_translations_controls() {
-		// shows only when translation polling is on and there are translations in progress
 		$this->build_content_dashboard_fetch_translations_box();
 
 		$active_service         = icl_do_not_promote() ? false : TranslationProxy::get_current_service();
@@ -286,9 +261,6 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 		?>
 		<form method="post" id="icl_tm_dashboard_form">
 			<?php
-			// #############################################
-			// Display the items for translation in a table.
-			// #############################################
 			$this->build_content_dashboard_documents();
 
 			$this->heading( __( '2. Select translation options', 'wpml-translation-management' ) );
@@ -581,7 +553,6 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 		$this->post_types = apply_filters( 'wpml_get_translatable_types', $this->post_types );
 		foreach ( $this->post_types as $id => $type_info ) {
 			if ( isset( $type_info->prefix ) ) {
-				// this is an external type returned by wpml_get_translatable_types
 				$new_type                        = new stdClass();
 				$new_type->labels                = new stdClass();
 				$new_type->labels->singular_name = isset( $type_info->labels->singular_name ) ? $type_info->labels->singular_name : $type_info->label;
@@ -594,13 +565,6 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 		}
 	}
 
-	/**
-	 * @param array $post_types
-	 *
-	 * @since 2.6.0
-	 *
-	 * @return array
-	 */
 	public function exclude_attachments( $post_types ) {
 		unset( $post_types['attachment'] );
 
@@ -615,9 +579,6 @@ class WPML_TM_Menus_Management extends WPML_TM_Menus {
 		return 'dashboard';
 	}
 
-	/**
-	 * @return bool|\TranslationProxy_Service|\WP_Error
-	 */
 	private function is_translation_service_enabled() {
 		$translation_service_enabled = TranslationProxy::get_current_service();
 		if ( is_wp_error( $translation_service_enabled ) ) {

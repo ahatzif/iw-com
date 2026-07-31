@@ -17,11 +17,6 @@ class HTML extends Base {
 	const LIST_ITEM_BLOCK_NAME = 'core/list-item';
 	const HTML_BLOCK_NAME      = 'core/html';
 
-	/**
-	 * @param \WP_Block_Parser_Block $block
-	 *
-	 * @return array
-	 */
 	public function find( \WP_Block_Parser_Block $block ) {
 		$strings = array();
 
@@ -63,13 +58,6 @@ class HTML extends Base {
 		return $strings;
 	}
 
-	/**
-	 * @param \WP_Block_Parser_Block $block
-	 * @param array                  $string_translations
-	 * @param string                 $lang
-	 *
-	 * @return \WP_Block_Parser_Block
-	 */
 	public function update( \WP_Block_Parser_Block $block, array $string_translations, $lang ) {
 
 		$block_queries = $this->get_block_queries( $block );
@@ -109,11 +97,6 @@ class HTML extends Base {
 		return $block;
 	}
 
-	/**
-	 * @param \WP_Block_Parser_Block $block
-	 *
-	 * @return null|string
-	 */
 	private function get_block_string_id( \WP_Block_Parser_Block $block ) {
 		if ( isset( $block->blockName, $block->innerHTML ) && '' !== trim( $block->innerHTML ) ) {
 			return $this->get_string_id( $block->blockName, $block->innerHTML );
@@ -122,20 +105,10 @@ class HTML extends Base {
 		}
 	}
 
-	/**
-	 * @param \WP_Block_Parser_Block $block
-	 *
-	 * @return array|null
-	 */
 	private function get_block_queries( \WP_Block_Parser_Block $block ) {
 		return $this->get_block_config( $block, 'xpath' );
 	}
 
-	/**
-	 * @param \WP_Block_Parser_Block $block
-	 *
-	 * @return ListBlock|StandardBlock|HtmlBlock
-	 */
 	private function get_dom_handler( \WP_Block_Parser_Block $block ) {
 		$class = wpml_collect(
 			[
@@ -148,15 +121,6 @@ class HTML extends Base {
 		return new $class();
 	}
 
-	/**
-	 * @param string                 $text
-	 * @param string                 $translation
-	 * @param \WP_Block_Parser_Block $block
-	 * @param \DOMNode               $element
-	 * @param DOMHandle              $dom_handle
-	 *
-	 * @return \WP_Block_Parser_Block
-	 */
 	private function updateTranslationInBlock( $text, $translation, \WP_Block_Parser_Block $block, $element, $dom_handle ) {
 		if ( $translation ) {
 			$block = $dom_handle->applyStringTranslations( $block, $element, $translation, $text );
@@ -182,15 +146,6 @@ class HTML extends Base {
 		}
 	}
 
-	/**
-	 * Encodes standalone less-than characters to prevent DOMDocument truncation.
-	 *
-	 * @see https://onthegosystems.myjetbrains.com/youtrack/issue/wpmlpb-769/
-	 *
-	 * @param string $text
-	 *
-	 * @return string
-	 */
 	private function encodeStandaloneLessThan( $text ) {
 		return preg_replace( '/<(?![a-zA-Z][a-zA-Z0-9-:]*[\s\/>]|\/[a-zA-Z]|!)/', '&lt;', $text );
 	}
@@ -211,28 +166,11 @@ class HTML extends Base {
 		return $translation;
 	}
 
-	/**
-	 * HTML_ENTITY_PLACEHOLDERS
-	 * Some translations are applied using \DomHandler, which converts any HTML entity
-	 * back to it's character, i.e. &apos; becomes '.
-	 * At some places (like shortcode attributes) it breaks the attribute value, because
-	 * the delimter can use the same kind of quotes, i.e. [my attr='Some'value'] => broken.
-	 * To avoid this problem the HTML entities are replaced before parsing the content with
-	 * \DomDocument::loadHTML() and re-applied afterwards.
-	 */
 	const HTML_ENTITY_PLACEHOLDERS = [
 		'&apos;' => 'WPML_PLACEHOLDER_APOS',
 		'&quot;' => 'WPML_PLACEHOLDER_QUOT',
 	];
 
-	/**
-	 * Replaces HTML entities with WPML entity placeholders in given $content.
-	 * See self::HTML_ENTITY_PLACEHOLDERS for affected entities.
-	 *
-	 * @param string $content
-	 *
-	 * @return string
-	 */
 	private function apply_placeholders_for_html_entities( $content ) {
 		if ( empty( $content ) ) {
 			return $content;
@@ -245,14 +183,6 @@ class HTML extends Base {
 		);
 	}
 
-	/**
-	 * Replaces WPML entity placeholders with HTML entities in given $content.
-	 * See self::HTML_ENTITY_PLACEHOLDERS for affected entities.
-	 *
-	 * @param string $content
-	 *
-	 * @return string
-	 */
 	private function restore_placeholders_for_html_entities( $content ) {
 		if ( empty( $content ) ) {
 			return $content;

@@ -1,11 +1,5 @@
 <?php
 
-/**
- * @author OnTheGo Systems
- *
- * AMS: https://git.onthegosystems.com/ate/ams/wikis/home
- * ATE: https://git.onthegosystems.com/ate/ams/wikis/home (https://bitbucket.org/emartini_crossover/ate/wiki/browse/API/V1/jobs)
- */
 class WPML_TM_ATE_AMS_Endpoints {
 	const AMS_BASE_URL               = 'https://ams.wpml.org';
 	const ATE_BASE_URL               = 'https://ate.wpml.org';
@@ -16,9 +10,6 @@ class WPML_TM_ATE_AMS_Endpoints {
 	const ATE_JOB_STATUS_DELIVERED   = 8;
 	const ATE_JOB_STATUS_EDITED      = 15;
 
-	/**
-	 * AMS
-	 */
 	const ENDPOINTS_AUTO_LOGIN          = '/panel/autologin';
 	const ENDPOINTS_CLIENTS             = '/api/wpml/clients';
 	const ENDPOINTS_CONFIRM             = '/api/wpml/jobs/confirm';
@@ -38,17 +29,11 @@ class WPML_TM_ATE_AMS_Endpoints {
 
 	const ENDPOINTS_GLOSSARY_COUNTS = '/api/wpml/glossary_counts';
 
-	/**
-	 * AMS CLONED SITES
-	 */
 	const ENDPOINTS_SITE_CONFIRM    = '/api/wpml/websites/confirm';
 	const ENDPOINTS_COPY_ATTACHED   = '/api/wpml/websites/copy_attached';
 	const ENDPOINTS_DISCONNECT      = '/api/wpml/websites/disconnect';
 	const ENDPOINTS_CONNECT         = '/api/wpml/websites/connect_to_previous_organization';
 
-	/**
-	 * ATE
-	 */
 	const ENDPOINTS_JOB                 = '/api/wpml/job';
 	const ENDPOINTS_JOBS                = '/api/wpml/jobs';
 	const ENDPOINT_JOBS_BY_WPML_JOB_IDS = '/api/wpml/jobs/wpml';
@@ -78,30 +63,15 @@ class WPML_TM_ATE_AMS_Endpoints {
 	const RETRY_JOBS = '/ate/jobs/retry';
 	const FIX_JOB      = '/ate/jobs/(?P<ateJobId>\d+)/fix';
 
-	/**
-	 * ICL to ATE migration
-	 */
 	const ENDPOINTS_IMPORT_TRANSLATORS_FROM_ICL = '/api/wpml/icl/translators/import';
 	const ENDPOINTS_START_MIGRATION_IMPORT_FROM_ICL = '/api/wpml/icl/translations/import/start';
 	const ENDPOINTS_CHECK_STATUS_MIGRATION_IMPORT_FROM_ICL = '/api/wpml/icl/translations/import/status';
 
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_ams_auto_login() {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_AUTO_LOGIN );
 	}
 
-	/**
-	 * @param string     $service
-	 * @param string     $endpoint
-	 * @param array|null $query_string
-	 *
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_endpoint_url( $service, $endpoint, ?array $query_string = null ) {
 		$url = $this->get_base_url( $service ) . $endpoint;
 
@@ -129,12 +99,6 @@ class WPML_TM_ATE_AMS_Endpoints {
 		return $url;
 	}
 
-	/**
-	 * @param $service
-	 *
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_base_url( $service ) {
 		switch ( $service ) {
 			case self::SERVICE_AMS:
@@ -185,50 +149,26 @@ class WPML_TM_ATE_AMS_Endpoints {
 		return $url_parts['host'];
 	}
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_ams_register_client() {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_SITE );
 	}
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_ams_status() {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_STATUS );
 	}
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_ams_synchronize_managers() {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_MANAGERS );
 	}
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_ams_synchronize_translators() {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_TRANSLATORS );
 	}
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_ams_copy_attached() {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_COPY_ATTACHED );
 	}
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_ams_site_confirm() {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_SITE_CONFIRM );
 	}
@@ -241,28 +181,14 @@ class WPML_TM_ATE_AMS_Endpoints {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_CONNECT );
 	}
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_enable_subscription() {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_SUBSCRIPTION );
 	}
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_subscription_status() {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_SUBSCRIPTION_STATUS );
 	}
 
-	/**
-	 * @param int|string|array $job_params
-	 *
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_ate_confirm_job( $job_params = null ) {
 		$job_id_part = $this->parse_job_params( $job_params );
 
@@ -281,11 +207,6 @@ class WPML_TM_ATE_AMS_Endpoints {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_GLOSSARY_COUNTS );
 	}
 
-	/**
-	 * @param null|int|string|array $job_params
-	 *
-	 * @return string
-	 */
 	private function parse_job_params( $job_params ) {
 		$job_id_part = '';
 
@@ -301,21 +222,10 @@ class WPML_TM_ATE_AMS_Endpoints {
 		return $job_id_part;
 	}
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_ate_editor() {
 		return $this->get_endpoint_url( self::SERVICE_ATE, self::ENDPOINTS_EDITOR );
 	}
 
-	/**
-	 * @param null|int|string|array $job_params
-	 * @param null|array            $statuses
-	 *
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_ate_jobs( $job_params = null, ?array $statuses = null ) {
 		$job_id_part = $this->parse_job_params( $job_params );
 
@@ -365,10 +275,6 @@ class WPML_TM_ATE_AMS_Endpoints {
 		return $this->get_endpoint_url( self::SERVICE_ATE, self::ENDPOINTS_IMPORT_TRANSLATORS_FROM_ICL);
 	}
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_ate_job_status(  ) {
 		return $this->get_endpoint_url(
 			self::SERVICE_ATE,
@@ -376,11 +282,6 @@ class WPML_TM_ATE_AMS_Endpoints {
 		);
 	}
 
-	/**
-	 * @param int() $job_ids
-	 *
-	 * @return string
-	 */
 	public function get_ate_jobs_by_wpml_job_ids( $job_ids ) {
 		return $this->get_endpoint_url( self::SERVICE_ATE,
 			self::ENDPOINT_JOBS_BY_WPML_JOB_IDS,
@@ -390,41 +291,22 @@ class WPML_TM_ATE_AMS_Endpoints {
 			) );
 	}
 
-	/**
-	 * @return string
-	 */
 	public function get_websites() {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_WEBSITES );
 	}
 
-	/**
-	 * @return string
-	 */
 	public function get_source_id_migration() {
 		return $this->get_endpoint_url( self::SERVICE_ATE, self::ENDPOINT_SOURCE_ID_MIGRATION );
 	}
 
-	/**
-	 * @throws \InvalidArgumentException
-	 * @return string
-	 */
 	public function get_retranslate(): string {
 		return $this->get_endpoint_url( self::SERVICE_ATE, self::ENDPOINTS_RETRANSLATE );
 	}
 
-	/**
-	 * @return string
-	 */
 	public function get_sync_all() {
 		return $this->get_endpoint_url( self::SERVICE_ATE, self::ENDPOINTS_SYNC_ALL );
 	}
 
-	/**
-	 * @param string $paginationToken
-	 * @param int    $page
-	 *
-	 * @return string
-	 */
 	public function get_sync_page( $paginationToken, $page ) {
 		return $this->get_endpoint_url(
 			self::SERVICE_ATE,
@@ -437,11 +319,6 @@ class WPML_TM_ATE_AMS_Endpoints {
 		);
 	}
 
-	/**
-	 * @param int $job_id
-	 *
-	 * @return string
-	 */
 	public function get_clone_job( $job_id ) {
 		return $this->get_endpoint_url(
 			self::SERVICE_ATE,
@@ -449,34 +326,18 @@ class WPML_TM_ATE_AMS_Endpoints {
 		);
 	}
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_credits() {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_CREDITS );
 	}
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_account_balances() {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_ACCOUNT_BALANCES );
 	}
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_website_context() {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_WEBSITE_CONTEXTS);
 	}
 
-	/**
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_resume_all() {
 		return $this->get_endpoint_url( self::SERVICE_AMS, self::ENDPOINTS_RESUME_ALL );
 	}

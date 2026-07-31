@@ -6,11 +6,6 @@ use \WPML\LIB\WP\Cache;
 use \WPML\FP\Logic;
 use \WPML\TM\Jobs\JobLog;
 
-/**
- * Class TranslationProxy_Batch
- *
- * @method static callable|int getBatchId( ...$name ) :: string → int
- */
 class TranslationProxy_Batch {
 
 	use Macroable;
@@ -46,14 +41,6 @@ class TranslationProxy_Batch {
 		return $cache( $batch_name, $tp_id );
 	}
 
-	/**
-	 * returns the name of a generic batch
-	 * name is built based on the current's date
-	 *
-	 * @param bool $isAuto
-	 *
-	 * @return string
-	 */
 	public static function get_generic_batch_name( $isAuto = false ) {
 		if ( ! $isAuto && defined( 'WPML_DEBUG_TRANSLATION_PROXY' )  )
 			\WPML\Utilities\DebugLog::storeBackTrace();
@@ -61,11 +48,6 @@ class TranslationProxy_Batch {
 		return ( $isAuto ? 'Automatic Translations from ' : 'Manual Translations from ' ) . date( 'F \t\h\e jS\, Y' );
 	}
 
-	/**
-	 * returns the id of a generic batch
-	 *
-	 * @return int
-	 */
 	private static function create_generic_batch() {
 		$batch_name = self::get_generic_batch_name();
 		$batch_id   = self::update_translation_batch( $batch_name );
@@ -85,11 +67,8 @@ class TranslationProxy_Batch {
 			)
 		);
 
-		// if the batch id is smaller than 1 we assign the translation to the generic manual translations batch for today if the translation_service is local
 		if ( ( $batch_id < 1 ) && isset( $data ['translation_service'] ) && $data ['translation_service'] == 'local' ) {
-			// first we retrieve the batch id for today's generic translation batch
 			$batch_id = self::create_generic_batch();
-			// then we update the entry in the icl_translation_status table accordingly
 			$data_where = array( 'rid' => $data['rid'] );
 			$wpdb->update(
 				$wpdb->prefix . 'icl_translation_status',
@@ -99,12 +78,6 @@ class TranslationProxy_Batch {
 		}
 	}
 
-	/**
-	 * @param $batch_name
-	 * @param $tp_id
-	 *
-	 * @return mixed
-	 */
 	private static function createBatchRecord( $batch_name, $tp_id ) {
 		global $wpdb;
 
@@ -121,11 +94,6 @@ class TranslationProxy_Batch {
 	}
 }
 
-/**
- * @param $batch_name
- *
- * @return mixed
- */
 TranslationProxy_Batch::macro(
 	'getBatchId',
 	curryN(

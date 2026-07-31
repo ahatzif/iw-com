@@ -16,24 +16,12 @@ class TemplateTranslationHooks implements \IWPML_Backend_Action, \IWPML_Frontend
 		add_action( 'rest_after_insert_wp_template_part', [ $this, 'syncPostName' ], 20, 1 );
 	}
 
-	/**
-	 * @param array  $package
-	 * @param object $post
-	 *
-	 * @return array
-	 */
 	public function doNotTranslateTitle( array $package, $post ) {
 		return TemplateLocalizer::isTemplate( Obj::prop( 'post_type', $post ) )
 			? Obj::assocPath( [ 'contents', 'title', 'translate' ], 0, $package )
 			: $package;
 	}
 
-	/**
-	 * @param array  $postData
-	 * @param object $job
-	 *
-	 * @return array
-	 */
 	public function copyOriginalTitleToTranslation( $postData, $job ) {
 		if ( ! TemplateLocalizer::isJobType( Obj::prop( 'original_post_type', $job ) ) ) {
 			return $postData;
@@ -54,9 +42,6 @@ class TemplateTranslationHooks implements \IWPML_Backend_Action, \IWPML_Frontend
 		return $postData;
 	}
 
-	/**
-	 * @param \WP_Post $post Inserted or updated post object.
-	 */
 	public function syncPostName( $post ) {
 		$translations = PostTranslations::get( $post->ID );
 		global $wpdb;

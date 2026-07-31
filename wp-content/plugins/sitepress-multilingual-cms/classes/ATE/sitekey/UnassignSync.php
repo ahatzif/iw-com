@@ -7,10 +7,8 @@ use function WPML\Container\make;
 
 class UnassignSync implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 
-	/** @var BackgroundTaskService */
 	private $backgroundTaskService;
 
-	/** @var SitekeyProvider */
 	private $sitekeyProvider;
 
 	public function __construct( BackgroundTaskService $backgroundTaskService, SitekeyProvider $sitekeyProvider ) {

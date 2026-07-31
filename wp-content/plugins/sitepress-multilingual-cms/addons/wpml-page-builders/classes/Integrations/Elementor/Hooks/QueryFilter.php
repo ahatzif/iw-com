@@ -13,20 +13,10 @@ use function WPML\FP\spreadArgs;
 
 class QueryFilter implements \IWPML_Frontend_Action, \IWPML_DIC_Action {
 
-	/**
-	 * @var \SitePress
-	 */
 	private $sitepress;
 
-	/**
-	 * @var \WPML_Term_Translation
-	 */
 	private $wpmlTermTranslation;
 
-	/**
-	 * @param \SitePress             $sitepress
-	 * @param \WPML_Term_Translation $wpmlTermTranslation
-	 */
 	public function __construct( \SitePress $sitepress, \WPML_Term_Translation $wpmlTermTranslation ) {
 		$this->sitepress           = $sitepress;
 		$this->wpmlTermTranslation = $wpmlTermTranslation;
@@ -37,14 +27,6 @@ class QueryFilter implements \IWPML_Frontend_Action, \IWPML_DIC_Action {
 			->then( spreadArgs( Fns::withoutRecursion( Fns::identity(), [ $this, 'translateQueryIds' ] ) ) );
 	}
 
-	/**
-	 * @param mixed  $value
-	 * @param int    $object_id
-	 * @param string $meta_key
-	 * @param bool   $single
-	 *
-	 * @return mixed
-	 */
 	public function translateQueryIds( $value, $object_id, $meta_key, $single ) {
 		if ( WPML_Elementor_Data_Settings::META_KEY_DATA === $meta_key && $single ) {
 			return Maybe::of( get_post_meta( $object_id, WPML_Elementor_Data_Settings::META_KEY_DATA, true ) )
@@ -69,11 +51,6 @@ class QueryFilter implements \IWPML_Frontend_Action, \IWPML_DIC_Action {
 		return $value;
 	}
 
-	/**
-	 * @param array|object|mixed $data
-	 *
-	 * @return array|object|mixed
-	 */
 	private function recursivelyTranslateQueryIds( $data ) {
 		if ( is_array( $data ) ) {
 			foreach ( $data as $key => $value ) {
@@ -90,11 +67,6 @@ class QueryFilter implements \IWPML_Frontend_Action, \IWPML_DIC_Action {
 		return $data;
 	}
 
-	/**
-	 * @param object $data
-	 *
-	 * @return object
-	 */
 	private function translateSettingsIds( $data ) {
 		if ( empty( $data->settings ) ) {
 			return $data;
@@ -117,9 +89,6 @@ class QueryFilter implements \IWPML_Frontend_Action, \IWPML_DIC_Action {
 		return $data;
 	}
 
-	/**
-	 * @return string[]
-	 */
 	private function getTermIdProperties() {
 		$properties = [
 			'post_query_include_term_ids',
@@ -130,36 +99,18 @@ class QueryFilter implements \IWPML_Frontend_Action, \IWPML_DIC_Action {
 			'query_exclude_term_ids',
 		];
 
-		/**
-		 * Filters the list of Elementor settings properties containing term IDs to translate.
-		 *
-		 * @param string[] $properties Property names containing term taxonomy IDs.
-		 */
 		return apply_filters( 'wpml_pb_elementor_query_term_id_properties', $properties );
 	}
 
-	/**
-	 * @return string[]
-	 */
 	private function getPostIdProperties() {
 		$properties = [
 			'post_query_posts_ids',
 			'query_posts_ids',
 		];
 
-		/**
-		 * Filters the list of Elementor settings properties containing post IDs to translate.
-		 *
-		 * @param string[] $properties Property names containing post IDs.
-		 */
 		return apply_filters( 'wpml_pb_elementor_query_post_id_properties', $properties );
 	}
 
-	/**
-	 * @param int[] $ids
-	 *
-	 * @return int[]
-	 */
 	private function convertTermTaxonomyIds( $ids ) {
 		$currentLanguage = $this->sitepress->get_current_language();
 

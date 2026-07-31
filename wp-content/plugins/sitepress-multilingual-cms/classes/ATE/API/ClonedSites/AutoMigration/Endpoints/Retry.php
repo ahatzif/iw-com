@@ -12,14 +12,12 @@ use function WPML\Container\make;
 class Retry implements IHandler {
 
 	public function run( Collection $data ) {
-		/** @var Handler $handler */
 		$handler = make( Handler::class );
 
 		if ( ! $handler->tryMigrate() ) {
 			return Either::left( 'Retry failed' );
 		}
 
-		/** @var Lock $lock */
 		$lock = make( Lock::class );
 		$lock->unlock();
 

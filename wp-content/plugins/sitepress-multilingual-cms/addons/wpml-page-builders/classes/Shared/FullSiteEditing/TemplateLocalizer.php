@@ -2,40 +2,19 @@
 
 namespace WPML\PB\FullSiteEditing;
 
-/**
- * Builds language-specific FSE template slugs from a source template slug
- * (e.g. category-test → category-ejemplo for the target language which is need for WordPress to find the correct template).
- */
 class TemplateLocalizer {
 
-	/** @var string[] */
 	const TEMPLATE_POST_TYPES = [ 'wp_template', 'wp_template_part' ];
-	/** @var string[] */
 	const JOB_TYPES = [ 'post_wp_template', 'post_wp_template_part' ];
 
-	/**
-	 * @param string $postType
-	 * @return bool
-	 */
 	public static function isTemplate( $postType ) {
 		return in_array( $postType, self::TEMPLATE_POST_TYPES, true );
 	}
 
-	/**
-	 * @param string $jobType
-	 * @return bool
-	 */
 	public static function isJobType( $jobType ) {
 		return in_array( $jobType, self::JOB_TYPES, true );
 	}
 
-	/**
-	 * Returns the localized template slug for the given language, or the source slug when no translation applies.
-	 *
-	 * @param string      $sourceTemplateSlug Original template post_name (e.g. category-test, page-42).
-	 * @param string|null $languageCode       Target language code.
-	 * @return string Localized slug.
-	 */
 	public static function getLocalizedTemplateSlug( $sourceTemplateSlug, $languageCode ) {
 		if ( ! $languageCode || strpos( $sourceTemplateSlug, '-' ) === false ) {
 			return $sourceTemplateSlug;
@@ -62,21 +41,13 @@ class TemplateLocalizer {
 		$singleMatch = self::matchSingleTemplateSlug( $sourceTemplateSlug );
 		if ( $singleMatch ) {
 			list( $postType, $postSlug, $prefixSegment ) = $singleMatch;
-			$translated = self::translatedPostSlug( $postType, $postSlug, $languageCode ); // phpcs:ignore Generic.Formatting.MultipleStatementAlignment.NotSameWarning
+			$translated = self::translatedPostSlug( $postType, $postSlug, $languageCode );
 			return $translated ? 'single-' . $prefixSegment . '-' . $translated : $sourceTemplateSlug;
 		}
 
 		return $sourceTemplateSlug;
 	}
 
-	/**
-	 * Parses a taxonomy template slug (e.g. taxonomy-my-tax-term-slug) into taxonomy and term slug.
-	 * Supports taxonomy names and rewrite slugs that contain hyphens by matching against registered taxonomies
-	 * (longest prefix first).
-	 *
-	 * @param string $sourceTemplateSlug Slug such as taxonomy-{taxonomy}-{term-slug}.
-	 * @return array|null [ $taxonomy, $termSlug ] or null if no match.
-	 */
 	private static function matchTaxonomyTemplateSlug( $sourceTemplateSlug ) {
 		$prefix = 'taxonomy-';
 		if ( ! self::slugMatchesPrefix( $sourceTemplateSlug, $prefix ) ) {
@@ -96,13 +67,6 @@ class TemplateLocalizer {
 		return [ $match[0], $match[1] ];
 	}
 
-	/**
-	 * Parses a single template slug (e.g. single-book-my-story) into post type, post slug and the
-	 * prefix segment used in the slug (either the post type name or its rewrite slug).
-	 *
-	 * @param string $sourceTemplateSlug Slug such as single-{post-type-or-rewrite}-{post-slug}.
-	 * @return array|null [ $postType, $postSlug, $prefixSegment ] or null if no match.
-	 */
 	private static function matchSingleTemplateSlug( $sourceTemplateSlug ) {
 		$prefix = 'single-';
 		if ( ! self::slugMatchesPrefix( $sourceTemplateSlug, $prefix ) ) {
@@ -117,13 +81,6 @@ class TemplateLocalizer {
 		return self::matchTemplateSlugWithObjects( $sourceTemplateSlug, $prefix, $postTypes );
 	}
 
-	/**
-	 * Checks that the slug starts with the given prefix and has at least one hyphen after it.
-	 *
-	 * @param string $sourceTemplateSlug Full template slug.
-	 * @param string $prefix             Prefix such as 'taxonomy-' or 'single-'.
-	 * @return bool
-	 */
 	private static function slugMatchesPrefix( $sourceTemplateSlug, $prefix ) {
 		if ( strpos( $sourceTemplateSlug, $prefix ) !== 0 ) {
 			return false;
@@ -133,17 +90,6 @@ class TemplateLocalizer {
 		return '' !== $afterPrefix && strpos( $afterPrefix, '-' ) !== false;
 	}
 
-	/**
-	 * Generic helper to match template slugs of the form:
-	 *   {prefix}{name-or-rewrite}-{slug}
-	 * against a collection of objects keyed by name and possibly defining a rewrite slug.
-	 *
-	 * @param string $sourceTemplateSlug Full template slug.
-	 * @param string $prefix             Prefix such as 'taxonomy-' or 'single-'.
-	 * @param array  $objects            Objects keyed by name (taxonomy or post type).
-	 *
-	 * @return array|null [ $name, $slug, $prefixSegment ] or null if no match.
-	 */
 	private static function matchTemplateSlugWithObjects( $sourceTemplateSlug, $prefix, array $objects ) {
 		if ( ! self::slugMatchesPrefix( $sourceTemplateSlug, $prefix ) ) {
 			return null;
@@ -191,14 +137,6 @@ class TemplateLocalizer {
 		return null;
 	}
 
-	/**
-	 * Resolves the translated term slug for a taxonomy and slug-or-id in the given language.
-	 *
-	 * @param string     $taxonomy     Taxonomy name (e.g. category, post_tag).
-	 * @param string|int $slugOrId     Term slug or term_id.
-	 * @param string     $languageCode Target language code.
-	 * @return string|null Translated slug or null if not found.
-	 */
 	private static function translatedTermSlug( $taxonomy, $slugOrId, $languageCode ) {
 		if ( ctype_digit( (string) $slugOrId ) ) {
 			$sourceId = (int) $slugOrId;
@@ -217,14 +155,6 @@ class TemplateLocalizer {
 		return ( $slug && ! is_wp_error( $slug ) ) ? $slug : null;
 	}
 
-	/**
-	 * Resolves the translated post slug for a post type and slug-or-id in the given language.
-	 *
-	 * @param string     $postType     Post type (e.g. post, page).
-	 * @param string|int $slugOrId     Post slug or post ID.
-	 * @param string     $languageCode Target language code.
-	 * @return string|null Translated slug or null if not found.
-	 */
 	private static function translatedPostSlug( $postType, $slugOrId, $languageCode ) {
 		if ( ctype_digit( (string) $slugOrId ) ) {
 			$sourceId = (int) $slugOrId;

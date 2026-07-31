@@ -11,9 +11,6 @@ class StoredSitekey {
 		set_transient( self::TRANSIENT_KEY, $sitekey, self::EXPIRATION );
 	}
 
-	/**
-	 * @return string|null
-	 */
 	public static function get() {
 		$value = get_transient( self::TRANSIENT_KEY );
 

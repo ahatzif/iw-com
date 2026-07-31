@@ -13,16 +13,11 @@ class WPML_Page_Builders_Media_Find_Usage_Noop implements IWPML_PB_Media_Find_An
 	}
 
 	public function prefetch_media_urls( array $urls, $source_lang ) {
-		// No-op: this implementation only collects usage, does not translate.
 	}
 
 	public function reset_translated_ids() {
-		// Do nothing.
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_translated_ids() {
 		return [];
 	}

@@ -15,10 +15,8 @@ class CaptureWizardStepEvent {
 
 		global $wpml_dic;
 
-		/** @var CaptureWizardStep $postHogCaptureEvent */
 		$postHogCaptureEvent = $wpml_dic->make( CaptureWizardStep::class );
 
-		/** @var CaptureEventService $postHogCaptureEventService */
 		$postHogCaptureEventService = $wpml_dic->make( CaptureEventService::class, [
 			':captureEvent' => $postHogCaptureEvent,
 		] );

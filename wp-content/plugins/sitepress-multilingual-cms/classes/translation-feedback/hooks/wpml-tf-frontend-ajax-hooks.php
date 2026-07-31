@@ -1,38 +1,19 @@
 <?php
 
-/**
- * Class WPML_TF_Frontend_AJAX_Hooks
- *
- * @author OnTheGoSystems
- */
 class WPML_TF_Frontend_AJAX_Hooks implements IWPML_Action {
 
-	/** @var WPML_TF_Data_Object_Storage $feedback_storage */
 	private $feedback_storage;
 
-	/** @var WPML_TF_Document_Information $document_information */
 	private $document_information;
 
-	/** @var WPML_TF_Post_Rating_Metrics $post_rating_metrics */
 	private $post_rating_metrics;
 
-	/** @var WPML_TP_Client_Factory $tp_client_factory */
 	private $tp_client_factory;
 
-	/** @var WPML_TP_Client $tp_client */
 	private $tp_client;
 
 	private $post_data;
 
-	/**
-	 * WPML_TF_Frontend_AJAX_Hooks constructor.
-	 *
-	 * @param WPML_TF_Data_Object_Storage  $feedback_storage
-	 * @param WPML_TF_Document_Information $document_information
-	 * @param WPML_TF_Post_Rating_Metrics  $post_rating_metrics
-	 * @param WPML_TP_Client_Factory|null  $tp_client_factory
-	 * @param mixed[]|null                 $post_data
-	 */
 	public function __construct(
 		WPML_TF_Data_Object_Storage $feedback_storage,
 		WPML_TF_Document_Information $document_information,
@@ -47,17 +28,11 @@ class WPML_TF_Frontend_AJAX_Hooks implements IWPML_Action {
 		$this->post_data            = $post_data;
 	}
 
-	/**
-	 * method init
-	 */
 	public function add_hooks() {
 		add_action( 'wp_ajax_nopriv_' . WPML_TF_Frontend_AJAX_Hooks_Factory::AJAX_ACTION, array( $this, 'save_feedback_callback' ) );
 		add_action( 'wp_ajax_' . WPML_TF_Frontend_AJAX_Hooks_Factory::AJAX_ACTION, array( $this, 'save_feedback_callback' ) );
 	}
 
-	/**
-	 * Method callback
-	 */
 	public function save_feedback_callback() {
 		$feedback = null;
 
@@ -76,11 +51,6 @@ class WPML_TF_Frontend_AJAX_Hooks implements IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param int $feedback_id
-	 *
-	 * @return WPML_TF_Feedback|null|false
-	 */
 	private function update_feedback( $feedback_id ) {
 		$feedback = $this->feedback_storage->get( $feedback_id );
 
@@ -88,7 +58,6 @@ class WPML_TF_Frontend_AJAX_Hooks implements IWPML_Action {
 			return false;
 		}
 
-		/** @var WPML_TF_Feedback $feedback */
 		if ( isset( $this->post_data['content'] ) ) {
 			$feedback->set_content( $this->post_data['content'] );
 		}
@@ -102,9 +71,6 @@ class WPML_TF_Frontend_AJAX_Hooks implements IWPML_Action {
 		return $feedback;
 	}
 
-	/**
-	 * @return WPML_TF_Feedback
-	 */
 	private function create_feedback() {
 		$this->document_information->init( $this->post_data['document_id'], $this->post_data['document_type'] );
 
@@ -131,7 +97,6 @@ class WPML_TF_Frontend_AJAX_Hooks implements IWPML_Action {
 		return new WPML_TF_Feedback( $args );
 	}
 
-	/** @return string */
 	private function get_filtered_status() {
 		$rating = isset( $this->post_data['rating'] ) ? $this->post_data['rating'] : null;
 		$status = 'pending';
@@ -143,7 +108,6 @@ class WPML_TF_Frontend_AJAX_Hooks implements IWPML_Action {
 		return $status;
 	}
 
-	/** @return null|WPML_TP_Client */
 	private function get_tp_client() {
 		if ( $this->tp_client_factory && ! $this->tp_client ) {
 			$this->tp_client = $this->tp_client_factory->create();

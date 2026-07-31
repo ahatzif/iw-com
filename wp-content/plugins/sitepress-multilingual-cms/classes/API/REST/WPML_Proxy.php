@@ -4,10 +4,6 @@ declare( strict_types=1 );
 
 use WPML\ATE\Proxies\ProxyRoutingRules;
 
-/**
- * Minimal REST proxy endpoint as a single class.
- * Route: /wp-json/wpml/v1/proxy
- */
 final class WPML_Proxy {
 	const TIMEOUT         = 30;
 	const ROUTE           = '/wpml/v1/proxy';
@@ -26,16 +22,11 @@ final class WPML_Proxy {
 		];
 
 
-	/**
-	 * Even earlier interception during plugins_loaded (priority 0).
-	 * This runs before init/parse_request/REST bootstrap, reducing overall load.
-	 */
 	public static function maybe_handle_request() {
-		// Detect both pretty permalinks and query-string style REST access.
 		$rest_route = self::getRestRoute();
 
 		if ( ! self::routeMatches( $rest_route ) ) {
-			return; // Not our endpoint.
+			return;
 		}
 
 		$nonce = self::getWPNonce();
@@ -52,7 +43,6 @@ final class WPML_Proxy {
 			exit;
 		}
 
-		// Serve immediately using the same logic as parse_request interception.
 		$self = new self();
 
 		$input       = array_merge( (array) $_GET, (array) $_POST );
@@ -93,7 +83,7 @@ final class WPML_Proxy {
 			$headers = $self->parseHeaders( $p['headers'], isset( $p['content_type'] ) ? (string) $p['content_type'] : null );
 
 			if ( ! isset( $headers['Accept'] ) && ! isset( $headers['accept'] ) ) {
-				$headers['Accept'] = '*/*'; // [wpmldev-5894] [WPML PROXY] Ensure wp_remote_request sets a default Accept header to prevent empty response bodies from AMS requests when cURL is not installed
+				$headers['Accept'] = '*/*';
 			}
 			$args = [
 				'method'      => (string) $p['method'],
@@ -120,7 +110,6 @@ final class WPML_Proxy {
 			$body        = wp_remote_retrieve_body( $result );
 			$respHeaders = $self->filterHeaders( (array) $respHeaders );
 
-			// Make the proxy resilient when the client’s server forces an incorrect MIME type - For more details see wpmldev-5793
 			$respHeaders = $self->maybeForceContentTypeByUrl( $respHeaders, $url );
 
 			if ( function_exists( 'status_header' ) ) {
@@ -130,7 +119,6 @@ final class WPML_Proxy {
 				@http_response_code( (int) $status );
 			}
 
-			// Send a clean response (suppress errors, clear buffers, set length, emit headers/body, flush, exit).
 			$self->sendCleanResponse( $respHeaders, (string) $body );
 		} catch ( Throwable $e ) {
 			self::error( 500, 'internal_error', $e->getMessage() );
@@ -138,46 +126,27 @@ final class WPML_Proxy {
 		}
 	}
 
-	/**
-	 * Send a clean proxied response: suppress error output, clear buffers, avoid WP shutdown prints,
-	 * set Content-Length, emit headers/body, optionally flush via FastCGI, and exit.
-	 *
-	 * @param array  $respHeaders
-	 * @param string $body
-	 *
-	 * @return void
-	 */
 	private function sendCleanResponse( array $respHeaders, string $body ) {
-		// [Goal] Prevent notices/warnings from polluting the proxied response.
-		// Disable error display at runtime and swallow PHP errors from being echoed.
 		if ( function_exists( 'ini_set' ) ) {
 			@ini_set( 'display_errors', '0' );
 		}
 		set_error_handler(
             function () {
-                // Swallow all PHP errors (still logged if logging is enabled)
                 return true;
             },
             E_ALL
         );
 
-		// [Goal] Ensure no previous buffered output leaks into the response.
-		// Clear all active output buffers before sending headers/body.
 		while ( ob_get_level() > 0 ) {
 			@ob_end_clean();
 		}
 
-		// [Goal] Avoid typical WordPress shutdown callbacks that might print.
-		// This does not affect PHP-level shutdown functions but prevents WP hooks from emitting content.
 		if ( function_exists( 'remove_all_actions' ) ) {
 			remove_all_actions( 'shutdown' );
 		}
 
-		// [Goal] Provide a strict, predictable response size.
-		// Add Content-Length so clients can trust the payload size.
 		$respHeaders['Content-Length'] = (string) strlen( (string) $body );
 
-		// Emit headers
 		foreach ( $respHeaders as $name => $value ) {
 			if ( $name === '' ) {
 				continue;
@@ -186,21 +155,15 @@ final class WPML_Proxy {
 			@header( $line, true );
 		}
 
-		// Emit body
-		echo (string) $body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo (string) $body;
 
-		// [Goal] Flush response to client ASAP when using FPM/FastCGI.
 		if ( function_exists( 'fastcgi_finish_request' ) ) {
 			@fastcgi_finish_request();
 		}
 
-		// [Goal] Terminate immediately to avoid any further processing.
 		exit;
 	}
 
-	/**
-	 * @return false|string|null
-	 */
 	public static function getRestRoute() {
 		$rest_route = isset( $_GET['rest_route'] ) ? (string) $_GET['rest_route'] : null;
 		if ( ! $rest_route ) {
@@ -213,11 +176,6 @@ final class WPML_Proxy {
 		return $rest_route;
 	}
 
-	/**
-	 * Extract REST nonce from headers or params.
-	 *
-	 * @return string|null
-	 */
 	private static function getWPNonce() {
 		if ( isset( $_SERVER['HTTP_X_WP_NONCE'] ) && $_SERVER['HTTP_X_WP_NONCE'] !== '' ) {
 			return (string) $_SERVER['HTTP_X_WP_NONCE'];
@@ -323,14 +281,6 @@ final class WPML_Proxy {
 		return $out;
 	}
 
-	/**
-	 * Normalize/force Content-Type from URL extension
-	 *
-	 * @param array  $headers
-	 * @param string $url
-	 *
-	 * @return array
-	 */
 	private function maybeForceContentTypeByUrl( array $headers, string $url ): array {
 		$path = (string) parse_url( $url, PHP_URL_PATH );
 		$ext  = strtolower( (string) pathinfo( $path, PATHINFO_EXTENSION ) );
@@ -371,9 +321,6 @@ final class WPML_Proxy {
 		return $raw === false ? '' : $raw;
 	}
 
-	/**
-	 * @return void
-	 */
 	public static function error( $status_code, $error, $message ) {
 		if ( function_exists( 'status_header' ) ) {
 			status_header( $status_code );
@@ -381,7 +328,6 @@ final class WPML_Proxy {
 		if ( function_exists( 'http_response_code' ) ) {
 			@http_response_code( $status_code );
 		}
-		// Optional: ensure no prior buffered output
 		while ( ob_get_level() > 0 ) {
 			@ob_end_clean(); }
 
@@ -395,7 +341,6 @@ final class WPML_Proxy {
 		@header( 'Content-Length: ' . strlen( (string) $payload ), true );
 
 		echo (string) $payload;
-		// Optional: fastcgi_finish_request if available
 		if ( function_exists( 'fastcgi_finish_request' ) ) {
 			@fastcgi_finish_request(); }
 		exit;

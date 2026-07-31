@@ -22,10 +22,8 @@ class Process {
 
 	const LOCK_RELEASE_TIMEOUT = 1 * MINUTE_IN_SECONDS;
 
-	/** @var WPML_TM_ATE_API $api */
 	private $api;
 
-	/** @var WPML_TM_ATE_Job_Repository $ateRepository */
 	private $ateRepository;
 
 	public function __construct( WPML_TM_ATE_API $api, WPML_TM_ATE_Job_Repository $ateRepository ) {
@@ -33,11 +31,6 @@ class Process {
 		$this->ateRepository = $ateRepository;
 	}
 
-	/**
-	 * @param Arguments $args
-	 *
-	 * @return Result
-	 */
 	public function run( Arguments $args ) {
 		$result          = new Result();
 
@@ -66,16 +59,8 @@ class Process {
 		return $result;
 	}
 
-	/**
-	 * This will run the sync on extra pages.
-	 *
-	 * @param Result $result
-	 * @param Arguments $args
-	 *
-	 * @return Result
-	 */
 	private function runSyncOnPages( Result $result, Arguments $args ) {
-		$apiPage = $args->page - 1; // ATE API pagination starts at 0.
+		$apiPage = $args->page - 1;
 		$data    = $this->api->sync_page( $args->ateToken, $apiPage );
 
 		$jobs         = Obj::propOr( [], 'items', $data );
@@ -113,17 +98,7 @@ class Process {
 		return $result;
 	}
 
-	/**
-	 * This will run the first sync iteration.
-	 * We send all the job IDs we want to sync.
-	 *
-	 * @param Result $result
-	 * @param boolean $includeManualAndLongstandingJobs
-	 *
-	 * @return Result
-	 */
 	private function runSyncInit( Result $result, $includeManualAndLongstandingJobs = true ) {
-		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- existing property name
 		$jobsData   = $this->ateRepository->get_jobs_to_sync_with_element_ids( $includeManualAndLongstandingJobs );
 		$ateJobIds  = $jobsData['ateJobIds'];
 		$postIds    = $jobsData['postIds'];
@@ -140,7 +115,6 @@ class Process {
 					'includeManualAndLongstandingJobs' => $includeManualAndLongstandingJobs,
 				]
 			);
-			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- existing property name
 			$this->ateRepository->increment_ate_sync_count( $ateJobIds );
 			$data = $this->api->sync_all( $ateJobIds, $postIds, $stringIds, $packageIds );
 
@@ -152,12 +126,9 @@ class Process {
 			}
 
 			if ( isset( $data->next->pagination_token, $data->next->pages_number ) ) {
-				// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- existing property names
 				$result->ateToken = $data->next->pagination_token;
-				// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- existing property name
 				$result->numberOfPages = $data->next->pages_number;
-				// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- existing property name
-				$result->nextPage = 1; // We start pagination at 1 to avoid carrying a falsy value.
+				$result->nextPage = 1;
 			}
 
 			JobLog::add(
@@ -172,28 +143,16 @@ class Process {
 		return $result;
 	}
 
-	/**
-	 * @param boolean $includeManualAndLongstandingJobs
-	 *
-	 * @return array
-	 */
 	private function getAteJobIdsToSync( $includeManualAndLongstandingJobs = true ) {
-		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- existing property name
 		return $this->ateRepository
 			->get_jobs_to_sync( $includeManualAndLongstandingJobs )
 			->map_to_property( 'editor_job_id' );
 	}
 
-	/**
-	 * @param array $items
-	 *
-	 * @return Job[] $items
-	 */
 	private function handleJobs( array $items ) {
-		// phpcs:disable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 		return wpml_collect( $items )
 			->map( [ Job::class, 'fromAteResponse' ] )
-			->map( Obj::over( Obj::lensProp( 'jobId' ), Map::fromRid() ) ) // wpmlJobId returned by ATE endpoint represents RID column in wp_icl_translation_status.
+			->map( Obj::over( Obj::lensProp( 'jobId' ), Map::fromRid() ) )
 			->map(
 				function ( $job ) {
 					if ( $job->isUnsolvable ) {
@@ -214,18 +173,9 @@ class Process {
 				}
 			)
 			->toArray();
-		// phpcs:enable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 	}
 
-	/**
-	 * Log unsolvable job error to the database.
-	 *
-	 * @param Job $job
-	 *
-	 * @return void
-	 */
 	private function logUnsolvableJob( $job ) {
-		// phpcs:disable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 		$service = TranslateJobErrorServiceFactory::create();
 
 		$service->logError(
@@ -238,6 +188,5 @@ class Process {
 				'jobData'   => $job->errorData,
 			]
 		);
-		// phpcs:enable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 	}
 }

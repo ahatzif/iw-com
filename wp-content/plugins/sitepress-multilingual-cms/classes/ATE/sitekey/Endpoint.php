@@ -21,8 +21,6 @@ class Endpoint extends AbstractTaskEndpoint implements IHandler, TaskEndpointInt
 
 	public function runBackgroundTask( BackgroundTask $task ) {
 		if ( ! make( SitekeyProvider::class )->hasSitekey() ) {
-			// If a site key is not defined, we don't want to repeat this background task again.
-			// The sync action will be triggered if a user provides a valid site key.
 			SitekeyConfirmationFlag::markAsCompleted();
 			$task->finish();
 

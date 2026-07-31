@@ -67,18 +67,7 @@ class Notice implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		return Handler::getMigrationData() || Handler::hasFailed();
 	}
 
-	/**
-	 * Migration data can arrive on a site via a database import from another install
-	 * (e.g. when the user clones a site's DB back to its origin domain). The persisted
-	 * `new_url` then no longer matches the current site, so the React notice would
-	 * render data for a different domain. Clear the option so a fresh ATE call can
-	 * re-evaluate against AMS instead.
-	 */
 	private function discardStaleMigrationData(): void {
-		// When a migration is being simulated via the ATE_CLONED_SITE_URL constant
-		// (used by Codeception tests and manual QA), siteurl stays at the original
-		// domain on purpose while new_url points elsewhere — that mismatch is the
-		// simulation, not stale data.
 		if ( defined( 'ATE_CLONED_SITE_URL' ) || defined( 'ATE_CLONED_DEFAULT_SITE_URL' ) ) {
 			return;
 		}
@@ -101,11 +90,6 @@ class Notice implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		return rtrim( preg_replace( '#^https?://#i', '', $url ), '/' );
 	}
 
-	/**
-	 * Mirrors WPML\Notices\SiteKey\Notice::getData() so the consolidated notice can host the same SiteKeyForm.
-	 *
-	 * @return array{nonce:string,siteUrl:string}
-	 */
 	private function getSiteKeyConfig(): array {
 		return [
 			'nonce'   => wp_create_nonce( 'save_site_key_wpml' ),

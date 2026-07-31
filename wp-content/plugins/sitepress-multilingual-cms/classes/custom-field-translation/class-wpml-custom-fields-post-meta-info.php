@@ -1,19 +1,11 @@
 <?php
 
-/**
- * @author OnTheGo Systems
- */
 class WPML_Custom_Fields_Post_Meta_Info implements IWPML_Action {
 	const RESOURCES_HANDLE = 'wpml-cf-info';
 	const AJAX_ACTION      = 'wpml-cf-info-get';
 
 	private $translatable_element_factory;
 
-	/**
-	 * WPML_Custom_Fields_Post_Meta_Info constructor.
-	 *
-	 * @param WPML_Translation_Element_Factory $translatable_element_factory
-	 */
 	public function __construct( WPML_Translation_Element_Factory $translatable_element_factory ) {
 		$this->translatable_element_factory = $translatable_element_factory;
 	}
@@ -29,7 +21,6 @@ class WPML_Custom_Fields_Post_Meta_Info implements IWPML_Action {
 		if ( check_ajax_referer( self::AJAX_ACTION, 'nonceGet', false ) ) {
 			$meta_id = filter_var( $_GET['meta_id'], FILTER_SANITIZE_NUMBER_INT );
 			if ( $meta_id ) {
-				/** @var \stdClass $custom_field */
 				$custom_field = get_post_meta_by_id( (int) $meta_id );
 				if ( $custom_field ) {
 					$post_id  = $custom_field->post_id;

@@ -7,10 +7,8 @@ class WPML_Absolute_To_Permalinks {
 	private $taxonomies_query;
 	private $lang;
 
-	/** @var SitePress $sitepress */
 	private $sitepress;
 
-	/** @var AutoAdjustIds $auto_adjust_ids */
 	private $auto_adjust_ids;
 
 	public function __construct( SitePress $sitepress, ?AutoAdjustIds $auto_adjust_ids = null ) {

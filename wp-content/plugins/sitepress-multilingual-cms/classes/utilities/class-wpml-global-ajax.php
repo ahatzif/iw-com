@@ -4,11 +4,6 @@ use WPML\Core\Component\PostHog\Application\Service\Event\EventInstanceService;
 
 class WPML_Global_AJAX extends WPML_SP_User {
 
-	/**
-	 * WPML_Global_AJAX constructor.
-	 *
-	 * @param SitePress $sitepress
-	 */
 	public function __construct( &$sitepress ) {
 		parent::__construct( $sitepress );
 		add_action( 'wp_ajax_save_language_negotiation_type', array( $this, 'save_language_negotiation_type_action' ) );
@@ -36,15 +31,12 @@ class WPML_Global_AJAX extends WPML_SP_User {
 			if ( $icl_language_negotiation_type ) {
 				$this->sitepress->set_setting( 'language_negotiation_type', $icl_language_negotiation_type );
 
-				// prepare the language_negotiation_type for PostHog event capture.
-				// as per the LanguageNegotiation class the values will be: directory | domain | parameter
 				$postHogCaptureEventData['language_negotiation_type'] = \WPML\Core\LanguageNegotiation::getModeAsString( $icl_language_negotiation_type );
 				$response = true;
 
 				if ( ! empty( $language_domains ) ) {
 					$this->sitepress->set_setting( 'language_domains', $language_domains );
 
-					// prepare the language_domains array for PostHog event capture
 					$postHogCaptureEventData['language_domains'] = $language_domains;
 				}
 
@@ -52,13 +44,11 @@ class WPML_Global_AJAX extends WPML_SP_User {
 					$urls                                   = $this->sitepress->get_setting( 'urls' );
 					$urls['directory_for_default_language'] = $use_directory ? true : 0;
 
-					// prepare the directory_for_default_language boolean value for PostHog event capture
 					$postHogCaptureEventData['directory_for_default_language'] = $use_directory ? true : false;
 
 					if ( $use_directory ) {
 						$urls['show_on_root'] = $use_directory ? $show_on_root : '';
 
-						// prepare the show_on_root value for PostHog event capture
 						$postHogCaptureEventData['show_on_root'] = $urls['show_on_root'];
 
 						if ( 'html_file' === $show_on_root ) {
@@ -67,7 +57,6 @@ class WPML_Global_AJAX extends WPML_SP_User {
 							if ( $response ) {
 								$urls['root_html_file_path'] = $root_page_url;
 
-								// prepare the root_html_file_path value for PostHog event capture
 								$postHogCaptureEventData['root_html_file_path'] = $urls['root_html_file_path'];
 							}
 						} else {
@@ -81,11 +70,8 @@ class WPML_Global_AJAX extends WPML_SP_User {
 								$root_page_exists = ( $root_page && $root_page->post_status !== 'trash' );
 							}
 
-							// prepare the root_page_created boolean value for PostHog event capture
 							$postHogCaptureEventData['root_page_created'] = $root_page_exists;
-							// prepare the root_page_id value for PostHog event capture
 							$postHogCaptureEventData['root_page_id'] = $root_page_id;
-							// prepare the hide_language_switchers boolean value for PostHog event capture
 							$postHogCaptureEventData['hide_language_switchers'] = (bool) $urls['hide_language_switchers'];
 						}
 					}
@@ -96,11 +82,9 @@ class WPML_Global_AJAX extends WPML_SP_User {
 				$this->sitepress->set_setting( 'xdomain_data', $icl_xdomain_data );
 				$this->sitepress->set_setting( 'language_per_domain_sso_enabled', $sso_enabled );
 
-				// prepare the xdomain_data value for PostHog event capture
 				$postHogCaptureEventData['xdomain_data'] = $icl_xdomain_data == WPML_XDOMAIN_DATA_GET ? 'GET' :
 					( $icl_xdomain_data == WPML_XDOMAIN_DATA_POST ? 'POST' : 'OFF' );
 
-				// prepare the language_per_domain_sso_enabled value for PostHog event capture
 				$postHogCaptureEventData['language_per_domain_sso_enabled'] = $sso_enabled;
 
 				$this->sitepress->save_settings();
@@ -113,7 +97,6 @@ class WPML_Global_AJAX extends WPML_SP_User {
 				$save_permalinks_link    = '<a href="' . $permalinks_settings_url . '">' . _x( 're-save the site permalinks', 'You may need to {re-save the site permalinks} - 2/2', 'sitepress' ) . '</a>';
 				$save_permalinks_message = sprintf( _x( 'You may need to %s.', 'You may need to {re-save the site permalinks} - 1/2', 'sitepress' ), $save_permalinks_link );
 
-				// Start capturing PostHog event after the settings are saved.
 				$this->postHogCaptureLanguageNegotiationData($postHogCaptureEventData);
 
 				wp_send_json_success( $save_permalinks_message );
@@ -122,7 +105,6 @@ class WPML_Global_AJAX extends WPML_SP_User {
 					$errors[] = __( 'Error', 'sitepress' );
 				}
 
-				// Start capturing PostHog event for failed language negotiation save.
 				$this->postHogCaptureFailedLanguageNegotiationSave( $errors );
 
 				wp_send_json_error( $errors );
@@ -140,19 +122,12 @@ class WPML_Global_AJAX extends WPML_SP_User {
 	}
 
 
-	/** @param array $errors */
 	private function postHogCaptureFailedLanguageNegotiationSave( $errors ) {
 		\WPML\PostHog\Event\CaptureEvent::capture(
 			( new EventInstanceService() )->getSetLanguageUrlFormatFailedEvent( $errors )
 		);
 	}
 
-	/**
-	 * @param string $url
-	 * @param array  $errors
-	 *
-	 * @return bool
-	 */
 	private function validateRootPageUrl( $url, array &$errors ) {
 		$wp_http = new WP_Http();
 		if ( '' === trim( $url ) ) {
@@ -192,11 +167,6 @@ class WPML_Global_AJAX extends WPML_SP_User {
 		return true;
 	}
 
-	/**
-	 * @param string $url
-	 *
-	 * @return bool
-	 */
 	function is_external( $url ) {
 		$site_url        = get_site_url();
 		$site_components = wp_parse_url( $site_url );
@@ -214,14 +184,9 @@ class WPML_Global_AJAX extends WPML_SP_User {
 		$subdomain_position = strrpos( $url_host, '.' . $site_host );
 		$subdomain_length   = strlen( $url_host ) - strlen( '.' . $site_host );
 
-		return $subdomain_position !== $subdomain_length; // check if the url host is a subdomain
+		return $subdomain_position !== $subdomain_length;
 	}
 
-	/**
-	 * @param string $site_host
-	 *
-	 * @return string
-	 */
 	function remove_www_prefix( $site_host ) {
 		$site_host_levels = explode( '.', $site_host );
 		if ( 2 > count( $site_host_levels ) && 'www' === $site_host_levels[0] ) {

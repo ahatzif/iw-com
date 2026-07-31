@@ -13,11 +13,6 @@ use WPML\TM\ATE\Review\ReviewStatus;
 class Jobs {
 	const LONGSTANDING_AT_ATE_SYNC_COUNT = 100;
 
-	/**
-	 * Returns the SQL fragment for LEFT JOIN with error data per job.
-	 *
-	 * @return string
-	 */
 	private function getLatestErrorJoinSQL() {
 		global $wpdb;
 
@@ -27,17 +22,6 @@ class Jobs {
 		";
 	}
 
-	/**
-	 * Returns the SQL fragment for WHERE condition that excludes jobs with errors.
-	 *
-	 * Exclusion rules:
-	 * - Exclude jobs with SyncError (any counter value)
-	 * - Exclude jobs with DownloadError when counter >= 3
-	 * - Include jobs with other error types (not explicitly handled)
-	 * - Include jobs without errors
-	 *
-	 * @return string
-	 */
 	private function getErrorExclusionWhereSQL() {
 		return "
 			AND (
@@ -52,22 +36,9 @@ class Jobs {
 		";
 	}
 
-	/**
-	 * Each string inside string batch is counted separately.
-	 * Therefore, if we have two string batches and the first one has 3 strings inside and another 2,
-	 * we will count it as 5=3+2 instead of 2.
-	 *
-	 * @param bool $includeLongstanding A long-standing job is an automatic ATE job which we already tried to sync LONGSTANDING_AT_ATE_SYNC_COUNT or more times.
-	 * @return int
-	 */
 	public function getCountOfAutomaticInProgress( $includeLongstanding = true ) {
 		global $wpdb;
 
-		/**
-		 * Notice that we have the LEFT JOIN on `icl_string_batches` table.
-		 * This is relevant only for string jobs. In case of the posts, it will do nothing.
-		 * We need that join to count individual strings inside a string batch.
-		 */
 		$sql = "
 				SELECT COUNT(jobs.job_id)
 				FROM {$wpdb->prefix}icl_translate_job jobs
@@ -108,9 +79,6 @@ class Jobs {
 		return (int) $wpdb->get_var( $wpdb->prepare( $sql, \WPML_TM_Editors::ATE, ICL_TM_IN_PROGRESS, Languages::getDefaultCode() ) );
 	}
 
-	/**
-	 * @return int
-	 */
 	public function getCountOfInProgress() {
 		global $wpdb;
 
@@ -137,9 +105,6 @@ class Jobs {
 		return (int) $wpdb->get_var( $wpdb->prepare( $sql, \WPML_TM_Editors::ATE, ICL_TM_IN_PROGRESS ) );
 	}
 
-	/**
-	 * @return int
-	 */
 	public function getCountOfNeedsReview() {
 		global $wpdb;
 
@@ -164,12 +129,6 @@ class Jobs {
 	}
 
 
-	/**
-	 * It checks whether we have ANY jobs in the DB. It doesn't matter what kind of jobs they are. It can be a job from ATE, CTE or even the Translation Proxy.
-	 *
-	 * @return bool
-	 * @todo This method should not be here as the current class relates solely to ATE jobs, while this method asks for ANY jobs.
-	 */
 	public function hasAny() {
 		global $wpdb;
 
@@ -180,9 +139,6 @@ class Jobs {
 		return boolval( $wpdb->get_var( $sql ) );
 	}
 
-	/**
-	 * @return bool True if there is at least one job to sync.
-	 */
 	public function hasAnyToSync() {
 		global $wpdb;
 
@@ -211,12 +167,6 @@ class Jobs {
 		return (bool) $wpdb->get_var( $wpdb->prepare( $sql, \WPML_TM_Editors::ATE, ICL_TM_IN_PROGRESS ) );
 	}
 
-	/**
-	 * This is optimized query for getting the ate job ids to sync.
-	 *
-	 * @param bool $includeManualAndLongstandingJobs
-	 * @return int[]
-	 */
 	public function getATEJobIdsToSync( $includeManualAndLongstandingJobs = true ) {
 		global $wpdb;
 
@@ -251,12 +201,6 @@ class Jobs {
 		return $wpdb->get_col( $wpdb->prepare( $sql, \WPML_TM_Editors::ATE, ICL_TM_IN_PROGRESS, ICL_TM_WAITING_FOR_TRANSLATOR ) );
 	}
 
-	/**
-	 * Get ATE job IDs with their associated element IDs for ordering.
-	 *
-	 * @param bool $includeManualAndLongstandingJobs
-	 * @return array{ateJobIds: int[], postIds: int[], stringIds: int[], packageIds: int[]}
-	 */
 	public function getATEJobIdsToSyncWithElementIds( $includeManualAndLongstandingJobs = true ): array {
 		global $wpdb;
 
@@ -290,20 +234,14 @@ class Jobs {
 
 		if ( ! $includeManualAndLongstandingJobs ) {
 			$sql .= ' AND jobs.ate_sync_count < %d AND jobs.automatic = 1';
-			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL is built with table prefixes only, all values use placeholders
 			$results = $wpdb->get_results( $wpdb->prepare( $sql, \WPML_TM_Editors::ATE, ICL_TM_IN_PROGRESS, ICL_TM_WAITING_FOR_TRANSLATOR, self::LONGSTANDING_AT_ATE_SYNC_COUNT ) );
 		} else {
-			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- SQL is built with table prefixes only, all values use placeholders
 			$results = $wpdb->get_results( $wpdb->prepare( $sql, \WPML_TM_Editors::ATE, ICL_TM_IN_PROGRESS, ICL_TM_WAITING_FOR_TRANSLATOR ) );
 		}
 
 		return $this->groupJobsByElementType( $results ?: [] );
 	}
 
-	/**
-	 * @param array $results
-	 * @return array{ateJobIds: int[], postIds: int[], stringIds: int[], packageIds: int[]}
-	 */
 	private function groupJobsByElementType( array $results ): array {
 		$ateJobIds  = [];
 		$postIds    = [];

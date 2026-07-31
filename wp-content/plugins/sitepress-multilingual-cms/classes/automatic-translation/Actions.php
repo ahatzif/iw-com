@@ -29,13 +29,10 @@ use function WPML\FP\spreadArgs;
 
 class Actions implements \IWPML_Action {
 
-	/** @see \WPML\PB\Shutdown\Hooks */
 	const PRIORITY_AFTER_PB_PROCESS = 100;
 
-	/** @var \WPML_Translation_Element_Factory */
 	private $translationElementFactory;
 
-	/** @var PackageDefinitionQuery */
 	private $packageDefinitionQuery;
 
 	public function __construct(
@@ -53,12 +50,6 @@ class Actions implements \IWPML_Action {
 			->then( spreadArgs( [ $this, 'sendPackageToTranslation' ] ) );
 	}
 
-	/**
-	 * @param int $postId
-	 * @param callable|null $onComplete
-	 *
-	 * @throws \WPML\Auryn\InjectionException
-	 */
 	public function sendToTranslation( $postId, $onComplete = null ) {
 		$execOnComplete = function () use ( $postId, $onComplete ) {
 			if ( is_callable( $onComplete ) ) {
@@ -88,12 +79,6 @@ class Actions implements \IWPML_Action {
 						     $isDefaultLang         = $postElement->get_language_code() === Languages::getDefaultCode();
 						     $isPublish             = 'publish' === $postStatus;
 						     $isDraftOk             = 'draft' === $postStatus && \WPML\Setup\Option::getTranslateEverythingDrafts();
-						     /**
-						      * Allows excluding some posts from automatic translation.
-						      *
-						      * @param bool $excluded Whether the post is excluded from automatic translation. Default false.
-						      * @param int  $postId   The post ID to check.
-						      */
 						     $excluded = apply_filters( 'wpml_exclude_post_from_auto_translate', false, $postId );
 
 						     if (
@@ -110,8 +95,6 @@ class Actions implements \IWPML_Action {
 								     'lang_count'       => Lst::length( $secondaryLanguageCodes ),
 							     ] );
 
-							     // When $secondaryLanguageCodes is empty this can mean that WPML failed to get languages eligible for automatic translation
-							     // from ATE side, and if so, we display notice to the user that WPML failed to create translation jobs for the newly created post/page
 							     if ( ! Lst::length( $secondaryLanguageCodes ) ) {
 								     JobLog::addError( 'auto_translate_no_eligible_languages', [ 'post_id' => $postId ] );
 								     do_action( 'wpml_update_failed_jobs_notice', $postElement );
@@ -147,11 +130,6 @@ class Actions implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param \WPML_Package $package
-	 *
-	 * @return void
-	 */
 	public function sendPackageToTranslation( $package ) {
 		static $updatedPackages = [];
 
@@ -167,18 +145,6 @@ class Actions implements \IWPML_Action {
 
     $shouldTranslate = $this->packageDefinitionQuery->isPackageOnTheList( $package->kind_slug );
 
-		/**
-		 * Allows enabling automatic translation for string packages.
-		 *
-		 * @since 4.7.0
-		 *
-		 * @param bool  $shouldTranslate
-		 * @param array $packageData {
-		 *     @type string $name
-		 *     @type string $kind
-		 *     @type string $kind_slug
-		 * }
-		 */
 		$afterFilter = apply_filters( 'wpml_auto_translate_string_package', $shouldTranslate, (array) $package );
 
 		if ( $afterFilter ) {
@@ -187,15 +153,10 @@ class Actions implements \IWPML_Action {
 			return;
 		}
 
-		// Decision said "don't translate this package" — log it briefly so
-		// admins debugging "my plugin's strings aren't getting translated"
-		// can see whether the kind_slug list excluded it or a filter blocked
-		// it. The success path is already logged via getPackageHandler.
 		JobLog::maybeInitRequest();
 		JobLog::createNewGroup(
 			JobLog::GROUP_ID_TRANSLATE_EVERYTHING,
 			'String package auto-translate skipped',
-			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 			[ 'package_id' => $package->ID, 'kind_slug' => $package->kind_slug ?? null ]
 		);
 		JobLog::add( 'auto_translate_package_skipped_by_decision', [
@@ -205,11 +166,6 @@ class Actions implements \IWPML_Action {
 		JobLog::finishCurrentGroup();
 	}
 
-	/**
-	 * @param \WPML_Package $package
-	 *
-	 * @return \Closure
-	 */
 	private function getPackageHandler( \WPML_Package $package ) {
 		return function() use ( $package ) {
 			JobLog::maybeInitRequest();
@@ -225,7 +181,6 @@ class Actions implements \IWPML_Action {
 			JobLog::addExtraLogData( 'package_id', JobLog::safeProp( $package, 'ID' ) );
 
 			try {
-				// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 				$packageElement  = $this->translationElementFactory->create_package( $package->ID, $package->kind_slug );
 				$sourceLang      = JobLog::safeCall( $packageElement, 'get_source_language_code' );
 
@@ -237,8 +192,6 @@ class Actions implements \IWPML_Action {
 						'lang_count'       => Lst::length( $secondaryLanguageCodes ),
 					] );
 
-					// @todo: When $secondaryLanguageCodes is empty this can mean that WPML failed to get languages eligible for automatic translation
-					// from ATE side, we should warn the user as we do for posts.
 
 					$this->cancelExistingTranslationJobs( $packageElement, $secondaryLanguageCodes );
 					$this->createTranslationJobs( $packageElement, $secondaryLanguageCodes );
@@ -258,10 +211,6 @@ class Actions implements \IWPML_Action {
 		};
 	}
 
-	/**
-	 * @param \WPML_Translation_Element $translationElement
-	 * @param array                     $languages
-	 */
 	private function cancelExistingTranslationJobs( \WPML_Translation_Element $translationElement, $languages ) {
 		$getJobEntity = function ( $jobId ) use ( $translationElement ) {
 			return wpml_tm_get_jobs_repository()->get_job( Map::fromJobId( $jobId ), $translationElement->get_element_type() );
@@ -279,21 +228,12 @@ class Actions implements \IWPML_Action {
 			->map( Fns::tap( partial( 'do_action', 'wpml_tm_job_cancelled' ) ) );
 	}
 
-	/**
-	 * @return callable :: \stdClass -> bool
-	 */
 	private static function isCompleteAndUpToDateJob() {
 		return function ( $job ) {
 			return Cast::toInt( $job->needs_update ) !== 1 && Cast::toInt( $job->status ) === ICL_TM_COMPLETE;
 		};
 	}
 
-	/**
-	 * @param \WPML_Translation_Element $translationElement
-	 * @param array                     $targetLanguages
-	 *
-	 * @return void
-	 */
 	public function createTranslationJobs( \WPML_Translation_Element $translationElement, $targetLanguages ) {
 		if ( ! Option::shouldTranslateEverything() ) {
 			return;
@@ -307,7 +247,6 @@ class Actions implements \IWPML_Action {
 			$isNotCompleteAndUpToDate,
 			$isPostElementAndUsingTmEditor
 		) {
-			/** @var \stdClass|false $job */
 			$job = Jobs::getElementJob( $translationElement->get_element_id(), $translationElement->get_wpml_element_type(), $language );
 
 			if (
@@ -327,11 +266,6 @@ class Actions implements \IWPML_Action {
 		Fns::map( $sendToTranslation, $targetLanguages );
 	}
 
-	/**
-	 * @param int $jobId
-	 *
-	 * @return bool
-	 */
 	private function canJobBeReTranslatedAutomatically( $jobId ) {
 		$wpmlTmLoadOldJobsEditor = wpml_tm_load_old_jobs_editor();
 		$editorForOldJobs        = $wpmlTmLoadOldJobsEditor->get( $jobId );
@@ -340,10 +274,6 @@ class Actions implements \IWPML_Action {
 		return $editorForOldJobs === \WPML_TM_Editors::ATE || $currentJobEditor === \WPML_TM_Editors::WP;
 	}
 
-	/**
-	 * @param \WPML_Translation_Element $translationElement
-	 * @param string                    $language
-	 */
 	private function createJob( \WPML_Translation_Element $translationElement, $language ) {
 		$batch = new \WPML_TM_Translation_Batch(
 			[
@@ -362,13 +292,6 @@ class Actions implements \IWPML_Action {
 	}
 
 
-	/**
-	 * @param string $sourceLanguage
-	 * @param array  $elements E.g. [ [1, 'fr'], [1, 'de'], [2, 'fr'] ]
-	 * @param string $elementType Element type 'post_page' or 'package_wpforms' or 'st-batch'
-	 *
-	 * @return array
-	 */
 	public function createNewTranslationJobs( $sourceLanguage, array $elements, $elementType ) {
 		$getTargetLang      = Lst::nth( 1 );
 		$setTranslateAction = Obj::objOf( Fns::__, \TranslationManagement::TRANSLATE_ELEMENT_ACTION );
@@ -447,13 +370,6 @@ class Actions implements \IWPML_Action {
 			->toArray();
 	}
 
-	/**
-	 * Check if element type is Post and not using native editor.
-	 *
-	 * @param \WPML_Translation_Element $translationElement
-	 *
-	 * @return bool
-	 */
 	private function isPostElementAndUsingNativeEditor( \WPML_Translation_Element $translationElement ): bool {
 		return $translationElement->get_element_type() === 'post'
 			? \WPML_TM_Post_Edit_TM_Editor_Mode::is_using_tm_editor( null, $translationElement->get_element_id(), false )

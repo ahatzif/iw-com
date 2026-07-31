@@ -2,22 +2,12 @@
 
 namespace WPML\TM\ATE\Sitekey;
 
-/**
- * Service for confirming site key with AMS.
- * Handles the site key confirmation logic and flag management.
- */
 class SitekeyConfirmationService {
 
-	/** @var SitekeyProvider */
 	private $sitekeyProvider;
 
-	/** @var SitekeyApiClient */
 	private $sitekeyApiClient;
 
-	/**
-	 * @param SitekeyProvider  $sitekeyProvider
-	 * @param SitekeyApiClient $sitekeyApiClient
-	 */
 	public function __construct(
 		SitekeyProvider $sitekeyProvider,
 		SitekeyApiClient $sitekeyApiClient

@@ -4,17 +4,11 @@ namespace WPML\classes\wizard;
 
 class WPML_Reset_Wizard_Ajax_Hooks
 {
-	/**
-	 * Add AJAX hooks
-	 */
 	public function add_hooks()
 	{
 		add_action('wp_ajax_reset_wpml_wizard', [$this, 'handle_reset_wizard_ajax']);
 	}
 
-	/**
-	 * Handle the AJAX request for resetting the wizard
-	 */
 	public function handle_reset_wizard_ajax() {
 		$nonce = isset( $_POST['nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nonce'] ) ) : '';
 

@@ -43,7 +43,6 @@ class WPML_Taxonomy_Translation_Sync_Display {
 		if ( $taxonomy ) {
 			$sync_helper->sync_element_hierarchy( $taxonomy, $ref_lang );
 
-			// Capture PostHog event when taxonomy hierarchy sync is completed
 			$event_props = array(
 				'taxonomy' => $taxonomy,
 				'ref_lang' => $ref_lang,

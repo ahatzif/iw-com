@@ -5,7 +5,6 @@ namespace WPML\Translation;
 use WPML\Core\Component\Translation\Application\Service\CancelJobsService;
 
 class CancelJobsServiceFactory {
-	/** @var CancelJobsService|null */
 	private static $instance = null;
 
 	public static function create(): CancelJobsService {
@@ -16,11 +15,6 @@ class CancelJobsServiceFactory {
 		return self::$instance;
 	}
 
-	/**
-	 * @param CancelJobsService $instance
-	 *
-	 * @return void
-	 */
 	public static function setService( CancelJobsService $instance ) {
 		self::$instance = $instance;
 	}

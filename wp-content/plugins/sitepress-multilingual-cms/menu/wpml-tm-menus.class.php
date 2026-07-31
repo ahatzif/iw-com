@@ -7,7 +7,6 @@ abstract class WPML_TM_Menus {
 	private $base_target_url;
 	protected $current_shown_item;
 
-	/** @var  WPML_UI_Screen_Options_Pagination|null $dashboard_pagination */
 	protected $dashboard_pagination;
 
 	function __construct() {
@@ -30,9 +29,6 @@ abstract class WPML_TM_Menus {
 
 	abstract protected function build_tab_items();
 
-	/**
-	 * @return string
-	 */
 	private function get_current_shown_item() {
 		return $this->current_shown_item;
 	}
@@ -98,7 +94,6 @@ abstract class WPML_TM_Menus {
 				if ( $this->current_user_can_access( $tab_item ) ) {
 					if ( isset( $tab_item['target'] ) ) {
 						$target = $tab_item['target'];
-						/** @noinspection PhpIncludeInspection */
 						include_once $this->build_tab_item_target_url( $target );
 					}
 					if ( isset( $tab_item['callback'] ) ) {
@@ -136,11 +131,6 @@ abstract class WPML_TM_Menus {
 	}
 
 
-	/**
-	 * Used only by unit tests at the moment
-	 *
-	 * @return mixed
-	 */
 	public function get_post_types() {
 		return $this->post_types;
 	}

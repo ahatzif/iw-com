@@ -1,5 +1,4 @@
 <?php
-	/* var WPML_Language_Switcher $wpml_language_switcher */
 	global $sitepress, $sitepress_settings, $wpdb, $wpml_language_switcher;
 
 use WPML\Core\WP\App\Resources;
@@ -51,7 +50,6 @@ if ( isset( $_GET['trop'] ) ) {
 	$inactive_content                   = null;
 
 if ( ! $existing_content_language_verified ) {
-	// try to determine the blog language
 	$blog_current_lang = 0;
 	if ( $blog_lang = get_option( 'WPLANG' ) ) {
 		$exp               = explode( '_', $blog_lang );
@@ -138,9 +136,6 @@ $resource( [
 						unset( $navigation_items['#lang-sec-4'] );
 					}
 
-					/**
-					 * @param array $navigation_items
-					 */
 					$navigation_items = apply_filters( 'wpml_admin_languages_navigation_items', $navigation_items );
 
 					foreach ( $navigation_items  as $link => $text ) {
@@ -282,10 +277,6 @@ $resource( [
 			if ( ! class_exists( 'WP_Http' ) ) {
 				include_once ABSPATH . WPINC . '/class-http.php';
 			}
-			/**
-			 * @var WPML_URL_Converter $wpml_url_converter
-			 * @var WPML_Request $wpml_request_handler
-			 */
 			global $wpml_url_converter, $wpml_request_handler;
 
 			$validator = wpml_get_langs_in_dirs_val( $wpml_url_converter );
@@ -680,7 +671,6 @@ $resource( [
 						<p id="icl_hidden_languages_status">
 							<?php
 							if ( ! empty( $hidden_languages ) ) {
-								// While checking for hidden languages, it cleans any possible leftover from inactive or deleted languages
 								if ( 1 == count( $hidden_languages ) ) {
 									if ( isset( $active_languages[ $hidden_languages[0] ] ) ) {
 										printf( esc_html__( '%s is currently hidden to visitors.', 'sitepress' ), esc_html( $active_languages[ $hidden_languages[0] ]['display_name'] ) );
@@ -836,19 +826,12 @@ $resource( [
 	<?php
 	do_action( 'wpml_after_settings', $theme_wpml_config_file );
 
-	/**
-	 * @deprecated use `wpml_after_settings` instead
-	 */
 	do_action( 'wpml_admin_after_wpml_love', $theme_wpml_config_file );
 
-	/**
-	 * @deprecated use `wpml_menu_footer` instead
-	 */
 	do_action( 'icl_menu_footer' );
 	do_action( 'wpml_menu_footer' );
 	?>
 
 </div> <!-- .wrap -->
 <?php
-// Save any changed setting
 $sitepress->save_settings();

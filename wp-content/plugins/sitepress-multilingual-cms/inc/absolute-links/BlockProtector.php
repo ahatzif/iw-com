@@ -20,15 +20,12 @@ class BlockProtector {
 		$replaceBlockWithPlaceholder = function ( $text, $block ) {
 			$key = md5( $block );
 
-			// Try exact match first (original behavior).
 			if ( false !== mb_strpos( $text, $block ) ) {
 				$this->protectedBlocks[ $key ] = $block;
 
 				return str_replace( $block, $key, $text );
 			}
 
-			// Fallback: the rendered block may differ from the original due to JSON re-serialization.
-			// Find the block by its name in the original text instead.
 			if ( preg_match( '#^<!-- wp:(\S+)\s#', $block, $m ) ) {
 				$isSelfClosing = mb_substr( rtrim( $block ), -4 ) === '/-->';
 				$originalBlock = $this->findBlockInText( $text, $m[1], $isSelfClosing );
@@ -52,16 +49,6 @@ class BlockProtector {
 			->reduce( $replaceBlockWithPlaceholder, $text );
 	}
 
-	/**
-	 * Find a block's original text in the content by its block name.
-	 * Uses depth tracking to correctly handle nested blocks of the same type.
-	 *
-	 * @param string $text The text to search in.
-	 * @param string $blockName The block name (e.g., 'toolset-views/wpa-editor').
-	 * @param bool   $isSelfClosing Whether the block is self-closing.
-	 *
-	 * @return string|null The original block text, or null if not found.
-	 */
 	protected function findBlockInText( $text, $blockName, $isSelfClosing = false ) {
 		$openTag = '<!-- wp:' . $blockName . ' ';
 
@@ -79,7 +66,6 @@ class BlockProtector {
 			return mb_substr( $text, $openPos, $endPos + 4 - $openPos );
 		}
 
-		// Content block: find matching close tag with depth tracking.
 		$closeTag    = '<!-- /wp:' . $blockName . ' -->';
 		$openTagLen  = mb_strlen( $openTag );
 		$closeTagLen = mb_strlen( $closeTag );

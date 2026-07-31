@@ -13,16 +13,10 @@ use WPML\LIB\WP\Hooks;
 
 class BackgroundTaskLoader implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 
-	/** @var UpdateBackgroundTask $updateBackgroundTaskCommand */
 	private $updateBackgroundTaskCommand;
 
-	/** @var BackgroundTaskRepository $backgroundTaskRepository */
 	private $backgroundTaskRepository;
 
-	/**
-	 * @param UpdateBackgroundTask          $updateBackgroundTaskCommand
-	 * @param BackgroundTaskRepository      $backgroundTaskRepository
-	 */
 	public function __construct(
 		UpdateBackgroundTask $updateBackgroundTaskCommand,
 		BackgroundTaskRepository $backgroundTaskRepository
@@ -37,16 +31,12 @@ class BackgroundTaskLoader implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		     ->then( function() {
 			     $tasks = $this->getSerializedTasks();
 			     Resources::enqueueGlobalVariable('wpml_background_tasks', [
-					 /** @phpstan-ignore-next-line */
 				     'endpoints' => array_merge( Lst::pluck('taskType', $tasks), [ BackgroundTaskLoader::class ] ),
 				     'tasks' => $tasks,
 			     ] );
 		     } );
 	}
 
-	/**
-	 * @param \WPML\Collect\Support\Collection $data
-	 */
 	public function run(
 		Collection $data
 	) {
@@ -60,8 +50,6 @@ class BackgroundTaskLoader implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		$task = $this->backgroundTaskRepository->getByTaskId( $taskId );
 
 		if ( ! $task ) {
-			// The task was deleted/finished in the meantime.
-			// Nothing to do.
 			return Either::of( null );
 		} elseif ( 'stop' === $cmd ) {
 			$this->updateBackgroundTaskCommand->runStop( $task );
@@ -79,9 +67,6 @@ class BackgroundTaskLoader implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 	}
 
 
-	/**
-	 * @return array
-	 */
 	public function getSerializedTasks() {
 		return Fns::map(
 			function( $task ) {

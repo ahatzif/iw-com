@@ -12,15 +12,11 @@ class Cache implements \IWPML_Frontend_Action, \IWPML_Backend_Action {
 			->then( spreadArgs( [ $this, 'flush' ] ) );
 	}
 
-	/**
-	 * @param int $postId
-	 */
 	public function flush( $postId ) {
 		if ( QueryHooks::POST_TYPE === get_post_type( $postId ) ) {
 			try {
 				\Elementor\Plugin::instance()->files_manager->clear_cache();
 			} catch ( \Throwable $e ) {
-				// Silently fail.
 			}
 		}
 	}

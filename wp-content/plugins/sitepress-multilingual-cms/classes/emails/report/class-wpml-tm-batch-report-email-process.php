@@ -1,26 +1,11 @@
 <?php
 
-/**
- * Class WPML_TM_Batch_Report_Email_Process
- */
 class WPML_TM_Batch_Report_Email_Process {
 
-	/**
-	 * @var WPML_TM_Batch_Report
-	 */
 	private $batch_report;
 
-	/**
-	 * @var WPML_TM_Batch_Report_Email_Builder
-	 */
 	private $email_builder;
 
-	/**
-	 * WPML_TM_Batch_Report_Email_Process constructor.
-	 *
-	 * @param WPML_TM_Batch_Report $batch_report
-	 * @param WPML_TM_Batch_Report_Email_Builder $email_builder
-	 */
 	public function __construct( WPML_TM_Batch_Report $batch_report, WPML_TM_Batch_Report_Email_Builder $email_builder ) {
 		$this->batch_report  = $batch_report;
 		$this->email_builder = $email_builder;

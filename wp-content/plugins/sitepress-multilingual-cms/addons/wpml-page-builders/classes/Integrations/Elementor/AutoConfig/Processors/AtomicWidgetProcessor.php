@@ -12,20 +12,10 @@ class AtomicWidgetProcessor implements WidgetProcessorInterface {
 		'link'     => 'LINK',
 	];
 
-	/**
-	 * @param Widget_Base $widget
-	 *
-	 * @return bool
-	 */
 	public function canProcess( $widget ) {
 		return method_exists( $widget, 'get_atomic_controls' );
 	}
 
-	/**
-	 * @param object $widget
-	 *
-	 * @return array
-	 */
 	public function process( $widget ) {
 		if ( ! method_exists( $widget, 'get_title' ) || ! method_exists( $widget, 'get_atomic_controls' ) ) {
 			return [];
@@ -42,13 +32,6 @@ class AtomicWidgetProcessor implements WidgetProcessorInterface {
 		return $config;
 	}
 
-	/**
-	 * @param array  $config
-	 * @param object $section
-	 * @param string $title
-	 *
-	 * @return array
-	 */
 	private function processControl( $config, $section, $title ) {
 		$items = $section->get_items();
 
@@ -84,12 +67,6 @@ class AtomicWidgetProcessor implements WidgetProcessorInterface {
 		return $config;
 	}
 
-	/**
-	 * @param string $name
-	 * @param string $type
-	 *
-	 * @return bool
-	 */
 	private function isRegistrable( $name, $type ) {
 		if ( $this->isPrivate( $name ) ) {
 			return false;
@@ -102,29 +79,14 @@ class AtomicWidgetProcessor implements WidgetProcessorInterface {
 		return $this->isTranslatable( $type );
 	}
 
-	/**
-	 * @param string $name
-	 *
-	 * @return bool
-	 */
 	private function isPrivate( $name ) {
 		return 0 === strpos( $name, '_' );
 	}
 
-	/**
-	 * @param string $type
-	 *
-	 * @return bool
-	 */
 	private function isTranslatable( $type ) {
 		return null !== $this->getEditorType( $type );
 	}
 
-	/**
-	 * @param string $type
-	 *
-	 * @return string|null
-	 */
 	private function getEditorType( $type ) {
 		return self::EDITOR_TYPE_MAP[ $type ] ?? null;
 	}

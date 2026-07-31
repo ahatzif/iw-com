@@ -36,7 +36,6 @@ function new_duplicated_terms_filter( $post_ids, $duplicates_only = true ) {
 		$wpml_admin_notices = wpml_get_admin_notices();
 		$wpml_admin_notices->add_notice( $notice );
 
-		// Capture PostHog event when notice is displayed (only once per unique taxonomy set per hour).
 		$event_key = 'wpml_taxonomy_sync_event_captured_' . md5( serialize( $taxonomies ) );
 		if ( ! get_transient( $event_key ) ) {
 			$event_props = array(
@@ -50,10 +49,8 @@ function new_duplicated_terms_filter( $post_ids, $duplicates_only = true ) {
 					->getTaxonomyHierarchySyncNoticeDisplayedEvent( $event_props )
 			);
 
-			// Set transient for 1 hour to prevent duplicate captures.
 			set_transient( $event_key, true, HOUR_IN_SECONDS );
 
-			// Register the key so cleanup can delete it by exact name.
 			$registry = get_transient( 'wpml_taxonomy_sync_capture_event_transient_keys' );
 			$registry = is_array( $registry ) ? $registry : [];
 			$registry[ $event_key ] = true;
@@ -83,7 +80,6 @@ function remove_taxonomy_hierarchy_message() {
 add_action( 'wpml_sync_term_hierarchy_done', 'remove_taxonomy_hierarchy_message' );
 
 function clear_taxonomy_sync_event_transients() {
-	// Clear all tracked event capture transients so future sync issues will be tracked.
 	$registry = get_transient( 'wpml_taxonomy_sync_capture_event_transient_keys' );
 	if ( is_array( $registry ) ) {
 		foreach ( array_keys( $registry ) as $key ) {
@@ -95,9 +91,6 @@ function clear_taxonomy_sync_event_transients() {
 
 add_action( 'wpml_sync_term_hierarchy_done', 'clear_taxonomy_sync_event_transients' );
 
-/**
- * @return WPML_Notices
- */
 function wpml_get_admin_notices() {
 	global $wpml_admin_notices, $sitepress;
 

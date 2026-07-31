@@ -36,12 +36,8 @@ class SendDataToPostHog {
 			$eventProps = $data['captureData'];
 		}
 
-		// Create custom event
 		$event = new \WPML\Core\Component\PostHog\Domain\Event\Custom\Event( $eventName, $eventProps );
 
-		/**
-		 * Capture custom events for PostHog
-		 */
 		\WPML\PostHog\Event\CaptureEvent::capture( $event );
 
 		wp_die();

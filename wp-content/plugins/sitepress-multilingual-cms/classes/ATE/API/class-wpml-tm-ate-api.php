@@ -22,9 +22,6 @@ use WPML\FP\Maybe;
 use WPML\TM\ATE\API\RequestException;
 use WPML\Translation\AteSyncOrderingServiceFactory;
 
-/**
- * @author OnTheGo Systems
- */
 class WPML_TM_ATE_API {
 
 	const TRANSLATED = 6;
@@ -34,28 +31,12 @@ class WPML_TM_ATE_API {
 	private $auth;
 	private $endpoints;
 
-	/** @var string[] */
 	private static $forbidden_requests = [];
 
-	/**
-	 * @var ClonedSitesHandler
-	 */
 	private $clonedSitesHandler;
 
-	/**
-	 * @var FingerprintGenerator
-	 */
 	private $fingerprintGenerator;
 
-	/**
-	 * WPML_TM_ATE_API constructor.
-	 *
-	 * @param WP_Http                    $wp_http
-	 * @param WPML_TM_ATE_Authentication $auth
-	 * @param WPML_TM_ATE_AMS_Endpoints  $endpoints
-	 * @param ClonedSitesHandler  $clonedSitesHandler
-	 * @param FingerprintGenerator  $fingerprintGenerator
-	 */
 	public function __construct(
 		WP_Http $wp_http,
 		WPML_TM_ATE_Authentication $auth,
@@ -70,23 +51,6 @@ class WPML_TM_ATE_API {
 		$this->fingerprintGenerator = $fingerprintGenerator;
 	}
 
-	/**
-	 * On success, it returns the map: wpmlJobId => ateJobId inside the 'jobs' key.
-	 *
-	 * @param array $params
-	 * @see https://bitbucket.org/emartini_crossover/ate/wiki/API/V1/jobs/create
-	 *
-	 * @return array{
-	 *  code: int,
-	 *  status: string,
-	 *  message: string,
-	 *  jobs: array{
-	 *    int: int
-	 *  }
-	 * } | WP_Error
-	 *
-	 * @throws \InvalidArgumentException
-	 */
 	public function create_jobs( array $params ) {
 		return $this->requestWithLog(
 			$this->endpoints->get_ate_jobs(),
@@ -97,22 +61,10 @@ class WPML_TM_ATE_API {
 		);
 	}
 
-	/**
-	 * @param int|string|array $ate_job_id
-	 *
-	 * @return array|WP_Error
-	 * @throws \InvalidArgumentException
-	 */
 	public function confirm_received_job( $ate_job_id ) {
 		return $this->requestWithLog( $this->endpoints->get_ate_confirm_job( $ate_job_id ) );
 	}
 
-	/**
-	 * @param array|int $jobIds
-	 * @param bool      $onlyFailed
-	 *
-	 * @return array|mixed|object|string|\WP_Error|null
-	 */
 	public function cancelJobs( $jobIds, $onlyFailed = false ) {
 		return $this->requestWithLog(
 			$this->endpoints->getAteCancelJobs(),
@@ -126,12 +78,6 @@ class WPML_TM_ATE_API {
 		);
 	}
 
-	/**
-	 * @param array|int $jobIds
-	 * @param bool      $force
-	 *
-	 * @return array|mixed|object|string|\WP_Error|null
-	 */
 	public function hideJobs( $jobIds, $force = false ) {
 		return $this->requestWithLog(
 			$this->endpoints->getAteHideJobs(),
@@ -145,13 +91,6 @@ class WPML_TM_ATE_API {
 		);
 	}
 
-	/**
-	 * @param int    $job_id
-	 * @param string $return_url
-	 *
-	 * @return string|WP_Error
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_editor_url( $job_id, $return_url ) {
 		$lock = $this->clonedSitesHandler->checkCloneSiteLock();
 		if ( $lock ) {
@@ -191,13 +130,6 @@ class WPML_TM_ATE_API {
 		return $this->auth->get_signed_url_with_parameters( 'GET', $url, null );
 	}
 
-	/**
-	 * @param int                          $ate_job_id
-	 * @param WPML_Element_Translation_Job $job_object
-	 * @param int|null $sentFrom
-	 *
-	 * @return array
-	 */
 	public function clone_job( $ate_job_id, WPML_Element_Translation_Job $job_object, $sentFrom = null ) {
 		$url    = $this->endpoints->get_clone_job( $ate_job_id );
 		$params = [
@@ -228,12 +160,6 @@ class WPML_TM_ATE_API {
 		];
 	}
 
-	/**
-	 * @param int $ate_job_id
-	 *
-	 * @return array|WP_Error
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_job( $ate_job_id ) {
 		if ( ! $ate_job_id ) {
 			return null;
@@ -242,18 +168,6 @@ class WPML_TM_ATE_API {
 		return $this->requestWithLog( $this->endpoints->get_ate_jobs( $ate_job_id ) );
 	}
 
-	/**
-	 * If `$job_ids` is not an empty array,
-	 * the `$statuses` parameter will be ignored in ATE's endpoint.
-	 *
-	 * @see https://bitbucket.org/emartini_crossover/ate/wiki/API/V1/jobs/status
-	 *
-	 * @param null|array $job_ids
-	 * @param null|array $statuses
-	 *
-	 * @return array|mixed|null|object|WP_Error
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_jobs( $job_ids, $statuses = null ) {
 		return $this->requestWithLog( $this->endpoints->get_ate_jobs( $job_ids, $statuses ) );
 	}
@@ -270,20 +184,10 @@ class WPML_TM_ATE_API {
 
 	}
 
-	/**
-	 * @param $wpml_job_ids
-	 *
-	 * @return array|mixed|object|WP_Error|null
-	 */
 	public function get_jobs_by_wpml_ids( $wpml_job_ids ) {
 		return $this->requestWithLog( $this->endpoints->get_ate_jobs_by_wpml_job_ids( $wpml_job_ids ) );
 	}
 
-	/**
-	 * @param array $pairs
-	 * @see https://bitbucket.org/emartini_crossover/ate/wiki/API/V1/migration/migrate
-	 * @return bool
-	 */
 	public function migrate_source_id( array $pairs ) {
 		$lock = $this->clonedSitesHandler->checkCloneSiteLock();
 		if ( $lock ) {
@@ -315,11 +219,6 @@ class WPML_TM_ATE_API {
 		return $this->get_response_errors( $result ) === null;
 	}
 
-	/**
-	 * @param LanguageMapping[] $languagesToMap
-	 *
-	 * @return Either
-	 */
 	public function create_language_mapping( array $languagesToMap ) {
 		$result = $this->requestWithLog(
 			$this->endpoints->getLanguages(),
@@ -331,7 +230,6 @@ class WPML_TM_ATE_API {
 			]
 		);
 
-		// it has an error when there is at least one record which has falsy "result" => "created" field
 		$hasError = Lst::find( Logic::complement( Obj::path( [ 'result', 'created' ] ) ) );
 
 		$logError = Fns::tap( function ( $data ) {
@@ -348,11 +246,6 @@ class WPML_TM_ATE_API {
 		                ->chain( Logic::ifElse( $hasError, pipe( $logError, Either::left() ), Either::right() ) );
 	}
 
-	/**
-	 * @param $mappingIds
-	 *
-	 * @return false|array
-	 */
 	public function remove_language_mapping( $mappingIds ) {
 		$result = $this->requestWithLog(
 			$this->endpoints->getDeleteLanguagesMapping(),
@@ -362,12 +255,6 @@ class WPML_TM_ATE_API {
 		return is_wp_error( $result ) ? false : $result;
 	}
 
-	/**
-	 * @param string[] $languageCodes
-	 * @param null|string $sourceLanguage
-	 *
-	 * @return Maybe
-	 */
 	public function get_languages_supported_by_automatic_translations( $languageCodes, $sourceLanguage = null ) {
 		$sourceLanguage = $sourceLanguage ?: Languages::getDefaultCode();
 
@@ -397,13 +284,9 @@ class WPML_TM_ATE_API {
 
 
 		$languagePairs = $getLanguagesCheckPairs();
-		// $getLanguagesCheckPairs() needs to be evaluated separately because doing it
-		// inside $extractData( ... ) will result into a false positive in 3rd party security scanners.
 		$result = $extractData( $languagePairs );
 
-		// Simple re-try because maybe ATE is temporarily disabled at this point.
 		if ( Fns::isNothing( $result ) ) {
-			// We need to make sure we call ``$getLanguagesCheckPairs`` again so the ATE request is retried.
 			$languagePairs = $getLanguagesCheckPairs();
 			$result = $extractData( $languagePairs );
 		}
@@ -411,17 +294,6 @@ class WPML_TM_ATE_API {
 		return $result;
 	}
 
-	/**
-	 * It returns language details from ATE including the info about translation engine supporting this language.
-	 *
-	 *  If $inTheWebsiteContext is true, then we are taking into consideration user's translation engine settings.
-	 *  It means that generally language may be supported e.g. by google, but when he turns off this engine, it will be reflected in the response.
-	 *
-	 * @param string $languageCode
-	 * @param bool $inTheWebsiteContext
-	 *
-	 * @return Maybe
-	 */
 	public function get_language_details( $languageCode, $inTheWebsiteContext = true ) {
 		$result = $this->requestWithLog( sprintf( $this->endpoints->getShowLanguage(), $languageCode ), [ 'method' => 'GET' ] );
 
@@ -430,18 +302,12 @@ class WPML_TM_ATE_API {
 		            ->map( Obj::prop( $inTheWebsiteContext ? 'website_language' : 'language' ) );
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_available_languages() {
 		$result = $this->requestWithLog( $this->endpoints->getLanguages(), [ 'method' => 'GET' ] );
 
 		return is_wp_error( $result ) ? [] : $result;
 	}
 
-	/**
-	 * @return Maybe
-	 */
 	public function get_language_mapping() {
 		$result = $this->requestWithLog( $this->endpoints->getLanguagesMapping(), [ 'method' => 'GET' ] );
 
@@ -456,7 +322,6 @@ class WPML_TM_ATE_API {
 				'body'   => [
 					'site_identifier' => $this->get_website_id( site_url() ),
 					'ts_id'           => 10,
-					// random numbers for now, we should check what needs to be done for the final version.
 					'ts_access_key'   => 20,
 				],
 			]
@@ -473,7 +338,6 @@ class WPML_TM_ATE_API {
 				'body'   => [
 					'site_identifier' => $this->get_website_id( site_url() ),
 					'ts_id'           => 10,
-					// random numbers for now, we should check what needs to be done for the final version.
 					'ts_access_key'   => 20,
 				],
 			]
@@ -482,14 +346,6 @@ class WPML_TM_ATE_API {
 		return WordPress::handleError( $result );
 	}
 
-	/**
-	 * @see https://ate.pages.onthegosystems.com/ate-docs/ATE/API/V1/icl/translators/import
-	 *
-	 * @param $iclToken
-	 * @param $iclServiceId
-	 *
-	 * @return callable|Either
-	 */
 	public function import_icl_translators( $tsId, $tsAccessKey ) {
 		$params = [
 			'site_identifier' => $this->auth->get_site_id(),
@@ -515,26 +371,6 @@ class WPML_TM_ATE_API {
 		return $this->get_response_body( $result );
 	}
 
-	/**
-	 * Extract app-level signals from an ATE response body — the `code`
-	 * field (NOT_ENOUGH_CREDIT_STATUS = 31 and friends), the `message`
-	 * field, and any credit / account-state telemetry recognised by key
-	 * name. Called once per response so the caller can both enrich the
-	 * response log AND fire targeted error events without re-parsing.
-	 *
-	 * Recognised credit-telemetry keys are deliberately a broad superset
-	 * of what ATE has been seen to return — extras with non-matching
-	 * names are simply ignored. False positives in $credit_info are
-	 * harmless; missing data on a real exhaustion event would be.
-	 *
-	 * @param mixed $result The raw return value of $this->wp_http->request().
-	 *
-	 * @return array{
-	 *     app_code: int|null,
-	 *     message: string|null,
-	 *     credit_info: array<string, scalar>|null,
-	 * }
-	 */
 	private static function extractAppLevelSignals( $result ) {
 		$signals = [
 			'app_code'    => null,
@@ -623,9 +459,6 @@ class WPML_TM_ATE_API {
 		return $response_errors;
 	}
 
-	/**
-	 * @return array
-	 */
 	private function json_headers() {
 		return [
 			'Accept'                                      => 'application/json',
@@ -634,27 +467,14 @@ class WPML_TM_ATE_API {
 		];
 	}
 
-	/**
-	 * @param array $args
-	 *
-	 * @return string
-	 */
 	private function encode_body_args( array $args ) {
 		return wp_json_encode( $args, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
 	}
 
-	/**
-	 * @param string $xliff_url
-	 * @param array|\stdClass|false|null $job
-	 *
-	 * @return string
-	 * @throws RequestException The request to ATE failed.
-	 */
 	public function get_remote_xliff_content( $xliff_url, $job = null ) {
 
 		$avoidLogDuplication = false;
 		try {
-			/** @var \WP_Error|array $response */
 			$response = $this->wp_http->get($xliff_url, array(
 				'timeout' => min(30, ini_get('max_execution_time') ?: 10)
 			));
@@ -677,12 +497,6 @@ class WPML_TM_ATE_API {
 			);
 		}
 
-		// Cheap breadcrumb proving the download happened — size + sha1 of the
-		// XLIFF body without storing the body itself. Lets operators correlate
-		// by job_id/ate_job_id, confirm bytes received, and prove which exact
-		// payload was applied without inflating the joblog storage budget.
-		// The XLIFF download is the one ATE API path that bypasses request()
-		// (separate wp_http->get), so events here are the only signal it ran.
 		if ( class_exists( \WPML\TM\Jobs\JobLog::class ) ) {
 			\WPML\TM\Jobs\JobLog::add( 'xliff_downloaded', [
 				'job_id'     => Obj::prop( 'jobId', $job ),
@@ -730,18 +544,10 @@ class WPML_TM_ATE_API {
 	}
 
 
-	/**
-	 * @return array|WP_Error
-	 */
 	public function get_website_context() {
 		return $this->requestWithLog( $this->endpoints->get_website_context() );
 	}
 
-	/**
-	 * @param int $page
-	 *
-	 * @return \WPML\FP\Left|\WPML\FP\Right
-	 */
 	public function get_jobs_to_retranslation( int $page = 1 ) {
 		try {
 			$result = $this->requestWithLog(
@@ -759,17 +565,6 @@ class WPML_TM_ATE_API {
 	}
 
 
-	/**
-	 * @see https://bitbucket.org/emartini_crossover/ate/wiki/API/V1/sync/all
-	 *
-	 * @param array $ateJobIds
-	 * @param array $postIds
-	 * @param array $stringIds
-	 * @param array $packageIds
-	 *
-	 * @return array|mixed|null|object|WP_Error
-	 * @throws \InvalidArgumentException
-	 */
 	public function sync_all( array $ateJobIds, array $postIds = [], array $stringIds = [], array $packageIds = [] ) {
 		$orderingService = AteSyncOrderingServiceFactory::create();
 		$payload         = $orderingService->buildSyncPayload( $ateJobIds, $postIds, $stringIds, $packageIds );
@@ -783,25 +578,10 @@ class WPML_TM_ATE_API {
 		);
 	}
 
-	/**
-	 * @see https://bitbucket.org/emartini_crossover/ate/wiki/API/V1/sync/page
-	 *
-	 * @param string $token
-	 * @param int    $page
-	 *
-	 * @return array|mixed|null|object|WP_Error
-	 * @throws \InvalidArgumentException
-	 */
 	public function sync_page( $token, $page ) {
 		return $this->requestWithLog( $this->endpoints->get_sync_page( $token, $page ) );
 	}
 
-	/**
-	 * @param string $url
-	 * @param array  $requestArgs
-	 *
-	 * @return array|mixed|object|string|WP_Error|null
-	 */
 	private function request( $url, array $requestArgs = [] ) {
 		$lock = $this->clonedSitesHandler->checkCloneSiteLock( $url );
 		if ( $lock ) {
@@ -850,20 +630,12 @@ class WPML_TM_ATE_API {
 			]
 		);
 
-		// For GET requests there's no point sending parameters in the body.
-		// Actually, this will trigger an error in WP_HTTP Curl class when
-		// trying to build the params into a string.
 		if ( $bodyArgs && $requestArgs['method'] !== 'GET' ) {
 			$requestArgs['body'] = $this->encode_body_args( $bodyArgs );
 		}
 
 		$result = $this->wp_http->request( $signedUrl, $requestArgs );
 
-		// Parse business-logic signals out of the response body once so the
-		// response log carries structured credit/account telemetry and we
-		// can flag app-level errors (NOT_ENOUGH_CREDIT, etc.) that ride on
-		// HTTP 200 and would otherwise be invisible to the HTTP-status
-		// check below.
 		$appSignals = self::extractAppLevelSignals( $result );
 
 		JobLog::add(
@@ -875,13 +647,6 @@ class WPML_TM_ATE_API {
 			]
 		);
 
-		// Surface non-2xx HTTP responses as JobLog errors so the request gets
-		// the red `errors` badge in the admin list and hasErrorLogs flips.
-		// Without this, a 401/403/429/500 from ATE looks like a normal
-		// `complete` request — the response body is captured but nothing
-		// flags it visually. Covers auth, quota, rate-limit, and server
-		// error cases uniformly. ATE app-level errors that come with HTTP
-		// 200 + an error code in the body are caught separately below.
 		$httpCode = is_array( $result ) && isset( $result['response']['code'] )
 			? (int) $result['response']['code']
 			: null;
@@ -900,14 +665,6 @@ class WPML_TM_ATE_API {
 			);
 		}
 
-		// App-level error detection — ATE returns HTTP 200 with a `code`
-		// field in the body for business-logic failures the HTTP layer
-		// cannot see. NOT_ENOUGH_CREDIT_STATUS (=31) is the consequential
-		// one for the recent VIP-incident class: a customer's account
-		// safety-limit was hit ATE-side and we previously had no signal
-		// for it on the WPML side. Surfacing it as addError flips the
-		// request's error badge and makes joblog grep-able for the
-		// "credit exhausted" story across multiple requests.
 		if ( self::NOT_ENOUGH_CREDIT_STATUS === $appSignals['app_code'] ) {
 			$bodyExcerpt = is_array( $result ) && isset( $result['body'] ) && is_string( $result['body'] )
 				? substr( $result['body'], 0, 500 )
@@ -932,14 +689,6 @@ class WPML_TM_ATE_API {
 
 		$response = $this->get_response( $result );
 
-		/**
-		 * When the ATE credentials are removed, or a site uses different ATE servers,
-		 * the response will be 403 (and not 426, which indicates a copied sites).
-		 * Both cases are not real cases for client sites, but can happen on internal
-		 * sandboxes. The following prevents false alerts for slow page loads.
-		 *
-		 * See wpmldev-4267 for more details.
-		 */
 		if (
 			is_array( $result )
 			&& isset( $result['response']['code'] )
@@ -951,12 +700,6 @@ class WPML_TM_ATE_API {
 		return $response;
 	}
 
-	/**
-	 * @param string $url
-	 * @param array $requestArgs
-	 *
-	 * @return array|int|float|object|string|WP_Error|null
-	 */
 	private function requestWithLog( $url, array $requestArgs = [], $extraMessage = "" ) {
 		$response = $this->request( $url, $requestArgs );
 

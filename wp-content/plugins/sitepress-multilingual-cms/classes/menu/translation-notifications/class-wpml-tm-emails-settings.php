@@ -14,14 +14,8 @@ class WPML_TM_Emails_Settings {
 	const JOB_LIMITS_15           = 15;
 	const JOB_LIMITS_20           = 20;
 
-	/**
-	 * @var IWPML_Template_Service
-	 */
 	private $template_service;
 
-	/**
-	 * @var array
-	 */
 	private $tm;
 
 	public function __construct( IWPML_Template_Service $template_service, TranslationManagement $tm ) {

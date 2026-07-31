@@ -5,10 +5,6 @@ use WPML\API\Sanitize;
 class WPML_WP_In_Subdir_URL_Filters_Factory implements IWPML_Frontend_Action_Loader, IWPML_Backend_Action_Loader {
 
 	public function create() {
-		/**
-		 * @var WPML_URL_Converter $wpml_url_converter
-		 * @var SitePress          $sitepress
-		 */
 		global $wpml_url_converter, $sitepress;
 
 		$lang_negotiation_type = $sitepress->get_setting( 'language_negotiation_type', false );

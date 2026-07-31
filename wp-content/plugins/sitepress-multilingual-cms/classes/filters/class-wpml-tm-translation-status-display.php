@@ -24,51 +24,22 @@ class WPML_TM_Translation_Status_Display {
 	private $statuses        = array();
 	private $stats_preloaded = false;
 
-	/**
-	 * @var WPML_Post_Status
-	 */
 	private $status_helper;
 
-	/**
-	 * @var WPML_Translation_Job_Factory
-	 */
 	private $job_factory;
 
-	/**
-	 * @var WPML_TM_API
-	 */
 	protected $tm_api;
 
-	/**
-	 * @var WPML_Post_Translation
-	 */
 	private $post_translations;
 
-	/**
-	 * @var SitePress
-	 */
 	protected $sitepress;
 
 	private $original_links  = array();
 	private $tm_editor_links = array();
-	/**
-	 * @var \wpdb
-	 */
 	private $wpdb;
 
-	/** @var TranslateEverything\UntranslatedPosts  */
 	private $untranslatedPosts;
 
-	/**
-	 * WPML_TM_Translation_Status_Display constructor.
-	 *
-	 * @param wpdb                         $wpdb
-	 * @param SitePress                    $sitepress
-	 * @param WPML_Post_Status             $status_helper
-	 * @param WPML_Translation_Job_Factory $job_factory
-	 * @param WPML_TM_API                  $tm_api
-	 * @param TranslateEverything\UntranslatedPosts $untranslatedPosts
-	 */
 	public function __construct(
 		wpdb $wpdb,
 		SitePress $sitepress,
@@ -132,9 +103,7 @@ class WPML_TM_Translation_Status_Display {
 			return;
 		}
 
-		// Keep a local alias so WPCS recognizes {$wpdb->prefix} in the inline prepared query.
 		$wpdb  = $this->wpdb;
-		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Placeholder list is built from internal %d tokens and values are still bound via $wpdb->prepare().
 		$stats = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT translation_status.status,
@@ -168,7 +137,6 @@ class WPML_TM_Translation_Status_Display {
 			),
 			ARRAY_A
 		);
-		// phpcs:enable WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 		foreach ( $stats as $element ) {
 			$this->statuses[ $element['trid'] ][ $element['code'] ] = $element;
 		}
@@ -178,7 +146,6 @@ class WPML_TM_Translation_Status_Display {
 	public function filter_status_css_class( $css_class, $post_id, $lang, $trid ) {
 		$this->maybe_load_stats( $trid );
 
-		// Check if job has unsolvable error (SyncError or DownloadError with counter >= 3)
 		if ( $this->has_unsolvable_error( $trid, $lang ) ) {
 			$css_class = 'otgs-ico-warning';
 			return $css_class;
@@ -219,7 +186,6 @@ class WPML_TM_Translation_Status_Display {
 
 		$this->maybe_load_stats( $trid );
 
-		// Check if job has unsolvable error
 		if ( $this->has_unsolvable_error( $trid, $lang ) ) {
 			$text = __( 'Translation job encountered an error and needs to be resent', 'sitepress' );
 			return $text;
@@ -260,28 +226,14 @@ class WPML_TM_Translation_Status_Display {
 		return $text;
 	}
 
-	/**
-	 * Determine if there is no manual translation for the given trid
-	 * and language.
-	 *
-	 * @param int    $trid
-	 * @param string $lang
-	 *
-	 * @return bool
-	 */
 	private function has_no_manual_translation( $trid, $lang ) {
 		if (
 			! array_key_exists( $trid, $this->statuses ) ||
 			! array_key_exists( $lang, $this->statuses[ $trid ] )
 		) {
-			// There is no job yet for this language.
 			return true;
 		}
 
-		// The ICL_TM_NOT_TRANSLATED flag is used for jobs which were canceled.
-		// I.e. Job created on post update while a Translation Service is
-		// active, but before that service has been able to translate the post,
-		// the user switched to Translate Everything.
 		$job_is_canceled  = pipe(
 			Obj::path( [ $trid, $lang, 'status' ] ),
 			Relation::equals( ICL_TM_NOT_TRANSLATED )
@@ -297,14 +249,6 @@ class WPML_TM_Translation_Status_Display {
 		);
 	}
 
-	/**
-	 * @param string $link
-	 * @param int    $post_id
-	 * @param string $lang
-	 * @param int    $trid
-	 *
-	 * @return string
-	 */
 	public function filter_status_link( $link, $post_id, $lang, $trid ) {
 
 		$this->original_links[ $post_id ][ $lang ][ $trid ] = $link;
@@ -320,7 +264,6 @@ class WPML_TM_Translation_Status_Display {
 
 		$this->maybe_load_stats( $trid );
 
-		// Check if job has unsolvable error - make it non-clickable
 		if ( $this->has_unsolvable_error( $trid, $lang ) ) {
 			$link = '';
 			$this->original_links[ $post_id ][ $lang ][ $trid ] = '';
@@ -348,7 +291,7 @@ class WPML_TM_Translation_Status_Display {
 			$this->it_needs_retry( $trid, $lang )
 		) {
 			$link = '';
-			$this->original_links[ $post_id ][ $lang ][ $trid ] = ''; // Also block the native editor
+			$this->original_links[ $post_id ][ $lang ][ $trid ] = '';
 		} elseif ( $source_lang_code !== $lang ) {
 			$job_id = null;
 
@@ -392,14 +335,6 @@ class WPML_TM_Translation_Status_Display {
 		return $cachedKeys[ $postId ];
 	}
 
-	/**
-	 * @param string $html
-	 * @param int    $post_id
-	 * @param string $lang
-	 * @param int    $trid
-	 *
-	 * @return string
-	 */
 	public function add_links_data_attributes( $html, $post_id, $lang, $trid ) {
 		if ( ! isset(
 			$this->original_links[ $post_id ][ $lang ][ $trid ],
@@ -472,7 +407,7 @@ class WPML_TM_Translation_Status_Display {
 		$args = array(
 			'page'       => WPML_TM_FOLDER . '/menu/translations-queue.php',
 			'return_url' => $returnUrl,
-			'lang'       => Languages::getCurrentCode(), // We pass this param later to ATE in order to return to the page list in the same language.
+			'lang'       => Languages::getCurrentCode(),
 		);
 
 		return add_query_arg( $args, 'admin.php' );
@@ -517,7 +452,6 @@ class WPML_TM_Translation_Status_Display {
 			return Logic::firstSatisfying( Logic::isTruthy(), $strategies, null );
 		};
 
-		// We add the lang parameter to the return url to return from CTE to the post list in the same language.
 		return add_query_arg(
 			[
 				'lang'         => Languages::getCurrentCode(),
@@ -528,13 +462,6 @@ class WPML_TM_Translation_Status_Display {
 		);
 	}
 
-	/**
-	 * @param string $lang_to
-	 * @param string $lang_from
-	 * @param int    $post_id
-	 *
-	 * @return bool
-	 */
 	protected function is_lang_pair_allowed( $lang_to, $lang_from = null, $post_id = 0 ) {
 
 		return $this->tm_api->is_translator_filter(
@@ -549,16 +476,6 @@ class WPML_TM_Translation_Status_Display {
 		);
 	}
 
-	/**
-	 * It checks whether a current user has rights to edit a translation created by another user.
-	 * All admins and editors can edit any translation.
-	 * Other translators can edit only translations which either are assigned to them or unassigned.
-	 *
-	 * @param int    $trid
-	 * @param string $lang
-	 *
-	 * @return bool
-	 */
 	private function has_user_rights_to_translate( $trid, $lang ) {
 		$user = User::getCurrent();
 		if ( User::isAdministrator( $user ) || User::isEditor( $user ) ) {
@@ -570,7 +487,7 @@ class WPML_TM_Translation_Status_Display {
 			return true;
 		}
 
-		if ( ! Obj::prop( 'translator_id', $job ) ) { // nobody is currently assigned
+		if ( ! Obj::prop( 'translator_id', $job ) ) {
 			return true;
 		}
 
@@ -578,15 +495,9 @@ class WPML_TM_Translation_Status_Display {
 			return true;
 		}
 
-		// Neither admin, nor editor, nor the translator of $trid.
 		return false;
 	}
 
-	/**
-	 * @param int $trid
-	 *
-	 * @todo make this into a proper active record user
-	 */
 	private function maybe_load_stats( $trid ) {
 		if ( ! $this->stats_preloaded ) {
 			$this->preload_stats();
@@ -626,15 +537,7 @@ class WPML_TM_Translation_Status_Display {
 			       ->get_status( false, $trid, $lang ) === ICL_TM_IN_BASKET;
 	}
 
-	/**
-	 * @param int    $trid
-	 * @param int    $postId
-	 * @param string $language
-	 *
-	 * @return bool
-	 */
 	private function isTranslateEverythingInProgress( $trid, $postId, $language ) {
-		/** @var string $postType */
 		$postType = Post::getType( $postId );
 		return $postType
 			   && Option::shouldTranslateEverything()
@@ -659,17 +562,6 @@ class WPML_TM_Translation_Status_Display {
 		       $this->doesExistingJobSupportsAte( $trid, $postId, $targetLang );
 	}
 
-	/**
-	 * A given post may already have an existing translation created in CTE.
-	 * Depending on the WPML Settings, we may want to exclude such translation from automatic re-translation.
-	 * @see wpmldev-3871
-	 *
-	 * @param int    $trid
-	 * @param int    $postIdD
-	 * @param string $targetLang
-	 *
-	 * @return bool
-	 */
 	private function doesExistingJobSupportsAte( $trid, $postId, $targetLang ): bool {
 		$jobId = isset( $this->statuses[ $trid ][ $targetLang ]['job_id'] )
 			? $this->statuses[ $trid ][ $targetLang ]['job_id']
@@ -682,29 +574,13 @@ class WPML_TM_Translation_Status_Display {
 		return ! wpml_tm_load_old_jobs_editor()->shouldStickToWPMLEditor( $jobId, Jobs::get( $jobId ) );
 	}
 
-	/**
-	 * @param int    $trid
-	 * @param string $lang
-	 *
-	 * @return bool
-	 */
 	private function shouldATESync( $trid, $lang ) {
 		$job = Obj::path( [ $trid, $lang ], $this->statuses );
 
 		return Jobs::shouldBeATESynced( $job );
 	}
 
-	/**
-	 * Get tooltip text for In-progress jobs based on translator ID.
-	 *
-	 * @param int    $trid
-	 * @param string $lang
-	 * @param array  $language_details
-	 *
-	 * @return string Tooltip text.
-	 */
 	private function get_in_progress_status_txt( $trid, $lang, $language_details ) {
-		// If it is an automatic job.
 		if ( Obj::path( [ $trid, $lang, 'automatic' ], $this->statuses ) ) {
 			// Translators: %s: Language display name.
 			return sprintf(
@@ -713,7 +589,6 @@ class WPML_TM_Translation_Status_Display {
 			);
 		}
 
-		// If it is not an automatic job.
 		$translator_id = Obj::path( [ $trid, $lang, 'translator_id' ], $this->statuses );
 		$status_txt    = $translator_id
 			// Translators: %s: Language display name.
@@ -724,14 +599,6 @@ class WPML_TM_Translation_Status_Display {
 		return sprintf( $status_txt, $language_details['display_name'] );
 	}
 
-	/**
-	 * Check if job has an error that should display as unsolvable.
-	 *
-	 * @param int    $trid
-	 * @param string $lang
-	 *
-	 * @return bool
-	 */
 	private function has_unsolvable_error( $trid, $lang ) {
 		if ( ! isset( $this->statuses[ $trid ][ $lang ]['error_type'] ) ) {
 			return false;
@@ -739,12 +606,10 @@ class WPML_TM_Translation_Status_Display {
 
 		$error_type = $this->statuses[ $trid ][ $lang ]['error_type'];
 
-		// SyncError: Always unsolvable
 		if ( $error_type === 'SyncError' ) {
 			return true;
 		}
 
-		// DownloadError: Unsolvable if counter >= 3
 		if ( $error_type === 'DownloadError' ) {
 			$counter = isset( $this->statuses[ $trid ][ $lang ]['error_counter'] )
 				? (int) $this->statuses[ $trid ][ $lang ]['error_counter']

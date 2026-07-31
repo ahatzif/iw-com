@@ -7,7 +7,6 @@ use WPML\FP\Obj;
 
 class Repository {
 
-	/** @var \WPML_LS_Model_Build */
 	private $languageSwitcherModelBuilder;
 
 	public function __construct(
@@ -19,9 +18,6 @@ class Repository {
 		$this->languageSwitcherModelBuilder = new \WPML_LS_Model_Build( $dependencies->settings(), $sitepress, 'wpml-ls-' );
 	}
 
-	/**
-	 * @return LanguageSwitcher
-	 */
 	public function getCurrentLanguageSwitcher( ) {
 		$model = $this->languageSwitcherModelBuilder->get( new \WPML_LS_Slot( [
 			'display_link_for_current_lang' => true,

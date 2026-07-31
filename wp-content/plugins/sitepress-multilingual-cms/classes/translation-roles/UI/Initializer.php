@@ -95,11 +95,6 @@ class Initializer {
 		];
 	}
 
-	/**
-	 * @param \WP_User|null $currentUser
-	 *
-	 * @return array
-	 */
 	private static function getTranslationManagerRoles( $currentUser ) {
 		$editorRoles        = wpml_collect( \WPML_WP_Roles::get_editor_roles() )
 			->pluck( 'id' )
@@ -110,12 +105,6 @@ class Initializer {
 		return Fns::filter( $filterManagerRoles, \WPML_WP_Roles::get_roles_up_to_user_level( $currentUser ) );
 	}
 
-	/**
-	 * @param callable|null $userExtra
-	 *
-	 * @return array
-	 * @throws \WPML\Auryn\InjectionException
-	 */
 	private static function getManagers( ?callable $userExtra = null ) {
 		$isAdministrator = pipe( Obj::prop( 'roles' ), Lst::includes( 'administrator' ) );
 

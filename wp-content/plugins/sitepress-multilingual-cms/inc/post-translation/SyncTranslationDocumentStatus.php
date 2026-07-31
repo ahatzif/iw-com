@@ -17,11 +17,6 @@ class SyncTranslationDocumentStatus implements \IWPML_Action, \IWPML_DIC_Action,
 		add_action( 'transition_post_status', [$this, 'onPostStatusChange'], 10, 3 );
 	}
 
-	/**
-	 * @param string $newStatus
-	 * @param string $oldStatus
-	 * @param \WP_Post $post
-	 */
 	public function onPostStatusChange( $newStatus, $oldStatus, $post ) {
 		if ( $newStatus === $oldStatus || 'publish' !== $newStatus ) {
 			return;

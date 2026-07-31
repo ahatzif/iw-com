@@ -1,7 +1,4 @@
 <?php
-/**
- * @author OnTheGo Systems
- */
 
 class WPML_TM_REST_XLIFF extends WPML_TM_ATE_Required_Rest_Base {
 	const CAPABILITY = 'translate';
@@ -20,12 +17,6 @@ class WPML_TM_REST_XLIFF extends WPML_TM_ATE_Required_Rest_Base {
 		);
 	}
 
-	/**
-	 * @param WP_REST_Request $request
-	 *
-	 * @return array
-	 * @throws \InvalidArgumentException
-	 */
 	public function fetch_xliff( WP_REST_Request $request ) {
 		$result = null;
 

@@ -4,9 +4,6 @@ use WPML\FP\Obj;
 use WPML\PB\Elementor\DynamicContent\Strings as DynamicContentStrings;
 use WPML\PB\Elementor\Modules\ModuleWithItemsFromConfig;
 
-/**
- * Class WPML_Elementor_Translatable_Nodes
- */
 class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translatable_Nodes {
 
 	const SETTINGS_FIELD      = 'settings';
@@ -15,17 +12,8 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 	const DEFAULT_HEADING_TAG = 'h2';
 	const ELEMENT_TYPE        = 'elType';
 
-	/**
-	 * @var array
-	 */
 	private $nodes_to_translate;
 
-	/**
-	 * @param string|int $node_id Translatable node id.
-	 * @param array      $element
-	 *
-	 * @return WPML_PB_String[]
-	 */
 	public function get( $node_id, $element ) {
 
 		if ( ! $this->nodes_to_translate ) {
@@ -73,9 +61,7 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 				foreach ( $this->get_integration_instances( $node_data ) as $instance ) {
 					try {
 						$strings = $instance->get( $node_id, $element, $strings );
-						// phpcs:disable Generic.CodeAnalysis.EmptyStatement.DetectedCatch
 					} catch ( Exception $e ) {
-						// phpcs:enable Generic.CodeAnalysis.EmptyStatement.DetectedCatch
 					}
 				}
 			}
@@ -84,13 +70,6 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 		return DynamicContentStrings::filter( $strings, $node_id, $element );
 	}
 
-	/**
-	 * @param int|string     $node_id
-	 * @param array          $element
-	 * @param WPML_PB_String $pbString
-	 *
-	 * @return array
-	 */
 	public function update( $node_id, $element, WPML_PB_String $pbString ) {
 
 		if ( ! $this->nodes_to_translate ) {
@@ -143,7 +122,6 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 							$element = Obj::assocPath( $path, $item, $element );
 						}
 					} catch ( Exception $e ) {
-						// Silently fail.
 					}
 				}
 			}
@@ -152,34 +130,14 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 		return DynamicContentStrings::updateNode( $element, $pbString );
 	}
 
-	/**
-	 * @param string $field
-	 *
-	 * @return string[]
-	 */
 	private static function get_partial_path( $field ) {
 		return explode( '>', $field );
 	}
 
-	/**
-	 * Active settings for the Elementor node currently being processed.
-	 *
-	 * @var array|null
-	 */
 	private static $active_settings_cache = null;
 
-	/**
-	 * @var bool
-	 */
 	private static $active_settings_cache_enabled = false;
 
-	/**
-	 * Keeps the active settings cache scoped to one Elementor node processing flow.
-	 *
-	 * @param callable $callback
-	 *
-	 * @return mixed
-	 */
 	public static function with_active_element_settings_cache( callable $callback ) {
 		$was_enabled = self::$active_settings_cache_enabled;
 
@@ -198,23 +156,10 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 		}
 	}
 
-	/**
-	 * Clears the current-node active settings cache.
-	 */
 	private static function clear_active_element_settings_cache() {
 		self::$active_settings_cache = null;
 	}
 
-	/**
-	 * Returns the element's active settings as evaluated by Elementor itself
-	 * (control conditions, including repeaters). Inactive controls are set to
-	 * null. Returns an empty array when Elementor cannot evaluate the element,
-	 * in which case callers fail open because no known controls are inactive.
-	 *
-	 * @param array $element
-	 *
-	 * @return array
-	 */
 	public static function get_active_element_settings( array $element ) {
 		if ( self::$active_settings_cache_enabled && null !== self::$active_settings_cache ) {
 			return self::$active_settings_cache;
@@ -241,17 +186,6 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 		return $active;
 	}
 
-	/**
-	 * Whether the control backing a field is active for this element. A control
-	 * hidden by an unsatisfied Elementor condition is reported inactive (null)
-	 * and its string must not be registered. Fails open: when active settings
-	 * are unavailable, or the field maps to no known control, returns true.
-	 *
-	 * @param string $field_key
-	 * @param array  $element
-	 *
-	 * @return bool
-	 */
 	private function is_field_active( $field_key, array $element ) {
 		$active = self::get_active_element_settings( $element );
 
@@ -264,12 +198,6 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 		return null !== $active[ $top ];
 	}
 
-	/**
-	 * @param array $element
-	 * @param array $path
-	 *
-	 * @return array|null
-	 */
 	private function get_overridable_string_path( array $element, array $path ) {
 		$fieldPath = [ 'value', 'content', 'value' ] === array_slice( $path, -3 )
 			? array_slice( $path, 0, -3 )
@@ -299,11 +227,6 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 		return null;
 	}
 
-	/**
-	 * @param array $node_data
-	 *
-	 * @return WPML_Elementor_Module_With_Items[]
-	 */
 	private function get_integration_instances( $node_data ) {
 		$instances = [];
 
@@ -321,7 +244,6 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 					try {
 						$instances[] = new $class_or_instance();
 					} catch ( Exception $e ) {
-						// Allow to continue if an integration class fails.
 					}
 				}
 			}
@@ -336,13 +258,6 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 		return $instances;
 	}
 
-	/**
-	 * @param string $node_id
-	 * @param array  $field
-	 * @param array  $settings
-	 *
-	 * @return string
-	 */
 	public function get_string_name( $node_id, $field, $settings ) {
 		$field_id = isset( $field['field_id'] ) ? $field['field_id'] : $field['field'];
 		$type     = isset( $settings[ self::TYPE ] ) ? $settings[ self::TYPE ] : $settings[ self::ELEMENT_TYPE ];
@@ -350,14 +265,6 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 		return $field_id . '-' . $type . '-' . $node_id;
 	}
 
-	/**
-	 * Get wrap tag for string.
-	 * Used for SEO, can contain (h1...h6, etc.)
-	 *
-	 * @param array $settings Field settings.
-	 *
-	 * @return string
-	 */
 	private function get_wrap_tag( $settings ) {
 		if ( isset( $settings[ self::TYPE ] ) && 'heading' === $settings[ self::TYPE ] ) {
 			$header_size = isset( $settings[ self::SETTINGS_FIELD ]['header_size'] ) ?
@@ -369,12 +276,6 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 		return '';
 	}
 
-	/**
-	 * @param array $node_data
-	 * @param array $element
-	 *
-	 * @return bool
-	 */
 	private function conditions_ok( $node_data, $element ) {
 		$conditions_meet = true;
 		foreach ( $node_data['conditions'] as $field_key => $field_value ) {
@@ -389,8 +290,6 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 
 	public static function get_nodes_to_translate() {
 		return array(
-			// Container for the flexbox layout.
-			// It is not actually a widget but may have an URL to translate.
 			'container'            => [
 				'conditions' => [ self::ELEMENT_TYPE => 'container' ],
 				'fields'     => [
@@ -401,7 +300,6 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 					],
 				],
 			],
-			// Everything below is a widget and has strings to translate.
 			'heading'              => array(
 				'conditions' => array( self::TYPE => 'heading' ),
 				'fields'     => array(

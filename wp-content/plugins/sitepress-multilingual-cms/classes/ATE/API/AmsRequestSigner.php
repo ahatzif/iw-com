@@ -4,13 +4,10 @@ namespace WPML\TM\ATE\API;
 
 class AmsRequestSigner {
 
-	/** @var \WP_Http */
 	private $wpHttp;
 
-	/** @var \WPML_TM_ATE_Authentication */
 	private $auth;
 
-	/** @var FingerprintGenerator */
 	private $fingerprintGenerator;
 
 	public function __construct(
@@ -23,15 +20,6 @@ class AmsRequestSigner {
 		$this->fingerprintGenerator = $fingerprintGenerator;
 	}
 
-	/**
-	 * Sends a signed request to AMS with the new site fingerprint header.
-	 *
-	 * @param string $url         The AMS endpoint URL.
-	 * @param string $method      HTTP method (POST, PUT, etc.).
-	 * @param array  $queryParams Query parameters to include in the URL.
-	 *
-	 * @return array|\WP_Error Raw HTTP response.
-	 */
 	public function send( string $url, string $method, array $queryParams = [] ) {
 		$headers = [
 			'Accept'                                          => 'application/json',

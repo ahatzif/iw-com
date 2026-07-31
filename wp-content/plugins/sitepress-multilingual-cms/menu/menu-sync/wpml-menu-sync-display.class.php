@@ -2,7 +2,6 @@
 
 class WPML_Menu_Sync_Display {
 	private $menu_id;
-	/** @var ICLMenusSync $icl_ms*/
 	private $icl_ms;
 	private $labels;
 
@@ -45,7 +44,6 @@ class WPML_Menu_Sync_Display {
 
 		$icl_menus_sync = $this->icl_ms;
 		$menu_id        = $this->menu_id;
-		// items translations / del
 		if ( isset( $icl_menus_sync->sync_data[ $index ][ $menu_id ] ) ) {
 			foreach ( $icl_menus_sync->sync_data[ $index ][ $menu_id ] as $item_id => $languages ) {
 				foreach ( $languages as $lang_code => $name ) {

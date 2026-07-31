@@ -7,9 +7,6 @@ use WPML\PB\Elementor\AutoConfig\Processors\ClassicWidgetProcessor;
 
 class Factory implements \IWPML_Backend_Action_Loader, \IWPML_Frontend_Action_Loader {
 
-	/**
-	 * @return \IWPML_Action
-	 */
 	public function create() {
 		$processors = [
 			new AtomicWidgetProcessor(),

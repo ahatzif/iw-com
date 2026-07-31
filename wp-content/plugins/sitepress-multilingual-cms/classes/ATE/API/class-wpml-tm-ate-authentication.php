@@ -1,23 +1,15 @@
 <?php
 
-/**
- * @author OnTheGo Systems
- */
 class WPML_TM_ATE_Authentication {
 	const AMS_DATA_KEY          = 'WPML_TM_AMS';
 	const AMS_STATUS_NON_ACTIVE = 'non-active';
 	const AMS_STATUS_ENABLED    = 'enabled';
 	const AMS_STATUS_ACTIVE     = 'active';
 
-	/** @var string|null $site_id */
 	private $site_id = null;
 
-	/** @var WPML_Site_ID */
 	private $site_id_manager;
 
-	/**
-	 * @param WPML_Site_ID|null $site_id_manager
-	 */
 	public function __construct( ?WPML_Site_ID $site_id_manager = null ) {
 		$this->site_id_manager = $site_id_manager ?: new WPML_Site_ID();
 	}
@@ -91,20 +83,10 @@ class WPML_TM_ATE_Authentication {
 		return null;
 	}
 
-	/**
-	 * @return array
-	 */
 	private function get_ams_data() {
 		return get_option( self::AMS_DATA_KEY, [] );
 	}
 
-	/**
-	 * @param string     $verb
-	 * @param string     $url
-	 * @param array|null $params
-	 *
-	 * @return string
-	 */
 	private function add_required_arguments_to_url( $verb, $url, ?array $params = null ) {
 		$verb = strtolower( $verb );
 
@@ -138,11 +120,6 @@ class WPML_TM_ATE_Authentication {
 		return http_build_url( $url_parts );
 	}
 
-	/**
-	 * @param string $url
-	 *
-	 * @return array
-	 */
 	private function get_url_query( $url ) {
 		$url_parts = wp_parse_url( $url );
 		$query     = array();
@@ -153,11 +130,6 @@ class WPML_TM_ATE_Authentication {
 		return $query;
 	}
 
-	/**
-	 * @param $query
-	 *
-	 * @return mixed|string
-	 */
 	protected function build_query( $query ) {
 		if ( PHP_VERSION_ID >= 50400 ) {
 			$final_query = http_build_query( $query, '', '&', PHP_QUERY_RFC3986 );
@@ -172,9 +144,6 @@ class WPML_TM_ATE_Authentication {
 		return $final_query;
 	}
 
-	/**
-	 * @param string|null $site_id
-	 */
 	public function override_site_id( $site_id ) {
 		$this->site_id = $site_id;
 	}
@@ -183,11 +152,6 @@ class WPML_TM_ATE_Authentication {
 		return $this->site_id ? $this->site_id : wpml_get_site_id( WPML_TM_ATE::SITE_ID_SCOPE );
 	}
 
-	/**
-	 * Resets AMS authentication data by removing the stored credentials and site ID.
-	 *
-	 * @return void
-	 */
 	public function reset() {
 		delete_option( self::AMS_DATA_KEY );
 		$this->site_id_manager->reset( 'ate' );

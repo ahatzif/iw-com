@@ -20,13 +20,6 @@ class Overrides implements \IWPML_Page_Builders_Module {
 	const EDITOR_TYPE_LINE            = 'LINE';
 	const EDITOR_TYPE_LINK            = \WPML_TM_Page_Builders::FIELD_STYLE_LINK;
 
-	/**
-	 * @param string|int        $node_id
-	 * @param array             $element
-	 * @param \WPML_PB_String[] $strings
-	 *
-	 * @return \WPML_PB_String[]
-	 */
 	public function get( $node_id, $element, $strings ) {
 		foreach ( $this->get_items( $element ) as $item ) {
 			$value = $this->get_string_value( $item );
@@ -46,13 +39,6 @@ class Overrides implements \IWPML_Page_Builders_Module {
 		return $strings;
 	}
 
-	/**
-	 * @param int|string      $node_id
-	 * @param array           $element
-	 * @param \WPML_PB_String $pbString
-	 *
-	 * @return array
-	 */
 	public function update( $node_id, $element, \WPML_PB_String $pbString ) {
 		foreach ( $this->get_items( $element ) as $key => $item ) {
 			if ( $this->get_string_name( $node_id, $item, $element ) !== $pbString->get_name() ) {
@@ -73,57 +59,29 @@ class Overrides implements \IWPML_Page_Builders_Module {
 		return [ null, null ];
 	}
 
-	/**
-	 * @return string
-	 */
 	public function get_items_field() {
 		return self::ITEMS_FIELD;
 	}
 
-	/**
-	 * @param array $element
-	 *
-	 * @return array
-	 */
 	private function get_items( $element ) {
 		return $element['settings']['component_instance']['value']['overrides']['value'] ?? [];
 	}
 
-	/**
-	 * @param array $item
-	 *
-	 * @return bool
-	 */
 	private function isStringOverride( $item ) {
 		return self::OVERRIDE_VALUE_TYPE_STRING === Obj::path( self::OVERRIDE_VALUE_TYPE_PATH, $item )
 			&& is_string( Obj::path( self::OVERRIDE_STRING_VALUE_PATH, $item ) );
 	}
 
-	/**
-	 * @param array $item
-	 *
-	 * @return bool
-	 */
 	private function isHtmlOverride( $item ) {
 		return self::OVERRIDE_VALUE_TYPE_HTML_V3 === Obj::path( self::OVERRIDE_VALUE_TYPE_PATH, $item )
 			&& is_string( Obj::path( self::OVERRIDE_HTML_V3_VALUE_PATH, $item ) );
 	}
 
-	/**
-	 * @param array $item
-	 *
-	 * @return bool
-	 */
 	private function isLinkOverride( $item ) {
 		return self::OVERRIDE_VALUE_TYPE_LINK === Obj::path( self::OVERRIDE_VALUE_TYPE_PATH, $item )
 			&& is_string( Obj::path( self::OVERRIDE_LINK_VALUE_PATH, $item ) );
 	}
 
-	/**
-	 * @param array $item
-	 *
-	 * @return string|null
-	 */
 	private function get_string_value( $item ) {
 		if ( $this->isStringOverride( $item ) ) {
 			return Obj::path( self::OVERRIDE_STRING_VALUE_PATH, $item );
@@ -140,22 +98,10 @@ class Overrides implements \IWPML_Page_Builders_Module {
 		return null;
 	}
 
-	/**
-	 * @param array $item
-	 *
-	 * @return string
-	 */
 	private function get_editor_type( $item ) {
 		return $this->isLinkOverride( $item ) ? self::EDITOR_TYPE_LINK : self::EDITOR_TYPE_LINE;
 	}
 
-	/**
-	 * @param string|int $nodeId
-	 * @param array      $item
-	 * @param array      $element
-	 *
-	 * @return string
-	 */
 	private function get_string_name( $nodeId, array $item, array $element ) {
 		$widgetType  = $element['widgetType'] ?? null;
 		$overrideKey = Obj::path( self::OVERRIDE_KEY_PATH, $item );

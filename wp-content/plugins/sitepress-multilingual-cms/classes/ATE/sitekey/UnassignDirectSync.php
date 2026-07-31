@@ -10,16 +10,12 @@ use function WPML\FP\spreadArgs;
 
 class UnassignDirectSync implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 
-	/** @var BackgroundTaskService */
 	private $backgroundTaskService;
 
-	/** @var BackgroundTaskRepository */
 	private $backgroundTaskRepository;
 
-	/** @var UnassignApiClient */
 	private $unassignApiClient;
 
-	/** @var SitekeyProvider */
 	private $sitekeyProvider;
 
 	public function __construct(

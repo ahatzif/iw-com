@@ -6,7 +6,6 @@ use WPML\TM\ATE\ClonedSites\SetupMigration\SiteKeyRemoveServiceFactory;
 
 class SiteKeyRegistrar {
 
-	/** @var SiteKeyRemoveServiceFactory */
 	private $factory;
 
 	public function __construct( ?SiteKeyRemoveServiceFactory $factory = null ) {

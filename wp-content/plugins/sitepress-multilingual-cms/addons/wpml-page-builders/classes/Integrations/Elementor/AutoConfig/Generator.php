@@ -7,24 +7,12 @@ use WPML\PB\Elementor\AutoConfig\Processors\WidgetProcessorInterface;
 
 class Generator {
 
-	/**
-	 * @var WidgetProcessorInterface[]
-	 */
 	private $processors;
 
-	/**
-	 * @param WidgetProcessorInterface[] $processors
-	 */
 	public function __construct( array $processors ) {
 		$this->processors = $processors;
 	}
 
-	/**
-	 * @param array $existingWidgets
-	 * @param array $widgetInstances
-	 *
-	 * @return array
-	 */
 	public function generate( array $existingWidgets, array $widgetInstances ) {
 		$config = [];
 
@@ -44,11 +32,6 @@ class Generator {
 		return $config;
 	}
 
-	/**
-	 * @param Widget_Base $widgetInstance
-	 *
-	 * @return array
-	 */
 	private function generateWidgetConfig( $widgetInstance ) {
 		foreach ( $this->processors as $processor ) {
 			if ( $processor->canProcess( $widgetInstance ) ) {

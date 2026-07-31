@@ -14,12 +14,6 @@ class MainLayoutTemplate {
 
 	const SERVICES_LIST_TEMPLATE = 'services-layout.twig';
 
-	/**
-	 * @param callable $templateRenderer
-	 * @param callable $activeServiceRenderer
-	 * @param bool     $hasPreferredService
-	 * @param callable $retrieveServiceTabsData
-	 */
 	public static function render(
 		$templateRenderer,
 		$activeServiceRenderer,
@@ -32,13 +26,6 @@ class MainLayoutTemplate {
 		);
 	}
 
-	/**
-	 * @param callable $activeServiceRenderer
-	 * @param bool     $hasPreferredService
-	 * @param callable $retrieveServiceTabsData
-	 *
-	 * @return array
-	 */
 	private static function getModel( $activeServiceRenderer, $hasPreferredService, $retrieveServiceTabsData ) {
 		$services = $retrieveServiceTabsData();
 

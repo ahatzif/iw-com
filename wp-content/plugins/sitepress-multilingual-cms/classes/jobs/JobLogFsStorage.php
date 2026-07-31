@@ -1,104 +1,37 @@
 <?php
-// phpcs:disable Generic.CodeAnalysis.AssignmentInCondition.FoundInWhileCondition,Squiz.Commenting.FunctionComment.ParamCommentFullStop,Squiz.Commenting.InlineComment.InvalidEndChar,Squiz.PHP.CommentedOutCode.Found,WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase,WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.PHP.YodaConditions.NotYoda,WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents,WordPress.WP.AlternativeFunctions.file_system_operations_chmod,WordPress.WP.AlternativeFunctions.file_system_operations_fclose,WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents,WordPress.WP.AlternativeFunctions.file_system_operations_fopen,WordPress.WP.AlternativeFunctions.file_system_operations_fwrite,WordPress.WP.AlternativeFunctions.file_system_operations_mkdir,WordPress.WP.AlternativeFunctions.json_encode_json_encode,WordPress.WP.AlternativeFunctions.rename_rename,WordPress.WP.AlternativeFunctions.unlink_unlink
 
 
 namespace WPML\TM\Jobs;
 
 class FsJobLogStorage {
 
-	/**
-	 * Default cap on the joblog queue directory's total size (bytes).
-	 * Operators can override this from the admin UI via the size badge
-	 * popup; getMaxTotalBytes() returns the configured value when set,
-	 * this constant when not.
-	 */
-	const MAX_TOTAL_BYTES = 52428800;   // 50 MiB
+	const MAX_TOTAL_BYTES = 52428800;
 
-	/**
-	 * Default ceiling on file count. The admin UI exposes an override on
-	 * the same popup as the size cap; getMaxStoredRequestsCount() reads
-	 * the configured value when set. Even if every request produces tiny
-	 * files we never want unbounded count — getRequestSummaries() walks
-	 * every file.
-	 */
 	const MAX_STORED_REQUESTS_COUNT = 1500;
 
-	/**
-	 * Operator-configurable cap overrides. Stored on the sitepress
-	 * settings object so they move with the rest of the JobLog feature
-	 * toggle (and inherit its multisite behaviour). Zero / unset / non-
-	 * positive values fall back to the MAX_* constants above.
-	 */
 	const OPTION_MAX_MB    = 'wpml_tm_job_log_max_mb';
 	const OPTION_MAX_FILES = 'wpml_tm_job_log_max_files';
 
-	/**
-	 * Hard sanity bounds on the operator inputs to prevent typos that
-	 * would either disable the cap (huge value) or pin it useless-small.
-	 * Range chosen wide enough to cover every realistic VIP-incident
-	 * retention need without permitting a runaway disk fill.
-	 */
 	const MIN_CONFIGURABLE_MB    = 1;
-	const MAX_CONFIGURABLE_MB    = 10000;   // 10 GiB ceiling
+	const MAX_CONFIGURABLE_MB    = 10000;
 	const MIN_CONFIGURABLE_FILES = 50;
 	const MAX_CONFIGURABLE_FILES = 100000;
 
-	/** Fraction of files to drop when either cap is exceeded. */
 	const PRUNE_RATIO = 0.25;
 
-	/** Seconds after which an `.in_progress` file is treated as stuck. */
 	const DEFAULT_STUCK_THRESHOLD_SECONDS = 300;
 
-	/**
-	 * Seconds after which an `.in_progress` file is considered abandoned and
-	 * eligible for prune-time deletion. Deliberately much longer than the
-	 * stuck-UI threshold (300 s): a stuck file is useful diagnostic evidence
-	 * we want to preserve in the UI, but past one hour we accept it as dead
-	 * weight from a long-gone worker and reclaim it when caps trip.
-	 * Comfortably exceeds any realistic PHP max_execution_time.
-	 */
 	const ABANDONED_IN_PROGRESS_SECONDS = 3600;
 
-	/** Request lifecycle states surfaced by getRequestSummaries(). */
 	const STATUS_COMPLETE    = 'complete';
 	const STATUS_IN_PROGRESS = 'in_progress';
 	const STATUS_STUCK       = 'stuck';
 	const STATUS_LEGACY      = 'legacy';
-	/**
-	 * Request finalised via the PHP shutdown fallback because the WP
-	 * shutdown action chain aborted on a fatal — file carries a
-	 * `php_fatal` event and a synthesised request_finished with
-	 * `aborted: true`.
-	 */
 	const STATUS_ABORTED = 'aborted';
 
-	/**
-	 * Test-only override for the queue directory location. When set, every
-	 * read/write/prune operation in this class points at the override path
-	 * instead of the real WP_LANG_DIR/wpml/joblog/ tree. Production code
-	 * paths never touch this — only the test harness calls
-	 * setQueueDirForTests() before running, and clears it in tearDown().
-	 *
-	 * @var string|null
-	 */
 	private static $queueDirOverride = null;
 
-	// ---------------------------------------------------------------------
-	// Write side — unchanged from the streaming refactor.
-	// ---------------------------------------------------------------------
 
-	/**
-	 * Open a new NDJSON stream for the current request.
-	 *
-	 * The file is created as `.in_progress.ndjson`; finaliseStream() renames it
-	 * to `.complete.ndjson` on a clean shutdown. If a worker dies before
-	 * finalisation, the file stays `.in_progress` and is detectable as stuck.
-	 *
-	 * @param string $logUid           Stable per-request identifier (`uniqid()`).
-	 * @param float  $requestStartTime Unix timestamp with microseconds.
-	 *
-	 * @return array{0: resource|null, 1: string} [$fp, $inProgressFilepath]
-	 */
 	public static function openRequestStream( $logUid, $requestStartTime ) {
 		self::ensureQueueDir();
 
@@ -110,9 +43,6 @@ class FsJobLogStorage {
 			return [ null, $filepath ];
 		}
 
-		// Disable PHP's userspace stream buffer so every fwrite() becomes a write(2)
-		// syscall; this is what makes lines survive a worker crash without an
-		// explicit fflush() per call.
 		stream_set_write_buffer( $fp, 0 );
 
 		$chmod = defined( 'FS_CHMOD_FILE' ) ? FS_CHMOD_FILE : 0644;
@@ -121,15 +51,6 @@ class FsJobLogStorage {
 		return [ $fp, $filepath ];
 	}
 
-	/**
-	 * Append one NDJSON line to an open request stream.
-	 *
-	 * @param resource $fp
-	 * @param array    $line
-	 *
-	 * @return bool True if the full line was written. False on encode failure or
-	 *              partial/failed fwrite (disk full, broken pipe, etc.).
-	 */
 	public static function writeLine( $fp, array $line ) {
 		if ( ! is_resource( $fp ) ) {
 			return false;
@@ -143,16 +64,6 @@ class FsJobLogStorage {
 		return self::writeEncodedLine( $fp, $json );
 	}
 
-	/**
-	 * Append a pre-encoded JSON string to the stream. Lets callers that have
-	 * already paid the encode cost (e.g. JobLog::capLineSize() needs the
-	 * encoded bytes to measure line size) avoid encoding a second time.
-	 *
-	 * @param resource $fp
-	 * @param string   $json A complete JSON object — no trailing newline.
-	 *
-	 * @return bool True if the full line was written.
-	 */
 	public static function writeEncodedLine( $fp, $json ) {
 		if ( ! is_resource( $fp ) || ! is_string( $json ) ) {
 			return false;
@@ -162,15 +73,6 @@ class FsJobLogStorage {
 		return is_int( $written ) && $written === strlen( $payload );
 	}
 
-	/**
-	 * Close the stream and atomically transition `.in_progress` → `.complete`.
-	 *
-	 * @param resource|null $fp
-	 * @param string|null   $inProgressPath
-	 *
-	 * @return bool True on successful rename. False if the file is missing, the
-	 *              path is invalid, or rename() itself fails.
-	 */
 	public static function finaliseStream( $fp, $inProgressPath ) {
 		if ( is_resource( $fp ) ) {
 			@fclose( $fp );
@@ -192,30 +94,7 @@ class FsJobLogStorage {
 		return (bool) $renamed;
 	}
 
-	// ---------------------------------------------------------------------
-	// Read side — event-native API.
-	// ---------------------------------------------------------------------
 
-	/**
-	 * Lightweight metadata for every stored request (complete, in-progress,
-	 * stuck, and legacy). Each entry summarises the file *without* loading its
-	 * full event stream, so this is the right entry point for list views.
-	 *
-	 * @return array<int, array{
-	 *     logUid: string,
-	 *     requestUrl: string,
-	 *     requestDateTime: string,
-	 *     startedAt: float|null,
-	 *     finishedAt: float|null,
-	 *     durationMs: int|null,
-	 *     hasErrorLogs: bool,
-	 *     status: string,
-	 *     php_pid: int|null,
-	 *     ageSeconds: int,
-	 *     filePath: string,
-	 *     format: string,
-	 * }>
-	 */
 	public static function getRequestSummaries() {
 		$dir = self::getQueueDir();
 
@@ -229,9 +108,6 @@ class FsJobLogStorage {
 			self::globLegacyJsonFiles( $dir )
 		);
 
-		// Newest first by filename — both formats embed the timestamp at the
-		// start, so lexicographic order = chronological order within each
-		// format. Cross-format ordering is best-effort.
 		rsort( $files );
 
 		$now       = time();
@@ -250,18 +126,6 @@ class FsJobLogStorage {
 		return $summaries;
 	}
 
-	/**
-	 * Stream the events of a single request. Returns a generator so the caller
-	 * never has to hold the full event list in memory.
-	 *
-	 * Legacy `.json` files are translated on-the-fly into the new event shape
-	 * (request_started → group_started/log/group_finished* → request_finished)
-	 * so consumers can be format-agnostic.
-	 *
-	 * @param string $logUid
-	 *
-	 * @return \Generator yielding `array` events
-	 */
 	public static function readEvents( $logUid ) {
 		$file = self::findFileByLogUid( $logUid );
 		if ( $file === null ) {
@@ -280,10 +144,6 @@ class FsJobLogStorage {
 			return;
 		}
 
-		// Per-file resolver: writer stores the full trace inline on its first
-		// occurrence and a `traceHash` reference on subsequent ones. Because
-		// the inline copy is always emitted first, a single forward scan with
-		// a local map is enough to rehydrate every reference.
 		$traceMap = [];
 
 		while ( ( $rawLine = fgets( $fp ) ) !== false ) {
@@ -312,15 +172,6 @@ class FsJobLogStorage {
 		@fclose( $fp );
 	}
 
-	/**
-	 * `.in_progress.ndjson` files older than the threshold — these represent
-	 * worker crashes mid-request (the primary diagnostic surface for 6742-class
-	 * race conditions).
-	 *
-	 * @param int $thresholdSeconds
-	 *
-	 * @return array<int, array> Same shape as getRequestSummaries() entries.
-	 */
 	public static function getStuckRequests( $thresholdSeconds = self::DEFAULT_STUCK_THRESHOLD_SECONDS ) {
 		$dir = self::getQueueDir();
 		if ( ! is_dir( $dir ) ) {
@@ -348,24 +199,6 @@ class FsJobLogStorage {
 		return $stuck;
 	}
 
-	/**
-	 * Find requests that touched a given entity (e.g. rid, job_id, post_id,
-	 * element_id, trid, target_lang).
-	 *
-	 * Fast path: the writer emits a per-request `ids` map on `request_finished`,
-	 * which `summariseNdjson` exposes as `entityIds` on each summary. A query
-	 * is an O(files) check against those sets — no event walking.
-	 *
-	 * Fallback: summaries without an `entityIds` field (legacy `.json`,
-	 * `.in_progress` files, requests written before this index was added)
-	 * fall back to a full event scan so results stay correct across the
-	 * upgrade boundary.
-	 *
-	 * @param string     $idType e.g. "rid" or "rids", "element_id", "post_id".
-	 * @param string|int $id
-	 *
-	 * @return array<int, array> Matching request summaries.
-	 */
 	public static function findRequestsByEntity( $idType, $id ) {
 		$idType  = (string) $idType;
 		$bucket  = substr( $idType, -1 ) === 's' ? $idType : $idType . 's';
@@ -380,7 +213,6 @@ class FsJobLogStorage {
 				continue;
 			}
 
-			// Backward-compat path: no entityIds → walk events.
 			foreach ( self::readEvents( $summary['logUid'] ) as $event ) {
 				if ( self::eventMatchesEntity( $event, $idType, $idValue ) ) {
 					$matches[] = $summary;
@@ -392,17 +224,6 @@ class FsJobLogStorage {
 		return $matches;
 	}
 
-	/**
-	 * Check the request-level index for a value in the given bucket. Loose
-	 * string comparison because numeric IDs survive JSON round-trip as ints
-	 * while query inputs typically arrive as strings.
-	 *
-	 * @param array  $entityIds  e.g. ['rids' => [5879, 5891], …]
-	 * @param string $bucket     e.g. "rids"
-	 * @param string $idValue    e.g. "5879"
-	 *
-	 * @return bool
-	 */
 	private static function indexedMatch( array $entityIds, $bucket, $idValue ) {
 		if ( ! isset( $entityIds[ $bucket ] ) || ! is_array( $entityIds[ $bucket ] ) ) {
 			return false;
@@ -415,16 +236,6 @@ class FsJobLogStorage {
 		return false;
 	}
 
-	/**
-	 * Resolved size cap (bytes). Returns the operator-configured override
-	 * when set on the sitepress settings object, otherwise falls back to
-	 * the MAX_TOTAL_BYTES default. Values outside the sanity range
-	 * (MIN/MAX_CONFIGURABLE_MB) are treated as unset and ignored — the UI
-	 * validates on save but we defend the resolver too in case raw option
-	 * editing puts a bad value on disk.
-	 *
-	 * @return int
-	 */
 	public static function getMaxTotalBytes() {
 		global $sitepress;
 		if ( ! $sitepress ) {
@@ -437,12 +248,6 @@ class FsJobLogStorage {
 		return $mb * 1024 * 1024;
 	}
 
-	/**
-	 * Resolved file-count cap. Same fallback / sanity behaviour as
-	 * getMaxTotalBytes().
-	 *
-	 * @return int
-	 */
 	public static function getMaxStoredRequestsCount() {
 		global $sitepress;
 		if ( ! $sitepress ) {
@@ -455,14 +260,6 @@ class FsJobLogStorage {
 		return $files;
 	}
 
-	/**
-	 * Total bytes used by every file in the joblog queue directory —
-	 * `.complete.ndjson`, `.in_progress.ndjson`, and legacy `.json`. Shown
-	 * in the admin toolbar next to the Clear-logs button so operators see
-	 * the on-disk footprint at a glance.
-	 *
-	 * @return int
-	 */
 	public static function getTotalSize() {
 		$dir = self::getQueueDir();
 		if ( ! is_dir( $dir ) ) {
@@ -481,13 +278,6 @@ class FsJobLogStorage {
 		return $total;
 	}
 
-	/**
-	 * Human-readable byte size: bytes / KB / MB / GB depending on magnitude.
-	 *
-	 * @param int $bytes
-	 *
-	 * @return string
-	 */
 	public static function formatBytes( $bytes ) {
 		$bytes = max( 0, (int) $bytes );
 		if ( $bytes < 1024 ) {
@@ -502,11 +292,6 @@ class FsJobLogStorage {
 		return number_format( $bytes / 1024 / 1024 / 1024, 2 ) . ' GB';
 	}
 
-	/**
-	 * Remove all stored request log files (any format, any state).
-	 *
-	 * @return bool
-	 */
 	public static function clearAllLogs() {
 		$dir = self::getQueueDir();
 
@@ -527,12 +312,6 @@ class FsJobLogStorage {
 		return true;
 	}
 
-	/**
-	 * Count the stored completed (and legacy) request logs. Used by the
-	 * "logs in storage" UI counter — in-progress files are excluded.
-	 *
-	 * @return int
-	 */
 	public static function getLogsCount() {
 		$dir = self::getQueueDir();
 
@@ -548,20 +327,7 @@ class FsJobLogStorage {
 		return count( $files );
 	}
 
-	// ---------------------------------------------------------------------
-	// Read-side internals.
-	// ---------------------------------------------------------------------
 
-	/**
-	 * Build a summary for an NDJSON file by scanning lines and picking out
-	 * `request_started`, `request_finished`, and error log counts. Avoids the
-	 * full tree reconstruction.
-	 *
-	 * @param string $file
-	 * @param int    $now
-	 *
-	 * @return array|null
-	 */
 	private static function summariseNdjson( $file, $now ) {
 		$isInProgress = self::isInProgressFile( $file );
 
@@ -589,12 +355,6 @@ class FsJobLogStorage {
 					$requestStarted = $event;
 					break;
 				case 'request_finished':
-					// On a completed file this line is authoritative for
-					// hasErrorLogs / entityIds / duration — no need to keep
-					// scanning the rest of the file just to count log lines.
-					// In-progress files never reach this branch, so they
-					// still take the full walk (their hasErrorLogs comes
-					// from accumulating log-type events as before).
 					$requestFinished = $event;
 					break 2;
 				case 'log':
@@ -643,9 +403,6 @@ class FsJobLogStorage {
 			$entityIds = $requestFinished['ids'];
 		}
 
-		// Aborted requests carry an explicit marker on their synthesised
-		// request_finished line. When set, override the status so the
-		// admin list can paint these distinctly from clean completions.
 		$aborted = is_array( $requestFinished ) && ! empty( $requestFinished['aborted'] );
 		if ( $aborted ) {
 			$status = self::STATUS_ABORTED;
@@ -668,14 +425,6 @@ class FsJobLogStorage {
 		];
 	}
 
-	/**
-	 * Build a summary for a legacy single-blob JSON file.
-	 *
-	 * @param string $file
-	 * @param int    $now
-	 *
-	 * @return array|null
-	 */
 	private static function summariseLegacyJson( $file, $now ) {
 		$content = @file_get_contents( $file );
 		if ( ! is_string( $content ) ) {
@@ -706,27 +455,17 @@ class FsJobLogStorage {
 		];
 	}
 
-	/**
-	 * Locate the on-disk file for a given logUid across all known states and
-	 * formats. Returns the first match found.
-	 *
-	 * @param string $logUid
-	 *
-	 * @return string|null
-	 */
 	private static function findFileByLogUid( $logUid ) {
 		$dir = self::getQueueDir();
 		if ( ! is_dir( $dir ) ) {
 			return null;
 		}
 
-		// New format: `..._<logUid>.{complete|in_progress}.ndjson`
 		$matches = glob( $dir . '*_' . $logUid . '.*.ndjson' ) ?: [];
 		if ( ! empty( $matches ) ) {
 			return $matches[0];
 		}
 
-		// Legacy: `<ts>_<logUid>.json`
 		$matches = glob( $dir . '*_' . $logUid . '.json' ) ?: [];
 		foreach ( $matches as $candidate ) {
 			if ( ! self::isLegacyJsonFile( $candidate ) ) {
@@ -738,14 +477,6 @@ class FsJobLogStorage {
 		return null;
 	}
 
-	/**
-	 * Translate a legacy `.json` tree into a synthesised event stream so the
-	 * event-native API stays format-agnostic.
-	 *
-	 * @param string $file
-	 *
-	 * @return \Generator
-	 */
 	private static function synthesiseEventsFromLegacyJson( $file ) {
 		$content = @file_get_contents( $file );
 		if ( ! is_string( $content ) ) {
@@ -800,16 +531,6 @@ class FsJobLogStorage {
 		];
 	}
 
-	/**
-	 * Match an event against an entity (idType=value) pair. Checks top-level
-	 * keys (extraLogData lives there) then recurses into the event's `data`.
-	 *
-	 * @param array  $event
-	 * @param string $idType
-	 * @param string $idValue
-	 *
-	 * @return bool
-	 */
 	private static function eventMatchesEntity( array $event, $idType, $idValue ) {
 		if ( isset( $event[ $idType ] ) && (string) $event[ $idType ] === $idValue ) {
 			return true;
@@ -822,15 +543,6 @@ class FsJobLogStorage {
 		return false;
 	}
 
-	/**
-	 * Recursively look for a key=value match in an arbitrary array.
-	 *
-	 * @param array  $data
-	 * @param string $idType
-	 * @param string $idValue
-	 *
-	 * @return bool
-	 */
 	private static function arrayContainsId( array $data, $idType, $idValue ) {
 		foreach ( $data as $k => $v ) {
 			if ( $k === $idType && (string) $v === $idValue ) {
@@ -843,31 +555,7 @@ class FsJobLogStorage {
 		return false;
 	}
 
-	// ---------------------------------------------------------------------
-	// Filesystem helpers.
-	// ---------------------------------------------------------------------
 
-	/**
-	 * Prune-then-continue cap enforcement. If the queue directory exceeds
-	 * EITHER limit (total bytes > MAX_TOTAL_BYTES, or file count >
-	 * MAX_STORED_REQUESTS_COUNT), delete the oldest PRUNE_RATIO (25%) of
-	 * eligible files in one pass.
-	 *
-	 * Eligible = `.complete.ndjson` + legacy `.json` + ABANDONED
-	 * `.in_progress.ndjson` (mtime older than ABANDONED_IN_PROGRESS_SECONDS).
-	 * Recent `.in_progress.ndjson` files are NEVER pruned — they may still
-	 * be under active write by another worker, or stuck files we want to
-	 * surface in the UI. Including abandoned in-progress files in both the
-	 * trigger and the deletion pool prevents a directory dominated by
-	 * crashed-worker debris from escaping the cap undetected.
-	 *
-	 * Called from JobLog::ensureStreamOpen() (before opening a new request's
-	 * file) and from finaliseStream() (after closing one). Dynamic — no
-	 * cache. Cost at 1500-file cap: ~10ms local SSD, ~150ms slow disk; runs
-	 * twice per request maximum, only when logging is enabled.
-	 *
-	 * @return void
-	 */
 	public static function pruneIfLimitsExceeded() {
 		$dir = self::getQueueDir();
 
@@ -881,8 +569,6 @@ class FsJobLogStorage {
 		);
 		$inProgressFiles = glob( $dir . '*.in_progress.ndjson' ) ?: [];
 
-		// Count both classes for the trigger so stuck-file accumulation
-		// can't push the directory past the cap unnoticed.
 		$fileCount = count( $completedFiles ) + count( $inProgressFiles );
 		if ( $fileCount === 0 ) {
 			return;
@@ -893,12 +579,6 @@ class FsJobLogStorage {
 
 		$overCount = $fileCount > $maxFiles;
 
-		// Skip the expensive total-size scan when file count is still well
-		// below cap. With the per-line 64 KiB cap upstream, average request
-		// files are small and total size is dominated by file count — so
-		// below this threshold we can't realistically be at the size cap
-		// either. Saves a full directory stat per request (~1500 filesize()
-		// calls at full cap).
 		$sizeCheckThreshold = (int) ceil( $maxFiles * 0.75 );
 		$overSize           = false;
 		if ( ! $overCount && $fileCount >= $sizeCheckThreshold ) {
@@ -909,9 +589,6 @@ class FsJobLogStorage {
 			return;
 		}
 
-		// Filemtime only runs on the in-progress glob *after* we already
-		// decided to prune — so the no-prune hot path stays free of the
-		// per-file stat cost.
 		$abandonedInProgress = self::filterAbandonedInProgress( $inProgressFiles );
 		$eligible            = array_merge( $completedFiles, $abandonedInProgress );
 
@@ -921,11 +598,6 @@ class FsJobLogStorage {
 
 		$toDeleteCount = (int) ceil( count( $eligible ) * self::PRUNE_RATIO );
 
-		// Two-pass priority-aware prune: clean completions die first;
-		// aborted + hasErrorLogs requests are preserved as long as
-		// possible because they're the actionable diagnostic surface.
-		// Legacy .json and abandoned .in_progress files count as
-		// low-priority (no readable hasErrorLogs marker; old / dead).
 		list( $lowPriority, $highPriority ) = self::partitionByPrunePriority( $eligible );
 
 		sort( $lowPriority );
@@ -933,10 +605,6 @@ class FsJobLogStorage {
 
 		$victims = array_slice( $lowPriority, 0, $toDeleteCount );
 		if ( count( $victims ) < $toDeleteCount ) {
-			// Low-priority pool was exhausted — spill into the oldest
-			// high-priority files. Only happens when the directory is
-			// dominated by error/aborted requests, which is itself a
-			// signal worth seeing (operators should investigate why).
 			$stillNeed = $toDeleteCount - count( $victims );
 			$victims   = array_merge( $victims, array_slice( $highPriority, 0, $stillNeed ) );
 		}
@@ -946,24 +614,6 @@ class FsJobLogStorage {
 		}
 	}
 
-	/**
-	 * Split the prune-eligible file list into two pools so the prune can
-	 * preserve diagnostic-bearing requests longer than routine clean ones.
-	 *
-	 * Low-priority (prune first):
-	 *   - Clean `.complete.ndjson` (request_finished present, hasErrorLogs=false, no aborted flag)
-	 *   - Legacy `.json` (no readable error marker; old format)
-	 *   - Abandoned `.in_progress.ndjson` (older than ABANDONED_IN_PROGRESS_SECONDS — never finalised)
-	 *
-	 * High-priority (preserved as long as possible):
-	 *   - `.complete.ndjson` with `request_finished.aborted = true`
-	 *     (the PHP-fatal capture path — carries a php_fatal event inside)
-	 *   - `.complete.ndjson` with `request_finished.hasErrorLogs = true`
-	 *
-	 * @param string[] $files
-	 *
-	 * @return array{0: string[], 1: string[]} [$low, $high]
-	 */
 	private static function partitionByPrunePriority( array $files ) {
 		$low  = [];
 		$high = [];
@@ -977,24 +627,7 @@ class FsJobLogStorage {
 		return [ $low, $high ];
 	}
 
-	/**
-	 * Cheap classifier: read only the file's tail and look at the last
-	 * line for `request_finished`. Returns true when the envelope has
-	 * `aborted: true` or `hasErrorLogs: true`. Anything else (no
-	 * envelope, legacy file, abandoned in-progress, clean completion)
-	 * is low priority.
-	 *
-	 * Cost: one `file_get_contents` with offset/length = a single read of
-	 * up to 16 KiB per file. Fast enough that classifying 1500 files
-	 * adds ~50-100 ms to a prune that only runs when caps are exceeded.
-	 *
-	 * @param string $file
-	 *
-	 * @return bool
-	 */
 	private static function isHighPriorityForPrune( $file ) {
-		// Legacy + in-progress files don't carry a reliable hasErrorLogs
-		// signal we can cheaply extract; classify as low priority.
 		if ( self::isLegacyJsonFile( $file ) || self::isInProgressFile( $file ) ) {
 			return false;
 		}
@@ -1012,22 +645,6 @@ class FsJobLogStorage {
 		return false;
 	}
 
-	/**
-	 * Read the last line of a `.complete.ndjson` file looking for the
-	 * `request_finished` envelope. JobLog::shutdown() writes it as the
-	 * final line before the file rename, so this is reliably reachable
-	 * by reading the last few KiB of the file rather than the whole
-	 * thing.
-	 *
-	 * 16 KiB tail is well above any realistic request_finished line size
-	 * (envelope has hasErrorLogs flag, capped requestParams, ids index,
-	 * stringIdsByBatchId — all subject to MAX_LINE_BYTES = 64 KiB upstream
-	 * but typically a few KiB at most).
-	 *
-	 * @param string $file
-	 *
-	 * @return array|null
-	 */
 	private static function readRequestFinishedFromTail( $file ) {
 		$size = @filesize( $file );
 		if ( ! $size || $size <= 0 ) {
@@ -1054,16 +671,6 @@ class FsJobLogStorage {
 		return $event;
 	}
 
-	/**
-	 * Filter an `.in_progress.ndjson` file list down to entries whose mtime
-	 * is older than ABANDONED_IN_PROGRESS_SECONDS — i.e. workers that
-	 * almost certainly will never call finaliseStream(). Recent files are
-	 * left untouched so a live worker's stream is never yanked.
-	 *
-	 * @param string[] $files
-	 *
-	 * @return string[]
-	 */
 	private static function filterAbandonedInProgress( array $files ) {
 		if ( empty( $files ) ) {
 			return [];
@@ -1079,14 +686,6 @@ class FsJobLogStorage {
 		return $out;
 	}
 
-	/**
-	 * `glob('*.json')` also matches `*.ndjson` because `.ndjson` ends in
-	 * `.json`. This helper strips those out.
-	 *
-	 * @param string $dir
-	 *
-	 * @return string[]
-	 */
 	private static function globLegacyJsonFiles( $dir ) {
 		$files = glob( $dir . '*.json' ) ?: [];
 		return array_values(
@@ -1118,22 +717,10 @@ class FsJobLogStorage {
 			@mkdir( $queueDir, 0777, true );
 		}
 
-		// WP_LANG_DIR is web-served on most stacks; NDJSON bodies contain
-		// request URLs, params, stack traces, and HTTP body excerpts.
-		// Block direct access at both directory levels.
 		self::writeAccessGuards( $wpmlDir );
 		self::writeAccessGuards( $queueDir );
 	}
 
-	/**
-	 * Drop standard "silence is golden" + Apache deny guards into a directory
-	 * if they aren't there yet. Cheap idempotent check; only writes on first
-	 * encounter (or after the admin deleted the files).
-	 *
-	 * @param string $dir
-	 *
-	 * @return void
-	 */
 	private static function writeAccessGuards( $dir ) {
 		if ( ! is_dir( $dir ) ) {
 			return;
@@ -1146,9 +733,6 @@ class FsJobLogStorage {
 
 		$htaccessPath = rtrim( $dir, '/\\' ) . '/.htaccess';
 		if ( ! file_exists( $htaccessPath ) ) {
-			// Apache 2.4 first, then 2.2 fallback. Covers the realistic stacks
-			// where WP_LANG_DIR is served by Apache; nginx hosts must block
-			// the directory in server config (this file is inert there).
 			$body  = "<IfModule mod_authz_core.c>\n    Require all denied\n</IfModule>\n";
 			$body .= "<IfModule !mod_authz_core.c>\n    Order allow,deny\n    Deny from all\n</IfModule>\n";
 			@file_put_contents( $htaccessPath, $body );
@@ -1173,17 +757,6 @@ class FsJobLogStorage {
 		return self::getWpmlDir() . 'joblog/' . $subdir;
 	}
 
-	/**
-	 * Redirect all queue-dir operations to a custom path. Used by tests to
-	 * point at a per-test temp directory so suites don't trample each other
-	 * (or production logs). Pass null to clear the override.
-	 *
-	 * @internal Test use only.
-	 *
-	 * @param string|null $dir
-	 *
-	 * @return void
-	 */
 	public static function setQueueDirForTests( $dir ) {
 		self::$queueDirOverride = $dir;
 	}
@@ -1192,16 +765,6 @@ class FsJobLogStorage {
 		return self::getQueueDir() . $filename;
 	}
 
-	/**
-	 * Filename anatomy:
-	 *   request_{Ymd-His}-{ms}_{pid}_{logUid}.{state}.ndjson
-	 *
-	 * @param string $logUid
-	 * @param float  $requestStartTime
-	 * @param string $state            in_progress|complete
-	 *
-	 * @return string
-	 */
 	private static function generateFilename( $logUid, $requestStartTime, $state ) {
 		$ts   = (int) $requestStartTime;
 		$date = gmdate( 'Ymd-His', $ts );

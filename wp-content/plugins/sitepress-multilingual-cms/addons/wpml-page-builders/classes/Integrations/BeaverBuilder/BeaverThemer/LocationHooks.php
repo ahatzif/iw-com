@@ -25,14 +25,6 @@ class LocationHooks implements \IWPML_Backend_Action {
 			->then( spreadArgs( [ $this, 'translateConditionalLogic' ] ) );
 	}
 
-	/**
-	 * @param mixed  $copiedValue
-	 * @param int    $translatedPostId
-	 * @param int    $originalPostId
-	 * @param string $metaKey
-	 *
-	 * @return mixed
-	 */
 	public function translateLocationRulesMeta( $copiedValue, $translatedPostId, $originalPostId, $metaKey ) {
 		if ( in_array( $metaKey, [ self::LOCATIONS_RULES_KEY, self::EXCLUSIONS_RULES_KEY ], true ) ) {
 			$targetLang = self::getLayoutLanguage( $translatedPostId );
@@ -45,11 +37,6 @@ class LocationHooks implements \IWPML_Backend_Action {
 		return $copiedValue;
 	}
 
-	/**
-	 * @param int    $newPostId
-	 * @param array  $fields
-	 * @param object $job
-	 */
 	public function translateConditionalLogic( $newPostId, $fields, $job ) {
 		if ( get_post_type( $newPostId ) !== self::LAYOUT_CPT ) {
 			return;
@@ -58,10 +45,6 @@ class LocationHooks implements \IWPML_Backend_Action {
 		$this->processBuilderDataConditionalLogic( $newPostId, Obj::prop( 'language_code', $job ) );
 	}
 
-	/**
-	 * @param int    $postId
-	 * @param string $lang
-	 */
 	private function processBuilderDataConditionalLogic( $postId, $lang ) {
 		$builderData = get_post_meta( $postId, self::BUILDER_DATA_KEY, true );
 		if ( ! $builderData || ! is_array( $builderData ) ) {
@@ -83,12 +66,6 @@ class LocationHooks implements \IWPML_Backend_Action {
 		}
 	}
 
-	/**
-	 * @param array  $visibilityLogic
-	 * @param string $lang
-	 *
-	 * @return array
-	 */
 	private function translateVisibilityLogic( $visibilityLogic, $lang ) {
 		foreach ( (array) $visibilityLogic as &$logicGroup ) {
 			foreach ( (array) $logicGroup as &$rule ) {
@@ -101,12 +78,6 @@ class LocationHooks implements \IWPML_Backend_Action {
 		return $visibilityLogic;
 	}
 
-	/**
-	 * @param object $rule
-	 * @param string $lang
-	 *
-	 * @return object
-	 */
 	private function translateConditionalRule( $rule, $lang ) {
 		if ( isset( $rule->type ) && 'wordpress/archive-term' === $rule->type && isset( $rule->term, $rule->taxonomy ) ) {
 			$rule->term = self::translateElement( $rule->term, $rule->taxonomy, $lang );
@@ -120,27 +91,6 @@ class LocationHooks implements \IWPML_Backend_Action {
 		return $rule;
 	}
 
-	/**
-	 * Translate IDs in locations rules.
-	 *
-	 * Location rules are an array of rules. Each rule is separated by (:).
-	 * General rules can be like:
-	 *   'general:site'
-	 *   'general:archive'
-	 *   'general:single'
-	 *   'general:404'
-	 *   'post:post'
-	 *   'post:page'
-	 *
-	 * This translates the cases for posts and taxonomies. Their rules can be like:
-	 *   'post:page:12'
-	 *   'post:post:taxonomy:category:45'
-	 *
-	 * @param string $rule
-	 * @param string $targetLangCode
-	 *
-	 * @return string
-	 */
 	private function translateRule( $rule, $targetLangCode ) {
 		$parts = explode( ':', $rule );
 
@@ -153,11 +103,6 @@ class LocationHooks implements \IWPML_Backend_Action {
 		return $rule;
 	}
 
-	/**
-	 * @param int $translatedPostId
-	 *
-	 * @return string|null
-	 */
 	private static function getLayoutLanguage( $translatedPostId ) {
 		return apply_filters(
 			'wpml_element_language_code',
@@ -169,13 +114,6 @@ class LocationHooks implements \IWPML_Backend_Action {
 		);
 	}
 
-	/**
-	 * @param string $elementId
-	 * @param string $elementType
-	 * @param string $targetLangCode
-	 *
-	 * @return string
-	 */
 	private static function translateElement( $elementId, $elementType, $targetLangCode ) {
 		return Ids::convert( $elementId, $elementType, true, $targetLangCode );
 	}

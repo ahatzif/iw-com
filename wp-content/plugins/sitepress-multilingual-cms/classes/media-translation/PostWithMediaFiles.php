@@ -13,46 +13,14 @@ class PostWithMediaFiles {
 
 	const REFERENCED_MEDIA_IDS_SETTING = 'referenced_media_ids';
 
-	/**
-	 * @var int
-	 */
 	private $post_id;
-	/**
-	 * @var MediaImgParse
-	 */
 	private $media_parser;
-	/**
-	 * @var MediaAttachmentByUrlFactory
-	 */
 	private $attachment_by_url_factory;
-	/**
-	 * @var \SitePress $sitepress
-	 */
 	private $sitepress;
-	/**
-	 * @var \WPML_Custom_Field_Setting_Factory
-	 */
 	private $cf_settings_factory;
-	/**
-	 * @var CopiedAndReferencedMediaExtractor
-	 */
 	private $copied_and_referenced_media_extractor;
-	/**
-	 * @var UsageOfMediaFilesInPosts
-	 */
 	private $usage_of_media_files_in_posts;
 
-	/**
-	 * WPML_Media_Post_With_Media_Files constructor.
-	 *
-	 * @param $post_id
-	 * @param MediaImgParse $media_parser
-	 * @param MediaAttachmentByUrlFactory $attachment_by_url_factory
-	 * @param \SitePress $sitepress
-	 * @param \WPML_Custom_Field_Setting_Factory $cf_settings_factory
-	 * @param CopiedAndReferencedMediaExtractor $copied_and_referenced_media_extractor
-	 * @param UsageOfMediaFilesInPosts $usage_of_media_files_in_posts
-	 */
 	public function __construct(
 		$post_id,
 		MediaImgParse $media_parser,
@@ -71,17 +39,11 @@ class PostWithMediaFiles {
 		$this->usage_of_media_files_in_posts         = $usage_of_media_files_in_posts;
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_copied_media_ids() {
 		$ids = get_post_meta( $this->post_id, self::COPIED_MEDIA_IDS_SETTING, true );
 		return is_array( $ids ) ? $ids : [];
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_referenced_media_ids() {
 		$ids = get_post_meta( $this->post_id, self::REFERENCED_MEDIA_IDS_SETTING, true );
 		return is_array( $ids ) ? $ids : [];
@@ -197,9 +159,6 @@ class PostWithMediaFiles {
 		return $texts;
 	}
 
-	/**
-	 * We should not call wp_delete_attachment here because it can trigger hooks with original attachment filepath.
-	 */
 	private function delete_duplicated_attachment( $post_id ) {
 		global $wpdb;
 
@@ -228,7 +187,6 @@ class PostWithMediaFiles {
 			delete_metadata_by_mid( 'post', $mid );
 		}
 
-		// When we delete the attachment entry from the database for the translation there is no reason to even allow a file deletion from the filesystem.
 		add_filter( 'wp_delete_file', '__return_false', PHP_INT_MAX );
 		do_action( 'delete_post', $post_id, $post );
 		remove_filter( 'wp_delete_file', '__return_false', PHP_INT_MAX );
@@ -300,11 +258,6 @@ class PostWithMediaFiles {
 		);
 	}
 
-	/**
-	 * @param array $post_media_data
-	 *
-	 * @return array
-	 */
 	private static function extract_attachment_ids( $post_media_data ) {
 		$media_file_ids = [];
 		foreach ( $post_media_data as $media_data ) {
@@ -318,9 +271,6 @@ class PostWithMediaFiles {
 		return $media_file_ids;
 	}
 
-	/**
-	 * @param bool $get_attachment_ids_from_urls
-	 */
 	public function get_media_data_from_post_content_and_meta( $get_attachment_ids_from_urls = true ) {
 		$post = get_post( $this->post_id );
 		if ( ! $post ) {
@@ -404,11 +354,6 @@ class PostWithMediaFiles {
 		return Fns::filter( Post::get(), apply_filters( 'wpml_ids_of_media_used_in_post', $media_ids, $this->post_id ) );
 	}
 
-	/**
-	 * @param array $media_array
-	 *
-	 * @return array
-	 */
 	private function _get_ids_from_media_array( $media_array ) {
 		$media_ids = [];
 		foreach ( $media_array as $media ) {
@@ -426,11 +371,6 @@ class PostWithMediaFiles {
 		return $media_ids;
 	}
 
-	/**
-	 * @param string $post_content
-	 *
-	 * @return array
-	 */
 	private function get_gallery_media_ids( $post_content ) {
 
 		$galleries_media_ids     = [];
@@ -452,11 +392,6 @@ class PostWithMediaFiles {
 		return $galleries_media_ids;
 	}
 
-	/**
-	 * @param $languages
-	 *
-	 * @return array
-	 */
 	public function get_untranslated_media( $languages ) {
 
 		$untranslated_media = [];

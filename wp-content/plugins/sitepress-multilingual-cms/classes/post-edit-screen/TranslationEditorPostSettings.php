@@ -110,7 +110,6 @@ class TranslationEditorPostSettings {
 			$global_key = \WPML_TM_Post_Edit_TM_Editor_Mode::TM_KEY_GLOBAL_USE_NATIVE;
 		}
 
-		// Check post meta first.
 		$post_meta = get_post_meta( $post_id, $meta_key, true );
 		if ( $post_meta ) {
 			return [
@@ -119,7 +118,6 @@ class TranslationEditorPostSettings {
 			];
 		}
 
-		// Then check setting for post type.
 		$post_type = get_post_type( $post_id );
 		if ( isset( $tmSettings[ $post_type_key ][ $post_type ] ) ) {
 			return [
@@ -128,7 +126,6 @@ class TranslationEditorPostSettings {
 			];
 		}
 
-		// Last check global setting.
 		if ( isset( $tmSettings[ $global_key ] ) ) {
 			return [
 				$tmSettings[ $global_key ],
@@ -136,7 +133,6 @@ class TranslationEditorPostSettings {
 			];
 		}
 
-		// Use "dashboard" editor by default.
 		return [
 			SetEditorMode::TRANSLATION_EDITOR_DASHBOARD,
 			SetEditorMode::MODE_FOR_GLOBAL

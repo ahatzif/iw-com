@@ -6,7 +6,6 @@ use WPML\TM\ATE\ClonedSites\SetupMigration\SiteKeyRemoveServiceFactory;
 
 class SiteKeyCleaner {
 
-	/** @var SiteKeyRemoveServiceFactory */
 	private $factory;
 
 	public function __construct( SiteKeyRemoveServiceFactory $factory ) {
@@ -14,8 +13,6 @@ class SiteKeyCleaner {
 	}
 
 	public function unregister() {
-		// When the site key is defined via PHP constant, the Installer owns it and validates it
-		// internally. We must not touch it, otherwise we'd lock the user out of their constant-based setup.
 		if ( $this->isWPMLSiteKeyDefinedInWPConfig() ) {
 			return;
 		}

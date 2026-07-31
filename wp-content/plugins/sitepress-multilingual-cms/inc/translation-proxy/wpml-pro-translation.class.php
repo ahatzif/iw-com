@@ -1,8 +1,4 @@
 <?php
-/**
- * @package wpml-core
- * @package wpml-core-pro-translation
- */
 
 use WPML\FP\Fns;
 use WPML\FP\Lst;
@@ -10,21 +6,15 @@ use WPML\FP\Str;
 use function WPML\Container\make;
 use function WPML\FP\pipe;
 
-/**
- * Class WPML_Pro_Translation
- */
 class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 
 	private static $translated_links = [];
 
 	public $errors = array();
-	/** @var TranslationManagement $tmg */
 	private $tmg;
 
-	/** @var  WPML_TM_CMS_ID $cms_id_helper */
 	private $cms_id_helper;
 
-	/** @var WPML_TM_Xliff_Reader_Factory $xliff_reader_factory */
 	private $xliff_reader_factory;
 
 
@@ -34,11 +24,6 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 
 	private $is_language_switched = false;
 
-	/**
-	 * WPML_Pro_Translation constructor.
-	 *
-	 * @param WPML_Translation_Job_Factory $job_factory
-	 */
 	function __construct( &$job_factory ) {
 		parent::__construct( $job_factory );
 		global $iclTranslationManagement, $wpdb, $sitepress, $wpml_post_translations, $wpml_term_translations;
@@ -72,17 +57,10 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 		$this->update_pm = new WPML_Update_PickUp_Method( $this->sitepress );
 	}
 
-	/**
-	 * @return WPML_TM_CMS_ID
-	 */
 	public function &get_cms_id_helper() {
 		return $this->cms_id_helper;
 	}
 
-	/**
-	 * @param string $call
-	 * @param array  $data
-	 */
 	function ajax_calls( $call, $data ) {
 		switch ( $call ) {
 			case 'set_pickup_mode':
@@ -103,17 +81,7 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 		return TranslationProxy::get_current_project();
 	}
 
-	/**
-	 * @param WP_Post|WPML_Package|int $postOrPackage
-	 * @param array                $target_languages
-	 * @param int                  $translator_id
-	 * @param int                  $job_id
-	 * @param array<string,string> | null $tp_batch_info
-	 *
-	 * @return bool|int
-	 */
 	function send_post( $postOrPackage, $target_languages, $translator_id, $job_id, $tp_batch_info = null ) {
-		/** @var TranslationManagement $iclTranslationManagement */
 		global $sitepress, $iclTranslationManagement;
 
 		$this->maybe_init_translation_management( $iclTranslationManagement );
@@ -130,7 +98,6 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 		$element_type_prefix = $iclTranslationManagement->get_element_type_prefix_from_job_id( $job_id );
 		$element_type        = $element_type_prefix . '_' . $element_type;
 
-		//Set translator note for string packages
 		if( $postOrPackage instanceof WPML_Package ) {
 			$note = $postOrPackage->translator_note;
 		} else {
@@ -148,7 +115,7 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 			return false;
 		}
 		$translation = $this->tmg->get_element_translation( $element_id, $target_language, $element_type );
-		if ( ! $translation ) { // translated the first time
+		if ( ! $translation ) {
 			$err = true;
 		}
 		if ( ! $err && ( $translation->needs_update || $translation->status == ICL_TM_NOT_TRANSLATED || $translation->status == ICL_TM_WAITING_FOR_TRANSLATOR ) ) {
@@ -167,7 +134,7 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 			}
 		}
 
-		return $err ? false : $tp_job_id; // last $ret
+		return $err ? false : $tp_job_id;
 	}
 
 	function server_languages_map( $language_name, $server2plugin = false ) {
@@ -185,11 +152,6 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 		return isset( $map[ $language_name ] ) ? $map[ $language_name ] : $language_name;
 	}
 
-	/**
-	 * @param $methods
-	 *
-	 * @return array
-	 */
 	public function custom_xmlrpc_methods( $methods ) {
 		$icl_methods['translationproxy.test_xmlrpc']        = '__return_true';
 		$icl_methods['translationproxy.updated_job_status'] = array(
@@ -208,11 +170,6 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 		return $methods;
 	}
 
-	/**
-	 * @param array $args
-	 *
-	 * @return int|IXR_Error
-	 */
 	public function xmlrpc_updated_job_status( $args ) {
 		global $wpdb;
 
@@ -227,7 +184,6 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 
 		try {
 
-			/** @var WPML_TM_Jobs_Repository $jobs_repository */
 			$jobs_repository = wpml_tm_get_jobs_repository();
 
 			$job_match = $jobs_repository->get(
@@ -266,18 +222,12 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 		return 0;
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function authenticate_request( $tp_id, $cms_id, $status, $signature ) {
 		$project = TranslationProxy::get_current_project();
 
 		return sha1( $project->id . $project->access_key . $tp_id . $cms_id . $status ) === $signature;
 	}
 
-	/**
-	 * @return WPML_WP_API
-	 */
 	function get_wpml_wp_api() {
 		return $this->sitepress->get_wp_api();
 	}
@@ -301,19 +251,9 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 		return $links;
 	}
 
-	/**
-	 * @param int    $element_id
-	 * @param string $target_lang_code
-	 * @param string $element_type
-	 * @param array  $preLoaded
-	 *
-	 * @return int Number of links fixed. This is used only for the case that
-	 *             the "Scan now and fix" button is clicked.
-	 */
 	public function fix_links_to_translated_content( $element_id, $target_lang_code, $element_type = 'post', $preLoaded = [] ) {
 		global $wpdb, $sitepress;
 
-		// Get content to translate.
 		$wpml_element_type          = $element_type;
 		$body                       = '';
 		$postExcerpt = '';
@@ -337,7 +277,6 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 				$post          = $wpdb->get_row( $post_prepared );
 
 				if ( ! $post ) {
-					// The related post could not be found.
 					$links_fixed_status->set( true );
 
 					return 0;
@@ -366,7 +305,6 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 				);
 
 				if ( ! $data ) {
-					// The related string could not be found.
 					$links_fixed_status->set( true );
 					return 0;
 				}
@@ -409,7 +347,7 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 				$translatedLink = $absolute_links->convert_url( $link_url, $target_lang_code );
 				$translatedLink = Str::replace( $link[2], $translatedLink, $link[0] );
 			} else {
-				add_filter( 'wpml_force_translated_permalink', '__return_true' ); // Need to activate permalink translation as it normally wouldn't run on admin calls.
+				add_filter( 'wpml_force_translated_permalink', '__return_true' );
 				$translatedLink = $translate_link_targets->convert_text( $link[0] );
 				remove_filter( 'wpml_force_translated_permalink', '__return_true' );
 				if ( self::should_links_be_converted_back_to_sticky( $element_type ) ) {
@@ -463,7 +401,6 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 					[ 'ID' => $element_id ]
 				);
 
-				// Delete the post cache because we are updating the post via SQL directly.
 				if ( false !== $updated ) {
 					clean_post_cache( $element_id );
 				}
@@ -487,7 +424,6 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 
 		$links_fixed_status_factory = new WPML_Links_Fixed_Status_Factory( $wpdb, new WPML_WP_API() );
 		$links_fixed_status         = $links_fixed_status_factory->create( $element_id, $wpml_element_type );
-		// wpmldev-2742 deprecated links_fixed; new translations always set it true, only upgraded legacy content can still store false.
 		$links_fixed_status->set( true );
 
 		if ( $this->is_language_switched ) {
@@ -573,9 +509,6 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 		$this->errors[] = $project_error;
 	}
 
-	/**
-	 * @param $project TranslationProxy_Project
-	 */
 	function enqueue_project_errors( $project ) {
 		if ( isset( $project ) && isset( $project->errors ) && $project->errors ) {
 			foreach ( $project->errors as $project_error ) {
@@ -584,9 +517,6 @@ class WPML_Pro_Translation extends WPML_TM_Job_Factory_User {
 		}
 	}
 
-	/**
-	 * @param TranslationManagement $iclTranslationManagement
-	 */
 	private function maybe_init_translation_management( $iclTranslationManagement ) {
 		if ( empty( $this->tmg->settings ) ) {
 			$iclTranslationManagement->init();

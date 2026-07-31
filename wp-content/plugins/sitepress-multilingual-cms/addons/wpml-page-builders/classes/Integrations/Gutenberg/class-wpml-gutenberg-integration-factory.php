@@ -5,7 +5,6 @@ use function WPML\Container\share;
 
 class WPML_Gutenberg_Integration_Factory {
 
-	/** @return \WPML\PB\Gutenberg\Integration_Composite */
 	public function create() {
 		$integrations = new WPML\PB\Gutenberg\Integration_Composite();
 
@@ -54,14 +53,7 @@ class WPML_Gutenberg_Integration_Factory {
 		return $integrations;
 	}
 
-	/**
-	 * @return WPML_Gutenberg_Integration
-	 */
 	public function create_gutenberg_integration() {
-		/**
-		 * @var SitePress $sitepress
-		 * @var wpdb $wpdb
-		 */
 		global $sitepress, $wpdb;
 
 		$config_option    = new WPML_Gutenberg_Config_Option();
@@ -94,9 +86,7 @@ class WPML_Gutenberg_Integration_Factory {
 		return new WPML\PB\Gutenberg\StringsInBlock\Collection( $string_parsers );
 	}
 
-	/** @return bool */
 	private function should_translate_reusable_blocks() {
-		/** @var SitePress $sitepress */
 		global $sitepress;
 
 		return $sitepress->is_translated_post_type(

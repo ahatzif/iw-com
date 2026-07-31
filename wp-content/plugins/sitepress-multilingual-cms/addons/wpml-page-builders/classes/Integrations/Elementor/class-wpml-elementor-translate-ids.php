@@ -5,19 +5,10 @@ use WPML\FP\Str;
 use WPML\FP\Fns;
 use function WPML\FP\pipe;
 
-/**
- * Class WPML_Elementor_Translate_IDs
- */
 class WPML_Elementor_Translate_IDs implements IWPML_Action {
 
-	/** @var \WPML\Utils\DebugBackTrace */
 	private $debug_backtrace;
 
-	/**
-	 * WPML_Elementor_Translate_IDs constructor.
-	 *
-	 * @param \WPML\Utils\DebugBackTrace $debug_backtrace
-	 */
 	public function __construct( \WPML\Utils\DebugBackTrace $debug_backtrace ) {
 		$this->debug_backtrace = $debug_backtrace;
 	}
@@ -35,21 +26,7 @@ class WPML_Elementor_Translate_IDs implements IWPML_Action {
 		return $this->translate_id( $template_id );
 	}
 
-	/**
-	 * @param int|string $sub_id
-	 * @param array      $parsed_condition
-	 *
-	 * @return int|string
-	 */
 	public function translate_location_condition_sub_id( $sub_id, $parsed_condition ) {
-		/**
-		 * `$sub_name` gives a context for the `$sub_id`, it can be either:
-		 * - `child_of`
-		 * - `in_{taxonomy}`
-		 * - `in_{taxonomy}_children`
-		 * - `{post_type}`
-		 * - `{taxonomy}`
-		 */
 		$sub_name = isset( $parsed_condition['sub_name'] ) ? $parsed_condition['sub_name'] : null;
 
 		if ( (int) $sub_id > 0 && $sub_name ) {
@@ -79,11 +56,6 @@ class WPML_Elementor_Translate_IDs implements IWPML_Action {
 		return $sub_id;
 	}
 
-	/**
-	 * @param int|string $template_id
-	 *
-	 * @return int|string
-	 */
 	public function translate_template_id( $template_id ) {
 		if ( $this->should_translate_template() ) {
 			$template_id = $this->translate_id( $template_id );
@@ -92,9 +64,6 @@ class WPML_Elementor_Translate_IDs implements IWPML_Action {
 		return $template_id;
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function should_translate_template() {
 		$wpWidgetCall        = [ 'ElementorPro\Modules\Library\WP_Widgets\Elementor_Library', 'widget' ];
 		$shortcodeCall       = [ 'ElementorPro\Modules\Library\Classes\Shortcode', 'shortcode' ];
@@ -119,12 +88,6 @@ class WPML_Elementor_Translate_IDs implements IWPML_Action {
 		);
 	}
 
-	/**
-	 * @param array $data_array
-	 * @param int   $post_id
-	 *
-	 * @return array The modified data array with translated IDs.
-	 */
 	public function translate_global_widget_ids( $data_array, $post_id ) {
 		foreach ( $data_array as &$data ) {
 			if ( isset( $data['elType'] ) && 'widget' === $data['elType'] ) {
@@ -140,12 +103,6 @@ class WPML_Elementor_Translate_IDs implements IWPML_Action {
 		return $data_array;
 	}
 
-	/**
-	 * @param array $data_array
-	 * @param int   $post_id
-	 *
-	 * @return array
-	 */
 	public function translate_product_ids( $data_array, $post_id ) {
 		foreach ( $data_array as &$data ) {
 			if (
@@ -162,12 +119,6 @@ class WPML_Elementor_Translate_IDs implements IWPML_Action {
 		return $data_array;
 	}
 
-	/**
-	 * @param int|string $element_id
-	 * @param string     $element_type
-	 *
-	 * @return int
-	 */
 	private function translate_id( $element_id, $element_type = null ) {
 		if ( ! $element_type || 'any_child_of' === $element_type ) {
 			$element_type = get_post_type( $element_id );
@@ -186,12 +137,6 @@ class WPML_Elementor_Translate_IDs implements IWPML_Action {
 		return $translated_id;
 	}
 
-	/**
-	 * @param array $data_array
-	 * @param int   $post_id
-	 *
-	 * @return array
-	 */
 	public function translate_ids_in_widget_fields( $data_array, $post_id ) {
 		foreach ( $data_array as &$data ) {
 			if ( isset( $data['elType'] ) && 'widget' === $data['elType'] ) {
@@ -206,43 +151,10 @@ class WPML_Elementor_Translate_IDs implements IWPML_Action {
 		return $data_array;
 	}
 
-	/**
-	 * @return array
-	 */
 	private function get_widget_fields_with_ids() {
-		/**
-		 * Filters the configuration array for fields containing IDs that need translation in Elementor widgets.
-		 *
-		 * @since 2.3.0
-		 *
-		 * @param array<
-		 *     string, array{
-		 *         fields: array<
-		 *             array{
-		 *                 field_key: string,
-		 *                 repeater_key?: string,
-		 *                 id_type?: "term",
-		 *                 type?: string
-		 *             }
-		 *         >
-		 *     }
-		 * > $fields_with_ids Configuration array where:
-		 *   - key is the widget name (string).
-		 *   - value is an array containing:
-		 *     - fields: array of field configurations:
-		 *       - field_key: (required) The name of the field containing the ID(s).
-		 *       - repeater_key: (optional) If set, indicates this is a repeater field and contains the repeater field name.
-		 *       - id_type: (optional) Set to "term" for taxonomy term IDs. Defaults to post IDs if not set.
-		 *       - type: (optional) You can set the specific post-type slug or taxonomy slug for a slight improvement in performance.
-		 */
 		return apply_filters( 'wpmlpb_elementor_fields_with_ids', [] );
 	}
 
-	/**
-	 * @param array $data
-	 *
-	 * @return array Modified data with translated IDs
-	 */
 	private function translate_widget_ids( $data ) {
 		$widget_name     = $data['widgetType'] ?? null;
 		$fields_with_ids = $this->get_widget_fields_with_ids();
@@ -260,12 +172,6 @@ class WPML_Elementor_Translate_IDs implements IWPML_Action {
 		return $data;
 	}
 
-	/**
-	 * @param array $settings
-	 * @param array $field_config
-	 *
-	 * @return array Modified settings with translated IDs
-	 */
 	private function translate_repeater_field_ids( $settings, $field_config ) {
 		$repeater_key = $field_config['repeater_key'];
 		$field_key    = $field_config['field_key'];
@@ -284,12 +190,6 @@ class WPML_Elementor_Translate_IDs implements IWPML_Action {
 		return $settings;
 	}
 
-	/**
-	 * @param array $settings
-	 * @param array $field_config
-	 *
-	 * @return array Modified settings with translated IDs
-	 */
 	private function translate_field_ids( $settings, $field_config ) {
 		$field_path = explode( '>', $field_config['field_key'] );
 		$current    = &$settings;
@@ -311,12 +211,6 @@ class WPML_Elementor_Translate_IDs implements IWPML_Action {
 		return $settings;
 	}
 
-	/**
-	 * @param array $ids
-	 * @param array $field_config
-	 *
-	 * @return array
-	 */
 	private function translate_ids_from_array( $ids, $field_config ) {
 		$translated_ids = [];
 
@@ -334,12 +228,6 @@ class WPML_Elementor_Translate_IDs implements IWPML_Action {
 		return $translated_ids;
 	}
 
-	/**
-	 * @param int|string $id
-	 * @param array      $field_config
-	 *
-	 * @return string|null
-	 */
 	private function get_element_type( $id, $field_config ) {
 		if ( isset( $field_config['id_type'] ) && 'term' === $field_config['id_type'] ) {
 			$term = get_term( $id );

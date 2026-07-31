@@ -18,8 +18,6 @@ class WPML_TM_Old_Editor implements IWPML_Action {
 	public function handle_custom_ajax_call( $call, $data ) {
 		if ( self::CUSTOM_AJAX_CALL === $call ) {
 			if ( ! isset( $data[ WPML_TM_Old_Jobs_Editor::OPTION_NAME ] ) ) {
-				// Since WPML 4.7, the option is a checkbox.
-				// The default value when it's not checked is WPML.
 				$old_editor = WPML_TM_Editors::WPML;
 			} else {
 				$old_editor = strtolower($data[ WPML_TM_Old_Jobs_Editor::OPTION_NAME ]) == WPML_TM_Editors::ATE ?
@@ -31,12 +29,10 @@ class WPML_TM_Old_Editor implements IWPML_Action {
 				return;
 			}
 
-			// Get previous value to detect changes
 			$previous_old_editor = get_option( WPML_TM_Old_Jobs_Editor::OPTION_NAME, null );
 
 			update_option( WPML_TM_Old_Jobs_Editor::OPTION_NAME, $old_editor );
 
-			// Capture PostHog event only when the setting actually changes
 			if ( $previous_old_editor !== $old_editor ) {
 				$this->capture_ate_for_old_translations_event( $old_editor );
 			}
@@ -54,20 +50,11 @@ class WPML_TM_Old_Editor implements IWPML_Action {
 		}
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function is_ate_enabled_and_manager_wizard_completed() {
 		return WPML_TM_ATE_Status::is_enabled_and_activated() && (bool) get_option( WPML_TM_Wizard_Options::WIZARD_COMPLETE_FOR_MANAGER, false );
 	}
 
-	/**
-	 * Capture PostHog event when ATE for old translations setting is changed.
-	 *
-	 * @param string $old_editor The editor selected for old translations.
-	 */
 	private function capture_ate_for_old_translations_event( $old_editor ) {
-		// Skip if PostHog is not enabled
 		if ( ! \WPML\PostHog\State\PostHogState::isEnabled() ) {
 			return;
 		}
@@ -76,7 +63,6 @@ class WPML_TM_Old_Editor implements IWPML_Action {
 			'enabled' => WPML_TM_Editors::ATE === $old_editor,
 		);
 
-		// Capture the event
 		\WPML\PostHog\Event\CaptureEvent::capture(
 			( new EventInstanceService() )->getATEForOldTranslationsEnabledEvent( $event_props )
 		);

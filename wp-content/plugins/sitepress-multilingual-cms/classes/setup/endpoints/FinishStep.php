@@ -34,7 +34,6 @@ class FinishStep implements IHandler {
 	}
 
 	public function run( Collection $data ) {
-		// Prepare media setup which will run right after finishing WPML setup.
 		\WPML\Media\Option::prepareSetup();
 
 		$wpmlInstallation = wpml_get_setup_instance();
@@ -46,15 +45,6 @@ class FinishStep implements IHandler {
 
 		self::enableFooterLanguageSwitcher();
 
-		/**
-		 * 1. Setting 'translateEverything = false' because starting from WPML 4.7, when user finishes wizard,
-		 * he should have TranslateEverything paused initially.
-		 *
-		 * 2. Setting 'reviewMode = null' because starting from WPML 4.7, user should have NO default review mode selected,
-		 * he'll need to select review mode when he sends content to automatic translation
-		 *
-		 * 3. Setting 'onlyNew = true' to resave TranslateEverything settings as now languages are activated, which happened on 'finish_step2'.
-		 */
 		make( SetTranslateEverything::class )->run(
 			wpml_collect( [
 				'translateEverything' => false,
@@ -80,7 +70,6 @@ class FinishStep implements IHandler {
 				make( Deactivate::class )->run( wpml_collect( [] ) );
 			}
 
-			// Set 'dashboard' as global editor mode.
 			Settings::assoc( 'translation-management', \WPML_TM_Post_Edit_TM_Editor_Mode::TM_KEY_GLOBAL_USE_WPML, 'dashboard' );
 		} else {
 			Option::setTranslateEverything( false );
@@ -120,7 +109,6 @@ class FinishStep implements IHandler {
 		$eventData['support_step_value']          = class_exists( 'OTGS_Installer_WP_Share_Local_Components_Setting' ) && \OTGS_Installer_WP_Share_Local_Components_Setting::get_setting( 'wpml' );
 		$eventData['wpml_active_plugins']         = ( new WpmlActivePluginsQuery() )->getActivePlugins();
 
-		// Add AI Translation step values if available
 		if ( ! empty( $eventData['ai_translation_data'] ) && is_array( $eventData['ai_translation_data'] ) ) {
 			$eventData['ai_translation_step_values'] = [
 				'product_or_service'  => isset( $eventData['ai_translation_data']['product_or_service'] ) ?
@@ -137,7 +125,6 @@ class FinishStep implements IHandler {
 			$eventData['ai_translation_step_values'] = null;
 		}
 
-		// Remove the raw ai_translation_data as we've processed it
 		unset( $eventData['ai_translation_data'] );
 
 		$event = ( new EventInstanceService() )->getWizardCompletedEvent( $eventData );
@@ -147,7 +134,6 @@ class FinishStep implements IHandler {
 	private static function enableFooterLanguageSwitcher() {
 		\WPML_Config::load_config_run();
 
-		/** @var \WPML_LS_Settings $lsSettings */
 		$lsSettings = make( \WPML_LS_Dependencies_Factory::class )->settings();
 
 		$settings = $lsSettings->get_settings();

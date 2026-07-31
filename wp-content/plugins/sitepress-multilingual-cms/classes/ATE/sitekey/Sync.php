@@ -5,17 +5,10 @@ namespace WPML\TM\ATE\Sitekey;
 use WPML\Core\BackgroundTask\Service\BackgroundTaskService;
 use function WPML\Container\make;
 
-/**
- *
- */
 class Sync implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 
-	/** @var BackgroundTaskService */
 	private $backgroundTaskService;
 
-	/**
-	 * @param BackgroundTaskService $backgroundTaskService
-	 */
 	public function __construct( BackgroundTaskService $backgroundTaskService ) {
 		$this->backgroundTaskService = $backgroundTaskService;
 	}

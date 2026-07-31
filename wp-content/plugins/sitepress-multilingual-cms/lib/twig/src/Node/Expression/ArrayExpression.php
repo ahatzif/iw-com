@@ -35,8 +35,6 @@ class ArrayExpression extends \WPML\Core\Twig\Node\Expression\AbstractExpression
     public function hasElement(\WPML\Core\Twig\Node\Expression\AbstractExpression $key)
     {
         foreach ($this->getKeyValuePairs() as $pair) {
-            // we compare the string representation of the keys
-            // to avoid comparing the line numbers which are not relevant here.
             if ((string) $key === (string) $pair['key']) {
                 return \true;
             }

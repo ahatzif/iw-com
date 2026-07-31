@@ -6,7 +6,6 @@ use WPML\TM\Jobs\Log\Hooks;
 
 class View {
 
-	/** @var int */
 	private $logCount;
 
 	public function __construct( int $logCount ) {

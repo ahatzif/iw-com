@@ -2,18 +2,10 @@
 
 use WPML\API\Sanitize;
 
-/**
- * @author OnTheGo Systems
- */
 class WPML_Languages_AJAX {
 	private $sitepress;
 	private $default_language;
 
-	/**
-	 * WPML_Languages_AJAX constructor.
-	 *
-	 * @param SitePress $sitepress
-	 */
 	public function __construct( SitePress $sitepress ) {
 		$this->sitepress        = $sitepress;
 		$this->default_language = $this->sitepress->get_default_language();
@@ -65,7 +57,6 @@ class WPML_Languages_AJAX {
 
 			icl_cache_clear();
 
-			/** @deprecated Use `wpml_update_active_languages` instead */
 			do_action( 'icl_update_active_languages' );
 			do_action( 'wpml_update_active_languages', $old_active_languages );
 		}

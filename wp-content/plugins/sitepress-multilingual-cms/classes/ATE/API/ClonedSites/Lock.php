@@ -11,7 +11,6 @@ use function WPML\Container\make;
 class Lock {
 	const CLONED_SITE_OPTION = 'otgs_wpml_tm_ate_cloned_site_lock';
 
-	/** @var FingerprintGenerator */
 	private static $fingerprint_generator;
 
 	public function lock( $lockData ) {
@@ -29,9 +28,6 @@ class Lock {
 		}
 	}
 
-	/**
-	 * @return array{urlCurrentlyRegisteredInAMS: string, urlUsedToMakeRequest: string, siteMoved: bool}
-	 */
 	public function getLockData() {
 		$option = get_option( self::CLONED_SITE_OPTION, [] );
 		$urls   = $this->extractUrls( $option );
@@ -43,13 +39,6 @@ class Lock {
 		];
 	}
 
-	/**
-	 * Extracts old and new URLs from fingerprint data (either from lock option or 426 error).
-	 *
-	 * @param array $data Array with 'stored_fingerprint' and 'received_fingerprint'.
-	 *
-	 * @return array{old_url: string, new_url: string}
-	 */
 	public function extractUrls( array $data ) {
 		$oldUrl = Obj::pathOr( '', [ 'stored_fingerprint', 'wp_url' ], $data );
 
@@ -66,9 +55,6 @@ class Lock {
 		];
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getUrlRegisteredInAMS() {
 		$lockData = $this->getLockData();
 
@@ -107,11 +93,9 @@ class Lock {
 		if ( $option && isset( $option['stored_fingerprint'] ) && isset( $option['stored_fingerprint']['wp_url'] ) ) {
 			$stored_url = $option['stored_fingerprint']['wp_url'];
 
-			// Use FingerprintGenerator to get current URL.
 			$current_url = self::getFingerPrintGenerator()->getClonedSiteUrl();
 
 			if ( $stored_url === $current_url ) {
-				// URLs match - this is the original site, so we should unlock it.
 				static::doUnlock();
 				return false;
 			}

@@ -31,13 +31,6 @@ class PrepareForTranslation implements IHandler {
 		}
 	}
 
-	/**
-	 * By this situation we mean that we have only the default language and ZERO target languages!
-	 * You can't have such situation after WPML Setup. You have to go to WPML > Languages and
-	 * manually unselect all target languages.
-	 *
-	 * @return bool
-	 */
 	private function isThereOnlyOneActiveLanguage(): bool {
 		$activeLanguages = Languages::getActive();
 

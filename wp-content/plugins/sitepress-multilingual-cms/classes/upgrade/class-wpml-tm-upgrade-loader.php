@@ -5,19 +5,14 @@ use WPML\API\Version;
 
 class WPML_TM_Upgrade_Loader implements IWPML_Action {
 
-	/** @var SitePress */
 	private $sitepress;
 
-	/** @var WPML_Upgrade_Schema */
 	private $upgrade_schema;
 
-	/** @var WPML_Settings_Helper */
 	private $settings;
 
-	/** @var WPML_Upgrade_Command_Factory */
 	private $factory;
 
-	/** @var WPML_Notices */
 	private $notices;
 
 	public function __construct(

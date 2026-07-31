@@ -4,13 +4,10 @@ namespace WPML\TM\ATE\ClonedSites;
 
 class InProgressJobsCanceller {
 
-	/** @var \WPML_TM_ATE_Job_Repository */
 	private $ateJobsRepository;
 
-	/** @var \WPML_TP_Sync_Update_Job */
 	private $updateJobs;
 
-	/** @var \WPML_Translation_Job_Factory */
 	private $translationJobFactory;
 
 	public function __construct(
@@ -26,7 +23,6 @@ class InProgressJobsCanceller {
 	public function cancel(): int {
 		$jobsInProgress = $this->ateJobsRepository->get_jobs_to_sync();
 
-		/** @var \WPML_TM_Post_Job_Entity $jobInProgress */
 		foreach ( $jobsInProgress as $jobInProgress ) {
 			$jobInProgress->set_status( ICL_TM_NOT_TRANSLATED );
 			$this->updateJobs->update_state( $jobInProgress );

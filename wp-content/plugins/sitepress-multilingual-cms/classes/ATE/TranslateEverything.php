@@ -24,9 +24,6 @@ use function WPML\Container\make;
 
 class TranslateEverything implements CompletedTranslationsInterface {
 
-	/**
-	 * @var UntranslatedElementsInterface[]
-	 */
 	private $untranslated_elements = [];
 
 	const LOCK_RELEASE_TIMEOUT = 2 * MINUTE_IN_SECONDS;
@@ -106,9 +103,6 @@ class TranslateEverything implements CompletedTranslationsInterface {
 		}
 	}
 
-	/**
-	 * @param Actions $actions
-	 */
 	private function translateEverything( Actions $actions ) {
 		foreach ( $this->untranslated_elements as $untranslated ) {
 			JobLog::addExtraLogData( 'strategy', get_class( $untranslated ) );
@@ -154,11 +148,6 @@ class TranslateEverything implements CompletedTranslationsInterface {
 	}
 
 
-	/**
-	 * @param bool $cached
-	 *
-	 * @return bool
-	 */
 	public function isEverythingProcessed( $cached = false ) {
 		foreach ( $this->untranslated_elements as $untranslated ) {
 			if ( ! $untranslated->isEverythingProcessed( $cached ) ) {
@@ -194,13 +183,6 @@ class TranslateEverything implements CompletedTranslationsInterface {
 		}
 	}
 
-	/**
-	 * Sort strategies by their tier so that higher-priority content is processed first.
-	 *
-	 * @param UntranslatedElementsInterface[] $strategies
-	 *
-	 * @return UntranslatedElementsInterface[]
-	 */
 	private function sortStrategiesByTier( array $strategies ): array {
 		usort(
 			$strategies,
@@ -211,13 +193,6 @@ class TranslateEverything implements CompletedTranslationsInterface {
 		return $strategies;
 	}
 
-	/**
-	 * Map a strategy instance to its Tier constant.
-	 *
-	 * @param UntranslatedElementsInterface $strategy
-	 *
-	 * @return int
-	 */
 	private static function getStrategyTier( UntranslatedElementsInterface $strategy ): int {
 		if ( $strategy instanceof UntranslatedPosts ) {
 			return Tier::PAGES_UNDER_HOMEPAGE;

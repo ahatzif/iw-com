@@ -4,14 +4,8 @@ namespace WPML\Hooks;
 
 class WpmlSavePostHooks {
 
-	/**
-	 * @var \SitePress $sitepress
-	 */
 	private $sitepress;
 
-	/**
-	 * @var \wpdb $wpdb
-	 */
 	private $wpdb;
 
 	public function __construct( \SitePress $sitepress, \wpdb $wpdb ) {
@@ -75,10 +69,6 @@ class WpmlSavePostHooks {
 		$this->executeSavePostHook( $post );
 	}
 
-	/**
-	 * @param int|string $post_id
-	 * @param bool       $update
-	 */
 	public function executeOnPostTranslationSave( $post_id ) {
 		$post = get_post( (int) $post_id );
 
@@ -94,19 +84,11 @@ class WpmlSavePostHooks {
 		$this->executeSavePostHook( $post, true );
 	}
 
-	/**
-	 * @param \WP_Post $post
-	 * @param bool     $isPostTranslation
-	 */
 	private function executeSavePostHook( \WP_Post $post, $isPostTranslation = false ) {
 		do_action( 'wpml_save_post', $post->ID, $isPostTranslation );
 		do_action( 'wpml_save_post_' . $post->post_type, $post->ID, $isPostTranslation );
 	}
 
-	/**
-	 * @param \WP_Post $post
-	 * @param bool     $isPostTranslation
-	 */
 	private function executeSaveProductHook( \WP_Post $post, $isPostTranslation = false ) {
 		do_action( 'wpml_save_product', $post->ID, $isPostTranslation );
 	}

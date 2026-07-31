@@ -14,12 +14,8 @@ class SaveManager extends SaveUser {
 
 	const TRANSLATION_MANAGER_INSTRUCTIONS_TEMPLATE = 'notification/translation-manager-instructions.twig';
 
-	/**
-	 * @inheritDoc
-	 */
 	public function run( Collection $data ) {
 
-		// $setRole :: WP_User -> WP_User
 		$setRole = Fns::tap( invoke( 'add_cap' )->with( User::CAP_MANAGE_TRANSLATIONS ) );
 
 		return self::getUser( $data )

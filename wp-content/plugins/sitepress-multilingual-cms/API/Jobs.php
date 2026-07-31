@@ -21,26 +21,6 @@ use function WPML\Container\make;
 use function WPML\FP\curryN;
 use function WPML\FP\pipe;
 
-/**
- * Class Jobs
- * @package WPML\TM\API
- *
- * @phpstan-type curried "__CURRIED_PLACEHOLDER__"
- *
- * @method static callable|null|\stdClass getPostJob( ...$postId, ...$postType, ...$language ) : Curried:: int->string->string->null|\stdClass
- * @method static callable|null|\stdClass getTridJob( ...$trid, ...$language ) : Curried:: int->string->null|\stdClass
- * @method static callable|void setNotTranslatedStatus( ...$jobId )  : Curried:: int->int
- * @method static callable|void setTranslationService( ...$jobId, $translationService ) : Curried:: int->int|string->int
- * @method static callable|void clearReviewStatus( ...$jobId ) : Curried:: int->int->int
- * @method static callable|array getTranslation( ...$job ) - Curried :: \stdClass->array
- * @method static callable|int getTranslatedPostId( ...$job ) - Curried :: \stdClass->int
- * @method static callable|void incrementRetryCount( ...$jobId ) : Curried:: int->void
- * @method static callable|void setTranslated( ...$jobId, ...$status ) - Curried :: int->bool->int
- * @method static callable|void clearTranslated( ...$jobId ) - Curried :: int->int
- * @method static callable|int clearAutomatic( ...$jobId ) - Curried :: int->int
- * @method static callable|void delete( ...$jobId ) - Curried :: int->void
- * @method static callable|bool isEligibleForAutomaticTranslations( ...$jobId ) - Curried :: int->bool
- */
 class Jobs {
 	use Macroable;
 
@@ -100,7 +80,6 @@ class Jobs {
 			return self::updateTranslateJobField( $jobId, 'translated', $status );
 		} ) );
 
-		/** @phpstan-ignore-next-line */
 		self::macro( 'clearTranslated', self::setTranslated( Fns::__, false ) );
 
 		self::macro( 'clearAutomatic', curryN( 1, function ( $jobId ) {
@@ -108,7 +87,6 @@ class Jobs {
 		} ) );
 
 		self::macro( 'delete', curryN( 1, function ( $jobId ) {
-			/** @var \wpdb $wpdb */
 			global $wpdb;
 
 			$rid           = Map::fromJobId( $jobId );
@@ -142,22 +120,12 @@ class Jobs {
 		} ) ) );
 	}
 
-	/**
-	 * @return string
-	 */
 	public static function getCurrentUrl() {
 		$protocol = ( ( ! empty( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] != 'off' ) || Obj::prop( 'SERVER_PORT', $_SERVER ) == 443 ) ? "https://" : "http://";
 
 		return $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 	}
 
-	/**
-	 * It checks whether the job must be synced with ATE or not
-	 *
-	 * @param array{status: int, editor: string}|\stdClass{status: int, editor: string} $job
-	 *
-	 * @return bool
-	 */
 	public static function shouldBeATESynced( $job ) {
 		$statuses = [ ICL_TM_WAITING_FOR_TRANSLATOR, ICL_TM_IN_PROGRESS ];
 
@@ -165,12 +133,6 @@ class Jobs {
 		       Obj::prop( 'editor', $job ) === \WPML_TM_Editors::ATE;
 	}
 
-	/**
-	 * @param int $jobId
-	 * @param bool $isAutomatic
-	 *
-	 * @return void
-	 */
 	public static function setAutomaticStatus( $jobId, $isAutomatic ) {
 		self::updateTranslateJobField( $jobId, 'automatic', $isAutomatic ? 1 : 0 );
 
@@ -181,22 +143,6 @@ class Jobs {
 		}
 	}
 
-	/**
-	 * @template A as int
-	 * @template B as int
-	 * @template R as int
-	 *
-	 * @param ?(int|curried) $jobId
-	 * @param ?(int|curried) $status
-	 *
-	 * @return ($jobId is A
-	 *  ? ($status is B ? R : callable(B=):R)
-	 *  : ($jobId is curried
-	 *    ? ($status is B ? callable(A=):R : callable(A=,B=):R)
-	 *    : callable(A=,B=):R
-	 *    )
-	 *  )
-	 */
 	public static function setStatus( $jobId = null, $status = null ) {
 		return call_user_func_array(
 			curryN(
@@ -214,22 +160,6 @@ class Jobs {
 	}
 
 
-	/**
-	 * @template A as int
-	 * @template B as string
-	 * @template R as int
-	 *
-	 * @param ?(int|curried)    $jobId
-	 * @param ?(string|curried) $status
-	 *
-	 * @return ($jobId is A
-	 *  ? ($status is B ? R : callable(B=):R)
-	 *  : ($jobId is curried
-	 *    ? ($status is B ? callable(A=):R : callable(A=,B=):R)
-	 *    : callable(A=,B=):R
-	 *    )
-	 *  )
-	 */
 	public static function setReviewStatus( $jobId = null, $status = null ) {
 		return call_user_func_array(
 			curryN(
@@ -248,19 +178,6 @@ class Jobs {
 	}
 
 
-	/**
-	 * @param int $jobId
-	 *
-	 * @return \stdClass|false
-	 *
-	 * @phpstan-template V1 of int|curried
-	 * @phpstan-template P1 of int
-	 * @phpstan-template R of \stdClass|false
-	 *
-	 * @phpstan-param ?V1 $jobId
-	 *
-	 * @phpstan-return ($jobId is P1 ? R : callable(P1=):R)
-	 */
 	public static function get( $jobId = null ) {
 		return call_user_func_array(
 			curryN(
@@ -273,26 +190,6 @@ class Jobs {
 		);
 	}
 
-	/**
-	 * @param string $returnUrl
-	 * @param int $jobId
-	 *
-	 * @return callable|string
-	 *
-	 * @phpstan-template A1 of string|curried
-	 * @phpstan-template A2 of int|curried
-	 * @phpstan-template P1 of string
-	 * @phpstan-template P2 of int
-	 * @phpstan-template R of string
-	 *
-	 * @phpstan-param ?A1 $returnUrl
-	 * @phpstan-param ?A2 $jobId
-	 *
-	 * @phpstan-return ($returnUrl is P1
-	 *  ? ($jobId is P2 ? R : callable(P2=):R)
-	 *  : ($jobId is P2 ? callable(P1=):R : callable(P1=,P2=):R)
-	 * )
-	 */
 	public static function getEditUrl( $returnUrl = null, $jobId = null ) {
 		return call_user_func_array(
 			curryN(
@@ -311,44 +208,6 @@ class Jobs {
 		);
 	}
 
-	/**
-	 * @param int    $postId
-	 * @param string $elementType
-	 * @param string $language
-	 *
-	 * @return callable|\stdClass|null
-	 *
-	 * @phpstan-template A1 of int|curried
-	 * @phpstan-template A2 of string|curried
-	 * @phpstan-template A3 of string|curried
-	 * @phpstan-template P1 of int
-	 * @phpstan-template P2 of string
-	 * @phpstan-template P3 of string
-	 * @phpstan-template R of \stdClass|null
-	 *
-	 * @phpstan-param ?A1 $postId
-	 * @phpstan-param ?A2 $elementType
-	 * @phpstan-param ?A3 $language
-	 *
-	 * @phpstan-return ($postId is P1
-	 *  ? ($elementType is P2
-	 *    ? ($language is P3
-	 *      ? R
-	 *      : callable(P3=):R)
-	 *    : ($language is P3
-	 *      ? callable(P2=):R
-	 *      : callable(P2=,P3=):R)
-	 *  )
-	 *  : ($elementType is P2
-	 *    ? ($language is P3
-	 *      ? callable(P1=):R
-	 *      : callable(P1=,P3=):R)
-	 *    : ($language is P3
-	 *      ? callable(P1=,P2=):R
-	 *      : callable(P1=,P2=,P3=):R)
-	 *  )
-	 * )
-	 */
 	public static function getElementJob( $postId = null, $elementType = null, $language = null ) {
 		return call_user_func_array(
 			curryN(
@@ -368,13 +227,6 @@ class Jobs {
 	private static function updateTranslationStatusField( $jobId, $fieldName, $newValue, $fieldType = '%d' ) {
 		global $wpdb;
 
-		// Capture pre-update status only for the status field, and only when
-		// JobLog is actually going to write the event. Without the canLog()
-		// gate this SELECT would run unconditionally on every status mutation
-		// — on a TEA pass that flips status hundreds of times that's pure
-		// regression for sites that have logging disabled. A null old_status
-		// when we DO log signals the rid row was missing at read time
-		// (6742-class vanish signal).
 		$shouldLog = 'status' === $fieldName
 			&& class_exists( JobLog::class )
 			&& JobLog::canLog();
@@ -399,14 +251,11 @@ class Jobs {
 					";
 
 		if ( null === $newValue ) {
-			// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
 			$query = $wpdb->prepare( $unpreparedQuery, $jobId );
 		} else {
-			// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
 			$query = $wpdb->prepare( $unpreparedQuery, $newValue, $jobId );
 		}
 
-		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
 		$affected = $wpdb->query( $query );
 		if ( $affected > 0 ) {
 			do_action( 'wpml_tm_ate_jobs_updated', [ $jobId ] );
@@ -436,13 +285,6 @@ class Jobs {
 		return $jobId;
 	}
 
-	/**
-	 * Returns object of the first found previous translation job if exists.
-	 *
-	 * @param $jobId
-	 *
-	 * @return object|null
-	 */
 	public static function getPreviousJob( $jobId ) {
 		global $wpdb;
 

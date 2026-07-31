@@ -4,12 +4,8 @@ namespace WPML\PB\Gutenberg;
 
 class MediaHooksIntegration implements Integration {
 
-	/** @var \WPML_Gutenberg_Config_Option */
 	private $config;
 
-	/**
-	 * @param \WPML_Gutenberg_Config_Option $config
-	 */
 	public function __construct( \WPML_Gutenberg_Config_Option $config ) {
 		$this->config = $config;
 	}

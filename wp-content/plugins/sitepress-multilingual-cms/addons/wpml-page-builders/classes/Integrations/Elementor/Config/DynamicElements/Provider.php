@@ -4,9 +4,6 @@ namespace WPML\PB\Elementor\Config\DynamicElements;
 
 class Provider {
 
-	/**
-	 * @return array
-	 */
 	public static function get() {
 		return array_merge(
 			[

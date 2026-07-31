@@ -8,14 +8,6 @@ use WPML\LIB\WP\User;
 use function WPML\Container\make;
 
 class Strings {
-	/**
-	 * @param callable $sendBatch
-	 * @param \WPML\TM\Jobs\Dispatch\Messages $messages
-	 * @param callable $buildBatch
-	 * @param $stringIds
-	 * @param $sourceLanguage
-	 * @param $targetLanguages
-	 */
 	public static function dispatch(
 		callable $sendBatch,
 		Messages $messages,
@@ -40,7 +32,6 @@ class Strings {
 		$stringsToTranslation   = [];
 		$ignoredStringsMessages = [];
 
-		/** @var \WPML_ST_String_Factory $stringFactory */
 		$stringFactory = make( \WPML_ST_String_Factory::class );
 
 		foreach ( $stringIds as $stringId ) {
@@ -60,7 +51,6 @@ class Strings {
 
 		$messages->showForStrings( $ignoredStringsMessages, 'information' );
 
-		/** @phpstan-ignore-next-line */
 		return array_filter( $stringsToTranslation, Lst::length() );
 	}
 }

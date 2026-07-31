@@ -1,8 +1,5 @@
 <?php
 
-/**
- * @return mixed
- */
 function icl_get_languages_names() {
 	static $__icl_lang_names_cached = null;
 
@@ -18,9 +15,6 @@ function icl_get_languages_names() {
 }
 
 
-/**
- * @return array
- */
 function icl_get_languages_codes() {
 	static $result = null;
 
@@ -210,9 +204,6 @@ function icl_get_languages_codes() {
 	return $result;
 }
 
-/**
- * @return array
- */
 function icl_get_languages_locales() {
 	static $result = null;
 

@@ -11,15 +11,10 @@ use WPML\TM\TranslationDashboard\SentContentMessages;
 use function WPML\FP\spreadArgs;
 
 class Validator {
-	/** @var Base64DetectionService */
 	private $base64Detector;
-	/** @var \WPML_Element_Translation_Package */
 	private $package_helper;
-	/** @var SentContentMessages */
 	private $sentContentMessages;
-	/** @var FieldTitle */
 	private $fieldTitle;
-	/** @var \WPML_PB_Factory */
 	private $pbFactory;
 
 	public function __construct(
@@ -37,34 +32,11 @@ class Validator {
 
 
 	private function getBase64DetectionService() {
-		/** @var Dic $wpml_dic */
 		global $wpml_dic;
 
 		return $wpml_dic->make( Base64DetectionService::class );
 	}
 
-	/**
-	 * $data may contain two keys: 'post' and 'package'. Each of them has the same shape:
-	 * [
-	 *   idOfElement1 => [
-	 *      checked: 1,
-	 *      type: 'post',
-	 *   ],
-	 *   idOfElement2 => [
-	 *      type: 'post',
-	 *   ],
-	 * ] and so on.
-	 *
-	 * If element has "checked" field, it means it has been selected for translation.
-	 * Therefore, if we want to filter it out from translation, we have to remove that field.
-	 *
-	 * The "validateTMDashboardInput" performs similar check for both "post" and "package" lists,
-	 * checks if their elements contains encoded fields and removes them from the list.
-	 *
-	 * @param array $data
-	 *
-	 * @return array
-	 */
 	public function validateTMDashboardInput( $data ) {
 		$postInvalidElements = [];
 		if ( isset( $data['post'] ) ) {
@@ -80,19 +52,12 @@ class Validator {
 
 		$invalidElements = array_merge( $postInvalidElements, $packageInvalidElements );
 		if ( count( $invalidElements ) ) {
-			// Display the error message only if there are invalid elements.
 			$this->sentContentMessages->postsWithEncodedFieldsHasBeenSkipped( $invalidElements );
 		}
 
 		return $data;
 	}
 
-	/**
-	 * @param int[] $postIds
-	 * @param int[] $packageIds
-	 *
-	 * @return int[][]
-	 */
 	public function getInvalidPostAndPackageIds( $postIds, $packageIds ) {
 		$invalidPostIds    = [];
 		$invalidPackageIds = [];
@@ -110,12 +75,6 @@ class Validator {
 		return [ $invalidPostIds, $invalidPackageIds ];
 	}
 
-	/**
-	 * @param string $type
-	 * @param int[]  $elementsIds
-	 *
-	 * @return int[]
-	 */
 	private function findElementsIdsWithEncodedFields( $type, $elementsIds ) {
 		$elementsIdsWithEncodedFields = [];
 
@@ -138,14 +97,6 @@ class Validator {
 		return $elementsIdsWithEncodedFields;
 	}
 
-	/**
-	 * Get list of ids of selected posts/packages
-	 *
-	 * @param 'post'|'package' $type
-	 * @param array            $data
-	 *
-	 * @return []
-	 */
 	private function getCheckedIds( $type, $data ) {
 		return \wpml_collect( Obj::propOr( [], $type, $data ) )
 			->filter( Obj::prop( 'checked' ) )
@@ -153,15 +104,6 @@ class Validator {
 			->toArray();
 	}
 
-	/**
-	 * It removes "checked" property from the elements that have "encoded" fields. It means they will not be sent to translation.
-	 *
-	 * @param 'post'|'package' $type
-	 * @param array            $data
-	 * @param int[]            $ids
-	 *
-	 * @return array
-	 */
 	private function excludeInvalidElements( $type, $data, $invalidElementIds ) {
 		return (array) Obj::over( Obj::lensProp( $type ), function ( $elements ) use ( $invalidElementIds ) {
 			return \wpml_collect( $elements )
@@ -176,11 +118,6 @@ class Validator {
 		}, $data );
 	}
 
-	/**
-	 * @param int[] $postIds
-	 *
-	 * @return ErrorEntry[]
-	 */
 	private function findPostsWithEncodedFields( $postIds ) {
 		$appendPackage = function ( \WP_Post $post ) {
 			$package = $this->package_helper->create_translation_package( $post->ID, true );
@@ -192,9 +129,6 @@ class Validator {
 			$decodedFieldData = base64_decode( $field['data'] );
 
 			return array_key_exists( 'format', $field )
-			        // HotFix - wpmldev-6436: Exclude title and body fields. Title can contain visible base64 encoded data we should allow.
-			        // Body is not translatable for page builder, we should exclude.
-			        // In case of classic editor containing base64 encoded data in body, we should allow it for now.
 					&& ! in_array( $slug, [ 'title', 'body' ], true )
 					&& 'base64' === $field['format']
 					&& (
@@ -234,11 +168,6 @@ class Validator {
 
 	}
 
-	/**
-	 * @param int[] $packageIds
-	 *
-	 * @return ErrorEntry[]
-	 */
 	private function findPackagesWithEncodedFields( $packageIds ) {
 		$getInvalidFieldData = function ( $field, $slug ) {
 			return [
@@ -252,11 +181,6 @@ class Validator {
 					$this->base64Detector->containsBase64EncodedText( $content );
 		};
 
-		/**
-		 * @param \WPML_Package $package
-		 *
-		 * @return ErrorEntry|null
-		 */
 		$tryToGetError = function ( $package ) use ( $getInvalidFieldData, $isEncodedContent ) {
 			$invalidFields = \wpml_collect( Obj::propOr( [], 'string_data', $package ) )
 				->filter( $isEncodedContent )

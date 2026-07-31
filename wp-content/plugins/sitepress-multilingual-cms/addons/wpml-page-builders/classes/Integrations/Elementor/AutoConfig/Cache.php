@@ -7,11 +7,6 @@ class Cache {
 	const HASH_OPTION_KEY   = 'wpml_elementor_auto_config_hash';
 	const CONFIG_OPTION_KEY = 'wpml_elementor_auto_config';
 
-	/**
-	 * @param string $currentHash
-	 *
-	 * @return array|null
-	 */
 	public function get( $currentHash ) {
 		$cachedHash = get_option( self::HASH_OPTION_KEY );
 
@@ -22,10 +17,6 @@ class Cache {
 		return null;
 	}
 
-	/**
-	 * @param array  $config
-	 * @param string $hash
-	 */
 	public function set( array $config, $hash ) {
 		update_option( self::CONFIG_OPTION_KEY, $config, false );
 		update_option( self::HASH_OPTION_KEY, $hash, false );
@@ -36,11 +27,6 @@ class Cache {
 		delete_option( self::HASH_OPTION_KEY );
 	}
 
-	/**
-	 * @param array $widgetInstances
-	 *
-	 * @return string
-	 */
 	public function generateHash( array $widgetInstances ) {
 		$hashData = [];
 		foreach ( $widgetInstances as $widgetType => $widgetInstance ) {

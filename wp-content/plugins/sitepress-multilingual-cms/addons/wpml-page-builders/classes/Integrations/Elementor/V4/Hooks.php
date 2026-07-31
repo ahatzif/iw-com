@@ -15,7 +15,6 @@ class Hooks implements \IWPML_Frontend_Action, \IWPML_DIC_Action {
 	const LINK_QUERY_ID_PATH    = [ 'value', 'destination', 'value', 'id', 'value' ];
 	const COMPONENT_ID_PATH     = [ 'component_instance', 'value', 'component_id', 'value' ];
 
-	/** @var \SitePress */
 	private $sitepress;
 
 	public function __construct( \SitePress $sitepress ) {
@@ -27,11 +26,6 @@ class Hooks implements \IWPML_Frontend_Action, \IWPML_DIC_Action {
 			->then( spreadArgs( [ $this, 'translateContentIds' ] ) );
 	}
 
-	/**
-	 * @param array $data
-	 *
-	 * @return array
-	 */
 	public function translateContentIds( array $data ) {
 		foreach ( $data as &$element ) {
 			if ( $this->isV4Widget( $element ) ) {
@@ -46,11 +40,6 @@ class Hooks implements \IWPML_Frontend_Action, \IWPML_DIC_Action {
 		return $data;
 	}
 
-	/**
-	 * @param array $element
-	 *
-	 * @return bool
-	 */
 	private function isV4Widget( array $element ) {
 		$widgetType = $element['widgetType'] ?? null;
 
@@ -60,11 +49,6 @@ class Hooks implements \IWPML_Frontend_Action, \IWPML_DIC_Action {
 			&& is_array( $element['settings'] );
 	}
 
-	/**
-	 * @param array $settings
-	 *
-	 * @return array
-	 */
 	private function translateSettingsIds( array $settings ) {
 		foreach ( $settings as $key => $value ) {
 			if ( $this->isLinkWithQueryDestination( $value ) ) {
@@ -77,11 +61,6 @@ class Hooks implements \IWPML_Frontend_Action, \IWPML_DIC_Action {
 		return $settings;
 	}
 
-	/**
-	 * @param mixed $value
-	 *
-	 * @return bool
-	 */
 	private function isLinkWithQueryDestination( $value ) {
 		return is_array( $value )
 			&& 'link' === Obj::prop( self::TYPE_KEY, $value )
@@ -89,12 +68,6 @@ class Hooks implements \IWPML_Frontend_Action, \IWPML_DIC_Action {
 			&& null !== Obj::path( self::LINK_QUERY_ID_PATH, $value );
 	}
 
-	/**
-	 * @param array $data
-	 * @param array $path
-	 *
-	 * @return array
-	 */
 	private function translateIdInPath( array $data, array $path ) {
 		$postId = Obj::path( $path, $data );
 

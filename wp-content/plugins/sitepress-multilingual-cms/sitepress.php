@@ -2,10 +2,10 @@
 /**
  * Plugin Name: WPML Multilingual CMS
  * Plugin URI: https://wpml.org/
- * Description: WPML Multilingual CMS | <a href="https://wpml.org">Documentation</a> | <a href="https://wpml.org/version/wpml-4-9-5/">WPML 4.9.5 release notes</a>
+ * Description: WPML Multilingual CMS | <a href="https://wpml.org">Documentation</a> | <a href="https://wpml.org/version/wpml-4-9-6/">WPML 4.9.6 release notes</a>
  * Author: OnTheGoSystems
  * Author URI: http://www.onthegosystems.com/
- * Version: 4.9.5
+ * Version: 4.9.6
  * Plugin Slug: sitepress-multilingual-cms
  *
  * @package WPML\Core
@@ -32,28 +32,19 @@ if ( ! \WPML\Requirements\WordPress::checkMinimumRequiredVersion() ) {
 	return;
 }
 
-define( 'ICL_SITEPRESS_VERSION', '4.9.5' );
+define( 'ICL_SITEPRESS_VERSION', '4.9.6' );
 
-// Script version, first 3 digits are the same as the plugin version.
-// Increase the last 3 digits by 1 for intermediate packages (i.e. beta, rc, internal).
-define( 'ICL_SITEPRESS_SCRIPT_VERSION', '495000' );
+define( 'ICL_SITEPRESS_SCRIPT_VERSION', '496000' );
 
-// Do not uncomment the following line!
-// If you need to use this constant, use it in the wp-config.php file
-// define('ICL_SITEPRESS_DEV_VERSION', '3.4-dev');
 define( 'WPML_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 define( 'WPML_PLUGIN_FOLDER', dirname( WPML_PLUGIN_BASENAME ) );
 define( 'WPML_PLUGIN_PATH', __DIR__ );
 define( 'WPML_PLUGINS_DIR', realpath( __DIR__ . '/..' ) );
 define( 'WPML_PLUGIN_FILE', basename( WPML_PLUGIN_BASENAME ) );
 
-/** @deprecated since 3.7.0 and will be removed in 3.8.0, use `WPML_PLUGIN_BASENAME` instead */
 define( 'ICL_PLUGIN_FULL_PATH', WPML_PLUGIN_BASENAME );
-/** @deprecated since 3.7.0 and will be removed in 3.8.0, use `WPML_PLUGIN_FOLDER` instead */
 define( 'ICL_PLUGIN_FOLDER', WPML_PLUGIN_FOLDER );
-/** @deprecated since 3.7.0 and will be removed in 3.8.0, use `WPML_PLUGIN_PATH` instead */
 define( 'ICL_PLUGIN_PATH', WPML_PLUGIN_PATH );
-/** @deprecated since 3.7.0 and will be removed in 3.8.0, use `WPML_PLUGIN_FILE` instead */
 define( 'ICL_PLUGIN_FILE', WPML_PLUGIN_FILE );
 
 require_once __DIR__ . '/inc/functions-helpers.php';
@@ -71,7 +62,7 @@ add_action(
 			return;
 		}
 
-		$locale = determine_locale(); // determine_locale() has no cache.
+		$locale = determine_locale();
 		load_textdomain( 'wpml', __DIR__ . '/vendor/wpml/wpml/languages/wpml-' . $locale . '.mo', $locale );
 
 		require_once __DIR__ . '/vendor/wpml/wpml/wpml.php';
@@ -166,7 +157,6 @@ require_once __DIR__ . '/inc/language-switcher.php';
 require_once __DIR__ . '/inc/import-xml.php';
 require_once __DIR__ . '/inc/utilities/xml2array.php';
 
-// using a plugin version that the db can't be upgraded to.
 if ( defined( 'WPML_UPGRADE_NOT_POSSIBLE' ) && WPML_UPGRADE_NOT_POSSIBLE ) {
 	return;
 }
@@ -186,11 +176,8 @@ if ( function_exists( 'is_multisite' ) && is_multisite() ) {
 }
 
 if ( ! wp_next_scheduled( 'update_wpml_config_index' ) ) {
-	// Set cron job to update WPML config index file from CDN.
 	wp_schedule_event( time(), 'daily', 'update_wpml_config_index' );
 }
-/** @var WPML_Post_Translation $wpml_post_translations */
-/** @var WPML_Language_Resolution $wpml_language_resolution */
 global $sitepress, $wpdb, $wpml_url_filters, $wpml_post_translations, $wpml_term_translations, $wpml_url_converter, $wpml_language_resolution, $wpml_slug_filter, $wpml_cache_factory;
 
 $wpml_cache_factory = new WPML_Cache_Factory();
@@ -296,7 +283,6 @@ if ( $sitepress->is_setup_complete() ) {
 
 	$action_filter_loader->load( $rest_factories );
 
-	// On posts listing page.
 	add_action(
 		'load-edit.php',
 		function() {
@@ -317,7 +303,6 @@ $wpml_wp_comments = new WPML_WP_Comments( $sitepress );
 $wpml_wp_comments->add_hooks();
 
 new WPML_Global_AJAX( $sitepress );
-/** @var \WPML_WP_API $wpml_wp_api */
 $wpml_wp_api = $sitepress->get_wp_api();
 if ( $wpml_wp_api->is_support_page() ) {
 	new WPML_Support_Page( $wpml_wp_api );
@@ -339,7 +324,6 @@ share( [ $wpml_url_filters ] );
 wpml_load_request_handler( is_admin(), $wpml_language_resolution->get_active_language_codes(), $sitepress->get_default_language() );
 
 $tf_settings_read = new WPML_TF_Settings_Read();
-/** @var WPML_TF_Settings $tf_settings */
 $tf_settings                 = $tf_settings_read->get( 'WPML_TF_Settings' );
 $translation_feedback_module = new WPML_TF_Module( $action_filter_loader, $tf_settings );
 $translation_feedback_module->run();
@@ -347,10 +331,8 @@ $translation_feedback_module->run();
 require_once __DIR__ . '/inc/url-handling/wpml-slug-filter.class.php';
 $wpml_slug_filter = new WPML_Slug_Filter( $wpdb, $sitepress, $wpml_post_translations );
 
-/** @var array $sitepress_settings */
 $sitepress_settings = $sitepress->get_settings();
 wpml_load_term_filters();
-// Add wpml_maybe_setup_post_edit() before wpml_home_url_init().
 add_action( 'init', 'wpml_maybe_setup_post_edit', - 1 );
 
 require_once __DIR__ . '/inc/plugins-integration.php';
@@ -378,7 +360,6 @@ if ( $sitepress->get_wp_api()->is_admin() ) {
 	wpml_get_admin_notices();
 }
 
-// activation hook
 register_deactivation_hook( WPML_PLUGIN_PATH . '/' . WPML_PLUGIN_FILE, 'icl_sitepress_deactivate' );
 
 add_filter( 'plugin_action_links', partial( 'icl_plugin_action_links', $sitepress ), 10, 2 );
@@ -406,9 +387,6 @@ function wpml_mlo_init() {
 	$wpml_ml_options->init_hooks();
 }
 
-/**
- * @param SitePress $sitepress
- */
 function wpml_loaded( $sitepress ) {
 	if ( class_exists( 'WP_CLI' ) && defined( 'WP_CLI' ) && WP_CLI ) {
 		wpml_init_cli();
@@ -419,11 +397,6 @@ function wpml_loaded( $sitepress ) {
 
 	wpml_mlo_init();
 
-	/**
-	 * Also allow `troubleshooting.php` and `theme-localization.php` because we have direct AJAX calls
-	 *
-	 * @see https://onthegosystems.myjetbrains.com/youtrack/issue/wpmlcore-5167
-	 */
 	if (
 		$wpml_wp_api->is_back_end()
 		|| $wpml_wp_api->is_core_page( 'troubleshooting.php' )
@@ -435,6 +408,9 @@ function wpml_loaded( $sitepress ) {
 }
 
 add_action( 'wpml_loaded', 'wpml_loaded' );
+
+require_once WPML_PLUGIN_PATH . '/classes/settings/CustomFieldSettingsRollback.php';
+add_action( 'wpml_loaded', array( \WPML\TM\Settings\CustomFieldSettingsRollback::class, 'restoreIfNeeded' ) );
 
 if ( $sitepress ) {
 	add_action( 'init', 'wpml_integrations_requirements' );

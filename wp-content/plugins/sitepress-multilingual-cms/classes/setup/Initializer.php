@@ -39,21 +39,17 @@ use function WPML\Container\make;
 
 class Initializer {
 	public static function loadJS() {
-		// Enqueue the setup app with the ATE dashboard script as a dependency
 		$setupApp = Resources::enqueueApp( 'setup' );
 		$handleATEDashboardScript = self::registerAteDashboardScript() ;
 		$setupApp( self::getData(), [ $handleATEDashboardScript ] );
 	}
 
 	public static function getData() {
-		/** @var Dic $wpml_dic */
 		global $wpml_dic;
 		$currentStep = Option::getCurrentStep();
 		$currentStep = make( SetupMigrationService::class )->maybeMigrateCredentials( $currentStep );
 
 		if ( CurrentStep::STEP_HIGH_COSTS_WARNING === $currentStep ) {
-			// The user stopped the wizard on the high costs warning step.
-			// In this case we need to start the wizard one step before.
 			$currentStep = CurrentStep::STEP_TRANSLATION_SETTINGS;
 		}
 
@@ -192,9 +188,6 @@ class Initializer {
 	}
 
 
-	/**
-	 * @return bool
-	 */
 	private static function isPredefinedSiteKeySaved() {
 		return function_exists( 'OTGS_Installer' )
 		       && defined( 'OTGS_INSTALLER_SITE_KEY_WPML' )
@@ -202,9 +195,6 @@ class Initializer {
 		       && OTGS_Installer()->get_site_key( 'wpml' ) === OTGS_INSTALLER_SITE_KEY_WPML;
 	}
 
-	/**
-	 * @param string $siteKey
-	 */
 	private static function savePredefinedSiteKey( $siteKey ) {
 		if ( function_exists( 'OTGS_Installer' ) ) {
 			$args   = [
@@ -225,9 +215,6 @@ class Initializer {
 		}
 	}
 
-	/**
-	 * @return string
-	 */
 	private static function getLanguageNegotiationMode() {
 		if (
 			Option::getCurrentStep() === 'address'
@@ -241,9 +228,6 @@ class Initializer {
 		return LanguageNegotiation::getModeAsString();
 	}
 
-	/**
-	 * @return string
-	 */
 	private static function getDefaultLang() {
 		$getLangFromConstant = function () {
 			global $sitepress;
@@ -266,16 +250,10 @@ class Initializer {
 		return make( WPML_TM_ATE_AMS_Endpoints::class )->get_base_url( WPML_TM_ATE_AMS_Endpoints::SERVICE_ATE );
 	}
 
-	/**
-	 * @return string
-	 */
 	private static function getWPMLVersion() {
 		return Obj::prop( 'Version', get_plugin_data( WPML_PLUGIN_PATH . '/' . WPML_PLUGIN_FILE ) );
 	}
 
-	/**
-	 * @return string
-	 */
 	private static function getSiteKey() {
 		$siteKey = wpml_get_setting( 'site_key', (string) OTGS_Installer()->get_site_key( 'wpml' ) );
 

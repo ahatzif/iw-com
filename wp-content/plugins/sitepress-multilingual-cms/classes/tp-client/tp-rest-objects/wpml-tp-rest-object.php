@@ -8,9 +8,6 @@ abstract class WPML_TP_REST_Object {
 
 	abstract protected function get_properties();
 
-	/**
-	 * @param stdClass|null $obj
-	 */
 	protected function populate_properties_from_object( ?stdClass $obj ) {
 		if ( $obj ) {
 			$properties = $this->get_properties();

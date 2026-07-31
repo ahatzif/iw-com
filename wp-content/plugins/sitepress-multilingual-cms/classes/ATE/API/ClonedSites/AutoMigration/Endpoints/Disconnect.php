@@ -15,7 +15,6 @@ class Disconnect implements IHandler {
 		MigrationLogger::beginClonedSiteAction( 'disconnect' );
 
 		try {
-			/** @var \WPML_TM_AMS_API $amsApi */
 			$amsApi = make( \WPML_TM_AMS_API::class );
 
 			MigrationLogger::disconnectRequestSent();

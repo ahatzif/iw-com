@@ -4,13 +4,6 @@ namespace WPML\TM\ATE\API;
 
 class ErrorHandler {
 
-	/**
-	 * Creates an error structure with both formatted message and raw response data
-	 *
-	 * @param array $message Formatted error message with 'header' and 'description' keys.
-	 * @param mixed $rawResponse Raw response data (WP_Error, array, or other response data).
-	 * @return array Error structure containing both formatted message and raw data
-	 */
 	public static function createError( $message, $rawResponse = null ) {
 
 		if ( null !== $rawResponse ) {
@@ -20,12 +13,6 @@ class ErrorHandler {
 		return $message;
 	}
 
-	/**
-	 * Normalizes raw response data into a consistent structure
-	 *
-	 * @param mixed $rawResponse Raw response data.
-	 * @return array Normalized response structure
-	 */
 	private static function normalizeRawResponse( $rawResponse ) {
 		if ( is_wp_error( $rawResponse ) ) {
 			return self::normalizeWpError( $rawResponse );
@@ -41,12 +28,6 @@ class ErrorHandler {
 		];
 	}
 
-	/**
-	 * Normalizes WP_Error into structured format
-	 *
-	 * @param \WP_Error $error WordPress error object.
-	 * @return array Normalized error structure
-	 */
 	private static function normalizeWpError( $error ) {
 		return [
 			'type'          => 'wp_error',
@@ -56,12 +37,6 @@ class ErrorHandler {
 		];
 	}
 
-	/**
-	 * Normalizes HTTP response array into structured format
-	 *
-	 * @param array $response HTTP response array from wp_remote_request.
-	 * @return array Normalized response structure
-	 */
 	private static function normalizeHttpResponse( $response ) {
 		$normalized = [
 			'type' => 'http_response',

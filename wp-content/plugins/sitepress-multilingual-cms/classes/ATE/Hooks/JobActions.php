@@ -16,10 +16,8 @@ use WPML\TM\Jobs\JobLog;
 
 class JobActions implements \IWPML_Action {
 
-	/** @var \WPML_TM_ATE_API $apiClient */
 	private $apiClient;
 
-	/** @var TranslateEverything */
 	private $translateEverything;
 
 	public function __construct( \WPML_TM_ATE_API $apiClient, TranslateEverything $translateEverything ) {
@@ -41,25 +39,12 @@ class JobActions implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param \WPML_TM_Post_Job_Entity[]|\WPML_TM_Post_Job_Entity|\stdClass[]|\stdClass  $jobs
-	 *
-	 * @return void
-	 */
 	public function cancelJobsInATE( $jobs ) {
-		/**
-		 * We need this check because if we pass only one job to the hook:
-		 *  do_action( 'wpml_tm_jobs_cancelled', [ $job ] )
-		 * then WordPress converts it to $job.
-		 */
 		if ( is_object( $jobs ) ) {
 			$jobs = [ $jobs ];
 		}
 
-		// Normalize to stdObjects for backward compatibility
-		/** @var \stdClass[] $normalizedJobs */
 		$normalizedJobs = array_map( function( $job ) {
-			// Legacy WPML_TM_Post_Job_Entity -> stdClass
 			if ( $job instanceof \WPML_TM_Post_Job_Entity ) {
 				return (object) [
 					'editor'        => $job->get_editor(),
@@ -70,7 +55,6 @@ class JobActions implements \IWPML_Action {
 			return $job;
 		}, $jobs );
 
-		// Filter ATE jobs and extract editor_job_ids
 		$ateJobIds = array_values( array_filter( array_map( function( $job ) {
 			return ( isset( $job->editor ) && $job->editor === 'ate' && isset( $job->editor_job_id ) )
 				? $job->editor_job_id
@@ -78,9 +62,6 @@ class JobActions implements \IWPML_Action {
 		}, $normalizedJobs ) ) );
 
 		if ( ! empty( $ateJobIds ) ) {
-			// Logs land inside whichever group is currently open (typically the
-			// "Cancel jobs (admin)" group from WPML_TM_REST_Jobs, or the TEA
-			// disable cancel group). If no group is open this is a no-op.
 			JobLog::add( 'cancel_jobs_in_ate', [
 				'ate_job_ids' => array_map(
 					function ( $id ) { return [ 'ate_job_id' => $id ]; },
@@ -91,17 +72,12 @@ class JobActions implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param array $oldLanguages
-	 * @return void
-	 */
 	public function hideJobsAfterRemoveLanguage( $oldLanguages = [] ) {
 		$oldLanguagesArray = is_array( $oldLanguages ) ? array_keys( $oldLanguages ) : [];
 		$removedLanguages = Lst::diff( $oldLanguagesArray, array_keys( Languages::getActive() ) );
 
 		if ( $removedLanguages ) {
 			$inProgressJobsSearchParams = self::getInProgressSearch()
-											  /** @phpstan-ignore-next-line */
 			                                  ->set_target_language( array_values( $removedLanguages ) );
 
 			$this->hideJobs( $inProgressJobsSearchParams );
@@ -110,12 +86,6 @@ class JobActions implements \IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param $translateEverythingActive
-	 * @param array{translateExisting: boolean, 'reviewMode': string} $options
-	 *
-	 * @return void
-	 */
 	public function onTranslateEverythingModeChanged( $translateEverythingActive, $options = [] ) {
 		JobLog::maybeInitRequest();
 		JobLog::createNewGroup(
@@ -155,11 +125,6 @@ class JobActions implements \IWPML_Action {
 
 	public function cancelAllAutomaticJobs() {
 		JobLog::maybeInitRequest();
-		// Nest into an existing parent group (e.g. the disable path from
-		// onTranslateEverythingModeChanged) if one is already open; otherwise
-		// open our own. Using isGroupOpen() — not wasRequestInitialised() —
-		// so that callers in an initialised-but-ungrouped state still get
-		// their own group instead of producing orphan log lines.
 		$ownsGroup = ! JobLog::isGroupOpen();
 		if ( $ownsGroup ) {
 			JobLog::createNewGroup(

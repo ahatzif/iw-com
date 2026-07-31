@@ -5,51 +5,24 @@ use WPML\FP\Maybe;
 use WPML\FP\Obj;
 use function WPML\FP\partial;
 
-/**
- * Class WPML_Post_Synchronization
- *
- * @package    wpml-core
- * @subpackage post-translation
- */
 
 class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 
-	/** @var bool[] */
 	private $sync_parent_cpt = array();
-	/** @var bool $sync_parent */
 	private $sync_parent;
-	/** @var bool $sync_delete */
 	private $sync_delete;
-	/** @var bool $sync_ping_status */
 	private $sync_ping_status;
-	/** @var bool $sync_post_date */
 	private $sync_post_date;
-	/** @var bool $sync_post_format */
 	private $sync_post_format;
-	/** @var bool $sync_comment_status */
 	private $sync_comment_status;
-	/** @var bool $sync_page_template */
 	private $sync_page_template;
-	/** @var bool $sync_menu_order */
 	private $sync_menu_order;
-	/** @var bool $sync_password */
 	private $sync_password;
-	/** @var bool $sync_private_flag */
 	private $sync_private_flag;
-	/** @var bool $is_deleting_all_translations */
 	private $is_deleting_all_translations = false;
-	/** @var array $deleted_post_types */
 	private $deleted_post_types = array();
-	/**
-	 * @var int
-	 */
 	private $sync_document_status;
 
-	/**
-	 * @param array                 $settings
-	 * @param WPML_Post_Translation $post_translations
-	 * @param SitePress             $sitepress
-	 */
 	public function __construct( &$settings, &$post_translations, &$sitepress ) {
 		parent::__construct( $post_translations, $sitepress );
 		$this->sync_delete          = isset( $settings[ 'sync_delete' ] ) ? $settings[ 'sync_delete' ] : false;
@@ -73,15 +46,6 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 		return $this->sync_parent_cpt[ $post_type ];
 	}
 
-	/**
-	 * Fixes parents of translations for hierarchical post types
-	 *
-	 * User changed parent for a post in $post_type and we are setting proper parent for $translation_id in
-	 * $language_code_translated language
-	 *
-	 * @param string $post_type - post_type that should have the translated parents fixed
-	 * @return bool
-	 */
 	private function maybe_fix_translated_parent( $post_type ) {
 		if ( $this->must_sync_parents( $post_type ) ) {
 			$sync_helper = wpml_get_hierarchy_sync_helper();
@@ -108,10 +72,6 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 		remove_filter( 'wpml_prefetch_languages_for_mt_attachments', $filter_callback );
 	}
 
-	/**
-	 * @param int  $post_id
-	 * @param bool $keep_db_entries
-	 */
 	public function delete_post_actions( $post_id, $keep_db_entries = false ) {
 		$post_type            = get_post_type( $post_id );
 		$post_type_exceptions = array( 'nav_menu_item' );
@@ -144,12 +104,6 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 		}
 	}
 
-	/**
-	 * @param int $post_id
-	 * @param int $trid
-	 *
-	 * @return array
-	 */
 	private function get_translations_without_source( $post_id, $trid ) {
 		$actual_translations_only = ! $this->is_deleting_all_translations;
 		$translated_ids           = $this->post_translation->get_element_translations( $post_id, $trid, $actual_translations_only );
@@ -165,13 +119,11 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 		);
 	}
 
-	/** @param string $post_type */
 	private function reset_cache( $post_type ) {
 		require_once WPML_PLUGIN_PATH . '/inc/cache.php';
 		icl_cache_clear( $post_type . 's_per_language', true );
 	}
 
-	/** @param string $post_type */
 	private function defer_delete_actions( $post_type ) {
 		if ( ! in_array( $post_type, $this->deleted_post_types, true ) ) {
 			$this->deleted_post_types[] = $post_type;
@@ -190,11 +142,6 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 		}
 	}
 
-	/**
-	 * @param array  $translated_ids
-	 * @param bool   $keep_db_entries
-	 * @param string $post_type
-	 */
 	private function delete_translations( $post_type, array $translated_ids, $keep_db_entries ) {
 		if ( ! empty( $translated_ids ) ) {
 			foreach ( $translated_ids as $trans_id ) {
@@ -203,7 +150,6 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 						$this->post_translation->trash_translation( $trans_id );
 					} else {
 						if ( $post_type === 'attachment' ) {
-							// When we delete the attachment entry from the database for the translation there is no reason to even allow a file deletion from the filesystem.
 							add_filter( 'wp_delete_file', '__return_false', PHP_INT_MAX );
 						}
 						wp_delete_post( $trans_id, true );
@@ -216,7 +162,6 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 		}
 	}
 
-	/** @param string $post_type */
 	private function run_final_actions_for_delete_post( $post_type ) {
 		if ( $this->is_bulk_delete() ) {
 			$this->defer_delete_actions( $post_type );
@@ -334,20 +279,11 @@ class WPML_Post_Synchronization extends WPML_SP_And_PT_User {
 			$flush_cache = true;
 		}
 
-		// Delete translated post cache because we are making direct SQL queries.
 		if ( $translated_ids && $flush_cache ) {
 			array_map( 'clean_post_cache', $translated_ids );
 		}
 	}
 
-	/**
-	 * The function `get_post_status` does not return the raw status for attachments.
-	 * As we are running direct DB updates here, we need the actual DB value.
-	 *
-	 * @param int $post_id
-	 *
-	 * @return string|false
-	 */
 	private function get_post_status( $post_id ) {
 		$isAttachment = function( $post_id ) { return 'attachment' === get_post_type( $post_id ); };
 

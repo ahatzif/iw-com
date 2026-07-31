@@ -4,12 +4,6 @@ require_once WPML_PLUGIN_PATH . '/inc/functions-debug-information.php';
 $debug_info = get_debug_info();
 $debug_data = $debug_info->run();
 
-/* DEBUG ACTION */
-/**
- * @param $term_object
- *
- * @return callable
- */
 ?>
 <div class="wrap">
 	<h1><?php echo __( 'Debug information', 'sitepress' ); ?></h1>

@@ -14,7 +14,6 @@ class CaptureEvent {
 
 		global $wpml_dic;
 
-		/** @var CaptureEventService $postHogCaptureEventService */
 		$postHogCaptureEventService = $wpml_dic->make( CaptureEventService::class );
 
 		try {

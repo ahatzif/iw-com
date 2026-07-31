@@ -14,13 +14,6 @@ class LanguageSwitcher implements \IWPML_Frontend_Action {
 			->then( spreadArgs( [ $this, 'disableInBuilder' ] ) );
 	}
 
-	/**
-	 * @param string        $html
-	 * @param array         $model
-	 * @param \WPML_LS_Slot $slot
-	 *
-	 * @return string
-	 */
 	public function disableInBuilder( $html, $model, $slot ) {
 		if ( Helper::isInDiviBuilderMainWindow() && 'footer' === $slot->get( 'slot_slug' ) ) {
 			$html = '';

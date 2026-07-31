@@ -24,11 +24,6 @@ class DynamicContent implements \IWPML_Frontend_Action, \IWPML_Backend_Action {
 			->then( spreadArgs( [ $this, 'updateStringsInBlock' ] ) );
 	}
 
-	/**
-	 * @param string $content
-	 *
-	 * @return array|null
-	 */
 	private function parseDynamicPayload( $content ) {
 		$matches = Str::match( self::VARIABLE_PATTERN, $content );
 		if ( ! $matches || ! isset( $matches[1] ) ) {
@@ -39,12 +34,6 @@ class DynamicContent implements \IWPML_Frontend_Action, \IWPML_Backend_Action {
 		return json_decode( $jsonData, true );
 	}
 
-	/**
-	 * @param string $key
-	 * @param string $value
-	 *
-	 * @return string
-	 */
 	private function getWrapperStringName( $key, $value ) {
 		return md5( $key . $value );
 	}
@@ -80,13 +69,6 @@ class DynamicContent implements \IWPML_Frontend_Action, \IWPML_Backend_Action {
 		return $foundStrings;
 	}
 
-	/**
-	 * @param \WP_Block_Parser_Block $block
-	 * @param array                  $stringTranslations
-	 * @param string                 $lang
-	 *
-	 * @return \WP_Block_Parser_Block
-	 */
 	public function updateStringsInBlock( \WP_Block_Parser_Block $block, array $stringTranslations, $lang ) {
 		if ( ! $this->isDiviBlock( $block ) ) {
 			return $block;
@@ -99,13 +81,6 @@ class DynamicContent implements \IWPML_Frontend_Action, \IWPML_Backend_Action {
 		return $block;
 	}
 
-	/**
-	 * @param array  $attrs
-	 * @param array  $stringTranslations
-	 * @param string $lang
-	 *
-	 * @return array
-	 */
 	private function updateBlockAttrs( array $attrs, array $stringTranslations, $lang ) {
 		foreach ( $attrs as $key => $value ) {
 			if ( is_array( $value ) ) {
@@ -118,13 +93,6 @@ class DynamicContent implements \IWPML_Frontend_Action, \IWPML_Backend_Action {
 		return $attrs;
 	}
 
-	/**
-	 * @param string $value
-	 * @param array  $stringTranslations
-	 * @param string $lang
-	 *
-	 * @return string
-	 */
 	private function updateDynamicVariableInString( $value, array $stringTranslations, $lang ) {
 		$payload = $this->parseDynamicPayload( $value );
 		if ( ! is_array( $payload ) ) {
@@ -153,11 +121,6 @@ class DynamicContent implements \IWPML_Frontend_Action, \IWPML_Backend_Action {
 		return self::VARIABLE . '(' . wp_json_encode( $payload ) . ')$';
 	}
 
-	/**
-	 * @param \WP_Block_Parser_Block $block
-	 *
-	 * @return bool
-	 */
 	private function isDiviBlock( \WP_Block_Parser_Block $block ) {
 		return (bool) Str::startsWith( 'divi/', $block->blockName );
 	}

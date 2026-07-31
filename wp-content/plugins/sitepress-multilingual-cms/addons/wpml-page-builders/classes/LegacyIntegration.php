@@ -9,14 +9,12 @@ use function WPML\Container\make;
 class LegacyIntegration {
 
 	public static function load() {
-		/** @var \SitePress $sitepress */
 		global $sitepress;
 
 		$integrationClasses = [
 			\WPML\PB\FullSiteEditing\TemplateTranslationHooks::class,
 		];
 
-		// WPBakery Page Builder (a.k.a. Visual Composer).
 		if ( defined( 'WPB_VC_VERSION' ) ) {
 			$integrationClasses[] = \WPML\Compatibility\WPBakery\Hooks\TranslationJobLabels::class;
 			$integrationClasses[] = \WPML\Compatibility\WPBakery\Hooks\TranslationJobImages::class;
@@ -54,10 +52,8 @@ class LegacyIntegration {
 			$integrationClasses[] = \WPML\Compatibility\Enfold\Hooks\TranslationJobImages::class;
 			$integrationClasses[] = \WPML\Compatibility\Enfold\Hooks\TranslationGuiLabels::class;
 
-			// phpcs:disable WordPress.NamingConventions.ValidVariableName
 			global $iclTranslationManagement;
 			$enfold = new \WPML_Compatibility_Theme_Enfold( $iclTranslationManagement );
-			// phpcs:enable
 			$enfold->init_hooks();
 		}
 
@@ -71,7 +67,7 @@ class LegacyIntegration {
 			$integrationClasses[] = \WPML\Compatibility\Divi\TinyMCE::class;
 			$integrationClasses[] = \WPML\Compatibility\Divi\DisplayConditions::class;
 			$integrationClasses[] = \WPML\Compatibility\Divi\DoubleQuotes::class;
-			$integrationClasses[] = \WPML\Compatibility\Divi\WooShortcodes::class; // @todo: replace with config - wpmlpb-275
+			$integrationClasses[] = \WPML\Compatibility\Divi\WooShortcodes::class;
 			$integrationClasses[] = \WPML\Compatibility\Divi\Hooks\Editor::class;
 			$integrationClasses[] = \WPML\Compatibility\Divi\Hooks\EditorFrontend::class;
 			$integrationClasses[] = \WPML\Compatibility\Divi\Hooks\DomainsBackendEditor::class;

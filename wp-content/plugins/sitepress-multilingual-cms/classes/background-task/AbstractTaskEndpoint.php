@@ -16,16 +16,10 @@ abstract class AbstractTaskEndpoint implements TaskEndpointInterface {
 	const LOCK_TIME = 2*60;
 	const MAX_RETRIES = 0;
 
-	/** @var UpdateBackgroundTask $updateBackgroundTask */
 	protected $updateBackgroundTask;
 
-	/** @var BackgroundTaskService $backgroundTaskService */
 	protected $backgroundTaskService;
 
-	/**
-	 * @param UpdateBackgroundTask $updateBackgroundTask
-	 * @param BackgroundTaskService $backgroundTaskService
-	 */
 	public function __construct( UpdateBackgroundTask $updateBackgroundTask, BackgroundTaskService $backgroundTaskService ) {
 		$this->updateBackgroundTask     = $updateBackgroundTask;
 		$this->backgroundTaskService = $backgroundTaskService;
@@ -51,11 +45,6 @@ abstract class AbstractTaskEndpoint implements TaskEndpointInterface {
 		return static::class;
 	}
 
-	/**
-	 * @param BackgroundTask $task
-	 *
-	 * @return BackgroundTask
-	 */
 	abstract function runBackgroundTask( BackgroundTask $task );
 
 	public function run(
@@ -78,13 +67,7 @@ abstract class AbstractTaskEndpoint implements TaskEndpointInterface {
 		}
 	}
 
-	/**
-	 * @param BackgroundTask $backgroundTask
-	 *
-	 * @return callable|\WPML\FP\Right
-	 */
 	private function getResponse( BackgroundTask $backgroundTask ) {
-		/** @var \WPML\Utilities\Lock $endpointLock */
 		$endpointLock = make( 'WPML\Utilities\Lock', [ ':name' => $backgroundTask->getTaskType() ] );
 		$endpointLock->release();
 

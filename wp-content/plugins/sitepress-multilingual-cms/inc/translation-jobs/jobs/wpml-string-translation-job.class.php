@@ -41,9 +41,6 @@ class WPML_String_Translation_Job extends WPML_Translation_Job {
 		return esc_html( $this->basic_data->value );
 	}
 
-	/**
-	 * @return string
-	 */
 	public function get_id() {
 
 		return 'string|' . parent::get_id();
@@ -109,9 +106,6 @@ class WPML_String_Translation_Job extends WPML_Translation_Job {
 		);
 	}
 
-	/**
-	 * Retrieves the batch ID for a string job
-	 */
 	protected function load_batch_id() {
 		global $wpdb;
 

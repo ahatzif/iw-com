@@ -5,7 +5,6 @@ use WPML\PB\Elementor\Helper\StringFormat;
 
 class WPML_Elementor_Update_Translation extends WPML_Page_Builders_Update_Translation {
 
-	/** @param array $data_array */
 	protected function update_strings_in_modules( array &$data_array ) {
 		foreach ( $data_array as &$element ) {
 			if ( Node::hasChildren( $element ) ) {
@@ -18,12 +17,6 @@ class WPML_Elementor_Update_Translation extends WPML_Page_Builders_Update_Transl
 		}
 	}
 
-	/**
-	 * @param int   $node_id
-	 * @param array $settings
-	 *
-	 * @return array
-	 */
 	protected function update_strings_in_node( $node_id, $settings ) {
 		return WPML_Elementor_Translatable_Nodes::with_active_element_settings_cache(
 			function () use ( $node_id, $settings ) {

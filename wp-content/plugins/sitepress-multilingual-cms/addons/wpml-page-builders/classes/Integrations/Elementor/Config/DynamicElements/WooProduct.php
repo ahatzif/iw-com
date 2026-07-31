@@ -18,11 +18,6 @@ class WooProduct {
 		'url',
 	];
 
-	/**
-	 * @param string $tagName
-	 *
-	 * @return array[]
-	 */
 	private static function get( $tagName ) {
 		$converters = [];
 
@@ -33,12 +28,6 @@ class WooProduct {
 		return $converters;
 	}
 
-	/**
-	 * @param string $tagName
-	 * @param string $dynamicKey
-	 *
-	 * @return array
-	 */
 	private static function getConverter( $tagName, $dynamicKey ) {
 		$dynamicPath = [ 'settings', '__dynamic__', $dynamicKey ];
 
@@ -55,9 +44,6 @@ class WooProduct {
 		return [ $hasDynamicTag, $dynamicLens, $tagName, 'product_id' ];
 	}
 
-	/**
-	 * @return array[]
-	 */
 	public static function getAll() {
 		return array_merge(
 			self::get( 'woocommerce-product-title-tag' ),

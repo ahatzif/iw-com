@@ -17,44 +17,21 @@ use WPML\FP\Logic;
 use WPML\TM\ATE\API\CachedAMSAPI;
 use function WPML\FP\pipe;
 use function WPML\FP\invoke;
-/**
- * @author OnTheGo Systems
- */
 class WPML_TM_AMS_API {
 
 	const HTTP_ERROR_CODE_400 = 400;
 
 	private $auth;
 
-	/** @var WPML_TM_ATE_AMS_Endpoints */
 	private $endpoints;
 	private $wp_http;
 
-	/**
-	 * @var ClonedSitesHandler
-	 */
 	private $clonedSitesHandler;
 
-	/**
-	 * @var FingerprintGenerator
-	 */
 	private $fingerprintGenerator;
 
-	/**
-	 * @var \WPML\TM\ATE\API\AmsRequestSigner
-	 */
 	private $amsRequestSigner;
 
-	/**
-	 * WPML_TM_ATE_API constructor.
-	 *
-	 * @param WP_Http                                  $wp_http
-	 * @param WPML_TM_ATE_Authentication               $auth
-	 * @param WPML_TM_ATE_AMS_Endpoints                $endpoints
-	 * @param ClonedSitesHandler                       $clonedSitesHandler
-	 * @param FingerprintGenerator                     $fingerprintGenerator
-	 * @param \WPML\TM\ATE\API\AmsRequestSigner        $amsRequestSigner
-	 */
 	public function __construct(
 		WP_Http $wp_http,
 		WPML_TM_ATE_Authentication $auth,
@@ -71,12 +48,6 @@ class WPML_TM_AMS_API {
 		$this->amsRequestSigner       = $amsRequestSigner ?: new \WPML\TM\ATE\API\AmsRequestSigner( $wp_http, $auth, $fingerprintGenerator );
 	}
 
-	/**
-	 * @param string $translator_email
-	 *
-	 * @return array|mixed|null|object|WP_Error
-	 * @throws \InvalidArgumentException
-	 */
 	public function enable_subscription( $translator_email ) {
 		$result = null;
 
@@ -98,11 +69,6 @@ class WPML_TM_AMS_API {
 		return $result;
 	}
 
-	/**
-	 * @param string $translator_email
-	 *
-	 * @return bool|WP_Error
-	 */
 	public function is_subscription_activated( $translator_email ) {
 		$result = null;
 
@@ -126,11 +92,6 @@ class WPML_TM_AMS_API {
 		return $result;
 	}
 
-	/**
-	 * @return array|mixed|null|object|WP_Error
-	 *
-	 * @throws \InvalidArgumentException Exception.
-	 */
 	public function get_status() {
 		$result = null;
 
@@ -162,9 +123,6 @@ class WPML_TM_AMS_API {
 		return $result;
 	}
 
-	/**
-	 * @return mixed|WP_Error|null
-	 */
 	public function get_translation_engines() {
 		$result = null;
 
@@ -180,9 +138,6 @@ class WPML_TM_AMS_API {
 	}
 
 
-	/**
-	 * @return mixed|WP_Error|null
-	 */
 	public function get_available_formalities() {
 		$result = null;
 
@@ -197,9 +152,6 @@ class WPML_TM_AMS_API {
 		return $result;
 	}
 
-	/**
-	 * @return mixed|WP_Error|null
-	 */
 	public function getGlossaryCount() {
 		$result = $this->getSignedResult(
 			'GET',
@@ -209,11 +161,6 @@ class WPML_TM_AMS_API {
 		return Maybe::of( $result )->reject( 'is_wp_error' );
 	}
 
-	/**
-	 * @param $engine_settings
-	 *
-	 * @return bool|WP_Error
-	 */
 	public function update_translation_engines( $engine_settings ) {
 		$result = false;
 
@@ -234,18 +181,6 @@ class WPML_TM_AMS_API {
 		return $result;
 	}
 
-	/**
-	 * Used to register a manager and, at the same time, create a website in AMS.
-	 * This is called only when registering the site with AMS.
-	 * To register new managers or translators `\WPML_TM_ATE_AMS_Endpoints::get_ams_synchronize_managers`
-	 * and `\WPML_TM_ATE_AMS_Endpoints::get_ams_synchronize_translators` will be used.
-	 *
-	 * @param WP_User   $manager              The WP_User instance of the manager.
-	 * @param WP_User[] $translators          An array of WP_User instances representing the current translators.
-	 * @param WP_User[] $managers             An array of WP_User instances representing the current managers.
-	 *
-	 * @return \WPML\FP\Either
-	 */
 	public function register_manager( WP_User $manager, array $translators, array $managers ) {
 		$makeRequest = $this->makeRegistrationRequest( $manager, $translators, $managers );
 
@@ -375,26 +310,12 @@ class WPML_TM_AMS_API {
 		};
 	}
 
-	/**
-	 * Gets the data required by AMS to register a user.
-	 *
-	 * Ensures that critical user fields (email and display_name) are never empty.
-	 * If they are empty, generates fallback values and persists them to the database.
-	 *
-	 * @param WP_User $wp_user           The user from which data should be extracted.
-	 * @param bool    $with_name_details True if name details should be included.
-	 *
-	 * @return array User data array with 'email' and 'name' or detailed name fields.
-	 */
 	private function get_user_data( WP_User $wp_user, $with_name_details = false ) {
 		$data = array();
 
-		// wpmldev-5943
 		$data['email'] = $this->ensure_user_email_is_not_empty( $wp_user );
-		// wpmldev-5943
 		$display_name = $this->ensure_display_name_is_not_empty( $wp_user, $data['email'] );
 
-		// Add name fields based on requirements.
 		if ( $with_name_details ) {
 			$data['display_name'] = $display_name;
 			$data['first_name']   = $wp_user->first_name;
@@ -406,16 +327,6 @@ class WPML_TM_AMS_API {
 		return $data;
 	}
 
-	/**
-	 * Ensures user has a valid email address.
-	 *
-	 * If the user's email is empty, generates a placeholder email
-	 * and updates the user in the database.
-	 *
-	 * @param WP_User $wp_user The user object.
-	 *
-	 * @return string The user's email (real or generated).
-	 */
 	private function ensure_user_email_is_not_empty( WP_User $wp_user ) {
 		if ( ! empty( $wp_user->user_email ) ) {
 			return $wp_user->user_email;
@@ -433,17 +344,6 @@ class WPML_TM_AMS_API {
 		return $fake_email;
 	}
 
-	/**
-	 * Ensures user has a valid display name.
-	 *
-	 * If the user's display name is empty, uses user_login as fallback,
-	 * or the email if user_login is also empty. Updates the user in the database.
-	 *
-	 * @param WP_User $wp_user       The user object.
-	 * @param string  $default_value The default value (used as final fallback).
-	 *
-	 * @return string The user's display name (real or generated).
-	 */
 	private function ensure_display_name_is_not_empty( WP_User $wp_user, string $default_value ) {
 		if ( ! empty( $wp_user->display_name ) ) {
 			return $wp_user->display_name;
@@ -468,14 +368,6 @@ class WPML_TM_AMS_API {
 		return max( $timeout, $minimum );
 	}
 
-	/**
-	 * Converts an array of WP_User instances into an array of data nedded by AMS to identify users.
-	 *
-	 * @param WP_User[] $users             An array of WP_User instances.
-	 * @param bool      $with_name_details True if name details should be included.
-	 *
-	 * @return array
-	 */
 	private function get_users_data( array $users, $with_name_details = false ) {
 		$user_data = array();
 
@@ -490,13 +382,6 @@ class WPML_TM_AMS_API {
 		return $user_data;
 	}
 
-	/**
-	 * Checks if a reponse has a body.
-	 *
-	 * @param array|\WP_Error $response The response of the remote request.
-	 *
-	 * @return bool
-	 */
 	private function response_has_body( $response ) {
 		return ! is_wp_error( $response ) && array_key_exists( 'body', $response );
 	}
@@ -552,12 +437,6 @@ class WPML_TM_AMS_API {
 		return ! is_wp_error( $response ) && (int) \WPML\FP\Obj::path( [ 'response', 'code' ], $response ) === 200;
 	}
 
-	/**
-	 * @param array  $ams_error
-	 * @param string $default
-	 *
-	 * @return string
-	 */
 	private function get_error_message( $ams_error, $default ) {
 		$title   = isset( $ams_error['title'] ) ? $ams_error['title'] . ': ' : '';
 		$details = isset( $ams_error['detail'] ) ? $ams_error['detail'] : $default;
@@ -573,28 +452,14 @@ class WPML_TM_AMS_API {
 			&& array_key_exists( 'website_uuid', $response_body );
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_registration_data() {
 		return get_option( WPML_TM_ATE_Authentication::AMS_DATA_KEY, [] );
 	}
 
-	/**
-	 * @param $registration_data
-	 *
-	 * @return bool
-	 */
 	private function set_registration_data( $registration_data ) {
 		return update_option( WPML_TM_ATE_Authentication::AMS_DATA_KEY, $registration_data );
 	}
 
-	/**
-	 * @param array $managers
-	 *
-	 * @return array|mixed|null|object|WP_Error
-	 * @throws \InvalidArgumentException
-	 */
 	public function synchronize_managers( array $managers ) {
 		$result = null;
 
@@ -622,12 +487,6 @@ class WPML_TM_AMS_API {
 		return $result;
 	}
 
-	/**
-	 * @param array $translators
-	 *
-	 * @return array|mixed|null|object|WP_Error
-	 * @throws \InvalidArgumentException
-	 */
 	public function synchronize_translators( array $translators ) {
 		$result = null;
 
@@ -656,13 +515,6 @@ class WPML_TM_AMS_API {
 		return $result;
 	}
 
-	/**
-	 * @param string     $method
-	 * @param string     $url
-	 * @param array|null $params
-	 *
-	 * @return array|WP_Error
-	 */
 	private function request( $method, $url, ?array $params = null ) {
 		$lock = $this->clonedSitesHandler->checkCloneSiteLock( $url );
 		if ( $lock ) {
@@ -724,13 +576,6 @@ class WPML_TM_AMS_API {
 		return $response;
 	}
 
-	/**
-	 * @param string     $verb
-	 * @param string     $url
-	 * @param array|null $params
-	 *
-	 * @return array|WP_Error
-	 */
 	private function signed_request( $verb, $url, ?array $params = null ) {
 		$verb       = strtoupper( $verb );
 		$signed_url = $this->auth->get_signed_url_with_parameters( $verb, $url, $params );
@@ -742,11 +587,6 @@ class WPML_TM_AMS_API {
 		return $this->request( $verb, $signed_url, $params );
 	}
 
-	/**
-	 * @param $url
-	 *
-	 * @return string
-	 */
 	private function add_versions_to_url( $url ) {
 		$url_parts = wp_parse_url( $url );
 		$url_parts = $url_parts ?: [];
@@ -768,9 +608,6 @@ class WPML_TM_AMS_API {
 		$this->auth->override_site_id( $site_id );
 	}
 
-	/**
-	 * @return array|WP_Error
-	 */
 	public function getCredits() {
 		return $this->getSignedResult(
 			'GET',
@@ -778,9 +615,6 @@ class WPML_TM_AMS_API {
 		);
 	}
 
-	/**
-	 * @return array|WP_Error
-	 */
 	public function getAccountBalances() {
 		return $this->getSignedResult(
 			'GET',
@@ -788,9 +622,6 @@ class WPML_TM_AMS_API {
 		);
 	}
 
-	/**
-	 * @return array|WP_Error
-	 */
 	public function resumeAll() {
 		return $this->getSignedResult(
 			'GET',
@@ -825,20 +656,10 @@ class WPML_TM_AMS_API {
 		);
 	}
 
-	/**
-	 * Disconnects this site from its AMS organization.
-	 *
-	 * @return array|WP_Error Response body on success, WP_Error on failure.
-	 */
 	public function disconnect() {
 		return $this->getSignedResult( 'POST', $this->endpoints->get_ams_disconnect() );
 	}
 
-	/**
-	 * Re-attaches this site to its previous AMS organization.
-	 *
-	 * @return array|WP_Error Response body on success, WP_Error on failure.
-	 */
 	public function connect() {
 		return $this->getSignedResult( 'POST', $this->endpoints->get_ams_connect() );
 	}

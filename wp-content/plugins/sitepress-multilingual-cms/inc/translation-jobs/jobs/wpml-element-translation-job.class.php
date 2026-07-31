@@ -9,26 +9,15 @@ abstract class WPML_Element_Translation_Job extends WPML_Translation_Job {
 
 	protected $original_del_text;
 
-	/** @var  WPML_Translation_Job_Factory $job_factory */
 	protected $job_factory;
 
 	private $original_doc_id = false;
 	private $translation_id  = false;
 
-	/* Fields for Words to Translate */
-	/** @var ?int */
 	public $wpml_words_to_translate_count;
-	/** @var ?int */
 	public $wpml_automatic_translation_costs;
-	/** @var ?int  This is only for ATE. */
 	public $ate_previous_job_id;
 
-	/**
-	 * @param int                               $job_id
-	 * @param null|int                          $batch_id
-	 * @param null|TranslationManagement        $tm_instance
-	 * @param null|WPML_Translation_Job_Factory $job_factory
-	 */
 	function __construct( $job_id, $batch_id = null, &$tm_instance = null, $job_factory = null ) {
 		parent::__construct( $job_id, $batch_id, $tm_instance );
 		$this->original_del_text = __( 'The original has been deleted!', 'sitepress' );
@@ -77,12 +66,6 @@ abstract class WPML_Element_Translation_Job extends WPML_Translation_Job {
 		return $translation_id;
 	}
 
-	/**
-	 * Saves the job data in this object to the database (e.g. to a post)
-	 *
-	 * @param bool $complete whether or not to set the status
-	 *                       of the target element to complete
-	 */
 	public function save_to_element( $complete = false ) {
 		global $wpdb, $wpml_term_translations, $wpml_post_translations;
 
@@ -98,9 +81,6 @@ abstract class WPML_Element_Translation_Job extends WPML_Translation_Job {
 		$save_data_action->save_translation();
 	}
 
-	/**
-	 * @return int
-	 */
 	function estimate_word_count() {
 		$fields          = $this->get_original_fields();
 		$combined_string = join( ' ', $fields );
@@ -129,16 +109,6 @@ abstract class WPML_Element_Translation_Job extends WPML_Translation_Job {
 		return $res;
 	}
 
-	/**
-	 * @param TranslationProxy_Project $project
-	 * @param int                      $translator_id
-	 * @param WPML_TM_CMS_ID           $cms_id_helper
-	 * @param TranslationManagement    $tm_instance
-	 * @param null|string              $note
-	 * @param array<string,string> | null $tp_batch_info
-	 *
-	 * @return array
-	 */
 	function send_to_tp( $project, $translator_id, &$cms_id_helper, &$tm_instance, $note = null, $tp_batch_info = null ) {
 		global $wpdb;
 
@@ -157,7 +127,6 @@ abstract class WPML_Element_Translation_Job extends WPML_Translation_Job {
 		try {
 			$tp_job_id = $project->send_to_translation_batch_mode( $file, $title, $cms_id, $url, $source_language, $target_language, $word_count, $translator_id, $note, $uuid, $tp_batch_info );
 		} catch ( Exception $err ) {
-			// The translation entry will be removed
 			$project->errors[] = $err;
 			$tp_job_id         = 0;
 		}
@@ -180,16 +149,8 @@ abstract class WPML_Element_Translation_Job extends WPML_Translation_Job {
 		return array( isset( $err ) ? $err : false, $project, $tp_job_id );
 	}
 
-	/**
-	 * @param bool|false $original
-	 *
-	 * @return string
-	 */
 	abstract function get_url( $original = false );
 
-	/**
-	 * @return WP_Post|WPML_Package|mixed
-	 */
 	abstract function get_original_document();
 
 	protected function load_status() {
@@ -200,11 +161,6 @@ abstract class WPML_Element_Translation_Job extends WPML_Translation_Job {
 		return TranslationManagement::get_job_status_string( $status, Obj::prop( 'needs_update', $this->basic_data ) );
 	}
 
-	/**
-	 * @param int $job_id
-	 *
-	 * @return bool|stdClass|WPML_Element_Translation_Job
-	 */
 	protected function load_job_data( $job_id ) {
 		if ( $this->job_factory ) {
 			return $this->job_factory->get_translation_job( $job_id, false, 1 );
@@ -240,10 +196,6 @@ abstract class WPML_Element_Translation_Job extends WPML_Translation_Job {
 		return true;
 	}
 
-	/**
-	 * Retrieves the batch ID for job elements using the
-	 * `icl_translation_status` and `icl_translate_job` tables
-	 */
 	protected function load_batch_id() {
 		global $wpdb;
 
@@ -280,20 +232,10 @@ abstract class WPML_Element_Translation_Job extends WPML_Translation_Job {
 		return $wpdb->get_var( $prepared_query );
 	}
 
-	/**
-	 * If the job does not have deadline date,
-	 * we consider that the job was completed on time.
-	 *
-	 * @return bool
-	 */
 	public function is_completed_on_time() {
 		return $this->get_number_of_days_overdue() <= 0;
 	}
 
-	/**
-	 * @return false|int Negative integer if the job was completed before the deadline, or positive either.
-	 *                   False is the job has no deadline date
-	 */
 	public function get_number_of_days_overdue() {
 		$deadline  = $this->get_deadline_date();
 		$completed = $this->get_completed_date();
@@ -313,27 +255,22 @@ abstract class WPML_Element_Translation_Job extends WPML_Translation_Job {
 		return (int) floor( ( $completed - $deadline ) / DAY_IN_SECONDS );
 	}
 
-	/** @return string|null */
 	public function get_deadline_date() {
 		return $this->get_basic_data_property( 'deadline_date' );
 	}
 
-	/** @return string|null */
 	public function get_completed_date() {
 		return $this->get_basic_data_property( 'completed_date' );
 	}
 
-	/** @return string|null */
 	public function get_manager_id() {
 		return $this->get_basic_data_property( 'manager_id' );
 	}
 
-	/** @return string|null */
 	protected function get_title_from_db() {
 		return $this->get_basic_data_property( 'title' );
 	}
 
-	/** @return string|null */
 	protected function get_uuid() {
 		return $this->get_basic_data_property( 'uuid' );
 	}

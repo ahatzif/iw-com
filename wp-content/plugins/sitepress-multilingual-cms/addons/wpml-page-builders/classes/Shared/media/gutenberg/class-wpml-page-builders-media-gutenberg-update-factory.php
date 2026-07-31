@@ -2,24 +2,14 @@
 
 class WPML_Page_Builders_Media_Gutenberg_Update_Factory extends WPML_Page_Builders_Media_Update_Factory {
 
-	/** @var WPML_Gutenberg_Config_Option $config_option */
 	private $config_option;
 
-	/** @var WPML_Translation_Element_Factory|null $element_factory */
 	private $element_factory;
 
-	/**
-	 * @param WPML_Gutenberg_Config_Option $config_option
-	 */
 	public function __construct( WPML_Gutenberg_Config_Option $config_option ) {
 		$this->config_option = $config_option;
 	}
 
-	/**
-	 * @param bool $find_usage_instead_of_translate
-	 *
-	 * @return WPML_Page_Builders_Media_Gutenberg_Update
-	 */
 	public function create( $find_usage_instead_of_translate = false ) {
 		$media_gutenberg = new WPML_Page_Builders_Media_Gutenberg(
 			$this->get_media_translate( $find_usage_instead_of_translate, true ),
@@ -35,9 +25,6 @@ class WPML_Page_Builders_Media_Gutenberg_Update_Factory extends WPML_Page_Builde
 		);
 	}
 
-	/**
-	 * @return WPML_Translation_Element_Factory
-	 */
 	private function get_element_factory() {
 		global $sitepress;
 

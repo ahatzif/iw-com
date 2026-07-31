@@ -1,22 +1,13 @@
 <?php
 
-// phpcs:disable WordPress.WP.I18n.NonSingularStringLiteralText, WordPress.WP.I18n.LowLevelTranslationFunction
 class WPML_Page_Builders_Media_Gutenberg_Update implements IWPML_PB_Media_Update {
 
-	/** @var WPML_Translation_Element_Factory $element_factory */
 	private $element_factory;
 
-	/** @var WPML_Page_Builders_Media_Gutenberg $media_gutenberg */
 	private $media_gutenberg;
 
-	/** @var WPML_Page_Builders_Media_Usage|null $media_usage */
 	private $media_usage;
 
-	/**
-	 * @param WPML_Translation_Element_Factory    $element_factory
-	 * @param WPML_Page_Builders_Media_Gutenberg  $media_gutenberg
-	 * @param WPML_Page_Builders_Media_Usage|null $media_usage
-	 */
 	public function __construct(
 		WPML_Translation_Element_Factory $element_factory,
 		WPML_Page_Builders_Media_Gutenberg $media_gutenberg,
@@ -27,9 +18,6 @@ class WPML_Page_Builders_Media_Gutenberg_Update implements IWPML_PB_Media_Update
 		$this->media_usage     = $media_usage;
 	}
 
-	/**
-	 * @param WP_Post $post
-	 */
 	public function translate( $post ) {
 		if ( ! has_blocks( $post->post_content ) ) {
 			return;
@@ -69,11 +57,6 @@ class WPML_Page_Builders_Media_Gutenberg_Update implements IWPML_PB_Media_Update
 		}
 	}
 
-	/**
-	 * @param array $blocks
-	 *
-	 * @return array
-	 */
 	private function translate_blocks_recursive( $blocks ) {
 		foreach ( $blocks as &$block ) {
 			$block = $this->media_gutenberg->translate( $block );
@@ -86,9 +69,6 @@ class WPML_Page_Builders_Media_Gutenberg_Update implements IWPML_PB_Media_Update
 		return $blocks;
 	}
 
-	/**
-	 * @param WP_Post $post
-	 */
 	public function find_media( $post ) {
 		if ( ! has_blocks( $post->post_content ) ) {
 			return;
@@ -105,9 +85,6 @@ class WPML_Page_Builders_Media_Gutenberg_Update implements IWPML_PB_Media_Update
 		$this->find_media_recursive( $blocks );
 	}
 
-	/**
-	 * @param array $blocks
-	 */
 	private function find_media_recursive( $blocks ) {
 		foreach ( $blocks as $block ) {
 			$this->media_gutenberg->translate( $block );
@@ -118,9 +95,6 @@ class WPML_Page_Builders_Media_Gutenberg_Update implements IWPML_PB_Media_Update
 		}
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_media() {
 		return $this->media_gutenberg->get_media();
 	}

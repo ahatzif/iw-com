@@ -1,14 +1,8 @@
 <?php
-/**
- * Class WPML_Elementor_Integration_Factory
- */
 class WPML_Elementor_Integration_Factory {
 
 	const SLUG = 'elementor';
 
-	/**
-	 * @return WPML_Page_Builders_Integration
-	 */
 	public function create() {
 
 		$action_filter_loader = new WPML_Action_Filter_Loader();

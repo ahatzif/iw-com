@@ -6,22 +6,12 @@ use WPML\TM\ATE\Jobs;
 use WPML\Translation\TranslateJobErrorServiceFactory;
 
 class JobsCount implements JobsCountInterface {
- 	/** @var Jobs $jobs */
 	private $jobs;
 
 	public function __construct( Jobs $jobs ) {
 		$this->jobs = $jobs;
 	}
 
-	/**
-	 * @return array{
-	 *   allCount: int,
-	 *   allAutomaticCount: int,
-	 *   automaticWithoutLongstandingCount: int,
-	 *   needsReviewCount: int,
-	 *   unsolvableJobsCount: int
-	 * }
-	 */
 	public function get(): array {
 		return [
 			'allCount'                          => $this->jobs->getCountOfInProgress(),

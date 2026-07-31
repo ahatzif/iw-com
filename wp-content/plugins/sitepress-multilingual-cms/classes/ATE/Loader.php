@@ -46,13 +46,10 @@ class Loader implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 
 	const JOB_ID_PLACEHOLDER = '###';
 
-	/** @var BackgroundTaskRepository */
 	private $backgroundTaskRepository;
 
-	/** @var TranslateEverything */
 	private $translateEverything;
 
-	/** @var MarkPreviouslyUnsupportedContentAsCompletedInTEA */
 	private $markPreviouslyUnsupportedContentAsCompletedInTEA;
 
 
@@ -68,15 +65,9 @@ class Loader implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 
 	public function add_hooks() {
 		if ( wpml_is_ajax() ) {
-			// Prevent loading this for ajax calls.
-			// All tasks of this class are not relevant for ajax requests. Currently it's loaded by the root plugin.php
-			// which do not separate between ajax and non-ajax calls and loads this whenever is_admin() is true.
-			// Problem: ALL ajax calls return true for is_admin() - also on the frontend and for non logged-in users.
-			// TODO: Remove once wpmltm-4351 is done.
 			return;
 		}
 
-		// Skip loading ATE resources when previewing a post.
 		if ( $this->isPreviewAction() ) {
 			return;
 		}
@@ -91,14 +82,6 @@ class Loader implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 				 ->then( [ self::class, 'showAteConsoleContainer' ] );
 		} );
 
-		/**
-		 * The `MarkPreviouslyUnsupportedContentAsCompletedInTEA::run` migration must be run here, instead
-		 * of inside the regular Upgrade logic due to various reasons described in: wpmldev-3809.
-		 *
-		 * In short, the regular upgrade logic is run too early in WP lifecycle, and custom post types may not
-		 * be registered yet. Moreover, we need to aldo handle a case when a user temporarily disables ST, upgrades to WPML 4.7
-		 * and AFTER that, he re-enables ST. In this case, we need to run ST migration logic later, when ST is enabled.
-		 */
 		Hooks::onAction( 'wp_loaded' )
 				 ->then( [ $this->markPreviouslyUnsupportedContentAsCompletedInTEA, 'run' ] )
 		     ->then( [ $this, 'getData' ] )
@@ -111,13 +94,7 @@ class Loader implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		     ->then( [ self::class, 'getWpmlAutoTranslateContainer' ] );
 	}
 
-	/**
-	 * Check if current request is a preview action.
-	 *
-	 * @return bool
-	 */
 	private function isPreviewAction() {
-		// See wp-admin/post.php line 52.
 		return isset( $_POST['wp-preview'] ) && 'dopreview' === $_POST['wp-preview'];
 	}
 
@@ -141,10 +118,8 @@ class Loader implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 			Obj::values()
 		);
 
-		/** @var Jobs $jobs */
 		$jobs = make( Jobs::class );
 
-		/** @var Scheduler */
 		$scheduler = make( Scheduler::class );
 
 		$data = [
@@ -171,7 +146,7 @@ class Loader implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 					'doc_translation_method'
 				] ),
 				'shouldCheckForRetranslation' => $scheduler->shouldRun(),
-				'ateCallbacks' => [], // Should be used to add any needed ATE callbacks in JS side, refer to 'src/js/ate/retranslation/index.js' for example
+				'ateCallbacks' => [],
 
 				'settings' => [
 					'numberOfParallelDownloads' => defined('WPML_ATE_MAX_PARALLEL_DOWNLOADS') ? WPML_ATE_MAX_PARALLEL_DOWNLOADS : 2,
@@ -180,15 +155,12 @@ class Loader implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		];
 
 		if ( UIPage::isTMDashboard( $_GET ) ) {
-			$data['data']['anyJobsExist'] = $jobs->hasAny(); // any jobs, even including CTE jobs
+			$data['data']['anyJobsExist'] = $jobs->hasAny();
 		}
 
 		return $data;
 	}
 
-	/**
-	 * @return string
-	 */
 	public static function getNotEnoughCreditPopup() {
 		$isTranslationManager = User::canManageTranslations();
 
@@ -215,7 +187,6 @@ class Loader implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 
 	private static function getAteData() {
 		if ( User::canManageTranslations() ) {
-			/** @var NoCreditPopup $noCreditPopup */
 			$noCreditPopup = make( NoCreditPopup::class );
 
 			return $noCreditPopup->getData();

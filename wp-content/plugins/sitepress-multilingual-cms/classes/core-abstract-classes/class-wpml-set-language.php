@@ -2,18 +2,6 @@
 
 class WPML_Set_Language extends WPML_Full_Translation_API {
 
-	/**
-	 * @param int           $el_id the element's ID (for terms we use the `term_taxonomy_id`)
-	 * @param string        $el_type
-	 * @param int|bool|null $trid Trid the element is to be assigned to. Input that is == false will cause the term to
-	 *                            be assigned a new trid and potential translation relations to/from it to disappear.
-	 * @param string        $language_code
-	 * @param null|string   $src_language_code
-	 * @param bool          $check_duplicates
-	 * @param bool          $check_null
-	 *
-	 * @return bool|int|null|string
-	 */
 	public function set(
 		$el_id,
 		$el_type,
@@ -42,7 +30,6 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 		$src_language_code = $src_language_code === $language_code ? null : $src_language_code;
 
 		if ( $check_null && is_null( $trid ) ) {
-			// Check if there are any existing translations after check_duplicate corrections.
 			$existing = $this->get_existing( $el_type, $el_id );
 
 			if ( $existing ) {
@@ -51,8 +38,7 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 			}
 		}
 
-		if ( $trid ) { // it's a translation of an existing element
-			/** @var int $trid  is an integer if not falsy */
+		if ( $trid ) {
 			$this->maybe_delete_orphan( $trid, $language_code, $el_id );
 			if ( $el_id && (bool) ( $translation_id = $this->is_language_change( $el_id, $el_type, $trid ) ) === true
 				&& (bool) $this->trid_lang_trans_id( $trid, $language_code ) === false
@@ -99,7 +85,7 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 			} elseif ( (bool) ( $translation_id = $this->trid_lang_trans_id( $trid, $language_code ) ) === false ) {
 				$translation_id = $this->insert_new_row( $el_id, $trid, $el_type, $language_code, $src_language_code );
 			}
-		} else { // it's a new element or we are removing it from a trid
+		} else {
 			$this->delete_existing_row( $el_type, $el_id );
 			$translation_id = $this->insert_new_row( $el_id, false, $el_type, $language_code, $src_language_code );
 		}
@@ -116,24 +102,10 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 		return $translation_id;
 	}
 
-	/**
-	 * @param string|int $el_id
-	 * @param string     $el_type
-	 *
-	 * @return array<string, string>
-	 */
 	public static function get_cache_ref( $el_id, $el_type ) {
 		return [ $el_id . ':' . $el_type, 'element_language_details' ];
 	}
 
-	/**
-	 * Get the trid & language_code for element type and id
-	 *
-	 * @param string $element_type
-	 * @param int    $element_id
-	 *
-	 * @return null|int
-	 */
 	private function get_existing( $element_type, $element_id ) {
 		return $this->wpdb->get_row(
 			$this->wpdb->prepare(
@@ -148,14 +120,6 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 		);
 	}
 
-	/**
-	 * Returns the translation id belonging to a specific trid, language_code combination
-	 *
-	 * @param int    $trid
-	 * @param string $lang
-	 *
-	 * @return null|int
-	 */
 	private function trid_lang_trans_id( $trid, $lang ) {
 
 		return $this->wpdb->get_var(
@@ -171,15 +135,6 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 		);
 	}
 
-	/**
-	 * Changes the source_language_code of an element
-	 *
-	 * @param int    $trid
-	 * @param int    $el_id
-	 * @param string $el_type
-	 * @param string $language_code
-	 * @param string $src_language_code
-	 */
 	private function change_translation_of( $trid, $el_id, $el_type, $language_code, $src_language_code ) {
 		$src_language_code = empty( $src_language_code )
 			? $this->sitepress->get_source_language_by_trid( $trid ) : $src_language_code;
@@ -212,10 +167,6 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 		}
 	}
 
-	/**
-	 * @param string $el_type
-	 * @param int    $el_id
-	 */
 	private function delete_existing_row( $el_type, $el_id ) {
 
 		$context     = explode( '_', $el_type );
@@ -240,25 +191,7 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 		do_action( 'wpml_translation_update', array_merge( $update_args, array( 'type' => 'after_delete' ) ) );
 	}
 
-	/**
-	 * Inserts a new row into icl_translations
-	 *
-	 * @param int       $el_id
-	 * @param int|false $trid
-	 * @param string    $el_type
-	 * @param string    $language_code
-	 * @param string    $src_language_code
-	 *
-	 * @return int Translation ID of the new row
-	 */
 	private function insert_new_row( $el_id, $trid, $el_type, $language_code, $src_language_code ) {
-		// Insert with no $el_id produces a row in icl_translations with NULL
-		// element_id. That's the normal pre-delivery state for a translation
-		// placeholder (element_id gets backfilled once the translated post is
-		// created), so we log at INFO — the trace remains as the actionable
-		// breadcrumb if a downstream investigation needs to identify the
-		// caller, but it doesn't flip the request's error badge on healthy
-		// sends.
 		if ( ! $el_id && class_exists( \WPML\TM\Jobs\JobLog::class ) ) {
 			\WPML\TM\Jobs\JobLog::add( 'insert_new_row_null_element_id', [
 				'el_id'                => $el_id,
@@ -287,7 +220,6 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 			$new['element_id'] = $el_id;
 		}
 
-		// Check if there is already an entry for this trid + language_code combination.
 		$existing_id = $this->wpdb->get_var( $this->wpdb->prepare(
 			"SELECT translation_id FROM {$this->wpdb->prefix}icl_translations
 			WHERE trid = %d AND language_code = %s",
@@ -319,16 +251,6 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 		return $translation_id;
 	}
 
-	/**
-	 * Checks if a row exists for a concrete id, type and trid combination
-	 * in icl_translations.
-	 *
-	 * @param int    $el_id
-	 * @param string $el_type
-	 * @param int    $trid
-	 *
-	 * @return null|int
-	 */
 	private function is_language_change( $el_id, $el_type, $trid ) {
 
 		return $this->wpdb->get_var(
@@ -345,15 +267,6 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 		);
 	}
 
-	/**
-	 * Checks if a given trid, language_code combination contains a placeholder with NULL element_id
-	 * and if so returns the translation id of this row.
-	 *
-	 * @param int    $trid
-	 * @param string $language_code
-	 *
-	 * @return null|string translation id
-	 */
 	private function is_placeholder_update( $trid, $language_code ) {
 
 		return $this->wpdb->get_var(
@@ -369,14 +282,6 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 		);
 	}
 
-	/**
-	 * Checks if a row in icl_translations exists for a concrete element type and id combination
-	 *
-	 * @param int    $el_id
-	 * @param string $el_type
-	 *
-	 * @return null|int
-	 */
 	private function existing_element( $el_id, $el_type ) {
 
 		return $this->wpdb->get_var(
@@ -392,16 +297,7 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 		);
 	}
 
-	/**
-	 * Checks if a trid contains an existing translation other than a specific element id and deletes that row if it
-	 * exists.
-	 *
-	 * @param int    $trid
-	 * @param string $language_code
-	 * @param int    $correct_element_id
-	 */
 	private function maybe_delete_orphan( $trid, $language_code, $correct_element_id ) {
-		/** @var \stdClass $result */
 		$result = $this->wpdb->get_row(
 			$this->wpdb->prepare(
 				"SELECT translation_id, element_type, element_id
@@ -430,13 +326,6 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 				'context'        => $context[0],
 			);
 
-			// Orphan classification means this icl_translations row pointed at
-			// $result->element_id for trid+language, but a different element_id
-			// is now claimed as correct, so we drop the old row. If the "old"
-			// row was actually live translation work (6742-class race), this
-			// delete silently destroys it. Logging with the request-scoped
-			// stack trace surfaces which sending stage triggered the
-			// reclassification, and the element_id pair shows what was lost.
 			if ( class_exists( \WPML\TM\Jobs\JobLog::class ) ) {
 				\WPML\TM\Jobs\JobLog::addError( 'orphan_translation_deleted', [
 					'trid'                  => (int) $trid,
@@ -461,17 +350,6 @@ class WPML_Set_Language extends WPML_Full_Translation_API {
 		}
 	}
 
-	/**
-	 * Checks if a duplicate element_id already exists with a different than the input type.
-	 * This only applies to posts and taxonomy terms.
-	 *
-	 * @param string $el_type
-	 * @param int    $el_id
-	 *
-	 * @return null|string null if no duplicate icl translations entry is found
-	 * having a different than the input element type, the element type if a
-	 * duplicate row is found.
-	 */
 	private function check_duplicate( $el_type, $el_id ) {
 		$res   = false;
 		$exp   = explode( '_', $el_type );

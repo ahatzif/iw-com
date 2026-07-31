@@ -3,15 +3,9 @@
 use WPML\Core\WP\App\Resources;
 use WPML\LIB\WP\App\Resources as LibResources;
 
-/**
- * @author OnTheGo Systems
- */
 class WPML_Custom_XML_UI_Resources {
 	private $wpml_wp_api;
 
-	/**
-	 * @var string
-	 */
 	private $wpml_core_url;
 
 	function __construct( WPML_WP_API $wpml_wp_api) {

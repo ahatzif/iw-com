@@ -45,13 +45,6 @@ class WPML_Translate_Independently {
 		wp_localize_script( 'sitepress-post-edit', 'icl_duplicate_data', $duplicate_data );
 	}
 
-	/**
-	 * Add callback to detect post editor change.
-	 *
-	 * @param  array $initArray
-	 *
-	 * @return array
-	 */
 	public function add_tiny_mce_change_detection( $initArray ) {
 		$initArray['setup'] = 'function(ed) {
                   ed.on(\'change\', function() {

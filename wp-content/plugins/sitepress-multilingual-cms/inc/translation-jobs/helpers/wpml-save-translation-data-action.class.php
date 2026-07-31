@@ -12,22 +12,16 @@ class WPML_Save_Translation_Data_Action extends WPML_Translation_Job_Helper_With
 		'wp_template_part'
 	];
 
-	/**
-	 * @var \SitePress $sitepress
-	 */
 	private $sitepress;
 
-	/** @var WPML_TM_Records $tm_records */
 	private $tm_records;
 
-	/** @var  array $data */
 	private $data;
 
 	private $redirect_target = false;
 	private $translate_link_targets_in_posts;
 	private $translate_link_targets_in_strings;
 
-	/** @var SyncParentPost $syncParentPost */
 	private $sync_parent_post;
 
 	public function __construct( $data, $tm_records ) {
@@ -48,7 +42,6 @@ class WPML_Save_Translation_Data_Action extends WPML_Translation_Job_Helper_With
 		$new_post_id   = false;
 		$is_incomplete = false;
 		$data          = $this->data;
-		/** @var stdClass $job */
 		$job                 = ! empty( $data['job_id'] ) ? $this->get_translation_job( $data['job_id'], true ) : null;
 		$needs_second_update = $job && $job->needs_update ? 1 : 0;
 		$original_post       = null;
@@ -189,18 +182,14 @@ class WPML_Save_Translation_Data_Action extends WPML_Translation_Job_Helper_With
 					$_POST['skip_sitepress_actions'] = true;
 					$_POST['needs_second_update']    = $needs_second_update;
 
-					/* @deprecated Use `wpml_pre_save_pro_translation` instead */
 					$postarr = apply_filters( 'icl_pre_save_pro_translation', $postarr );
 
 					$postarr = apply_filters( 'wpml_pre_save_pro_translation', $postarr, $job );
 
-					// it's an update and user do not want to translate urls so do not change the url
 					if ( $element_id ) {
 						$translated_document_page_url = $sitepress->get_setting( 'translated_document_page_url' );
 						switch ( $translated_document_page_url ) {
 							case 'force-generate':
-								// by passing a empty post_name, it will be generated automatically from the post_title
-								// null is not used, as array_filter may be applied to $postarr, which will disable the generation.
 								$postarr['post_name'] = '';
 								break;
 						}
@@ -222,7 +211,6 @@ class WPML_Save_Translation_Data_Action extends WPML_Translation_Job_Helper_With
 
 					$link = get_edit_post_link( $new_post_id );
 					if ( '' === $link ) {
-						// the current user can't edit so just include permalink.
 						$link = get_permalink( $new_post_id );
 					}
 
@@ -258,13 +246,12 @@ class WPML_Save_Translation_Data_Action extends WPML_Translation_Job_Helper_With
 						$user_message = __( 'Translation updated: ', 'wpml-translation-management' ) . '<a href="' . $link . '">' . $postarr['post_title'] . '</a>.';
 					}
 
-					icl_cache_clear( $postarr['post_type'] . 's_per_language' ); // clear post counter per language in cache
+					icl_cache_clear( $postarr['post_type'] . 's_per_language' );
 					do_action( 'wpml_pro_translation_after_post_save', $new_post_id );
 
-					// set taxonomies for users with limited caps
 					if ( ! current_user_can( 'manage-categories' ) && ! empty( $postarr['tax_input'] ) ) {
 						foreach ( $postarr['tax_input'] as $taxonomy => $terms ) {
-							wp_set_post_terms( $new_post_id, $terms, $taxonomy, false ); // true to append to existing tags | false to replace existing tags
+							wp_set_post_terms( $new_post_id, $terms, $taxonomy, false );
 						}
 					}
 
@@ -273,7 +260,6 @@ class WPML_Save_Translation_Data_Action extends WPML_Translation_Job_Helper_With
 					do_action( 'icl_pro_translation_saved', $new_post_id, $data['fields'], $job );
 					do_action( 'wpml_translation_job_saved', $new_post_id, $data['fields'], $job );
 
-					// update body translation with the links fixed
 					$new_post_content = $wpdb->get_var( $wpdb->prepare( "SELECT post_content FROM {$wpdb->posts} WHERE ID=%d", $new_post_id ) );
 					foreach ( $job->elements as $job_element ) {
 						if ( $job_element->field_type === 'body' ) {
@@ -294,14 +280,12 @@ class WPML_Save_Translation_Data_Action extends WPML_Translation_Job_Helper_With
 
 					$sitepress->copy_custom_fields( $original_post->ID, $new_post_id );
 
-					// set specific custom fields
 					$copied_custom_fields = array( '_top_nav_excluded', '_cms_nav_minihome' );
 					foreach ( $copied_custom_fields as $ccf ) {
 						$val = get_post_meta( $original_post->ID, $ccf, true );
 						update_post_meta( $new_post_id, $ccf, $val );
 					}
 
-					// sync _wp_page_template
 					if ( $sitepress->get_setting( 'sync_page_template' ) ) {
 						$_wp_page_template = get_post_meta( $original_post->ID, '_wp_page_template', true );
 						if ( ! empty( $_wp_page_template ) ) {
@@ -315,8 +299,6 @@ class WPML_Save_Translation_Data_Action extends WPML_Translation_Job_Helper_With
 						\WPML\TM\Settings\Repository::getCustomFields()
 					);
 
-					// set stickiness
-					// is the original post a sticky post?
 					$sticky_posts       = get_option( 'sticky_posts' );
 					$sticky_posts       = is_array( $sticky_posts ) ? $sticky_posts : [];
 					$is_original_sticky = $original_post->post_type == 'post' && in_array( $original_post->ID, $sticky_posts );
@@ -325,7 +307,7 @@ class WPML_Save_Translation_Data_Action extends WPML_Translation_Job_Helper_With
 						stick_post( $new_post_id );
 					} else {
 						if ( $original_post->post_type == 'post' && ! is_null( $element_id ) ) {
-							unstick_post( $new_post_id ); // just in case - if this is an update and the original post stickiness has changed since the post was sent for translation
+							unstick_post( $new_post_id );
 						}
 					}
 
@@ -351,8 +333,6 @@ class WPML_Save_Translation_Data_Action extends WPML_Translation_Job_Helper_With
 					$this->save_terms_for_job( $data['job_id'] );
 				}
 
-				// sync post format
-				// Must be after save terms otherwise it gets lost.
 				if ( $sitepress->get_setting( 'sync_post_format' ) ) {
 					$_wp_post_format = get_post_format( $original_post->ID );
 					$_wp_post_format && set_post_format( $new_post_id, $_wp_post_format );
@@ -368,10 +348,6 @@ class WPML_Save_Translation_Data_Action extends WPML_Translation_Job_Helper_With
 					'needs_update' => $needs_second_update,
 				] );
 
-				// Verification SELECT runs only when JobLog will actually write
-				// the result — otherwise a TEA batch that finalises hundreds of
-				// jobs would pay this extra read per status update for no
-				// observable output.
 				if ( JobLog::canLog() ) {
 					$actualStatus = $wpdb->get_var( $wpdb->prepare(
 						"SELECT status FROM {$wpdb->prefix}icl_translation_status WHERE rid = %d LIMIT 1",
@@ -425,11 +401,6 @@ class WPML_Save_Translation_Data_Action extends WPML_Translation_Job_Helper_With
 		return $res;
 	}
 
-	/**
-	 * Clear page name query filter cache after translation is completed.
-	 *
-	 * @param int $post_id The translated post ID.
-	 */
 	private function clear_page_name_cache( $post_id ) {
 		$post = get_post( $post_id );
 
@@ -442,12 +413,6 @@ class WPML_Save_Translation_Data_Action extends WPML_Translation_Job_Helper_With
 		wp_cache_delete( $base_key, 'WPML_Page_Name_Query_Filter' );
 	}
 
-	/**
-	 * Returns false if after saving the translation no redirection is to happen or the target of the redirection
-	 * in case saving the data is followed by a redirect.
-	 *
-	 * @return false|string
-	 */
 	function get_redirect_target() {
 
 		return $this->redirect_target;
@@ -536,39 +501,11 @@ class WPML_Save_Translation_Data_Action extends WPML_Translation_Job_Helper_With
 		$iclTranslationManagement->add_message( $message );
 	}
 
-	/**
-	 * @param string   $element_type_prefix
-	 * @param object   $job
-	 * @param callable $decoder
-	 */
 	private static function save_external( $element_type_prefix, $job, $decoder ) {
-		/**
-		 * Save the external job.
-		 *
-		 * String packages and string batches hooks into this action to save the strings translations.
-		 *
-		 * @param string $elementTypePrefix The external element type prefix. Could be 'package' or 'st-batch'.
-		 * @param object $job The translation job to save.
-		 * @param callable $decoder Function to decode translation values.
-		 *
-		 * @since 4.4.0
-		 *
-		 */
 		do_action( 'wpml_save_external', $element_type_prefix, $job, $decoder );
 	}
 
-	/**
-	 * @param string $element_type_prefix
-	 * @param object $job
-	 */
 	private static function notify_job_in_progress( $element_type_prefix, $job ) {
-		/**
-		 * The action triggered when a job is marked as in progress
-		 *
-		 * @param string $element_type_prefix
-		 * @param object $job
-		 * @since 2.10.0
-		 */
 		do_action( 'wpml_tm_job_in_progress', $element_type_prefix, $job );
 	}
 }

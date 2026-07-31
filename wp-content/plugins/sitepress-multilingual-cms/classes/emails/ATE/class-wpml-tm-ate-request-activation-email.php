@@ -4,7 +4,6 @@ class WPML_TM_ATE_Request_Activation_Email {
 
 	const REQUEST_ACTIVATION_TEMPLATE = 'notification/request-ate-activation.twig';
 
-	/** @var WPML_TM_Email_Notification_View */
 	private $email_view;
 
 	public function __construct( WPML_TM_Email_Notification_View $email_view ) {

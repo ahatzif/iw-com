@@ -22,23 +22,14 @@ use WPML\Core\Component\PostHog\Application\Service\Event\EventInstanceService;
 
 class WPML_Translations_Queue {
 
-	/** @var  SitePress $sitepress */
 	private $sitepress;
 
 	private $must_render_the_editor = false;
 
-	/** @var WPML_Translation_Editor_UI */
 	private $translation_editor;
 
-	/**
-	 * @var Editor
-	 */
 	private $editor;
 
-	/**
-	 * @param SitePress $sitepress
-	 * @param Editor $editor
-	 */
 	public function __construct( SitePress $sitepress, Editor $editor ) {
 		$this->sitepress = $sitepress;
 		$this->editor    = $editor;
@@ -52,7 +43,6 @@ class WPML_Translations_Queue {
 		if ( $this->must_open_the_editor() ) {
 			$response = $this->editor->open( $_GET );
 
-			/** try to capture custom event for posthog */
 			\WPML\PostHog\Event\CaptureEvent::capture(
 				( new EventInstanceService() )->getOpenTranslationEditorEvent(
 					[
@@ -74,7 +64,6 @@ class WPML_Translations_Queue {
 	private function openClassicTranslationEditor( $job_object ) {
 		global $wpdb;
 
-		// Check for missing zlib and add notice if needed
 		\WPML\Translation\TranslationElements\MissingZlibNotice::maybeAddNotice( $job_object->get_id() );
 
 		$this->must_render_the_editor = true;
@@ -114,17 +103,10 @@ class WPML_Translations_Queue {
 		<?php
 	}
 
-	/**
-	 * @return bool
-	 */
 	private function must_open_the_editor() {
 		return Obj::prop( 'job_id', $_GET ) > 0 || Obj::prop( 'trid', $_GET ) > 0;
 	}
 
-	/**
-     * @todo this method should be removed but we have to check firts the logic in NextTranslationLink
-	 * @return array
-	 */
 	public static function get_cookie_filters() {
 		$filters = [];
 

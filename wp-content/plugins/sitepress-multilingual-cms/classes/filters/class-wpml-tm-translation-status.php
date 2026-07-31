@@ -1,7 +1,6 @@
 <?php
 
 class WPML_TM_Translation_Status {
-	/** @var WPML_TM_Records $tm_records */
 	protected $tm_records;
 
 	private $element_id_cache;
@@ -26,7 +25,6 @@ class WPML_TM_Translation_Status {
 		}
 
 		$getNewStatus = function ( $trid, $target_lang_code ) {
-			/** @var WPML_TM_Element_Translations $wpml_tm_element_translations */
 			$wpml_tm_element_translations = wpml_tm_load_element_translations();
 
 			$element_ids         = array_filter( $this->get_element_ids( $trid ) );

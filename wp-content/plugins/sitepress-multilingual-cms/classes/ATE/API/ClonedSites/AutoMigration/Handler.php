@@ -19,25 +19,18 @@ class Handler {
 	const OPTION_MIGRATION_DATA = 'wpml_ate_auto_migration_data';
 	const OPTION_MIGRATION_FAILED = 'wpml_ate_auto_migration_failed';
 
-	/** @var AmsRequestSigner */
 	private $signer;
 
-	/** @var \WPML_TM_ATE_AMS_Endpoints */
 	private $endpoints;
 
-	/** @var AmsCredentialsStorage */
 	private $credentialsStorage;
 
-	/** @var \WPML_TM_ATE_Authentication */
 	private $auth;
 
-	/** @var SiteKeyCleaner */
 	private $siteKeyCleaner;
 
-	/** @var SiteKeyRegistrar */
 	private $siteKeyRegistrar;
 
-	/** @var bool */
 	private static $processing = false;
 
 	public function __construct(
@@ -56,16 +49,7 @@ class Handler {
 		$this->siteKeyRegistrar   = $siteKeyRegistrar;
 	}
 
-	/**
-	 * @param string $oldUrl The domain previously registered in AMS.
-	 * @param string $newUrl The current domain that triggered the 426.
-	 *
-	 * @return bool True if migration succeeded.
-	 */
 	public function tryMigrate( string $oldUrl = '', string $newUrl = '' ): bool {
-		// Callers without URL context (e.g. the Retry endpoint) fall back to whatever we
-		// captured on a prior attempt. This keeps the failure UI's "original URL" rendering
-		// stable across retries even if the second tryMigrate() invocation is parameter-less.
 		if ( ! $oldUrl || ! $newUrl ) {
 			$existing = self::getMigrationData();
 			if ( is_array( $existing ) ) {
@@ -78,7 +62,6 @@ class Handler {
 			return $this->fail( $oldUrl, $newUrl );
 		}
 
-		// When setup wizard is incomplete, the SetupMigration\ClonedSiteResetter path handles migration instead.
 		if ( ! \SitePress_Setup::setup_complete() ) {
 			return false;
 		}
@@ -113,10 +96,6 @@ class Handler {
 		}
 	}
 
-	/**
-	 * Persist the failure flag, plus the URLs we attempted, so the React error UI can
-	 * always render "couldn't connect this site to <oldUrl>" without a defensive fallback.
-	 */
 	private function fail( string $oldUrl = '', string $newUrl = '' ): bool {
 		update_option( self::OPTION_MIGRATION_FAILED, true, false );
 
@@ -154,9 +133,6 @@ class Handler {
 			return false;
 		}
 
-		// Lazy resolution via sitepress's container. Constructor injection fails here because wpml/wpml's
-		// Dic (separate Auryn instance) cannot auto-wire sitepress classes across the container boundary
-		// (regression wpmldev-6711). Resolving on-demand via make() breaks that chain.
 		$cancelledCount = make( InProgressJobsCanceller::class )->cancel();
 		MigrationLogger::jobsCancelled( (int) $cancelledCount );
 
@@ -165,11 +141,6 @@ class Handler {
 		$organizationName      = $body['billing_group_name'] ?? $oldUrl;
 		$organizationConnected = (bool) ( $body['organization_connected'] ?? true );
 
-		// Snapshot the wpmldev-6477 alias-reset flag into the migration data
-		// itself — the caller will invoke Lock::unlock() right after this, which
-		// clears the flag before the notice can render. Carrying it inside the
-		// migration data keeps it available to the React notice for the lifetime
-		// of that notice (wpmldev-6885).
 		$aliasDomainReset = AliasDomainResetFlag::isSet();
 
 		update_option( self::OPTION_MIGRATION_DATA, [
@@ -197,9 +168,6 @@ class Handler {
 		return true;
 	}
 
-	/**
-	 * @return array|null Decoded response body on success, null on failure.
-	 */
 	private function callCopyWithAttachment() {
 		$registration_data = get_option( \WPML_TM_ATE_Authentication::AMS_DATA_KEY, [] );
 
@@ -294,9 +262,6 @@ class Handler {
 		return (bool) get_transient( self::TRANSIENT_KEY );
 	}
 
-	/**
-	 * @return array|null Array with 'old_url', 'new_url', 'organization_name', or null.
-	 */
 	public static function getMigrationData() {
 		$data = get_option( self::OPTION_MIGRATION_DATA, null );
 
@@ -335,14 +300,7 @@ class Handler {
 		return (bool) get_option( self::OPTION_MIGRATION_FAILED, false );
 	}
 
-	/**
-	 * @param array|null $migrationData Optional override; defaults to current persisted data.
-	 *
-	 * @return string One of 'error', 'success', 'success-independent'.
-	 */
 	public static function resolveInitialState( $migrationData = null ): string {
-		// Failure flag wins: a failed attempt may have stored URLs in MIGRATION_DATA so the
-		// React error UI can show them, but the dispatcher must still pick the error flow.
 		if ( self::hasFailed() ) {
 			return 'error';
 		}

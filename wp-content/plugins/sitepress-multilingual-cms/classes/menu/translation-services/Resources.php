@@ -63,9 +63,6 @@ class Resources implements \IWPML_Backend_Action {
 		return isset( $_GET['sm'] ) && 'translators' === $_GET['sm'];
 	}
 
-	/**
-	 * @return void
-	 */
 	public function enqueue_script_unlisted_translation_service() {
 		$handle = 'unlisted-translation-service';
 		\wp_enqueue_script(

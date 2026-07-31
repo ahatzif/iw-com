@@ -6,16 +6,10 @@ use Elementor\Plugin;
 
 class Hooks implements \IWPML_Action {
 
-	/** @var Generator */
 	private $generator;
 
-	/** @var Cache */
 	private $cache;
 
-	/**
-	 * @param Generator $generator
-	 * @param Cache     $cache
-	 */
 	public function __construct( Generator $generator, Cache $cache ) {
 		$this->generator = $generator;
 		$this->cache     = $cache;
@@ -29,11 +23,6 @@ class Hooks implements \IWPML_Action {
 		add_action( 'wpml_elementor_auto_config_clear_cache', [ $this, 'clearCache' ] );
 	}
 
-	/**
-	 * @param array $widgetsToTranslate
-	 *
-	 * @return array
-	 */
 	public function extendTranslatableWidgets( $widgetsToTranslate ) {
 		$widgetInstances = $this->getWidgetInstances();
 		$currentHash     = $this->cache->generateHash( $widgetInstances );
@@ -52,9 +41,6 @@ class Hooks implements \IWPML_Action {
 		$this->cache->clear();
 	}
 
-	/**
-	 * @return array
-	 */
 	protected function getWidgetInstances() {
 		try {
 			return Plugin::$instance->widgets_manager->get_widget_types();

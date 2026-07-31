@@ -16,11 +16,6 @@ use function WPML\FP\pipe;
 
 class GetJobsInfo implements \WPML\Ajax\IHandler {
 
-	/**
-	 * @param Collection<jobIds: int[], returnUrl: string> $data
-	 *
-	 * @return Either<{jobId: int, automatic:'1'|'0', status: int, ateJobId: int}[]>
-	 */
 	public function run( Collection $data ) {
 		$jobIds    = $data->get( 'jobIds', [] );
 		$returnUrl = $data->get( 'returnUrl', '' );

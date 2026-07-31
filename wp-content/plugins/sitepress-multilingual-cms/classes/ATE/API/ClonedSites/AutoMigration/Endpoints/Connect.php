@@ -15,7 +15,6 @@ class Connect implements IHandler {
 		MigrationLogger::beginClonedSiteAction( 'connect' );
 
 		try {
-			/** @var \WPML_TM_AMS_API $amsApi */
 			$amsApi = make( \WPML_TM_AMS_API::class );
 
 			MigrationLogger::connectRequestSent();

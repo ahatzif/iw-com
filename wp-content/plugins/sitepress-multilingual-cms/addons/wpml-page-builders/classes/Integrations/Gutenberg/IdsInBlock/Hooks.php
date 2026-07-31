@@ -9,7 +9,6 @@ use function WPML\FP\spreadArgs;
 
 class Hooks implements Integration {
 
-	/** @var \WPML_Gutenberg_Config_Option $config */
 	private $config;
 
 	public function __construct( \WPML_Gutenberg_Config_Option $config ) {
@@ -23,11 +22,6 @@ class Hooks implements Integration {
 		}
 	}
 
-	/**
-	 * @param array $block
-	 *
-	 * @return array
-	 */
 	public function filterIdsInBlock( array $block ) {
 		$blockConfig = $this->getBlockConfig( $block );
 
@@ -45,11 +39,6 @@ class Hooks implements Integration {
 		return $block;
 	}
 
-	/**
-	 * @param array $block
-	 *
-	 * @return array
-	 */
 	private function getBlockConfig( $block ) {
 		$blockName = Obj::prop( 'blockName', $block );
 		$config    = $this->config->get_ids_in_blocks();
@@ -65,11 +54,6 @@ class Hooks implements Integration {
 		);
 	}
 
-	/**
-	 * @param array $blockConfig
-	 *
-	 * @return BlockAttributes[]
-	 */
 	private function getBlockAttributesConverter( $blockConfig ) {
 		$keyConfig = wpml_collect( (array) Obj::prop( 'key', $blockConfig ) )
 			->map(
@@ -84,11 +68,6 @@ class Hooks implements Integration {
 		return $keyConfig ? [ new BlockAttributes( $keyConfig ) ] : [];
 	}
 
-	/**
-	 * @param array $blockConfig
-	 *
-	 * @return TagAttributes[]
-	 */
 	private function getTagAttributesConverter( $blockConfig ) {
 		$xpathConfig = wpml_collect( (array) Obj::prop( 'xpath', $blockConfig ) )
 			->map(

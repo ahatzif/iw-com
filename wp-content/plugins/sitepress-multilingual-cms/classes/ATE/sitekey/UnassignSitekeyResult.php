@@ -8,10 +8,8 @@ class UnassignSitekeyResult {
 	const STATUS_RETRYABLE_ERROR = 'retryable_error';
 	const STATUS_NON_RETRYABLE_ERROR = 'non_retryable_error';
 
-	/** @var string */
 	private $status;
 
-	/** @var string|null */
 	private $error;
 
 	public function __construct( $status, $error = null ) {
@@ -19,11 +17,6 @@ class UnassignSitekeyResult {
 		$this->error  = $error;
 	}
 
-	/**
-	 * @param mixed $result Raw result from WPML_TM_AMS_API::getSignedResult()
-	 *
-	 * @return self
-	 */
 	public static function fromApiResponse( $result ) {
 		if ( is_wp_error( $result ) ) {
 			$errorCode = $result->get_error_code();
@@ -50,9 +43,6 @@ class UnassignSitekeyResult {
 		return $this->status === self::STATUS_RETRYABLE_ERROR;
 	}
 
-	/**
-	 * @return string|null
-	 */
 	public function getError() {
 		return $this->error;
 	}

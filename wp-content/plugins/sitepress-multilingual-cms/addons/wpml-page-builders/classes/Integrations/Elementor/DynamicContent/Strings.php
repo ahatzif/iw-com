@@ -28,16 +28,6 @@ class Strings {
 		'shortcode',
 	];
 
-	/**
-	 * Remove the strings overwritten with dynamic content
-	 * and add the extra strings "before", "after" and "fallback".
-	 *
-	 * @param WPML_PB_String[] $strings
-	 * @param string           $nodeId
-	 * @param array            $element
-	 *
-	 * @return WPML_PB_String[]
-	 */
 	public static function filter( array $strings, $nodeId, array $element ) {
 
 		$dynamicFields = self::getDynamicFields( $element );
@@ -67,11 +57,6 @@ class Strings {
 			->toArray();
 	}
 
-	/**
-	 * @param array $element
-	 *
-	 * @return Collection
-	 */
 	private static function getDynamicFields( array $element ) {
 		if ( self::isModuleWithItems( $element ) ) {
 			return self::getDynamicFieldsForModuleWithItems( $element );
@@ -87,11 +72,6 @@ class Strings {
 		return wpml_collect();
 	}
 
-	/**
-	 * @param array $element
-	 *
-	 * @return Collection
-	 */
 	private static function getDynamicFieldsForModuleWithItems( array $element ) {
 		$isDynamic = function ( $item ) {
 			return isset( $item[ self::KEY_DYNAMIC_V3 ] );
@@ -116,11 +96,6 @@ class Strings {
 		return $collection->flatten();
 	}
 
-	/**
-	 * @param array $module
-	 *
-	 * @return array|null
-	 */
 	public static function getFieldsFromModuleWithItems( $module ) {
 		$hasFields = function ( $item ) {
 			return is_array( $item );
@@ -130,11 +105,6 @@ class Strings {
 			->first( $hasFields );
 	}
 
-	/**
-	 * @param array $module
-	 *
-	 * @return string
-	 */
 	public static function getKeyFromModuleWithItems( $module ) {
 		$hasFields = function ( $item ) {
 			return is_array( $item );
@@ -146,13 +116,6 @@ class Strings {
 			->first();
 	}
 
-	/**
-	 * @param array  $data
-	 * @param string $nodeId
-	 * @param string $itemId
-	 *
-	 * @return Collection
-	 */
 	private static function getFields( array $data, $nodeId, $itemId = '' ) {
 		$buildField = function ( $tagValue, $tagKey ) use ( $nodeId, $itemId ) {
 			return new Field( $tagValue, $tagKey, $nodeId, $itemId );
@@ -161,11 +124,6 @@ class Strings {
 		return wpml_collect( $data )->map( $buildField );
 	}
 
-	/**
-	 * @param array $element
-	 *
-	 * @return bool
-	 */
 	private static function isModuleWithItems( array $element ) {
 		if ( isset( $element[ self::KEY_SETTINGS ] ) ) {
 			$firstSettingElement = self::getFieldsFromModuleWithItems( $element[ self::KEY_SETTINGS ] );
@@ -175,12 +133,6 @@ class Strings {
 		return false;
 	}
 
-	/**
-	 * @param Collection  $dynamicFields
-	 * @param string|null $stringTitle
-	 *
-	 * @return Collection
-	 */
 	private static function addBeforeAfterAndFallback( Collection $dynamicFields, $stringTitle = null ) {
 		$dynamicFieldToSettingStrings = function ( Field $field ) use ( $stringTitle ) {
 			preg_match( self::SETTINGS_REGEX, $field->tagValue, $matches );
@@ -190,7 +142,6 @@ class Strings {
 			};
 
 			$buildStringFromSetting = function ( $value, $settingField ) use ( $field, $stringTitle ) {
-				// Get a title for dynamic strings attached to a field that isn't marked for translation.
 				$stringTitle = ( null === $stringTitle ) ? $field->tagKey : $stringTitle;
 
 				return new WPML_PB_String(
@@ -209,12 +160,6 @@ class Strings {
 		return $dynamicFields->map( $dynamicFieldToSettingStrings );
 	}
 
-	/**
-	 * @param array          $element
-	 * @param WPML_PB_String $pbString
-	 *
-	 * @return array
-	 */
 	public static function updateNode( array $element, WPML_PB_String $pbString ) {
 		$stringNameParts = explode( self::DELIMITER, $pbString->get_name() );
 
@@ -239,13 +184,6 @@ class Strings {
 		return $element;
 	}
 
-	/**
-	 * @param string         $encodedSettings
-	 * @param WPML_PB_String $pbString
-	 * @param string         $settingField
-	 *
-	 * @return string|null
-	 */
 	private static function replaceSettingString( $encodedSettings, WPML_PB_String $pbString, $settingField ) {
 		$replace = function ( array $matches ) use ( $pbString, $settingField ) {
 			$settings                  = self::decodeSettings( $matches[1] );
@@ -258,13 +196,6 @@ class Strings {
 		return preg_replace_callback( self::SETTINGS_REGEX, $replace, $encodedSettings );
 	}
 
-	/**
-	 * @param array          $element
-	 * @param WPML_PB_String $pbString
-	 * @param array          $stringNameParts
-	 *
-	 * @return array
-	 */
 	private static function updateNodeWithItems( array $element, WPML_PB_String $pbString, array $stringNameParts ) {
 		list( , , $itemId, $dynamicField, $settingField ) = $stringNameParts;
 
@@ -294,33 +225,14 @@ class Strings {
 		return $element;
 	}
 
-	/**
-	 * @param string $settingsString
-	 *
-	 * @return array
-	 */
 	private static function decodeSettings( $settingsString ) {
 		return json_decode( urldecode( $settingsString ), true );
 	}
 
-	/**
-	 * @param array $settings
-	 *
-	 * @return string
-	 */
 	private static function encodeSettings( array $settings ) {
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode, WordPress.PHP.DiscouragedPHPFunctions.urlencode_urlencode
 		return urlencode( json_encode( $settings ) );
 	}
 
-	/**
-	 * @param string $nodeId
-	 * @param string $itemId
-	 * @param string $tagKey
-	 * @param string $settingField
-	 *
-	 * @return string
-	 */
 	public static function getStringName( $nodeId, $itemId, $tagKey, $settingField ) {
 		return self::NAME_PREFIX . self::DELIMITER
 			. $nodeId . self::DELIMITER
@@ -329,11 +241,6 @@ class Strings {
 			. $settingField;
 	}
 
-	/**
-	 * @param array $element
-	 *
-	 * @return bool
-	 */
 	private static function hasV4DynamicFields( array $element ) {
 		if ( ! isset( $element[ self::KEY_SETTINGS ] ) ) {
 			return false;
@@ -346,11 +253,6 @@ class Strings {
 		return wpml_collect( $element[ self::KEY_SETTINGS ] )->contains( $isDynamicField );
 	}
 
-	/**
-	 * @param array $element
-	 *
-	 * @return Collection
-	 */
 	private static function getV4DynamicFields( array $element ) {
 		$toField = function ( $value, $tagKey ) use ( $element ) {
 			$tagValue = self::convertV4DynamicToV3Format( $value );
@@ -363,11 +265,6 @@ class Strings {
 			->map( $toField );
 	}
 
-	/**
-	 * @param array $v4Dynamic
-	 *
-	 * @return string
-	 */
 	private static function convertV4DynamicToV3Format( array $v4Dynamic ) {
 		$value    = Obj::propOr( [], 'value', $v4Dynamic );
 		$name     = Obj::propOr( '', 'name', $value );
@@ -387,25 +284,11 @@ class Strings {
 		return sprintf( '[elementor-tag id="%s" name="%s" settings="%s"]', uniqid(), $name, $encodedSettings );
 	}
 
-	/**
-	 * @param array  $element
-	 * @param string $dynamicField
-	 *
-	 * @return bool
-	 */
 	private static function isV4DynamicField( array $element, $dynamicField ) {
 		return isset( $element[ self::KEY_SETTINGS ][ $dynamicField ] )
 			&& Relation::propEq( self::KEY_DYNAMIC_V4, 'dynamic', $element[ self::KEY_SETTINGS ][ $dynamicField ] );
 	}
 
-	/**
-	 * @param array          $element
-	 * @param string         $dynamicField
-	 * @param string         $settingField
-	 * @param WPML_PB_String $pbString
-	 *
-	 * @return array
-	 */
 	private static function updateV4DynamicField( array $element, $dynamicField, $settingField, WPML_PB_String $pbString ) {
 		$path = [ self::KEY_SETTINGS, $dynamicField, 'value', 'settings', $settingField ];
 

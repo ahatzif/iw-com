@@ -35,11 +35,6 @@ class WPML_TP_API_Exception extends Exception {
 			   . '`';
 	}
 
-	/**
-	 * @param array $params
-	 *
-	 * @return array mixed
-	 */
 	private function filter_params( $params ) {
 		return wpml_collect( $params )->forget( 'accesskey' )->toArray();
 	}

@@ -13,14 +13,9 @@ use function WPML\FP\pipe;
 
 class RemoveTranslator extends Remove {
 
-	/**
-	 * @inheritDoc
-	 */
 	public function run( Collection $data ) {
-		// $removeLanguagePairs :: WP_user -> WP_user
 		$removeLanguagePairs = Fns::tap( pipe( Obj::prop( 'ID' ), [ make( \WPML_Language_Pair_Records::class ), 'remove_all' ] ) );
 
-		// $resignFromUnfinishedJobs :: WP_user -> WP_user
 		$resignFromUnfinishedJobs = Fns::tap( [ make( \TranslationManagement::class ), 'resign_translator_from_unfinished_jobs' ] );
 
 		$runParentRemove = function() use ( $data ) {

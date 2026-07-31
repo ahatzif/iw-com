@@ -14,12 +14,6 @@ class GutenbergUpdate implements \IWPML_Backend_Action {
 			->then( spreadArgs( [ $this, 'isPostBuiltWithShortcodes' ] ) );
 	}
 
-	/**
-	 * @param bool     $builtWithShortcodes
-	 * @param \WP_Post $post
-	 *
-	 * @return bool
-	 */
 	public static function isPostBuiltWithShortcodes( $builtWithShortcodes, $post ) {
 		if ( ! self::isDiviPost( $post->ID ) ) {
 			return $builtWithShortcodes;
@@ -36,11 +30,6 @@ class GutenbergUpdate implements \IWPML_Backend_Action {
 		return true;
 	}
 
-	/**
-	 * @param  int $postId
-	 *
-	 * @return bool
-	 */
 	private static function isDiviPost( $postId ) {
 		return 'on' === get_post_meta( $postId, '_et_pb_use_builder', true );
 	}

@@ -10,18 +10,12 @@ use function WPML\Container\make;
 
 class NoCreditPopup {
 
-	/**
-	 * @return string
-	 */
 	public function getUrl() {
 		$baseUrl = make( \WPML_TM_ATE_AMS_Endpoints::class )->get_base_url( \WPML_TM_ATE_AMS_Endpoints::SERVICE_AMS );
 
 		return $baseUrl . '/mini_app/main.js';
 	}
 
-	/**
-	 * @return array
-	 */
 	public function getData() {
 		$registration_data = make( \WPML_TM_AMS_API::class )->get_registration_data();
 

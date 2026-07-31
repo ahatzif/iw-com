@@ -15,9 +15,6 @@ class FindAvailableByRole implements IHandler {
 
 	const USER_SEARCH_LIMIT = 10;
 
-	/**
-	 * @inheritDoc
-	 */
 	public function run( Collection $data ) {
 		$search  = Sanitize::string( $data->get( 'search' ) );
 		$records = [

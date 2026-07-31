@@ -17,7 +17,6 @@ class SetEditorMode implements IHandler {
 	const MODE_FOR_POST_TYPE = 'all_posts_of_type';
 	const MODE_FOR_THIS_POST = 'this_post';
 
-	/** @var \SitePress $sitepress */
 	private $sitepress;
 
 	public function __construct( \SitePress $sitepress ) {
@@ -50,7 +49,6 @@ class SetEditorMode implements IHandler {
 					unset( $tmSettings[ WPML_TM_Post_Edit_TM_Editor_Mode::TM_KEY_GLOBAL_USE_WPML ] );
 				}
 
-				// If we are switching from WPML <-> native, we need to remove all posts option: post meta and post type settings.
 				if ( $isSwitchingWpmlNative ) {
 					unset( $tmSettings[ WPML_TM_Post_Edit_TM_Editor_Mode::TM_KEY_FOR_POST_TYPE_USE_NATIVE ] );
 					unset( $tmSettings[ WPML_TM_Post_Edit_TM_Editor_Mode::TM_KEY_FOR_POST_TYPE_USE_WPML ] );
@@ -77,7 +75,6 @@ class SetEditorMode implements IHandler {
 						unset( $tmSettings[ WPML_TM_Post_Edit_TM_Editor_Mode::TM_KEY_FOR_POST_TYPE_USE_WPML ][ $post_type ] );
 					}
 
-					// If we are switching from WPML <-> native, we need to remove all post meta.
 					if ( $isSwitchingWpmlNative ) {
 						WPML_TM_Post_Edit_TM_Editor_Mode::delete_all_posts_option( $post_type );
 					}

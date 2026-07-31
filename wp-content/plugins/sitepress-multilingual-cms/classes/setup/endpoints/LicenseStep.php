@@ -53,10 +53,6 @@ class LicenseStep implements IHandler {
 					'msg'         => __( 'Thank you for registering WPML on this site. You will receive automatic updates when new versions are available.', 'sitepress' )
 				];
 
-				// When the site key is registered successfully.,
-				// we need to check if PostHog is enabled for this site and if the PostHog script isn't already printed.
-				// Then we send the PostHog config in the response to import the PostHoh script dynamically and
-				// start session recording
 				if (
 					! wp_script_is( 'wpml-posthog', 'done' ) &&
 					PostHogState::isEnabled()

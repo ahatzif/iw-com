@@ -1,5 +1,4 @@
 <?php
-// phpcs:disable Squiz.Commenting.FunctionComment.MissingParamTag,Squiz.Commenting.FunctionComment.WrongStyle,WordPress.PHP.YodaConditions.NotYoda
 
 
 namespace WPML\TM\Jobs\Log;
@@ -7,49 +6,12 @@ namespace WPML\TM\Jobs\Log;
 use WPML\TM\Jobs\FsJobLogStorage;
 use WPML\TM\Jobs\JobLog;
 
-/**
- * Build the data payload that EntityTimelineView consumes.
- *
- * Two concerns kept here so the view stays presentational:
- *
- *  1. Current DB state for the picked post — title, trid, current
- *     translations, and any in-flight jobs against the trid. Read live
- *     from the DB so the operator sees "where we are now" alongside
- *     "what happened."
- *
- *  2. Cross-request event timeline — walk every joblog summary whose
- *     entity index touches this post's post_id / trid / rids, pull the
- *     matching events, flatten them into one chronologically-sorted
- *     stream.
- */
 class EntityTimelineFinder {
 
-	/**
-	 * Cap on how many summaries we'll walk. A heavily-translated post
-	 * can match 100s of requests; reading every NDJSON file would be
-	 * slow on cold cache and produce a timeline too long to read. We
-	 * take the most-recent N and flag if more were available.
-	 */
 	const MAX_REQUESTS_SCANNED = 100;
 
-	/**
-	 * Cap on total events returned. Each event is ~500 bytes-1 KiB; 500
-	 * keeps the AJAX response under ~500 KiB which renders fast in the
-	 * browser.
-	 */
 	const MAX_EVENTS_RETURNED = 500;
 
-	/**
-	 * @param int $postId
-	 *
-	 * @return array{
-	 *     state: array,
-	 *     events: array,
-	 *     event_total: int,
-	 *     truncated: bool,
-	 *     request_count: int,
-	 * }|null Null if the post doesn't exist.
-	 */
 	public static function build( $postId ) {
 		$postId = (int) $postId;
 		$post   = $postId > 0 ? get_post( $postId ) : null;
@@ -61,20 +23,13 @@ class EntityTimelineFinder {
 		$trid  = isset( $state['trid'] ) ? (int) $state['trid'] : 0;
 		$rids  = self::collectRidsForTrid( $trid );
 
-		// Match requests that mention post_id directly OR the post's trid
-		// OR any rid linked to that trid. Dedupe by logUid.
 		$matched = self::matchRequests( $postId, $trid, $rids );
 
-		// Walk events. Filter inside each request to only events that
-		// genuinely touch this entity — keeps the timeline focused when
-		// a matched request also touched dozens of other posts.
 		$events = self::collectEvents( $matched, $postId, $trid, $rids );
 
 		$eventTotal = count( $events );
 		$truncated  = $eventTotal > self::MAX_EVENTS_RETURNED;
 		if ( $truncated ) {
-			// Keep the MOST RECENT N — tail of the array since we sort
-			// chronologically ascending.
 			$events = array_slice( $events, -self::MAX_EVENTS_RETURNED );
 		}
 
@@ -87,9 +42,6 @@ class EntityTimelineFinder {
 		];
 	}
 
-	// -----------------------------------------------------------------
-	// DB state
-	// -----------------------------------------------------------------
 
 	private static function buildState( \WP_Post $post ) {
 		global $wpdb;
@@ -199,9 +151,6 @@ class EntityTimelineFinder {
 		return array_map( 'intval', (array) $rids );
 	}
 
-	// -----------------------------------------------------------------
-	// Event collection
-	// -----------------------------------------------------------------
 
 	private static function matchRequests( $postId, $trid, array $rids ) {
 		$byLogUid = [];
@@ -228,9 +177,6 @@ class EntityTimelineFinder {
 
 		$summaries = array_values( $byLogUid );
 
-		// Sort newest first by ts (request_started), then keep the most
-		// recent N to bound walking cost. The view tells the operator
-		// when this cap fires.
 		usort(
             $summaries,
             static function ( $a, $b ) {
@@ -259,7 +205,6 @@ class EntityTimelineFinder {
 			}
 		}
 
-		// Chronological ascending — easier to read top-to-bottom as a story.
 		usort(
             $out,
             static function ( $a, $b ) {
@@ -270,20 +215,12 @@ class EntityTimelineFinder {
 		return $out;
 	}
 
-	/**
-	 * Per-event filter: keep events whose payload references the picked
-	 * post_id, the post's trid, or any of its rids. Looks at the event's
-	 * top-level data + the extra-log-data fields merged into the line.
-	 */
 	private static function eventMatches( array $event, $postId, $trid, array $wantedRids ) {
 		$type = $event['type'] ?? '';
-		// Envelope rows (request_started, request_finished, group_*) are
-		// always interesting context — keep them.
 		if ( $type !== 'log' ) {
 			return true;
 		}
 
-		// Cheap top-level checks first.
 		if ( $postId > 0 && self::scalarEquals( $event, 'element_id', $postId ) ) {
 			return true;
 		}
@@ -294,8 +231,6 @@ class EntityTimelineFinder {
 			return true;
 		}
 
-		// Walk the data payload — bounded by dataToArray's depth/array
-		// caps, so this is fast.
 		if ( isset( $event['data'] ) && is_array( $event['data'] ) ) {
 			if ( self::dataContainsEntity( $event['data'], $postId, $trid, $wantedRids ) ) {
 				return true;

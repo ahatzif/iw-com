@@ -14,20 +14,10 @@ class ClassicWidgetProcessor implements WidgetProcessorInterface {
 		Controls_Manager::URL      => 'LINK',
 	];
 
-	/**
-	 * @param Widget_Base $widget
-	 *
-	 * @return bool
-	 */
 	public function canProcess( $widget ) {
 		return ! method_exists( $widget, 'get_atomic_controls' );
 	}
 
-	/**
-	 * @param Widget_Base $widget
-	 *
-	 * @return array
-	 */
 	public function process( $widget ) {
 		$title    = $widget->get_title();
 		$controls = $widget->get_controls();
@@ -46,14 +36,6 @@ class ClassicWidgetProcessor implements WidgetProcessorInterface {
 		return $config;
 	}
 
-	/**
-	 * @param array  $config
-	 * @param array  $control
-	 * @param string $title
-	 * @param bool   $isTopLevel
-	 *
-	 * @return array
-	 */
 	private function processControl( $config, $control, $title, $isTopLevel = true ) {
 		$type   = $control['type'];
 		$name   = $control['name'];
@@ -84,13 +66,6 @@ class ClassicWidgetProcessor implements WidgetProcessorInterface {
 		return $config;
 	}
 
-	/**
-	 * @param array  $config
-	 * @param array  $control
-	 * @param string $title
-	 *
-	 * @return array
-	 */
 	private function processRepeaterControl( $config, $control, $title ) {
 		if ( empty( $control['fields'] ) ) {
 			return $config;
@@ -118,12 +93,6 @@ class ClassicWidgetProcessor implements WidgetProcessorInterface {
 		return $config;
 	}
 
-	/**
-	 * @param string $key
-	 * @param array  $control
-	 *
-	 * @return bool
-	 */
 	private function isRegistrable( $key, $control ) {
 		if ( $this->isPrivate( $key ) ) {
 			return false;
@@ -136,38 +105,18 @@ class ClassicWidgetProcessor implements WidgetProcessorInterface {
 		return $this->isTranslatable( $control['type'] );
 	}
 
-	/**
-	 * @param string $key
-	 *
-	 * @return bool
-	 */
 	private function isPrivate( $key ) {
 		return 0 === strpos( $key, '_' );
 	}
 
-	/**
-	 * @param string $type
-	 *
-	 * @return bool
-	 */
 	private function isTranslatable( $type ) {
 		return $this->isRepeater( $type ) || null !== $this->getEditorType( $type );
 	}
 
-	/**
-	 * @param string $type
-	 *
-	 * @return bool
-	 */
 	private function isRepeater( $type ) {
 		return Controls_Manager::REPEATER === $type;
 	}
 
-	/**
-	 * @param string $type
-	 *
-	 * @return string|null
-	 */
 	private function getEditorType( $type ) {
 		return self::EDITOR_TYPE_MAP[ $type ] ?? null;
 	}

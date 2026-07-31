@@ -2,13 +2,6 @@
 
 namespace WPML\TM\ATE\Download\OrphanPostCleaner;
 
-/**
- * Thread-safe counter for tracking parallel download processes.
- *
- * Uses MySQL advisory locks (GET_LOCK/RELEASE_LOCK) to ensure atomic
- * increment/decrement operations, preventing race conditions when
- * multiple PHP processes run concurrently.
- */
 class ProcessCounter {
 
 	const OPTION_NAME = 'wpml_ate_download_process_counter';
@@ -16,7 +9,6 @@ class ProcessCounter {
 	const LOCK_TIMEOUT_SECONDS = 10;
 	const EXPIRATION_SECONDS = 20;
 
-	/** @var \wpdb */
 	private $wpdb;
 
 	public function __construct( \wpdb $wpdb ) {
@@ -58,19 +50,11 @@ class ProcessCounter {
 		} );
 	}
 
-	/**
-	 * @return int
-	 */
 	public function get() {
 		$data = $this->getData();
 		return $this->isExpired( $data ) ? 0 : $data['counter'];
 	}
 
-	/**
-	 * Execute a callback while holding an advisory lock.
-	 *
-	 * @param callable $callback
-	 */
 	private function withLock( callable $callback ) {
 		$lockAcquired = $this->acquireLock();
 
@@ -83,9 +67,6 @@ class ProcessCounter {
 		}
 	}
 
-	/**
-	 * @return bool True if lock was acquired.
-	 */
 	private function acquireLock() {
 		$result = $this->wpdb->get_var( $this->wpdb->prepare(
 			"SELECT GET_LOCK(%s, %d)",
@@ -103,9 +84,6 @@ class ProcessCounter {
 		) );
 	}
 
-	/**
-	 * @return array{counter: int, timestamp: int}
-	 */
 	private function getData() {
 		$row = $this->wpdb->get_var( $this->wpdb->prepare(
 			"SELECT option_value FROM {$this->wpdb->options} WHERE option_name = %s",

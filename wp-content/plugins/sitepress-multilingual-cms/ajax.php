@@ -4,12 +4,7 @@ use WPML\UrlHandling\WPLoginUrlConverter;
 use WPML\AdminLanguageSwitcher\AdminLanguageSwitcher;
 use WPML\Core\Component\PostHog\Application\Service\Event\EventInstanceService;
 
-/**
- * @package wpml-core
- * @used-by SitePress::ajax_setup
- */
 global $wpdb, $sitepress, $sitepress_settings, $wp_rewrite;
-/** @var SitePress $this */
 
 $request = filter_input( INPUT_POST, 'icl_ajx_action' );
 $request = $request ? $request : filter_input( INPUT_GET, 'icl_ajx_action' );
@@ -177,7 +172,7 @@ switch ( $request ) {
 		user_is_admin_or_exit();
 
 		$iclsettings['hidden_languages'] = empty( $_POST['icl_hidden_languages'] ) ? [] : $_POST['icl_hidden_languages'];
-		$this->set_setting( 'hidden_languages', [] ); // reset current value
+		$this->set_setting( 'hidden_languages', [] );
 		$active_languages = $this->get_active_languages();
 		if ( ! empty( $iclsettings['hidden_languages'] ) ) {
 			if ( 1 == count( $iclsettings['hidden_languages'] ) ) {
@@ -243,21 +238,17 @@ switch ( $request ) {
 
 		$new_options      = ! empty( $_POST['icl_sync_tax'] ) ? $_POST['icl_sync_tax'] : [];
 		$unlocked_options = ! empty( $_POST['icl_sync_tax_unlocked'] ) ? $_POST['icl_sync_tax_unlocked'] : [];
-		/** @var WPML_Settings_Helper $settings_helper */
 		$settings_helper = wpml_load_settings_helper();
 
-		// Get previous unlocked settings to detect newly unlocked items
 		$previous_unlocked = $sitepress->get_setting( 'taxonomies_unlocked_option', [] );
 
 		$settings_helper->update_taxonomy_unlocked_settings( $unlocked_options );
 		$settings_helper->update_taxonomy_sync_settings( $new_options );
 
-		// Capture PostHog event for newly unlocked taxonomies
 		foreach ( $unlocked_options as $slug => $is_unlocked ) {
 			$was_previously_unlocked = isset( $previous_unlocked[ $slug ] ) ? (int) $previous_unlocked[ $slug ] : 0;
 			$is_now_unlocked         = (int) $is_unlocked;
 
-			// Only capture event if item was just unlocked (changed from 0 to 1)
 			if ( $is_now_unlocked === 1 && $was_previously_unlocked === 0 ) {
 				$taxonomy_object = get_taxonomy( $slug );
 
@@ -283,22 +274,18 @@ switch ( $request ) {
 
 		$new_options      = ! empty( $_POST['icl_sync_custom_posts'] ) ? $_POST['icl_sync_custom_posts'] : [];
 		$unlocked_options = ! empty( $_POST['icl_sync_custom_posts_unlocked'] ) ? $_POST['icl_sync_custom_posts_unlocked'] : [];
-		/** @var WPML_Settings_Helper $settings_helper */
 		$settings_helper = wpml_load_settings_helper();
 
-		// Get previous unlocked settings to detect newly unlocked items
 		$previous_unlocked = $sitepress->get_setting( 'custom_posts_unlocked_option', [] );
 
 		$settings_helper->update_cpt_unlocked_settings( $unlocked_options );
 		$settings_helper->update_cpt_sync_settings( $new_options );
 		$customPostTypes = ( new WPML_Post_Types( $sitepress ) )->get_translatable_and_readonly();
 
-		// Capture PostHog event for newly unlocked post types
 		foreach ( $unlocked_options as $slug => $is_unlocked ) {
 			$was_previously_unlocked = isset( $previous_unlocked[ $slug ] ) ? (int) $previous_unlocked[ $slug ] : 0;
 			$is_now_unlocked         = (int) $is_unlocked;
 
-			// Only capture event if item was just unlocked (changed from 0 to 1)
 			if ( $is_now_unlocked === 1 && $was_previously_unlocked === 0 ) {
 				$post_type_object = get_post_type_object( $slug );
 
@@ -322,34 +309,6 @@ switch ( $request ) {
 	case 'copy_from_original':
 		user_is_translator_or_exit();
 
-		/*
-		 * apply filtering as to add further elements
-		 * filters will have to like as such
-		 * add_filter('wpml_copy_from_original_custom_fields', 'my_copy_from_original_fields');
-		 *
-		 * function my_copy_from_original_fields( $elements ) {
-		 *  $custom_field = 'editor1';
-		 *  $elements[ 'customfields' ][ $custom_fields ] = array(
-		 *    'editor_name' => 'custom_editor_1',
-		 *    'editor_type' => 'editor',
-		 *    'value'       => 'test'
-		 *  );
-		 *
-		 *  $custom_field = 'editor2';
-		 *  $elements[ 'customfields' ][ $custom_fields ] = array(
-		 *    'editor_name' => 'textbox1',
-		 *    'editor_type' => 'text',
-		 *    'value'       => 'testtext'
-		 *  );
-		 *
-		 *  return $elements;
-		 * }
-		 * This filter would result in custom_editor_1 being populated with the value "test"
-		 * and the textfield with id #textbox1 to be populated with "testtext".
-		 * editor type is always either text when populating general fields or editor when populating
-		 * a wp editor. The editor id can be either judged from the arguments used in the wp_editor() call
-		 * or from looking at the tinyMCE.Editors object that the custom post type's editor sends to the browser.
-		 */
 		$content_type = filter_input( INPUT_POST, 'content_type' );
 		$excerpt_type = filter_input( INPUT_POST, 'excerpt_type' );
 		$trid         = filter_input( INPUT_POST, 'trid' );
@@ -407,7 +366,7 @@ switch ( $request ) {
 		$sitepress->set_setting( 'seo', $seo, true );
 		echo '1|';
 		break;
-	case 'connect_translations': // This is used by the "Connect Translations" dialog.
+	case 'connect_translations':
 		user_can_edit_post_or_exit();
 
 		$new_trid      = $_POST['new_trid'];
@@ -496,7 +455,7 @@ switch ( $request ) {
 		}
 		echo wp_json_encode( true );
 		break;
-	case 'get_posts_from_trid': // This is used by the "Connect Translations" dialog.
+	case 'get_posts_from_trid':
 		user_can_edit_post_or_exit();
 
 		$trid      = $_POST['trid'];
@@ -517,7 +476,7 @@ switch ( $request ) {
 		}
 		echo wp_json_encode( $results );
 		break;
-	case 'get_orphan_posts': // This is used by the "Connect Translations" dialog.
+	case 'get_orphan_posts':
 		user_can_edit_post_or_exit();
 
 		$trid            = $_POST['trid'];
@@ -528,12 +487,10 @@ switch ( $request ) {
 		echo wp_json_encode( $results );
 
 		break;
-	// classes/ATE/Hooks/class-wpml-tm-old-editor.php
 	case 'icl_doc_translation_method':
 		user_is_translator_or_exit();
 		do_action( 'icl_ajx_custom_call', $request, $_REQUEST );
 		break;
-	// inc/translation-management/translation-management.class.php
 	case 'assign_translator':
 	case 'icl_cf_translation':
 	case 'icl_tcf_translation':
@@ -543,17 +500,14 @@ switch ( $request ) {
 		user_is_translator_or_exit();
 		do_action( 'icl_ajx_custom_call', $request, $_REQUEST );
 		break;
-	// inc/translation-proxy/wpml-pro-translation.class.php
 	case 'set_pickup_mode':
 		user_is_manager_or_exit();
 		do_action( 'icl_ajx_custom_call', $request, $_REQUEST );
 		break;
-	//wpml-string-translation/inc/wpml-string-translation.class.php
 	case 'icl_st_delete_strings':
 		user_is_translator_or_exit();
 		do_action( 'icl_ajx_custom_call', $request, $_REQUEST );
 		break;
-	//wpml-string-translation/classes/slug-translation/class-wpml-slug-translation.php
 	case 'icl_slug_translation':
 		user_is_translator_or_exit();
 		do_action( 'icl_ajx_custom_call', $request, $_REQUEST );

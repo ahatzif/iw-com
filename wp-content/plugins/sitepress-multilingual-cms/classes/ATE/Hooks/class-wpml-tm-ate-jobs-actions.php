@@ -22,9 +22,6 @@ use WPML\Element\API\Languages;
 use WPML\TM\Jobs\JobLog;
 use WPML\Translation\AteSyncOrderingServiceFactory;
 
-/**
- * @author OnTheGo Systems
- */
 class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 	const RESPONSE_ATE_NOT_ACTIVE_ERROR     = 403;
 	const RESPONSE_ATE_DUPLICATED_SOURCE_ID = 417;
@@ -35,44 +32,17 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 
 	const CREATE_ATE_JOB_CHUNK_WORDS_LIMIT = 2000;
 
-	/**
-	 * @var WPML_TM_ATE_API
-	 */
 	private $ate_api;
-	/**
-	 * @var WPML_TM_ATE_Jobs
-	 */
 	private $ate_jobs;
 
-	/**
-	 * @var WPML_TM_AMS_Translator_Activation_Records
-	 */
 	private $translator_activation_records;
 
-	/** @var bool */
 	private $is_second_attempt_to_get_jobs_data = false;
-	/**
-	 * @var SitePress
-	 */
 	private $sitepress;
-	/**
-	 * @var WPML_Current_Screen
-	 */
 	private $current_screen;
 
-	/** @var WPML_WP_API */
 	private $wp_api;
 
-	/**
-	 * WPML_TM_ATE_Jobs_Actions constructor.
-	 *
-	 * @param \WPML_TM_ATE_API                           $ate_api
-	 * @param \WPML_TM_ATE_Jobs                          $ate_jobs
-	 * @param \SitePress                                 $sitepress
-	 * @param \WPML_Current_Screen                       $current_screen
-	 * @param \WPML_TM_AMS_Translator_Activation_Records $translator_activation_records
-	 * @param \WPML_WP_API                               $wp_api
-	 */
 	public function __construct(
 		WPML_TM_ATE_API $ate_api,
 		WPML_TM_ATE_Jobs $ate_jobs,
@@ -119,29 +89,13 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param int    $job_id
-	 * @param string $translation_service
-	 *
-	 * @throws \InvalidArgumentException
-	 * @throws \RuntimeException
-	 */
 	public function added_translation_job( $job_id, $translation_service ) {
 		$this->added_translation_jobs( array( $translation_service => array( $job_id ) ) );
 	}
 
-	/**
-	 * @param array                           $jobs
-     * @param int|null                        $sentFrom
-     * @param \WPML_TM_Translation_Batch|null $batch
-	 *
-	 * @return void
-	 * @throws \InvalidArgumentException
-	 * @throws \RuntimeException
-	 */
 	public function added_translation_jobs( array $jobs, $sentFrom = null, ?\WPML_TM_Translation_Batch $batch = null ) {
 		$additionalErrorMsg            = '';
-		$translationModeSetInDashboard = null; // This value can be null. We handle it inside $this->getJobType().
+		$translationModeSetInDashboard = null;
 
 		try {
 			$oldEditor = wpml_tm_load_old_jobs_editor();
@@ -171,8 +125,6 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 			$additionalErrorMsg = $this->getErrorMessage( $throwable );
 			$this->maybeLogRuntimeError( $additionalErrorMsg );
 
-			// If there is an error in wpml_tm_load_old_jobs_editor() or getting $job_ids, we should skip.
-			// The jobs can be fixed by troubleshooting button.
 			if ( empty( $oldEditor ) || empty( $job_ids ) ) {
 				return;
 			}
@@ -193,22 +145,6 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 	                Jobs::setAutomaticStatus( $wpml_job_id, $jobType === 'auto' );
                 }
 
-				// Emit ate_job_bound AFTER the editor-set + job-load happen
-				// so the original code path runs in its original order, and
-				// $translationJob reflects post-set state. The original_post_id
-				// + target_lang on this event let later post-mortems (e.g.
-				// when a webhook arrives for a deleted wpml_job_id) reverse-
-				// lookup the source-post context that would otherwise be
-				// lost when the icl_translate_job row gets superseded. We
-				// emit the source post_id rather than the trid because the
-				// job factory doesn't expose a trid accessor on every job
-				// class (the trid can be derived from the source post_id
-				// at investigation time via sitepress->get_element_trid()).
-				// All accessors funnel through JobLog::safeCall so a missing
-				// method on a future job subclass (or one that throws) can
-				// never fatal here — this was the original bug location
-				// (get_trid() didn't exist on WPML_Post_Translation_Job and
-				// the resulting fatal aborted the WP shutdown action chain).
 				JobLog::add( 'ate_job_bound', [
 					'job_id'              => (int) $wpml_job_id,
 					'ate_job_id'          => (int) $ate_job_id,
@@ -266,22 +202,10 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		return $result;
 	}
 
-	/**
-	 * @param string      $type
-	 * @param string      $message
-	 * @param string|null $id
-	 */
 	private function add_message( $type, $message, $id = null ) {
 		do_action( 'wpml_tm_basket_add_message', $type, $message, $id );
 	}
 
-	/**
-	 * @param array    $jobsData
-     * @param int|null $sentFrom
-	 *
-	 * @return mixed
-	 * @throws \InvalidArgumentException
-	 */
 	public function create_jobs( array $jobsData, $sentFrom  ) {
 		$setJobType = Logic::ifElse( Fns::always( $sentFrom ), Obj::assoc( 'job_type', $sentFrom ), Fns::identity() );
 
@@ -305,12 +229,6 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 			->get();
 	}
 
-	/**
-	 * Build ordering payload for jobs.
-	 *
-	 * @param array $jobs
-	 * @return array
-	 */
 	private function buildOrderingForJobs( array $jobs ): array {
 		$postIds    = [];
 		$stringIds  = [];
@@ -345,10 +263,6 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		);
 	}
 
-	/**
-	 * @param array $ordering
-	 * @return callable
-	 */
 	private function addOrderingToPayload( array $ordering ): callable {
 		return function ( $payload ) use ( $ordering ) {
 			if ( ! empty( $ordering['positions'] ) ) {
@@ -358,13 +272,6 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		};
 	}
 
-	/**
-	 * After implementation of wpmltm-3211 and wpmltm-3391, we should not find missing ATE IDs anymore.
-	 * Some code below seems dead but we'll keep it for now in case we are missing a specific context.
-	 *
-	 * @link https://onthegosystems.myjetbrains.com/youtrack/issue/wpmltm-3211
-	 * @link https://onthegosystems.myjetbrains.com/youtrack/issue/wpmltm-3391
-	 */
 	private function get_ate_jobs_data( array $translation_jobs ) {
 		$ate_jobs_data      = array();
 		$skip_getting_data  = false;
@@ -375,12 +282,10 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		foreach ( $translation_jobs as $translation_job ) {
 			if ( $this->is_ate_translation_job( $translation_job ) ) {
 				$ate_job_id = $this->get_ate_job_id( $translation_job->job_id );
-				// Start of possibly dead code.
 				if ( ! $ate_job_id ) {
 					$ate_jobs_to_create[] = $translation_job->job_id;
 					$skip_getting_data    = true;
 				}
-				// End of possibly dead code.
 
 				if ( ! $skip_getting_data ) {
 					$ate_jobs_data[ $translation_job->job_id ] = [ 'ate_job_id' => $ate_job_id ];
@@ -388,7 +293,6 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 			}
 		}
 
-		// Start of possibly dead code.
 		if (
 			! $this->is_second_attempt_to_get_jobs_data &&
 			$ate_jobs_to_create
@@ -397,19 +301,10 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 			$ate_jobs_data                            = $this->get_ate_jobs_data( $translation_jobs );
 			$this->is_second_attempt_to_get_jobs_data = true;
 		}
-		// End of possibly dead code.
 
 		return $ate_jobs_data;
 	}
 
-	/**
-	 * @param string      $default_url
-	 * @param int         $job_id
-	 * @param null|string $return_url
-	 *
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
 	public function get_editor_url( $default_url, $job_id, $return_url = null ) {
 		$isUserActivated = $this->translator_activation_records->is_current_user_activated();
 
@@ -435,12 +330,6 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		return $default_url;
 	}
 
-	/**
-	 * @param $ignore
-	 * @param array  $translation_jobs
-	 *
-	 * @return array
-	 */
 	public function get_ate_jobs_data_filter( $ignore, array $translation_jobs ) {
 		return $this->get_ate_jobs_data( $translation_jobs );
 	}
@@ -449,11 +338,6 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		return $this->ate_jobs->get_ate_job_id( $job_id );
 	}
 
-	/**
-	 * @param mixed $response
-	 *
-	 * @throws \RuntimeException
-	 */
 	protected function check_response_error( $response ) {
 		if ( is_wp_error( $response ) ) {
 			$code    = 0;
@@ -487,14 +371,10 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 					}
 				}
 			}
-			/** @var WP_Error $response */
 			throw new RuntimeException( $message, $code );
 		}
 	}
 
-	/**
-	 * @param $ate_job_id
-	 */
 	private function resign_job_on_error( $ate_job_id ) {
 		$job_id = $this->ate_jobs->get_wpml_job_id( $ate_job_id );
 		if ( $job_id ) {
@@ -502,22 +382,11 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param $translation_job
-	 *
-	 * @return bool
-	 */
 	private function is_ate_translation_job( $translation_job ) {
 		return 'local' === $translation_job->translation_service
 			   && WPML_TM_Editors::ATE === $translation_job->editor;
 	}
 
-	/**
-	 * @param array $responses
-	 * @param \WPML_TM_ATE_Models_Job_Create[] $sentJobs
-	 *
-	 * @return array
-	 */
 	private function getResponsesJobs( $responses, $sentJobs ) {
 		$jobs = [];
 
@@ -543,12 +412,6 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		return $jobs + $existingJobs;
 	}
 
-	/**
-	 * @param \WPML_TM_ATE_Models_Job_Create[] $jobs
-     * @param "auto"|"manual"|null $translationModeSetInDashboard
-	 *
-	 * @return array
-	 */
 	private function getChunkedJobs( $jobs, $translationModeSetInDashboard ) {
 		usort(
 			$jobs,
@@ -584,7 +447,6 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		$newChunk( $chunkType );
 
 		foreach ( $jobs as $job ) {
-			/** @var WPML_Element_Translation_Job $translationJob */
 
 			$translationJob = wpml_tm_load_job_factory()->get_translation_job( $job->id, false, 0, true );
 			if ( $translationJob ) {
@@ -612,9 +474,6 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		return Fns::filter( $hasJobs, $chunkedJobs );
 	}
 
-	/**
-	 * @param int $jobId
-	 */
 	private function logRetryError( $jobId ) {
 		$job = Jobs::get( $jobId );
 
@@ -627,10 +486,6 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param int    $jobId
-	 * @param string $additionalErrorMsg Log any error message.
-	 */
 	private function logError( $jobId, string $additionalErrorMsg = '' ) {
 		$job = Jobs::get( $jobId );
 		if ( $job ) {
@@ -646,12 +501,6 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		}
 	}
 
-	/**
-	 * @param $translationJob
-	 * @param "auto"|"manual"|null $translationModeSetInDashboard
-	 *
-	 * @return "manual"|"auto"
-	 */
 	private function getJobType( $translationJob, $translationModeSetInDashboard ) {
 		$document = $translationJob->get_original_document();
 		if ( ! $document ) {
@@ -664,45 +513,18 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		}
 	}
 
-	/**
-	 * Determines whether translation memory should be applied based on batch settings.
-     *
-     * IMPORTANT: This is a global per batch setting, which can be later overridden by individual jobs
-     * in wpml_tm_create_ATE_job_creation_model.
-	 *
-	 * @param \WPML_TM_Translation_Batch|null $batch The translation batch.
-	 *
-	 * @return bool True if translation memory should be applied, false otherwise.
-	 */
 	private function shouldApplyTranslationMemory(?\WPML_TM_Translation_Batch $batch = null) {
 		if ( $this->getTranslationModeFromBatch( $batch ) === 'auto' ) {
-            // Do not apply translation memory only if a user explicitly said so.
 			return ! ( $batch &&  $batch->getHowToHandleExisting() === \WPML_TM_Translation_Batch::HANDLE_EXISTING_OVERRIDE );
 		} else {
-			// We don't want to clear Translation Memory for manual jobs.
-			// Most likely, such job will be almost immediately completed in ATE, but it is expected by users.
 			return true;
 		}
 	}
 
-	/**
-	 * Gets the translation mode from a batch.
-	 *
-	 * @param \WPML_TM_Translation_Batch|null $batch The translation batch.
-	 *
-	 * @return 'auto'|'manual'|null The translation mode or null if batch is null.
-	 */
 	private function getTranslationModeFromBatch(?\WPML_TM_Translation_Batch $batch = null) {
 		return $batch ? $batch->getTranslationMode() : null;
 	}
 
-	/**
-	 * Log error in PHP error log if `WP_DEBUG` is enabled.
-	 *
-	 * @param string $message
-	 *
-	 * @return void
-	 */
 	private function maybeLogRuntimeError( string $message ) {
 		JobLog::addError(
 			'WPML_TM_ATE_Jobs_Actions error',
@@ -716,13 +538,6 @@ class WPML_TM_ATE_Jobs_Actions implements IWPML_Action {
 		}
 	}
 
-	/**
-	 * Get human-readable error message from Throwable.
-	 *
-	 * @param \Throwable $throwable
-	 *
-	 * @return string
-	 */
 	private function getErrorMessage( \Throwable $throwable ): string {
 		return 'Error: ' . $throwable->getMessage() . ' in ' . $throwable->getFile() . ':' . $throwable->getLine();
 	}

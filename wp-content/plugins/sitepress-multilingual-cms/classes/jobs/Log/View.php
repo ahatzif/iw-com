@@ -1,5 +1,4 @@
 <?php
-// phpcs:disable Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed,Generic.Strings.UnnecessaryStringConcat.Found,Squiz.Commenting.FunctionComment.WrongStyle,Squiz.Commenting.InlineComment.InvalidEndChar,Squiz.PHP.DisallowSizeFunctionsInLoops.Found,WordPress.PHP.YodaConditions.NotYoda,WordPress.Security.EscapeOutput.OutputNotEscaped,WordPress.WP.I18n.MissingTranslatorsComment
 
 
 namespace WPML\TM\Jobs\Log;
@@ -10,10 +9,8 @@ use WPML\TM\Jobs\JobLog;
 
 class View {
 
-	/** @var Collection $summaries Collection of request summary arrays. */
 	private $summaries;
 
-	/** @var bool */
 	private $isLoggingEnabled;
 
 	public function __construct( Collection $summaries, $isLoggingEnabled ) {
@@ -21,12 +18,6 @@ class View {
 		$this->isLoggingEnabled = $isLoggingEnabled;
 	}
 
-	// ---------------------------------------------------------------------
-	// Shared tab nav between the request-timeline view (this file) and the
-	// by-post entity-timeline view. Plain WP `nav-tab-wrapper` markup so
-	// the page integrates with the rest of admin styling without
-	// per-tab CSS.
-	// ---------------------------------------------------------------------
 
 	public static function renderTabs( $active ) {
 		$baseUrl = admin_url( 'admin.php?page=' . Hooks::SUBMENU_HANDLE );
@@ -53,9 +44,6 @@ class View {
 		echo '</nav>';
 	}
 
-	// ---------------------------------------------------------------------
-	// List page (server-rendered, summaries only — no event data).
-	// ---------------------------------------------------------------------
 
 	public function renderPage() {
 		$isEnabled = $this->isLoggingEnabled;
@@ -180,13 +168,6 @@ class View {
 		<?php
 	}
 
-	/**
-	 * One summary row. Each row has a hidden detail panel that gets filled by
-	 * an AJAX call when the user clicks "View".
-	 *
-	 * @param array $summary
-	 * @param int   $i
-	 */
 	public function renderSummaryRow( $summary, $i ) {
 		$logUid          = (string) ( $summary['logUid'] ?? '' );
 		$requestUrl      = (string) ( $summary['requestUrl'] ?? '' );
@@ -231,15 +212,6 @@ class View {
 		<?php
 	}
 
-	/**
-	 * Render the "When" cell as a relative time ("3 minutes ago"), with the
-	 * absolute timestamp on hover via title attribute for precision.
-	 *
-	 * @param array  $summary
-	 * @param string $requestDateTime ISO-8601 fallback when ageSeconds is missing.
-	 *
-	 * @return string
-	 */
 	private function renderRelativeTime( array $summary, $requestDateTime ) {
 		$age = isset( $summary['ageSeconds'] ) ? (int) $summary['ageSeconds'] : null;
 
@@ -250,14 +222,12 @@ class View {
 		$now      = time();
 		$fromTime = max( 0, $now - $age );
 		$relative = human_time_diff( $fromTime, $now );
-		// WP's translation file already carries "%s ago".
 		$label = sprintf( __( '%s ago' ), $relative );
 
 		return '<span title="' . esc_attr( $requestDateTime ) . '">' . esc_html( $label ) . '</span>';
 	}
 
 	private function renderStatusBadge( $status, $hasErrorLogs ) {
-		// WPML brand palette — matches vendor/.../SharedKernel/.../_variables.scss
 		$colour = '#666';
 		$text   = $status;
 
@@ -279,9 +249,6 @@ class View {
 				$text   = $hasErrorLogs ? __( 'legacy/errors', 'sitepress' ) : __( 'legacy', 'sitepress' );
 				break;
 			case FsJobLogStorage::STATUS_ABORTED:
-				// Same red as `errors` — an aborted request always carries
-				// a fatal inside, the operator should treat it the same as
-				// errors-but-with-shutdown.
 				$colour = '#c8471f';
 				$text   = __( 'aborted', 'sitepress' );
 				break;
@@ -325,17 +292,7 @@ class View {
 		return substr( (string) $haystack, -$needleLen ) === $needle;
 	}
 
-	// ---------------------------------------------------------------------
-	// Detail panel (server-rendered HTML returned by AJAX).
-	// ---------------------------------------------------------------------
 
-	/**
-	 * Render the full detail HTML for one request, walking its event stream.
-	 *
-	 * @param string $logUid
-	 *
-	 * @return string
-	 */
 	public function renderRequestDetail( $logUid ) {
 		$collected = $this->collectGroups( $logUid );
 
@@ -427,16 +384,6 @@ class View {
 		echo '</div>';
 	}
 
-	/**
-	 * Walk events for one request, collecting them into a group structure that
-	 * the renderers below consume. Auto-closes any open group (worker crash
-	 * recovery), applies the st-batch string-id enrichment that the writer
-	 * emits in `request_finished`.
-	 *
-	 * @param string $logUid
-	 *
-	 * @return array{started: array|null, finished: array|null, groups: array, hasErrorLogs: bool}
-	 */
 	private function collectGroups( $logUid ) {
 		$started      = null;
 		$finished     = null;
@@ -534,10 +481,6 @@ class View {
 		unset( $group );
 	}
 
-	// ---------------------------------------------------------------------
-	// Detail body renderers — preserved from the legacy View. They consume
-	// the flat per-group "log entry" arrays we now collect from events.
-	// ---------------------------------------------------------------------
 
 	private function renderSendJobsLogs( $logs ) {
 		$i = 0;

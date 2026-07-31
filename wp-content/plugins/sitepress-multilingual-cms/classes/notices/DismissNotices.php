@@ -41,20 +41,10 @@ class DismissNotices implements \IWPML_Backend_Action {
 
 	}
 
-	/**
-	 * @param int $id
-	 *
-	 * @return bool
-	 */
 	public function isDismissed( $id ) {
 		return wpml_collect( get_option( self::OPTION, [] ) )->get( $id, false );
 	}
 
-	/**
-	 * @param int $id
-	 *
-	 * @return string
-	 */
 	public function renderCheckbox( $id ) {
 		return sprintf(
 			'<input type="checkbox" class="%s" data-id="%s" />',

@@ -38,7 +38,6 @@ class GetAttrExpression extends \WPML\Core\Twig\Node\Expression\AbstractExpressi
         }
         $compiler->subcompile($this->getNode('node'));
         $compiler->raw(', ')->subcompile($this->getNode('attribute'));
-        // only generate optional arguments when needed (to make generated code more readable)
         $needFourth = $this->getAttribute('ignore_strict_check');
         $needThird = $needFourth || $this->getAttribute('is_defined_test');
         $needSecond = $needThird || \WPML\Core\Twig\Template::ANY_CALL !== $this->getAttribute('type');

@@ -22,9 +22,6 @@ class AliasDomainCheckHandler implements \IWPML_Frontend_Action, \IWPML_Backend_
 		wp_die( self::RESPONSE_BODY, '', [ 'response' => 200 ] );
 	}
 
-	/**
-	 * @return string
-	 */
 	public static function getAndDeleteToken() {
 		$token = get_option( self::OPTION_KEY, '' );
 		delete_option( self::OPTION_KEY );

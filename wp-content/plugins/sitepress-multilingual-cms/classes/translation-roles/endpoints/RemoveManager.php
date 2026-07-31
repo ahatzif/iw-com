@@ -7,9 +7,6 @@ use WPML\LIB\WP\User;
 
 class RemoveManager extends Remove {
 
-	/**
-	 * @inheritDoc
-	 */
 	public function run( Collection $data ) {
 		$result = parent::run( $data );
 		do_action( 'wpml_tm_ate_synchronize_managers' );

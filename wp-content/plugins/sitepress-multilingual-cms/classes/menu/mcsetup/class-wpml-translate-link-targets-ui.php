@@ -3,13 +3,9 @@
 class WPML_Translate_Link_Targets_UI extends WPML_TM_MCS_Section_UI {
 	const ID = 'ml-content-setup-sec-links-target';
 
-	/** @var WPDB $wpdb */
 	private $wpdb;
-	/** @var WPML_Pro_Translation $pro_translation */
 	private $pro_translation;
-	/** @var WPML_WP_API $wp_api */
 	private $wp_api;
-	/** @var SitePress $sitepress */
 	private $sitepress;
 
 	public function __construct( $title, $wpdb, $sitepress, $pro_translation ) {
@@ -19,21 +15,12 @@ class WPML_Translate_Link_Targets_UI extends WPML_TM_MCS_Section_UI {
 		$this->sitepress       = $sitepress;
 	}
 
-	/**
-	 * Conditionally adds hooks for the Translate Link Targets UI
-	 * Only adds the navigation link if there are links that need adjustment
-	 *
-	 * @return void
-	 */
 	public function add_hooks() {
 		if ( $this->links_need_adjustment() ) {
 			parent::add_hooks();
 		}
 	}
 
-	/**
-	 * @return string
-	 */
 	protected function render_content() {
 		$output = '';
 
@@ -69,11 +56,6 @@ class WPML_Translate_Link_Targets_UI extends WPML_TM_MCS_Section_UI {
 		return $output;
 	}
 
-	/**
-	 * Check if links need adjustment
-	 *
-	 * @return bool
-	 */
 	private function links_need_adjustment() {
 		$global_state = new WPML_Translate_Link_Target_Global_State( $this->sitepress );
 		if ( $global_state->is_rescan_required() ) {

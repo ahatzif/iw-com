@@ -1,22 +1,13 @@
 <?php
 
-// phpcs:disable WordPress.WP.I18n.NonSingularStringLiteralText, WordPress.WP.I18n.LowLevelTranslationFunction
 class WPML_Page_Builders_Media_Shortcodes_Update implements IWPML_PB_Media_Update {
 
-	/** @var WPML_Translation_Element_Factory $element_factory */
 	private $element_factory;
 
-	/** @var WPML_Page_Builders_Media_Shortcodes $media_shortcodes*/
 	private $media_shortcodes;
 
-	/** @var WPML_Page_Builders_Media_Usage|null $media_usage */
 	private $media_usage;
 
-	/**
-	 * @param WPML_Translation_Element_Factory    $element_factory
-	 * @param WPML_Page_Builders_Media_Shortcodes $media_shortcodes
-	 * @param WPML_Page_Builders_Media_Usage|null $media_usage
-	 */
 	public function __construct(
 		WPML_Translation_Element_Factory $element_factory,
 		WPML_Page_Builders_Media_Shortcodes $media_shortcodes,
@@ -27,9 +18,6 @@ class WPML_Page_Builders_Media_Shortcodes_Update implements IWPML_PB_Media_Updat
 		$this->media_usage      = $media_usage;
 	}
 
-	/**
-	 * @param WP_Post $post
-	 */
 	public function translate( $post ) {
 		if ( ! $this->media_shortcodes->has_media_shortcode( $post->post_content ) ) {
 			return;
@@ -49,13 +37,6 @@ class WPML_Page_Builders_Media_Shortcodes_Update implements IWPML_PB_Media_Updat
 			$this->media_usage->update( $element->get_source_element()->get_id() );
 		}
 
-		/**
-		 * The function wp_update_post() can modify post tag.
-		 * The code below sends tags by IDs to prevent this.
-		 *
-		 * @see wpmlcore-5947
-		 * @see https://core.trac.wordpress.org/ticket/45121
-		 */
 		if ( $post->post_content !== $post_content ) {
 			$post->post_content = $post_content;
 
@@ -71,9 +52,6 @@ class WPML_Page_Builders_Media_Shortcodes_Update implements IWPML_PB_Media_Updat
 		}
 	}
 
-	/**
-	 * @param WP_Post $post
-	 */
 	public function find_media( $post ) {
 		if ( ! $this->media_shortcodes->has_media_shortcode( $post->post_content ) ) {
 			return;
@@ -86,9 +64,6 @@ class WPML_Page_Builders_Media_Shortcodes_Update implements IWPML_PB_Media_Updat
 			->translate( $post->post_content );
 	}
 
-	/**
-	 * @return array
-	 */
 	public function get_media() {
 		return $this->media_shortcodes->get_media();
 	}

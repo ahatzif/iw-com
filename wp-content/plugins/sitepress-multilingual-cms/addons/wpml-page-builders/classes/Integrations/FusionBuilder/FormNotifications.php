@@ -21,20 +21,10 @@ class FormNotifications implements \IWPML_Backend_Action, \IWPML_Frontend_Action
 			->then( spreadArgs( [ $this, 'encodeNestedSerializedData' ] ) );
 	}
 
-	/**
-	 * This method should be removed in WPML 4.10 release, when we will merge the XML:
-	 * https://github.com/OnTheGoSystems/wpml-config/pull/494
-	 *
-	 * @param array $config
-	 *
-	 * @return array
-	 */
 	public function addConfigArray( $config ) {
-		// Find the existing _fusion key in custom-fields-texts.
 		if ( isset( $config['wpml-config']['custom-fields-texts']['key'] ) ) {
 			foreach ( $config['wpml-config']['custom-fields-texts']['key'] as &$customField ) {
 				if ( isset( $customField['attr']['name'] ) && self::CUSTOM_FIELD_KEY === $customField['attr']['name'] ) {
-					// Add notifications config to existing _fusion key.
 					$customField['key'][] = [
 						'attr' => [ 'name' => self::NOTIFICATIONS_KEY ],
 						'key'  => [
@@ -77,12 +67,6 @@ class FormNotifications implements \IWPML_Backend_Action, \IWPML_Frontend_Action
 		return $config;
 	}
 
-	/**
-	 * @param mixed  $fieldValue
-	 * @param string $key
-	 *
-	 * @return mixed
-	 */
 	public function decodeNestedSerializedData( $fieldValue, $key ) {
 		if ( self::CUSTOM_FIELD_KEY !== $key || ! is_array( $fieldValue ) ) {
 			return $fieldValue;
@@ -98,12 +82,6 @@ class FormNotifications implements \IWPML_Backend_Action, \IWPML_Frontend_Action
 		return $fieldValue;
 	}
 
-	/**
-	 * @param mixed  $fieldValue
-	 * @param string $key
-	 *
-	 * @return mixed
-	 */
 	public function encodeNestedSerializedData( $fieldValue, $key ) {
 		if ( self::CUSTOM_FIELD_KEY !== $key || ! is_array( $fieldValue ) ) {
 			return $fieldValue;

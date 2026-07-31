@@ -123,7 +123,6 @@ function icl_reset_wpml( $blog_id = false ) {
 					)
 				);
 
-				/** @var WP_User $user */
 				foreach ( $users as $user ) {
 					delete_user_option( $user->ID, $wpml_user_option );
 				}
@@ -158,7 +157,6 @@ function icl_reset_wpml( $blog_id = false ) {
 				)
 			);
 
-			/** @var WP_User $user */
 			foreach ( $users as $user ) {
 				foreach ( $capabilities as $capability ) {
 					$user->remove_cap( $capability );
@@ -202,9 +200,6 @@ function icl_reset_wpml( $blog_id = false ) {
 	}
 }
 
-/**
- * Ajax handler for type assignment fix troubleshoot action
- */
 function icl_repair_broken_type_and_language_assignments() {
 	global $sitepress;
 

@@ -14,11 +14,6 @@ namespace WPML\Core\Twig\Node;
 use WPML\Core\Twig\Compiler;
 use WPML\Core\Twig\Node\Expression\AbstractExpression;
 use WPML\Core\Twig\Node\Expression\AssignNameExpression;
-/**
- * Represents a for node.
- *
- * @author Fabien Potencier <fabien@symfony.com>
- */
 class ForNode extends \WPML\Core\Twig\Node\Node
 {
     protected $loop;
@@ -54,9 +49,7 @@ class ForNode extends \WPML\Core\Twig\Node\Node
             $compiler->write("if (!\$context['_iterated']) {\n")->indent()->subcompile($this->getNode('else'))->outdent()->write("}\n");
         }
         $compiler->write("\$_parent = \$context['_parent'];\n");
-        // remove some "private" loop variables (needed for nested loops)
         $compiler->write('unset($context[\'_seq\'], $context[\'_iterated\'], $context[\'' . $this->getNode('key_target')->getAttribute('name') . '\'], $context[\'' . $this->getNode('value_target')->getAttribute('name') . '\'], $context[\'_parent\'], $context[\'loop\']);' . "\n");
-        // keep the values set in the inner context for variables defined in the outer context
         $compiler->write("\$context = array_intersect_key(\$context, \$_parent) + \$_parent;\n");
     }
 }

@@ -4,18 +4,12 @@ namespace WPML\TM\ATE\API;
 
 class AmsCredentialsStorage {
 
-	/** @var \WPML_TM_ATE_Authentication */
 	private $auth;
 
 	public function __construct( \WPML_TM_ATE_Authentication $auth ) {
 		$this->auth = $auth;
 	}
 
-	/**
-	 * @param array $responseBody Must contain 'new_secret_key', 'new_shared_key', 'new_website_uuid'.
-	 *
-	 * @return bool
-	 */
 	public function store( array $responseBody ): bool {
 		$registrationResult = $this->updateRegistrationData( $responseBody );
 		$uuidResult         = $this->updateSiteUuId( $responseBody );

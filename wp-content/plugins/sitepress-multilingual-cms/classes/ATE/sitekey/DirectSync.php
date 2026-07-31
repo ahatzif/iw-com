@@ -9,22 +9,14 @@ use WPML\WP\OptionManager;
 use function WPML\Container\make;
 use function WPML\FP\spreadArgs;
 
-/**
- * Handles direct site key synchronization with AMS.
- * Attempts immediate API call when site key is updated, with background task fallback on failure.
- */
 class DirectSync implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 
-	/** @var BackgroundTaskService */
 	private $backgroundTaskService;
 
-	/** @var BackgroundTaskRepository */
 	private $backgroundTaskRepository;
 
-	/** @var SitekeyConfirmationService */
 	private $confirmationService;
 
-	/** @var SitekeyProvider */
 	private $sitekeyProvider;
 
 
@@ -41,16 +33,10 @@ class DirectSync implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 	}
 
 	public function add_hooks() {
-		// Hook directly to site key update for immediate sync attempt
 		Hooks::onAction( 'otgs_installer_site_key_update' )
 			->then( spreadArgs( [ $this, 'handleSiteKeyUpdate' ] ) );
 	}
 
-	/**
-	 * Handle site key update with direct API call and fallback to background task.
-	 *
-	 * @param string $repo Repository identifier (should be 'wpml')
-	 */
 	public function handleSiteKeyUpdate( $repo ) {
 		if ( $repo !== 'wpml' ) {
 			return;
@@ -74,9 +60,6 @@ class DirectSync implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		}
 	}
 
-	/**
-	 * Schedule background task as fallback.
-	 */
 	private function scheduleBackgroundTask() {
 		$this->backgroundTaskService->addOnce(
 			make( Endpoint::class ),
@@ -84,9 +67,6 @@ class DirectSync implements \IWPML_Backend_Action, \IWPML_DIC_Action {
 		);
 	}
 
-	/**
-	 * Clean up any existing background tasks for this operation.
-	 */
 	private function cleanupExistingTasks() {
 		$task = $this->backgroundTaskRepository->getLastIncompletedByType( Endpoint::class );
 

@@ -4,10 +4,8 @@ namespace WPML\TM\ATE\Sitekey;
 
 class UnassignApiClient {
 
-	/** @var \WPML_TM_AMS_API */
 	private $amsApi;
 
-	/** @var SitekeyLogger */
 	private $logger;
 
 	public function __construct( \WPML_TM_AMS_API $amsApi, SitekeyLogger $logger ) {

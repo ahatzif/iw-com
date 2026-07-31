@@ -23,7 +23,6 @@ class WPML_Pre_Option_Page extends WPML_WPDB_And_SP_User {
 		$this->switched = $switched;
 		$this->lang     = $lang;
 
-		// Register hooks once
 		self::add_cache_clearing_hooks();
 	}
 
@@ -40,7 +39,6 @@ class WPML_Pre_Option_Page extends WPML_WPDB_And_SP_User {
 		) {
 			$results = [];
 			$results[ $type ] = [];
-			// Fetch for all languages and cache them.
 			$values = $this->wpdb->get_results(
 				$this->wpdb->prepare(
 					"	SELECT element_id, language_code

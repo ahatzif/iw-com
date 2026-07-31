@@ -7,16 +7,10 @@ use WPML_TM_ATE_Status;
 
 class Service {
 
-	/** @var AmsApiTester */
 	private $amsApiTester;
 
-	/** @var ClonedSiteResetter */
 	private $clonedSiteResetter;
 
-	/**
-	 * @param AmsApiTester       $amsApiTester
-	 * @param ClonedSiteResetter $clonedSiteResetter
-	 */
 	public function __construct(
 		AmsApiTester $amsApiTester,
 		ClonedSiteResetter $clonedSiteResetter
@@ -26,12 +20,6 @@ class Service {
 	}
 
 
-	/**
-	 * Attempts to migrate credentials by syncing with ATE API.
-	 * If a 426 error (cloned site) is detected, clears ATE-related options.
-	 *
-	 * @return string
-	 */
 	public function maybeMigrateCredentials( string $currentStep ): string {
 		if (
 			get_option( Lock::CLONED_SITE_OPTION ) ||

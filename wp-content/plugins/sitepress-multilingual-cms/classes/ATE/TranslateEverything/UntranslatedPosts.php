@@ -19,9 +19,6 @@ use function WPML\FP\pipe;
 
 class UntranslatedPosts extends AbstractUntranslatedElements{
 
-	/**
-	 * @return array
-	 */
 	public function getTypeWithLanguagesToProcess() {
 		$postTypes = $this->getPostTypesToTranslate(
 			$this->getTypes(),
@@ -35,12 +32,6 @@ class UntranslatedPosts extends AbstractUntranslatedElements{
 			->first();
 	}
 
-	/**
-	 * @param array $postTypes
-	 * @param array $targetLanguages
-	 *
-	 * @return array
-	 */
 	private function getPostTypesToTranslate( array $postTypes, array $targetLanguages ) {
 		$completed                               = $this->getCompleted();
 		$getLanguageCodesNotCompletedForPostType = pipe( Obj::propOr( [], Fns::__, $completed ), Lst::diff( $targetLanguages ) );
@@ -55,23 +46,11 @@ class UntranslatedPosts extends AbstractUntranslatedElements{
 		return $getPostTypesToTranslate( $postTypes );
 	}
 
-	/**
-	 * @param array $languages
-	 * @param string $type
-	 * @param int $queueSize
-	 *
-	 * @return array
-	 */
 	public function getElementsToProcess( $languages, $type, $queueSize ) {
 		if ( empty( $languages ) ) {
-			// Without secondaryLanguages there won't be any posts, and
-			// the following query will throw an error.
 			return [];
 		}
 
-		// If post type using native editor then find posts those are not using native editor explicitly i.e. meta value "no".
-		// If post type NOT using native editor then find posts those are not using native editor
-		// OR no preference is defined at all i.e. meta value NULL.
 		$postMetaAdditionalCondition =
 			\WPML_TM_Post_Edit_TM_Editor_Mode::is_post_type_using_wp_editor( $type )
 				? ''
@@ -119,26 +98,11 @@ class UntranslatedPosts extends AbstractUntranslatedElements{
 	}
 
 
-	/**
-	 * @param Actions $actions
-	 * @param array $elements
-	 * @param string $type
-	 *
-	 * @return array
-	 */
 	public function createTranslationJobs( Actions $actions, array $elements, $type ) {
 		return $actions->createNewTranslationJobs( Languages::getDefaultCode(), $elements, 'post_' . $type );
 	}
 
 
-	/**
-	 * Notice that this method is specific for UntranslatedPosts.
-	 * You can't find it in the UntranslatedElementsInterface.
-	 *
-	 * @param string $type
-	 *
-	 * @return void
-	 */
 	public function markPostTypeAsUncompleted( string $type ) {
 		$completed = $this->getCompleted();
 		$completed[ $type ] = [];
@@ -146,15 +110,6 @@ class UntranslatedPosts extends AbstractUntranslatedElements{
 		$this->setCompleted( $completed );
 	}
 
-	/**
-	 * Notice that this method is specific for UntranslatedPosts.
-	 * You can't find it in the UntranslatedElementsInterface.
-	 *
-	 * @param string $type
-	 * @param string $languageCode
-	 *
-	 * @return bool
-	 */
 	public function isPostTypeProcessedForTypeAndLanguage( string $type, string $languageCode ): bool {
 		$completed = $this->getCompleted();
 		$completedLanguages = $completed[ $type ] ?? [];
@@ -162,16 +117,10 @@ class UntranslatedPosts extends AbstractUntranslatedElements{
 		return in_array( $languageCode, $completedLanguages );
 	}
 
-	/**
-	 * @return array<string: string[]>
-	 */
 	protected function getCompleted(): array {
 		return Option::getTranslateEverythingCompletedPosts();
 	}
 
-	/**
-	 * @param array<string: string[]> $completed
-	 */
 	protected function setCompleted( array $completed ) {
 		Option::setTranslateEverythingCompletedPosts( $completed );
 	}
@@ -180,14 +129,6 @@ class UntranslatedPosts extends AbstractUntranslatedElements{
 		return PostTypes::getAutomaticTranslatable();
 	}
 
-	/**
-	 * Map a post type to its processing tier from Tier constants.
-	 * Pages cover tiers 2–4, but at this level we just need the coarsest bucket.
-	 *
-	 * @param string $postType
-	 *
-	 * @return int
-	 */
 	private static function getPostTypeTier( string $postType ): int {
 		if ( $postType === 'page' ) {
 			return Tier::PAGES_UNDER_HOMEPAGE;

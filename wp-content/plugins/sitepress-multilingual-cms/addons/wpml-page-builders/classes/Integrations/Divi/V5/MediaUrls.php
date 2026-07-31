@@ -6,10 +6,6 @@ use WPML\LIB\WP\Hooks;
 use WPML\FP\Str;
 use function WPML\FP\spreadArgs;
 
-/**
- * This class should be removed in WPML 4.10 release, when we will merge the XML:
- * https://github.com/OnTheGoSystems/wpml-config/pull/486
- */
 class MediaUrls implements \IWPML_Backend_Action, \IWPML_Frontend_Action {
 
 	public function add_hooks() {
@@ -17,11 +13,6 @@ class MediaUrls implements \IWPML_Backend_Action, \IWPML_Frontend_Action {
 			->then( spreadArgs( [ $this, 'replaceLinkWithMediaUrl' ] ) );
 	}
 
-	/**
-	 * @param array $config
-	 *
-	 * @return array
-	 */
 	public function replaceLinkWithMediaUrl( $config ) {
 		foreach ( $config['wpml-config']['gutenberg-blocks']['gutenberg-block'] as &$block ) {
 			$type = $block['attr']['type'];
@@ -33,9 +24,6 @@ class MediaUrls implements \IWPML_Backend_Action, \IWPML_Frontend_Action {
 		return $config;
 	}
 
-	/**
-	 * @param mixed $data
-	 */
 	private function processKeys( &$data ) {
 		if ( ! is_array( $data ) ) {
 			return;
@@ -62,9 +50,6 @@ class MediaUrls implements \IWPML_Backend_Action, \IWPML_Frontend_Action {
 		}
 	}
 
-	/**
-	 * @param array $imageKey
-	 */
 	private function replaceImageUrlType( &$imageKey ) {
 		if ( ! isset( $imageKey['key']['attr'] ) ) {
 			return;

@@ -63,7 +63,6 @@ class CurrentStep implements IHandler {
 
 		$completedStep = Option::getCurrentStep();
 
-		// Don't capture if user is on the same step (page refresh)
 		if ( $completedStep === $nextStep ) {
 			return;
 		}

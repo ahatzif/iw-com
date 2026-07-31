@@ -273,6 +273,64 @@ class IW_Email_Template{
 new IW_Email_Template();
 new IW_Email_Template_Email_Previews();
 
+/**
+ * Brand the login-details email sent when an administrator creates a user.
+ *
+ * WordPress generates the password key before this filter runs, so the key is
+ * read from the original message and routed through the site's reset-password
+ * popup instead of exposing wp-login.php in the email.
+ */
+function iw_email_template_new_user_notification_email( $email, $user, $blogname ) {
+    $reset_key = '';
+
+    if ( preg_match( '~https?://[^\s<]+~', (string) $email['message'], $matches ) ) {
+        $reset_url_parts = wp_parse_url( html_entity_decode( $matches[0], ENT_QUOTES, 'UTF-8' ) );
+
+        if ( ! empty( $reset_url_parts['query'] ) ) {
+            wp_parse_str( $reset_url_parts['query'], $reset_query );
+            $reset_key = isset( $reset_query['key'] ) ? sanitize_text_field( $reset_query['key'] ) : '';
+        }
+    }
+
+    if ( empty( $reset_key ) ) {
+        return $email;
+    }
+
+    $locale        = get_user_locale( $user );
+    $language      = 0 === strpos( $locale, 'en' ) ? 'en' : 'el';
+    $email_home    = apply_filters( 'wpml_home_url', home_url( '/' ), $language );
+    $set_password  = add_query_arg(
+        [
+            'reset-password-key' => $reset_key,
+            'id'                 => $user->ID,
+        ],
+        $email_home
+    );
+
+    if ( 'en' === $language ) {
+        $email['subject'] = 'Your account has been created';
+        $email['message'] = sprintf(
+            '<p>Hello,</p><p>An account has been created for you at %1$s.</p><p><strong>Username:</strong> %2$s</p><p>To complete your account setup, please choose a personal password using the button below.</p><p><a class="btn" href="%3$s">SET YOUR PASSWORD</a></p><p>This link is personal and is only used for the initial setup of your account. If you were not expecting this message, you can safely ignore it.</p>',
+            esc_html( $blogname ),
+            esc_html( $user->user_login ),
+            esc_url( $set_password )
+        );
+    } else {
+        $email['subject'] = 'Ο λογαριασμός σας δημιουργήθηκε';
+        $email['message'] = sprintf(
+            '<p>Γεια σας,</p><p>Δημιουργήθηκε ένας λογαριασμός για εσάς στο %1$s.</p><p><strong>Όνομα χρήστη:</strong> %2$s</p><p>Για να ολοκληρώσετε τη δημιουργία του λογαριασμού σας, ορίστε ένα προσωπικό συνθηματικό από το παρακάτω κουμπί.</p><p><a class="btn" href="%3$s">ΟΡΙΣΜΟΣ ΣΥΝΘΗΜΑΤΙΚΟΥ</a></p><p>Ο σύνδεσμος είναι προσωπικός και χρησιμοποιείται μόνο για την αρχική ρύθμιση του λογαριασμού σας. Αν δεν περιμένατε αυτό το μήνυμα, μπορείτε να το αγνοήσετε.</p>',
+            esc_html( $blogname ),
+            esc_html( $user->user_login ),
+            esc_url( $set_password )
+        );
+    }
+
+    $email['headers'] = [ 'Content-Type: text/html; charset=UTF-8' ];
+
+    return $email;
+}
+add_filter( 'wp_new_user_notification_email', 'iw_email_template_new_user_notification_email', 10, 3 );
+
 register_activation_hook( __FILE__, function (){
     if ( ! is_plugin_active('advanced-custom-fields-pro/acf.php' ) || ! is_plugin_active( 'acf-image-aspect-ratio-crop/acf-image-aspect-ratio-crop.php' ) ) {
         if( current_user_can( 'activate_plugins' )  ){

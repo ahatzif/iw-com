@@ -7,11 +7,11 @@
     --max-vw: 100vw;
     --vw: min(var(--max-vw),100vw);
     --iw-cookiebot-banner-background-color: #8185be;
-    --iw-cookiebot-banner-text-color: #31312f;
+    --iw-cookiebot-banner-text-color: #ffffff;
     --iw-cookiebot-banner-button-background-color: #173276;
     --iw-cookiebot-banner-button-text-color: #fff;
     --iw-cookiebot-popup-background-color: #8185be;
-    --iw-cookiebot-popup-text-color: #31312f;
+    --iw-cookiebot-popup-text-color: #ffffff;
     --iw-cookiebot-popup-button-background-color: #173276;
     --iw-cookiebot-popup-button-text-color: #fff;
 }
@@ -880,8 +880,8 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
     #cookie-consent-banner {
         width: 410px;
         border-radius: 1rem;
-        bottom: 1rem !important
-        left: 1rem !important
+        bottom: 1rem !important;
+        left: 1rem !important;
     }
 }
 

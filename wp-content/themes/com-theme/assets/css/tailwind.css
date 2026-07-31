@@ -7240,7 +7240,7 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
 #cookie-consent-banner {
   left: unset;
   display: block;
-  border-top-left-radius: 3rem;
+  border: 1rem;
 }
 
 #CookiebotWidget .CookiebotWidget-logo svg circle {
@@ -7251,21 +7251,21 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
   fill: #31312f !important;
 }
 
-@media screen and (min-width: 1024px) {
-  #cookie-consent-banner {
-    width: 480px;
-  }
-}
-
 @media screen and (min-width: 768px) {
   #cookie-consent-banner {
     width: 46.875vw;
   }
 }
 
+@media screen and (min-width: 1024px) {
+  #cookie-consent-banner {
+    width: 410px;
+  }
+}
+
 @media only screen and (max-width: 767px) {
   #cookie-consent-banner {
-    bottom: 0 !important;
+    bottom: 1rem !important;
     width: 100% !important;
     border-top-left-radius: 0rem;
   }

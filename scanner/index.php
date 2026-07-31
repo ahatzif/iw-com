@@ -222,7 +222,7 @@ if ( ( $_SERVER['REQUEST_METHOD'] ?? '' ) === 'POST' && ( $_POST['iw_scanner_act
 			[
 				'user_login'    => $user_login,
 				'user_password' => $password,
-				'rememberme'    => ! empty( $_POST['rememberme'] ),
+				'remember'      => ! empty( $_POST['rememberme'] ),
 			],
 			is_ssl()
 		);
@@ -398,6 +398,8 @@ $scanner_shell_class = implode( ' ', $scanner_shell_classes );
 								</div>
 
 								<form id="scanner-login-form" class="scanner-login-form" method="post" action="<?php echo esc_url( $scanner_url ); ?>">
+									<input type="hidden" name="action" value="iw-auth-login">
+									<input type="hidden" name="security" value="<?php echo esc_attr( wp_create_nonce( 'iw-auth-login' ) ); ?>">
 									<input type="hidden" name="iw_scanner_action" value="login">
 									<input type="hidden" name="iw_scanner_nonce" value="<?php echo esc_attr( wp_create_nonce( 'iw_scanner_login' ) ); ?>">
 

@@ -860,6 +860,7 @@ body.com-cardlink-receipt-pending [data-module-scroll="main"] > [data-scroll="co
         width: 46.875vw;
     }
 }
+
 @media screen and (min-width: 1024px) {
     #cookie-consent-banner {
         width: 410px;

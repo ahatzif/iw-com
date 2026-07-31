@@ -2800,7 +2800,7 @@
   html[data-scanner-theme="dark"] .scanner-history-row .scanner-history-icon,
   html[data-scanner-theme="dark"] .scanner-notification-marker {
     background: #ebe6d6;
-    color: var(--scanner-brand);
+    color: #173276;
   }
 
   html[data-scanner-theme="dark"] .scanner-app-nav {
